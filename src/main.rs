@@ -6,9 +6,10 @@ use std::io::Write;
 use std::sync::Arc;
 use tagisan::{
     AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, CollaborationStrategy,
-    CompletionRequest, ContentBlock, DialecticalDebateStrategy, EngineContext, GeminiProvider,
-    MixtureOfAgentsStrategy, OllamaProvider, OpenAiCompatibleProvider, ProviderCapabilities,
-    ReadFileTool, RunCommandTool, StrategyInput, StreamChunkDelta, ToolRegistry, WriteFileTool,
+    CompletionRequest, ContentBlock, DagScheduler, DialecticalDebateStrategy, EngineContext,
+    GeminiProvider, MixtureOfAgentsStrategy, OllamaProvider, OpenAiCompatibleProvider,
+    ProviderCapabilities, ReadFileTool, RunCommandTool, StrategyInput, StreamChunkDelta,
+    ToolRegistry, WorkflowEvent, WorkflowPlanner, WriteFileTool,
 };
 
 #[derive(Parser)]
@@ -89,8 +90,55 @@ enum Commands {
         /// The agent goal or task prompt
         prompt: String,
     },
+    /// Dynamic Multi-Agent DAG Workflow Engine (Milestone 3)
+    Workflow {
+        #[command(subcommand)]
+        action: Option<WorkflowAction>,
+
+        /// Decompose a complex objective into an optimal DAG and execute it
+        #[arg(long)]
+        plan: Option<String>,
+
+        /// Execute a sequential/parallel pipeline expression (e.g. "research -> analyze -> synthesize")
+        #[arg(long)]
+        run: Option<String>,
+
+        /// Direct goal / pipeline positional argument
+        #[arg(index = 1)]
+        objective: Option<String>,
+
+        /// Provider ID: anthropic, openai, xai, deepseek, gemini, ollama
+        #[arg(short, long, default_value = "anthropic")]
+        provider: String,
+
+        /// Model name
+        #[arg(short, long)]
+        model: Option<String>,
+
+        /// Comma-separated list of tools to enable: read_file, write_file, run_command, calculator, all
+        #[arg(short, long, default_value = "all")]
+        tools: String,
+
+        /// Maximum concurrency limit for parallel DAG tasks
+        #[arg(long)]
+        concurrency: Option<usize>,
+    },
     /// Check configured LLM providers, API keys, and model capability bitflags
     Status,
+}
+
+#[derive(Subcommand, Debug)]
+enum WorkflowAction {
+    /// Plan and execute a dynamic workflow from an objective
+    Plan {
+        /// Complex objective to decompose
+        goal: String,
+    },
+    /// Run a pipeline expression (e.g. "task1 -> task2")
+    Run {
+        /// Pipeline expression
+        pipeline: String,
+    },
 }
 
 fn build_engine_context(max_budget: f64) -> EngineContext {
@@ -530,6 +578,239 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 result.total_cost_usd,
                 result.total_latency.as_secs_f32()
             );
+        }
+
+        Commands::Workflow {
+            action,
+            plan,
+            run,
+            objective,
+            provider,
+            model,
+            tools,
+            concurrency,
+        } => {
+            let ctx = build_engine_context(cli.max_budget);
+            let prov = ctx.get_provider(&provider)?;
+
+            let model_name = model.unwrap_or_else(|| match provider.as_str() {
+                "anthropic" => "claude-3-5-sonnet-20241022".to_string(),
+                "xai" => "grok-2-latest".to_string(),
+                "openai" => "gpt-4o".to_string(),
+                "gemini" => "gemini-2.0-flash".to_string(),
+                "deepseek" => "deepseek-chat".to_string(),
+                _ => "llama3.2".to_string(),
+            });
+
+            // Build Tool Registry
+            let mut registry = ToolRegistry::new();
+            let tool_list: Vec<&str> = tools.split(',').map(|s| s.trim()).collect();
+            let enable_all = tool_list.contains(&"all");
+
+            if enable_all || tool_list.contains(&"read_file") {
+                registry.register_tool(ReadFileTool::new());
+            }
+            if enable_all || tool_list.contains(&"write_file") {
+                registry.register_tool(WriteFileTool::new());
+            }
+            if enable_all || tool_list.contains(&"run_command") {
+                registry.register_tool(RunCommandTool::default());
+            }
+            if enable_all || tool_list.contains(&"calculator") {
+                registry.register_tool(CalculatorTool::new());
+            }
+
+            // Determine execution mode (Plan vs Run pipeline vs Positional Objective)
+            let mut workflow_graph = match (action, plan, run, objective) {
+                (Some(WorkflowAction::Plan { goal }), _, _, _) => {
+                    println!("\n{}", "🧠 Decomposing Goal with Autonomous Planner...".bold().magenta());
+                    println!("Objective: \"{}\"\n", goal.italic());
+                    let planner = WorkflowPlanner::new(prov.clone(), model_name.clone()).with_tools(registry.clone());
+                    planner.plan(&goal, &ctx).await?
+                }
+                (Some(WorkflowAction::Run { pipeline }), _, _, _) => {
+                    println!("\n{}", "⚙️ Building Workflow from Pipeline Specification...".bold().cyan());
+                    println!("Pipeline: \"{}\"\n", pipeline.italic());
+                    let planner = WorkflowPlanner::new(prov.clone(), model_name.clone()).with_tools(registry.clone());
+                    planner.from_pipeline_str(&pipeline, prov.clone(), &model_name, registry.clone())?
+                }
+                (_, Some(goal), _, _) => {
+                    println!("\n{}", "🧠 Decomposing Goal with Autonomous Planner...".bold().magenta());
+                    println!("Objective: \"{}\"\n", goal.italic());
+                    let planner = WorkflowPlanner::new(prov.clone(), model_name.clone()).with_tools(registry.clone());
+                    planner.plan(&goal, &ctx).await?
+                }
+                (_, _, Some(pipeline), _) => {
+                    println!("\n{}", "⚙️ Building Workflow from Pipeline Specification...".bold().cyan());
+                    println!("Pipeline: \"{}\"\n", pipeline.italic());
+                    let planner = WorkflowPlanner::new(prov.clone(), model_name.clone()).with_tools(registry.clone());
+                    planner.from_pipeline_str(&pipeline, prov.clone(), &model_name, registry.clone())?
+                }
+                (_, _, _, Some(obj)) => {
+                    if obj.contains("->") {
+                        println!("\n{}", "⚙️ Building Workflow from Pipeline Specification...".bold().cyan());
+                        println!("Pipeline: \"{}\"\n", obj.italic());
+                        let planner = WorkflowPlanner::new(prov.clone(), model_name.clone()).with_tools(registry.clone());
+                        planner.from_pipeline_str(&obj, prov.clone(), &model_name, registry.clone())?
+                    } else {
+                        println!("\n{}", "🧠 Decomposing Goal with Autonomous Planner...".bold().magenta());
+                        println!("Objective: \"{}\"\n", obj.italic());
+                        let planner = WorkflowPlanner::new(prov.clone(), model_name.clone()).with_tools(registry.clone());
+                        planner.plan(&obj, &ctx).await?
+                    }
+                }
+                (None, None, None, None) => {
+                    eprintln!("{}", "Error: Please provide a goal with --plan \"<goal>\" or a pipeline with --run \"step1 -> step2\"".red().bold());
+                    std::process::exit(1);
+                }
+            };
+
+            // Display DAG topology
+            println!("{}", "════════════════ WORKFLOW TOPOLOGY ════════════════".bold().blue());
+            let topo = workflow_graph.validate()?;
+            for (i, task_id) in topo.iter().enumerate() {
+                let task = workflow_graph.get_task(task_id).unwrap();
+                let deps = workflow_graph.upstream_dependencies(task_id)?;
+                let deps_str = if deps.is_empty() {
+                    "None (Root Task)".italic().dimmed().to_string()
+                } else {
+                    deps.join(", ").yellow().to_string()
+                };
+                println!(
+                    "  {}. [{}] {} | Depends on: [{}]",
+                    i + 1,
+                    task.id.cyan().bold(),
+                    task.name.bold(),
+                    deps_str
+                );
+            }
+            println!("{}\n", "═══════════════════════════════════════════════════".bold().blue());
+
+            // Initialize Scheduler & Event Stream
+            let (event_tx, mut event_rx) = tokio::sync::mpsc::unbounded_channel();
+            let mut scheduler = DagScheduler::new()
+                .with_id("tagisan_wf")
+                .with_event_sender(event_tx);
+
+            if let Some(limit) = concurrency {
+                scheduler = scheduler.with_concurrency_limit(limit);
+            }
+
+            let event_printer = tokio::spawn(async move {
+                while let Some(evt) = event_rx.recv().await {
+                    match evt {
+                        WorkflowEvent::WorkflowStarted { workflow_id, total_tasks } => {
+                            println!(
+                                "{} [{}] ({} tasks scheduled)",
+                                "🚀 Workflow Execution Started:".bold().magenta(),
+                                workflow_id.cyan(),
+                                total_tasks
+                            );
+                        }
+                        WorkflowEvent::TaskStarted { task_id, task_name, attempt } => {
+                            println!(
+                                "  {} {} ({}) [Attempt {}]",
+                                "⏳ Starting Task:".yellow().bold(),
+                                task_name.bold(),
+                                task_id.dimmed(),
+                                attempt
+                            );
+                        }
+                        WorkflowEvent::TaskProgress { task_id, message } => {
+                            println!("    ↳ [{}] {}", task_id.dimmed(), message.italic());
+                        }
+                        WorkflowEvent::TaskRetry { task_id, attempt, max_retries, delay, error } => {
+                            println!(
+                                "  {} Task '{}' (attempt {}/{}) retrying in {:.1}s: {}",
+                                "🔄 Retry:".yellow().bold(),
+                                task_id.cyan(),
+                                attempt,
+                                max_retries,
+                                delay.as_secs_f32(),
+                                error.red()
+                            );
+                        }
+                        WorkflowEvent::TaskCompleted { task_id, output } => {
+                            println!(
+                                "  {} Task '{}' completed in {:.2}s (Tokens: {})",
+                                "✅ Task Succeeded:".green().bold(),
+                                task_id.cyan(),
+                                output.latency.as_secs_f32(),
+                                output.usage.prompt_tokens + output.usage.completion_tokens
+                            );
+                        }
+                        WorkflowEvent::TaskFailed { task_id, error, attempts } => {
+                            println!(
+                                "  {} Task '{}' failed after {} attempt(s): {}",
+                                "❌ Task Failed:".red().bold(),
+                                task_id.cyan(),
+                                attempts,
+                                error.red()
+                            );
+                        }
+                        WorkflowEvent::TaskSkipped { task_id, reason } => {
+                            println!(
+                                "  {} Task '{}' skipped: {}",
+                                "⚠️  Task Skipped:".yellow(),
+                                task_id.dimmed(),
+                                reason
+                            );
+                        }
+                        WorkflowEvent::WorkflowCompleted { workflow_id, total_tasks, completed_tasks, total_latency, total_cost_usd, .. } => {
+                            println!(
+                                "\n{} [{}] (Completed: {}/{}, Time: {:.2}s, Spent: ${:.4} USD)",
+                                "🎉 Workflow Finished Successfully!".green().bold(),
+                                workflow_id.cyan(),
+                                completed_tasks,
+                                total_tasks,
+                                total_latency.as_secs_f32(),
+                                total_cost_usd
+                            );
+                        }
+                        WorkflowEvent::WorkflowFailed { workflow_id, error } => {
+                            println!(
+                                "\n{} [{}] Error: {}",
+                                "💥 Workflow Failed!".red().bold(),
+                                workflow_id.cyan(),
+                                error.red()
+                            );
+                        }
+                    }
+                }
+            });
+
+            let result = scheduler.run(&mut workflow_graph, &ctx).await;
+            let _ = event_printer.await;
+
+            match result {
+                Ok(wf_res) => {
+                    println!("\n{}", "════════════════ WORKFLOW TASK RESULTS ════════════════".bold().green());
+                    for (task_id, output) in &wf_res.task_outputs {
+                        println!("\n{}", format!("--- Task [{}] ---", task_id).bold().cyan());
+                        println!("Latency: {:.2}s | Tokens: {}", output.latency.as_secs_f32(), output.usage.prompt_tokens + output.usage.completion_tokens);
+                        println!("{}\n", output.text);
+                    }
+
+                    if let Some(final_text) = wf_res.final_output {
+                        println!("{}", "════════════════ FINAL WORKFLOW SYNTHESIS ════════════════".bold().yellow());
+                        println!("{}\n", final_text);
+                        println!("{}", "══════════════════════════════════════════════════════════".bold().yellow());
+                    }
+
+                    println!(
+                        "Completed Tasks: {}/{} | Total Tokens: {} | Total Cost: ${:.4} USD | Total Time: {:.2}s",
+                        wf_res.completed_tasks,
+                        wf_res.completed_tasks + wf_res.failed_tasks,
+                        wf_res.total_usage.prompt_tokens + wf_res.total_usage.completion_tokens,
+                        wf_res.total_cost_usd,
+                        wf_res.total_latency.as_secs_f32()
+                    );
+                }
+                Err(e) => {
+                    eprintln!("\n{}: {:?}", "Workflow Execution Error".red().bold(), e);
+                    std::process::exit(1);
+                }
+            }
         }
     }
 

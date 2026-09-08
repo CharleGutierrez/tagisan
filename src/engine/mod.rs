@@ -33,4 +33,14 @@ impl EngineContext {
             .cloned()
             .ok_or_else(|| TagisanError::ProviderNotFound(provider_id.to_string()))
     }
+
+    /// Retrieve the default available provider (checking popular defaults, then any registered provider)
+    pub fn default_provider(&self) -> Option<Arc<dyn LlmProvider>> {
+        for name in &["anthropic", "openai", "gemini", "xai", "deepseek", "ollama"] {
+            if let Some(p) = self.providers.get(*name) {
+                return Some(p.clone());
+            }
+        }
+        self.providers.values().next().cloned()
+    }
 }

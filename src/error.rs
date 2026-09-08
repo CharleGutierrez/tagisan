@@ -36,4 +36,22 @@ pub enum TagisanError {
     Execution(String),
 }
 
+impl TagisanError {
+    /// Determines whether the error is transient and safe to retry automatically
+    pub fn is_retryable(&self) -> bool {
+        match self {
+            Self::BudgetExceeded { .. } => false,
+            Self::Authentication(..) => false,
+            Self::Cancelled => false,
+            Self::ContextLengthExceeded(..) => false,
+            Self::ProviderNotFound(..) => false,
+            Self::RateLimited(..) => true,
+            Self::Network(..) => true,
+            Self::BadResponse(..) => true,
+            Self::Serialization(..) => false,
+            Self::Execution(..) => false,
+        }
+    }
+}
+
 pub type Result<T> = std::result::Result<T, TagisanError>;

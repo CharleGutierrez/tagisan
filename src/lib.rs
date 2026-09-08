@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod dag;
 pub mod engine;
 pub mod error;
 pub mod providers;
@@ -8,6 +9,11 @@ pub mod tui;
 pub mod types;
 
 pub use agent::{AgentResult, AgentStep, AutonomousAgent};
+pub use dag::{
+    extract_json_block, interpolate_prompt, DagScheduler, PlannedTask, PlannedWorkflow,
+    RetryPolicy, TaskNode, TaskOutput, TaskStatus, WorkflowEvent, WorkflowGraph, WorkflowPlanner,
+    WorkflowResult, WorkflowRunner, PLANNER_SYSTEM_PROMPT,
+};
 pub use engine::budget::TokenBudgetTracker;
 pub use engine::EngineContext;
 pub use error::{Result, TagisanError};
