@@ -1,5 +1,0 @@
-{
-  "summary":  "src/tui/mod.rs implementing interactive 4-pane terminal UI with ratatui and crossterm",
-  "updatedAt":  "2026-09-08T04:22:37.606960700Z",
-  "userFacing":  true
-}
