@@ -1,0 +1,31 @@
+[package]
+name = "tagisan"
+version = "0.1.0"
+edition = "2021"
+description = "High-performance Multi-LLM Collaboration, Adversarial Debate & Mixture-of-Agents Engine in Rust"
+authors = ["Charle Gutierrez"]
+
+[dependencies]
+# Async Runtime & Concurrency
+tokio = { version = "1.43", features = ["full"] }
+tokio-util = "0.7"
+futures = "0.3"
+async-trait = "0.1"
+
+# HTTP Client & Streaming
+reqwest = { version = "0.12", features = ["json", "stream"] }
+eventsource-stream = "0.2"
+
+# Serialization & Error Handling
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+
+# CLI, Configuration & UI
+clap = { version = "4.5", features = ["derive"] }
+dotenvy = "0.15"
+colored = "2.1"
+
+# Logging & Telemetry
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
