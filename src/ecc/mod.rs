@@ -1,12 +1,18 @@
 pub mod agent;
+pub mod agentshield;
 pub mod audit;
 pub mod pipeline;
 pub mod presets;
+pub mod skills;
 
 pub use agent::EccAgent;
+pub use agentshield::{AgentShieldScanner, AgentShieldVerdict, ThreatLevel};
 pub use audit::EccAuditDebate;
 pub use pipeline::build_ecc_pipeline;
 pub use presets::{all_presets, find_preset};
+pub use skills::{
+    all_built_in_skills, find_built_in_skill, load_skills_from_dir, resolve_skill, EccSkill,
+};
 
 use std::path::Path;
 use tracing::warn;

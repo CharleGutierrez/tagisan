@@ -134,5 +134,6 @@ impl EccAgent {
 
         AutonomousAgent::new(provider, model, registry)
             .with_system_prompt(self.system_prompt.clone())
+            .with_agentshield(true)
     }
 }

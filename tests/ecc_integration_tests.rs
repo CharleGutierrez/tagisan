@@ -4,10 +4,12 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use tagisan::{
-    all_ecc_presets, build_ecc_pipeline, find_ecc_preset, load_ecc_agents_from_dir,
-    resolve_ecc_agent, BoxEventStream, CompletionRequest, CompletionResponse, DagScheduler,
-    EccAgent, EccAuditDebate, EngineContext, FinishReason, LlmProvider, Message,
-    ProviderCapabilities, StrategyInput, TagisanError, TokenUsage, ToolRegistry,
+    all_ecc_presets, all_ecc_skills, build_ecc_pipeline, find_ecc_preset, find_ecc_skill,
+    load_ecc_agents_from_dir, load_ecc_skills_from_dir, resolve_ecc_agent, resolve_ecc_skill,
+    AgentShieldScanner, AgentShieldVerdict, AutonomousAgent, BoxEventStream, CompletionRequest,
+    CompletionResponse, ContentBlock, DagScheduler, EccAgent, EccAuditDebate, EccSkill,
+    EngineContext, FinishReason, LlmProvider, Message, ProviderCapabilities, StrategyInput,
+    TagisanError, TokenUsage, ToolRegistry,
 };
 
 /// Mock provider for testing ECC workflows deterministically
@@ -232,4 +234,145 @@ async fn test_ecc_audit_debate_execution() {
     assert_eq!(output.intermediate_steps[1].step_name, "Round 2: Threat & Vulnerability Audit (ECC Security Auditor)");
     assert_eq!(output.intermediate_steps[2].step_name, "Round 3: Lakandiwa Synthesis & Hardened Verdict");
     assert!(!output.final_answer.is_empty());
+}
+
+#[test]
+fn test_ecc_skills_parser_and_registry() {
+    let markdown = r#"---
+name: custom-optimization
+description: Algorithm and latency optimization skill.
+---
+
+# Instructions
+Profile bottlenecks before optimizing.
+"#;
+
+    let skill = EccSkill::parse(markdown).expect("Valid skill markdown should parse");
+    assert_eq!(skill.name, "custom-optimization");
+    assert_eq!(skill.description, "Algorithm and latency optimization skill.");
+    assert!(skill.instructions.contains("Profile bottlenecks before optimizing."));
+
+    // Built-in skills
+    let built_ins = all_ecc_skills();
+    assert_eq!(built_ins.len(), 4);
+
+    assert!(find_ecc_skill("tdd-workflow").is_some());
+    assert!(find_ecc_skill("security-review").is_some());
+    assert!(find_ecc_skill("api-design").is_some());
+    assert!(find_ecc_skill("verification-loop").is_some());
+
+    // Directory discovery
+    let skills_dir = Path::new(".ecc/skills");
+    if skills_dir.exists() {
+        let loaded = load_ecc_skills_from_dir(skills_dir);
+        assert!(!loaded.is_empty());
+        let resolved = resolve_ecc_skill("tdd-workflow", Some(skills_dir));
+        assert!(resolved.is_some());
+    }
+}
+
+#[test]
+fn test_agentshield_scanner_blocking() {
+    // 1. Destructive commands
+    assert!(matches!(
+        AgentShieldScanner::scan_command("rm -rf /"),
+        AgentShieldVerdict::Block { .. }
+    ));
+    assert!(matches!(
+        AgentShieldScanner::scan_command("mkfs.ext4 /dev/sda1"),
+        AgentShieldVerdict::Block { .. }
+    ));
+    assert!(matches!(
+        AgentShieldScanner::scan_command("cat /etc/shadow"),
+        AgentShieldVerdict::Block { .. }
+    ));
+
+    // 2. Path traversal
+    assert!(matches!(
+        AgentShieldScanner::scan_file_path("../../../etc/shadow"),
+        AgentShieldVerdict::Block { .. }
+    ));
+    assert!(matches!(
+        AgentShieldScanner::scan_file_path("/etc/shadow"),
+        AgentShieldVerdict::Block { .. }
+    ));
+
+    // 3. Allowed operations
+    assert_eq!(AgentShieldScanner::scan_command("cargo test --release"), AgentShieldVerdict::Allow);
+    assert_eq!(AgentShieldScanner::scan_command("git status"), AgentShieldVerdict::Allow);
+    assert_eq!(AgentShieldScanner::scan_file_path("src/lib.rs"), AgentShieldVerdict::Allow);
+
+    // 4. Secret redaction
+    let text = "My API key is sk-ant-api03-abcdef123456 and token is sk-proj-12345 secret";
+    let redacted = AgentShieldScanner::redact_secrets(text);
+    assert!(!redacted.contains("sk-ant-api03-abcdef123456"));
+    assert!(redacted.contains("[REDACTED_ANTHROPIC_KEY]"));
+    assert!(redacted.contains("[REDACTED_OPENAI_KEY]"));
+}
+
+#[tokio::test]
+async fn test_agent_with_agentshield_interception() {
+    struct DangerousToolProvider;
+
+    #[async_trait]
+    impl LlmProvider for DangerousToolProvider {
+        fn provider_id(&self) -> &'static str { "danger_mock" }
+        fn capabilities(&self, _: &str) -> ProviderCapabilities {
+            ProviderCapabilities::FUNCTION_CALLING
+        }
+        async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse, TagisanError> {
+            let last_role = req.messages.last().map(|m| m.role.clone());
+            if last_role == Some(tagisan::Role::Tool) {
+                return Ok(CompletionResponse {
+                    id: "resp_final".to_string(),
+                    provider: "danger_mock".to_string(),
+                    model: req.model,
+                    message: Message::assistant("I cannot proceed with the destructive command."),
+                    finish_reason: FinishReason::Stop,
+                    usage: TokenUsage::default(),
+                    latency: Duration::from_millis(1),
+                });
+            }
+
+            Ok(CompletionResponse {
+                id: "resp_danger".to_string(),
+                provider: "danger_mock".to_string(),
+                model: req.model,
+                message: Message::tool_call(
+                    "call_bad_1",
+                    "run_command",
+                    serde_json::json!({ "command": "rm -rf /" }),
+                ),
+                finish_reason: FinishReason::ToolCalls,
+                usage: TokenUsage::default(),
+                latency: Duration::from_millis(1),
+            })
+        }
+        async fn stream(&self, _: CompletionRequest) -> Result<BoxEventStream, TagisanError> {
+            Err(TagisanError::Execution("unsupported".to_string()))
+        }
+    }
+
+    let prov = Arc::new(DangerousToolProvider);
+    let mut registry = ToolRegistry::new();
+    registry.register_tool(tagisan::RunCommandTool::default());
+
+    let agent = AutonomousAgent::new(prov, "mock-model", registry)
+        .with_agentshield(true)
+        .with_max_iterations(3);
+
+    let ctx = EngineContext::new(5.0);
+    let result = agent.run("Please format the drive", &ctx).await.expect("Agent execution should handle security blocks safely");
+
+    assert_eq!(result.steps.len(), 1);
+    let step = &result.steps[0];
+    assert_eq!(step.tool_results.len(), 1);
+    if let ContentBlock::ToolResult { content, is_error, .. } = &step.tool_results[0] {
+        assert!(*is_error);
+        assert!(content.contains("[AgentShield Security Block"));
+    } else {
+        panic!("Expected tool result block");
+    }
+
+    assert!(result.final_answer.contains("cannot proceed"));
 }

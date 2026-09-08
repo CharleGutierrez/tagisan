@@ -36,6 +36,7 @@ pub struct AutonomousAgent {
     pub system_prompt: Option<String>,
     pub max_iterations: usize,
     pub temperature: Option<f32>,
+    pub agentshield_enabled: bool,
 }
 
 impl AutonomousAgent {
@@ -52,7 +53,14 @@ impl AutonomousAgent {
             system_prompt: None,
             max_iterations: 10,
             temperature: Some(0.7),
+            agentshield_enabled: false,
         }
+    }
+
+    /// Enable or disable AgentShield security scanner for tool calls
+    pub fn with_agentshield(mut self, enabled: bool) -> Self {
+        self.agentshield_enabled = enabled;
+        self
     }
 
     /// Set system instruction for the agent
@@ -165,6 +173,27 @@ impl AutonomousAgent {
             for (id, name, args) in tool_calls {
                 if ctx.cancellation_token.is_cancelled() {
                     return Err(TagisanError::Cancelled);
+                }
+
+                // AgentShield security interception
+                if self.agentshield_enabled {
+                    if let crate::ecc::AgentShieldVerdict::Block { reason, threat_level } =
+                        crate::ecc::AgentShieldScanner::scan_tool_call(name, args)
+                    {
+                        warn!(
+                            "AgentShield security violation blocked tool '{}' (threat level {:?}): {}",
+                            name, threat_level, reason
+                        );
+                        tool_results.push(ContentBlock::tool_result(
+                            id,
+                            format!(
+                                "[AgentShield Security Block: {:?}] Tool execution blocked: {}",
+                                threat_level, reason
+                            ),
+                            true,
+                        ));
+                        continue;
+                    }
                 }
 
                 debug!("Executing tool call '{}' with ID '{}'", name, id);

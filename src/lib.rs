@@ -10,9 +10,12 @@ pub mod tui;
 pub mod types;
 
 pub use ecc::{
-    all_presets as all_ecc_presets, build_ecc_pipeline, find_preset as find_ecc_preset,
-    load_agents_from_dir as load_ecc_agents_from_dir, resolve_agent as resolve_ecc_agent,
-    EccAgent, EccAuditDebate,
+    all_built_in_skills as all_ecc_skills, all_presets as all_ecc_presets, build_ecc_pipeline,
+    find_built_in_skill as find_ecc_skill, find_preset as find_ecc_preset,
+    load_agents_from_dir as load_ecc_agents_from_dir,
+    load_skills_from_dir as load_ecc_skills_from_dir, resolve_agent as resolve_ecc_agent,
+    resolve_skill as resolve_ecc_skill, AgentShieldScanner, AgentShieldVerdict, EccAgent,
+    EccAuditDebate, EccSkill, ThreatLevel as EccThreatLevel,
 };
 
 pub use agent::{AgentResult, AgentStep, AutonomousAgent};

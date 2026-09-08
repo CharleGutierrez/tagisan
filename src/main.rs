@@ -5,7 +5,8 @@ use std::env;
 use std::io::Write;
 use std::sync::Arc;
 use tagisan::{
-    all_ecc_presets, build_ecc_pipeline, load_ecc_agents_from_dir, resolve_ecc_agent,
+    all_ecc_presets, all_ecc_skills, build_ecc_pipeline, load_ecc_agents_from_dir,
+    load_ecc_skills_from_dir, resolve_ecc_agent, resolve_ecc_skill, AgentShieldScanner,
     AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, CollaborationStrategy,
     CompletionRequest, ContentBlock, DagScheduler, DialecticalDebateStrategy, EccAuditDebate,
     EngineContext, GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider,
@@ -141,6 +142,12 @@ enum EccAction {
         #[arg(long)]
         dir: Option<String>,
     },
+    /// List all available built-in and discovered ECC engineering skills
+    Skills {
+        /// Directory containing custom ECC skills (defaults to .ecc/skills)
+        #[arg(long)]
+        dir: Option<String>,
+    },
     /// Run a specialized ECC agent persona with tool calling
     Run {
         /// Name of the ECC agent (e.g. architect, tdd-engineer, code-reviewer, security-auditor, build-resolver)
@@ -148,6 +155,10 @@ enum EccAction {
 
         /// Goal or prompt for the ECC agent
         prompt: String,
+
+        /// Optional ECC skill to attach to the agent context (e.g. tdd-workflow, security-review)
+        #[arg(long)]
+        skill: Option<String>,
 
         /// Provider ID: auto, anthropic, openai, xai, deepseek, gemini, ollama
         #[arg(short, long, default_value = "auto")]
@@ -192,6 +203,10 @@ enum EccAction {
     },
     /// Run an Adversarial ECC Engineering Audit (Architect vs Security Auditor -> Chief Adjudicator)
     Audit {
+        /// Launch interactive multi-pane Terminal User Interface (TUI)
+        #[arg(long)]
+        tui: bool,
+
         /// Architectural problem or code to audit
         prompt: String,
     },
@@ -957,9 +972,47 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
 
+                EccAction::Skills { dir } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  📚  ECC (Everything Coding Cloud) Skills Catalog".bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+                    println!("\n{}", "Built-in Standard ECC Skills:".bold());
+
+                    for skill in all_ecc_skills() {
+                        println!(
+                            "  [•] {:<22} -> {}",
+                            skill.name.green().bold(),
+                            skill.description.italic()
+                        );
+                    }
+
+                    let custom_path = dir
+                        .map(std::path::PathBuf::from)
+                        .unwrap_or_else(|| std::path::PathBuf::from(".ecc/skills"));
+
+                    if custom_path.exists() {
+                        println!("\n{}", format!("Discovered Skills in '{}':", custom_path.display()).bold());
+                        let custom_skills = load_ecc_skills_from_dir(&custom_path);
+                        if custom_skills.is_empty() {
+                            println!("  (No skill files found)");
+                        } else {
+                            for skill in custom_skills {
+                                println!(
+                                    "  [+] {:<22} -> {}",
+                                    skill.name.magenta().bold(),
+                                    skill.description.italic()
+                                );
+                            }
+                        }
+                    } else {
+                        println!("\nTip: Place custom ECC skills in '.ecc/skills/<skill>/SKILL.md' to discover them automatically.\n");
+                    }
+                }
+
                 EccAction::Run {
                     agent,
                     prompt,
+                    skill,
                     provider,
                     model,
                     tools,
@@ -967,7 +1020,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     dir,
                 } => {
                     let custom_dir = dir.as_ref().map(std::path::Path::new);
-                    let ecc_agent = match resolve_ecc_agent(&agent, custom_dir) {
+                    let mut ecc_agent = match resolve_ecc_agent(&agent, custom_dir) {
                         Some(a) => a,
                         None => {
                             let default_dir = std::path::Path::new(".ecc/agents");
@@ -984,6 +1037,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                     };
+
+                    // If a skill was attached, inject it into the agent's system prompt
+                    if let Some(ref skill_name) = skill {
+                        let skills_dir = std::path::Path::new(".ecc/skills");
+                        if let Some(attached_skill) = resolve_ecc_skill(skill_name, Some(skills_dir)) {
+                            println!("Attached Skill: {} ({})", attached_skill.name.cyan().bold(), attached_skill.description.italic());
+                            ecc_agent.system_prompt.push_str(&format!(
+                                "\n\n--- Attached ECC Skill: {} ---\n{}",
+                                attached_skill.name, attached_skill.instructions
+                            ));
+                        } else {
+                            eprintln!(
+                                "{}: ECC skill '{}' not found. Run 'tagisan ecc skills' to view available skills.",
+                                "Warning".yellow().bold(),
+                                skill_name
+                            );
+                        }
+                    }
 
                     let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
 
@@ -1190,7 +1261,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
 
-                EccAction::Audit { prompt } => {
+                EccAction::Audit { tui, prompt } => {
+                    if tui {
+                        tagisan::run_debate_tui(prompt, &ctx).await?;
+                        return Ok(());
+                    }
+
                     println!("\n{}", "🛡️  Starting ECC Adversarial Engineering Audit...".bold().magenta());
                     println!("Architectural Problem / Code: \"{}\"\n", prompt.italic());
 

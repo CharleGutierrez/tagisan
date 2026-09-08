@@ -37,7 +37,8 @@ pub fn build_ecc_pipeline(
     let architect = presets::architect();
     let plan_agent = AutonomousAgent::new(provider.clone(), model, tools.clone())
         .with_system_prompt(architect.system_prompt)
-        .with_temperature(0.5);
+        .with_temperature(0.5)
+        .with_agentshield(true);
 
     let plan_node = TaskNode::new(
         "ecc_plan",
@@ -58,7 +59,8 @@ pub fn build_ecc_pipeline(
     let tdd = presets::tdd_engineer();
     let tdd_agent = AutonomousAgent::new(provider.clone(), model, tools.clone())
         .with_system_prompt(tdd.system_prompt)
-        .with_temperature(0.3);
+        .with_temperature(0.3)
+        .with_agentshield(true);
 
     let test_node = TaskNode::new(
         "ecc_test",
@@ -83,7 +85,8 @@ pub fn build_ecc_pipeline(
             "You are a Senior Implementation Engineer operating under the ECC framework.\n\
             Write clean, idiomatic, fully functional, and production-grade code that satisfies the architecture and passes all tests.",
         )
-        .with_temperature(0.2);
+        .with_temperature(0.2)
+        .with_agentshield(true);
 
     let implement_node = TaskNode::new(
         "ecc_implement",
@@ -108,7 +111,8 @@ pub fn build_ecc_pipeline(
     let reviewer = presets::code_reviewer();
     let review_agent = AutonomousAgent::new(provider.clone(), model, tools.clone())
         .with_system_prompt(reviewer.system_prompt)
-        .with_temperature(0.4);
+        .with_temperature(0.4)
+        .with_agentshield(true);
 
     let review_node = TaskNode::new(
         "ecc_review",
@@ -126,7 +130,8 @@ pub fn build_ecc_pipeline(
     let security = presets::security_auditor();
     let security_agent = AutonomousAgent::new(provider.clone(), model, tools.clone())
         .with_system_prompt(security.system_prompt)
-        .with_temperature(0.3);
+        .with_temperature(0.3)
+        .with_agentshield(true);
 
     let security_node = TaskNode::new(
         "ecc_security",
@@ -146,7 +151,8 @@ pub fn build_ecc_pipeline(
             "You are the Chief Verification Adjudicator under the ECC framework.\n\
             Synthesize all upstream outputs into a rock-solid, production-verified final deliverable.",
         )
-        .with_temperature(0.2);
+        .with_temperature(0.2)
+        .with_agentshield(true);
 
     let verify_node = TaskNode::new(
         "ecc_verify",
