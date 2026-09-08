@@ -169,16 +169,12 @@ impl AutonomousAgent {
 
                 debug!("Executing tool call '{}' with ID '{}'", name, id);
                 let result_block = self.tools.execute_call(id, name, args).await;
-                tool_results.push(result_block.clone());
+                tool_results.push(result_block);
+            }
 
-                if let ContentBlock::ToolResult {
-                    tool_call_id,
-                    content,
-                    is_error,
-                } = result_block
-                {
-                    session.add_message(Message::tool_result(tool_call_id, content, is_error));
-                }
+            // Add all tool results for this iteration in a single turn
+            if !tool_results.is_empty() {
+                session.add_message(Message::tool_results(tool_results.clone()));
             }
 
             steps.push(AgentStep {

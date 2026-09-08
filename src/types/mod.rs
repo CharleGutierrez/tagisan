@@ -147,6 +147,15 @@ impl Message {
         }
     }
 
+    pub fn tool_results(results: impl IntoIterator<Item = ContentBlock>) -> Self {
+        Self {
+            role: Role::Tool,
+            content: results.into_iter().collect(),
+            name: None,
+            metadata: HashMap::new(),
+        }
+    }
+
     pub fn image(media_type: impl Into<String>, data_base64: impl Into<String>) -> Self {
         Self {
             role: Role::User,

@@ -33,7 +33,7 @@ impl GeminiProvider {
     }
 
     fn format_contents(&self, req: &CompletionRequest) -> Vec<GeminiContent> {
-        let mut contents = Vec::new();
+        let mut contents: Vec<GeminiContent> = Vec::new();
 
         for msg in &req.messages {
             let role_str = match msg.role {
@@ -100,6 +100,13 @@ impl GeminiProvider {
                             }),
                         });
                     }
+                }
+            }
+
+            if let Some(last) = contents.last_mut() {
+                if last.role == role_str {
+                    last.parts.extend(parts);
+                    continue;
                 }
             }
 

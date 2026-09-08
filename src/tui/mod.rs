@@ -1,10 +1,12 @@
 use crate::engine::EngineContext;
 use crate::error::Result;
+use crate::types::{StreamChunkDelta, TokenUsage};
 use crossterm::event::{self, Event, KeyCode, KeyModifiers};
 use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
+use futures::StreamExt;
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::style::{Color, Modifier, Style};
@@ -45,18 +47,24 @@ impl FocusedPane {
 
 #[derive(Debug, Clone)]
 pub enum DebateEvent {
+    Round1Chunk(String),
+    Round1Thinking(String),
     Round1Complete {
         provider: String,
         model: String,
         content: String,
         latency: Duration,
     },
+    Round2Chunk(String),
+    Round2Thinking(String),
     Round2Complete {
         provider: String,
         model: String,
         content: String,
         latency: Duration,
     },
+    Round3Chunk(String),
+    Round3Thinking(String),
     Round3Complete {
         provider: String,
         model: String,
@@ -133,6 +141,73 @@ impl TuiState {
             FocusedPane::Telemetry => {}
         }
     }
+
+    pub fn apply_event(&mut self, event: DebateEvent) {
+        match event {
+            DebateEvent::Round1Chunk(chunk) => {
+                self.proponent_text.push_str(&chunk);
+            }
+            DebateEvent::Round1Thinking(thought) => {
+                if !self.proponent_text.starts_with("--- Thinking ---\n") {
+                    self.proponent_text = format!("--- Thinking ---\n{}\n--- Thesis ---\n", thought);
+                } else {
+                    let insert_pos = self.proponent_text.find("\n--- Thesis ---").unwrap_or(self.proponent_text.len());
+                    self.proponent_text.insert_str(insert_pos, &thought);
+                }
+            }
+            DebateEvent::Round1Complete { provider, model, content, latency } => {
+                self.proponent_text = content;
+                self.proponent_meta = format!("{provider} / {model} ({:.2}s)", latency.as_secs_f32());
+            }
+            DebateEvent::Round2Chunk(chunk) => {
+                self.adversary_text.push_str(&chunk);
+            }
+            DebateEvent::Round2Thinking(thought) => {
+                if !self.adversary_text.starts_with("--- Thinking ---\n") {
+                    self.adversary_text = format!("--- Thinking ---\n{}\n--- Critique ---\n", thought);
+                } else {
+                    let insert_pos = self.adversary_text.find("\n--- Critique ---").unwrap_or(self.adversary_text.len());
+                    self.adversary_text.insert_str(insert_pos, &thought);
+                }
+            }
+            DebateEvent::Round2Complete { provider, model, content, latency } => {
+                self.adversary_text = content;
+                self.adversary_meta = format!("{provider} / {model} ({:.2}s)", latency.as_secs_f32());
+            }
+            DebateEvent::Round3Chunk(chunk) => {
+                self.lakandiwa_text.push_str(&chunk);
+            }
+            DebateEvent::Round3Thinking(thought) => {
+                if !self.lakandiwa_text.starts_with("--- Thinking ---\n") {
+                    self.lakandiwa_text = format!("--- Thinking ---\n{}\n--- Verdict ---\n", thought);
+                } else {
+                    let insert_pos = self.lakandiwa_text.find("\n--- Verdict ---").unwrap_or(self.lakandiwa_text.len());
+                    self.lakandiwa_text.insert_str(insert_pos, &thought);
+                }
+            }
+            DebateEvent::Round3Complete { provider, model, content, latency } => {
+                self.lakandiwa_text = content;
+                self.lakandiwa_meta = format!("{provider} / {model} ({:.2}s)", latency.as_secs_f32());
+            }
+            DebateEvent::StatusUpdate(status) => {
+                self.status = status;
+            }
+            DebateEvent::DebateFinished { total_cost, total_tokens, total_time } => {
+                self.is_running = false;
+                self.total_cost = total_cost;
+                self.total_tokens = total_tokens;
+                self.total_time = total_time;
+                self.status = format!(
+                    "✔ Debate Completed in {:.2}s! Total Spent: ${:.4} USD ({} tokens). Press [Tab] to inspect panes or [q] to exit.",
+                    total_time.as_secs_f32(), total_cost, total_tokens
+                );
+            }
+            DebateEvent::DebateError(err) => {
+                self.is_running = false;
+                self.status = format!("❌ Error: {err}");
+            }
+        }
+    }
 }
 
 /// Launch the interactive multi-pane TUI for Dialectical Debate
@@ -153,7 +228,7 @@ pub async fn run_debate_tui(topic: String, ctx: &EngineContext) -> Result<()> {
     start_debate_task(topic.clone(), ctx, tx.clone());
     state.is_running = true;
     state.start_instant = Some(Instant::now());
-    state.status = "Debate in progress: Executing Round 1 (Thesis)...".to_string();
+    state.status = "Debate in progress: Streaming Round 1 (Thesis)...".to_string();
 
     let res = run_app_loop(&mut terminal, &mut state, &mut rx, tx, ctx).await;
 
@@ -222,87 +297,180 @@ fn start_debate_task(
 
         let start_time = Instant::now();
 
-        // Round 1: Thesis
-        tx.send(DebateEvent::StatusUpdate("⚔️ Round 1: Proponent drafting thesis...".to_string())).ok();
+        // ----------------------------------------------------
+        // Round 1: Thesis (Real-Time Live SSE Stream)
+        // ----------------------------------------------------
+        tx.send(DebateEvent::StatusUpdate("⚔️ Round 1: Proponent streaming thesis in real-time...".to_string())).ok();
         let thesis_prompt = format!(
             "You are the Proponent in a high-rigor peer debate.\nUser Prompt:\n\"{}\"\n\nTASK: Provide a comprehensive, thoroughly reasoned initial solution.",
             topic
         );
         let req1 = crate::types::CompletionRequest::new(p_model.clone(), thesis_prompt)
             .with_temperature(0.7)
+            .with_stream(true)
             .with_cancellation(ctx_cancel.clone());
 
-        let resp1 = match p_prov.complete(req1).await {
-            Ok(r) => r,
+        let round1_start = Instant::now();
+        let mut stream1 = match p_prov.stream(req1).await {
+            Ok(s) => s,
             Err(e) => {
-                tx.send(DebateEvent::DebateError(format!("Thesis round failed: {e}"))).ok();
+                tx.send(DebateEvent::DebateError(format!("Thesis stream initialization failed: {e}"))).ok();
                 return;
             }
         };
-        ctx_budget.record(&p_model, resp1.usage.prompt_tokens, resp1.usage.completion_tokens).ok();
-        let thesis_text = resp1.message.extract_text();
+
+        let mut thesis_text = String::new();
+        let mut usage1 = TokenUsage::default();
+
+        while let Some(chunk_res) = stream1.next().await {
+            match chunk_res {
+                Ok(chunk) => {
+                    if let Some(u) = chunk.usage {
+                        usage1 = u;
+                    }
+                    match chunk.delta {
+                        StreamChunkDelta::Text(t) => {
+                            thesis_text.push_str(&t);
+                            tx.send(DebateEvent::Round1Chunk(t)).ok();
+                        }
+                        StreamChunkDelta::Thinking(th) => {
+                            tx.send(DebateEvent::Round1Thinking(th)).ok();
+                        }
+                        _ => {}
+                    }
+                }
+                Err(e) => {
+                    tx.send(DebateEvent::DebateError(format!("Thesis stream error: {e}"))).ok();
+                    return;
+                }
+            }
+        }
+
+        ctx_budget.record(&p_model, usage1.prompt_tokens, usage1.completion_tokens).ok();
         tx.send(DebateEvent::Round1Complete {
             provider: p_prov_id.clone(),
             model: p_model.clone(),
             content: thesis_text.clone(),
-            latency: resp1.latency,
+            latency: round1_start.elapsed(),
         }).ok();
 
-        // Round 2: Antithesis
-        tx.send(DebateEvent::StatusUpdate("🛡️ Round 2: Adversary scrutinizing thesis...".to_string())).ok();
+        // ----------------------------------------------------
+        // Round 2: Antithesis (Real-Time Live SSE Stream)
+        // ----------------------------------------------------
+        tx.send(DebateEvent::StatusUpdate("🛡️ Round 2: Adversary streaming critique in real-time...".to_string())).ok();
         let antithesis_prompt = format!(
             "You are the Adversarial Critic in a high-rigor peer debate.\nOriginal Topic:\n\"{}\"\n\nProponent Solution:\n{}\n\nTASK: Ruthlessly scrutinize the solution for bugs, flaws, and edge cases.",
             topic, thesis_text
         );
         let req2 = crate::types::CompletionRequest::new(a_model.clone(), antithesis_prompt)
             .with_temperature(0.4)
+            .with_stream(true)
             .with_cancellation(ctx_cancel.clone());
 
-        let resp2 = match a_prov.complete(req2).await {
-            Ok(r) => r,
+        let round2_start = Instant::now();
+        let mut stream2 = match a_prov.stream(req2).await {
+            Ok(s) => s,
             Err(e) => {
-                tx.send(DebateEvent::DebateError(format!("Antithesis round failed: {e}"))).ok();
+                tx.send(DebateEvent::DebateError(format!("Antithesis stream initialization failed: {e}"))).ok();
                 return;
             }
         };
-        ctx_budget.record(&a_model, resp2.usage.prompt_tokens, resp2.usage.completion_tokens).ok();
-        let antithesis_text = resp2.message.extract_text();
+
+        let mut antithesis_text = String::new();
+        let mut usage2 = TokenUsage::default();
+
+        while let Some(chunk_res) = stream2.next().await {
+            match chunk_res {
+                Ok(chunk) => {
+                    if let Some(u) = chunk.usage {
+                        usage2 = u;
+                    }
+                    match chunk.delta {
+                        StreamChunkDelta::Text(t) => {
+                            antithesis_text.push_str(&t);
+                            tx.send(DebateEvent::Round2Chunk(t)).ok();
+                        }
+                        StreamChunkDelta::Thinking(th) => {
+                            tx.send(DebateEvent::Round2Thinking(th)).ok();
+                        }
+                        _ => {}
+                    }
+                }
+                Err(e) => {
+                    tx.send(DebateEvent::DebateError(format!("Antithesis stream error: {e}"))).ok();
+                    return;
+                }
+            }
+        }
+
+        ctx_budget.record(&a_model, usage2.prompt_tokens, usage2.completion_tokens).ok();
         tx.send(DebateEvent::Round2Complete {
             provider: a_prov_id.clone(),
             model: a_model.clone(),
             content: antithesis_text.clone(),
-            latency: resp2.latency,
+            latency: round2_start.elapsed(),
         }).ok();
 
-        // Round 3: Synthesis
-        tx.send(DebateEvent::StatusUpdate("⚖️ Round 3: Lakandiwa forming final verdict...".to_string())).ok();
+        // ----------------------------------------------------
+        // Round 3: Synthesis (Real-Time Live SSE Stream)
+        // ----------------------------------------------------
+        tx.send(DebateEvent::StatusUpdate("⚖️ Round 3: Lakandiwa streaming final verdict in real-time...".to_string())).ok();
         let synthesis_prompt = format!(
             "You are the Lakandiwa in this Tagisan debate.\nTopic:\n\"{}\"\n\n--- Thesis ---\n{}\n\n--- Antithesis ---\n{}\n\nTASK: Evaluate arguments and produce the definitive verified synthesis.",
             topic, thesis_text, antithesis_text
         );
         let req3 = crate::types::CompletionRequest::new(adj_model.clone(), synthesis_prompt)
             .with_temperature(0.2)
+            .with_stream(true)
             .with_cancellation(ctx_cancel.clone());
 
-        let resp3 = match adj_prov.complete(req3).await {
-            Ok(r) => r,
+        let round3_start = Instant::now();
+        let mut stream3 = match adj_prov.stream(req3).await {
+            Ok(s) => s,
             Err(e) => {
-                tx.send(DebateEvent::DebateError(format!("Synthesis round failed: {e}"))).ok();
+                tx.send(DebateEvent::DebateError(format!("Synthesis stream initialization failed: {e}"))).ok();
                 return;
             }
         };
-        ctx_budget.record(&adj_model, resp3.usage.prompt_tokens, resp3.usage.completion_tokens).ok();
-        let synthesis_text = resp3.message.extract_text();
+
+        let mut synthesis_text = String::new();
+        let mut usage3 = TokenUsage::default();
+
+        while let Some(chunk_res) = stream3.next().await {
+            match chunk_res {
+                Ok(chunk) => {
+                    if let Some(u) = chunk.usage {
+                        usage3 = u;
+                    }
+                    match chunk.delta {
+                        StreamChunkDelta::Text(t) => {
+                            synthesis_text.push_str(&t);
+                            tx.send(DebateEvent::Round3Chunk(t)).ok();
+                        }
+                        StreamChunkDelta::Thinking(th) => {
+                            tx.send(DebateEvent::Round3Thinking(th)).ok();
+                        }
+                        _ => {}
+                    }
+                }
+                Err(e) => {
+                    tx.send(DebateEvent::DebateError(format!("Synthesis stream error: {e}"))).ok();
+                    return;
+                }
+            }
+        }
+
+        ctx_budget.record(&adj_model, usage3.prompt_tokens, usage3.completion_tokens).ok();
         tx.send(DebateEvent::Round3Complete {
             provider: adj_prov_id.clone(),
             model: adj_model.clone(),
             content: synthesis_text,
-            latency: resp3.latency,
+            latency: round3_start.elapsed(),
         }).ok();
 
-        let total_tokens = resp1.usage.prompt_tokens + resp1.usage.completion_tokens
-            + resp2.usage.prompt_tokens + resp2.usage.completion_tokens
-            + resp3.usage.prompt_tokens + resp3.usage.completion_tokens;
+        let total_tokens = usage1.prompt_tokens + usage1.completion_tokens
+            + usage2.prompt_tokens + usage2.completion_tokens
+            + usage3.prompt_tokens + usage3.completion_tokens;
 
         tx.send(DebateEvent::DebateFinished {
             total_cost: ctx_budget.current_spent_usd(),
@@ -320,39 +488,9 @@ async fn run_app_loop(
     ctx: &EngineContext,
 ) -> Result<()> {
     loop {
-        // Drain any pending debate events
+        // Drain all pending debate stream events
         while let Ok(event) = rx.try_recv() {
-            match event {
-                DebateEvent::Round1Complete { provider, model, content, latency } => {
-                    state.proponent_text = content;
-                    state.proponent_meta = format!("{provider} / {model} ({:.2}s)", latency.as_secs_f32());
-                }
-                DebateEvent::Round2Complete { provider, model, content, latency } => {
-                    state.adversary_text = content;
-                    state.adversary_meta = format!("{provider} / {model} ({:.2}s)", latency.as_secs_f32());
-                }
-                DebateEvent::Round3Complete { provider, model, content, latency } => {
-                    state.lakandiwa_text = content;
-                    state.lakandiwa_meta = format!("{provider} / {model} ({:.2}s)", latency.as_secs_f32());
-                }
-                DebateEvent::StatusUpdate(status) => {
-                    state.status = status;
-                }
-                DebateEvent::DebateFinished { total_cost, total_tokens, total_time } => {
-                    state.is_running = false;
-                    state.total_cost = total_cost;
-                    state.total_tokens = total_tokens;
-                    state.total_time = total_time;
-                    state.status = format!(
-                        "✔ Debate Completed in {:.2}s! Total Spent: ${:.4} USD ({} tokens). Press [Tab] to inspect panes or [q] to exit.",
-                        total_time.as_secs_f32(), total_cost, total_tokens
-                    );
-                }
-                DebateEvent::DebateError(err) => {
-                    state.is_running = false;
-                    state.status = format!("❌ Error: {err}");
-                }
-            }
+            state.apply_event(event);
         }
 
         // Draw UI
@@ -360,8 +498,8 @@ async fn run_app_loop(
             .draw(|f| draw_ui(f, state))
             .map_err(|e| crate::error::TagisanError::Execution(e.to_string()))?;
 
-        // Poll keyboard input with short timeout
-        if event::poll(Duration::from_millis(50))
+        // Poll keyboard input with short timeout for smooth 60fps rendering
+        if event::poll(Duration::from_millis(16))
             .map_err(|e| crate::error::TagisanError::Execution(e.to_string()))?
         {
             if let Event::Key(key) = event::read().map_err(|e| crate::error::TagisanError::Execution(e.to_string()))? {
@@ -424,7 +562,7 @@ fn draw_ui(f: &mut ratatui::Frame, state: &TuiState) {
     let header_text = vec![
         Line::from(vec![
             Span::styled("🇵🇭 TAGISAN NG TALINO ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-            Span::styled("— Dialectical Multi-LLM Debate System", Style::default().fg(Color::Cyan)),
+            Span::styled("— Real-Time Multi-LLM Live Streaming Debate", Style::default().fg(Color::Cyan)),
         ]),
         Line::from(vec![
             Span::styled("Topic: ", Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),

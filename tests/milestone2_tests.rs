@@ -415,3 +415,98 @@ async fn test_cascade_provider_non_retryable_error_does_not_cascade() {
     assert_eq!(p1.call_count.load(Ordering::SeqCst), 1);
     assert_eq!(p2.call_count.load(Ordering::SeqCst), 0, "Provider 2 should not have been called!");
 }
+
+#[tokio::test]
+async fn test_autonomous_agent_parallel_multi_tool_execution() {
+    let mut registry = ToolRegistry::new();
+    registry.register(Arc::new(CalculatorTool));
+    registry.register(Arc::new(ReadFileTool));
+
+    // Scripted provider that in Turn 1 calls 2 tools in parallel
+    let p = Arc::new(MockScriptedProvider::new(
+        "test_agent_prov",
+        vec![
+            // Turn 1: Assistant calls calculator and another tool simultaneously
+            Ok(CompletionResponse {
+                id: "step1".to_string(),
+                provider: "test_agent_prov".to_string(),
+                model: "test_model".to_string(),
+                message: Message {
+                    role: tagisan::Role::Assistant,
+                    content: vec![
+                        ContentBlock::ToolCall {
+                            id: "call_calc_1".to_string(),
+                            name: "calculator".to_string(),
+                            arguments: json!({"expression": "100 + 50"}),
+                        },
+                        ContentBlock::ToolCall {
+                            id: "call_calc_2".to_string(),
+                            name: "calculator".to_string(),
+                            arguments: json!({"expression": "200 * 2"}),
+                        },
+                    ],
+                    name: None,
+                    metadata: Default::default(),
+                },
+                finish_reason: FinishReason::ToolCalls,
+                usage: TokenUsage {
+                    prompt_tokens: 10,
+                    completion_tokens: 20,
+                    ..Default::default()
+                },
+                latency: Duration::from_millis(5),
+            }),
+            // Turn 2: Assistant receives both tool results in ONE unified message turn and finishes
+            Ok(CompletionResponse {
+                id: "step2".to_string(),
+                provider: "test_agent_prov".to_string(),
+                model: "test_model".to_string(),
+                message: Message::assistant("The results are 150 and 400."),
+                finish_reason: FinishReason::Stop,
+                usage: TokenUsage {
+                    prompt_tokens: 30,
+                    completion_tokens: 10,
+                    ..Default::default()
+                },
+                latency: Duration::from_millis(5),
+            }),
+        ],
+    ));
+
+    let agent = AutonomousAgent::new(p, "test_model", registry);
+    let ctx = EngineContext::new(5.0);
+
+    let result = agent.run("Calculate both numbers", &ctx).await.unwrap();
+    assert_eq!(result.final_answer, "The results are 150 and 400.");
+    assert_eq!(result.iterations, 2);
+
+    // Verify history structure: User -> Assistant (2 tool calls) -> Tool (1 merged message with 2 results) -> Assistant (final)
+    assert_eq!(result.history.len(), 4);
+    assert_eq!(result.history[0].role, tagisan::Role::User);
+    assert_eq!(result.history[1].role, tagisan::Role::Assistant);
+    assert_eq!(result.history[2].role, tagisan::Role::Tool);
+    assert_eq!(result.history[2].content.len(), 2, "Both tool results MUST be in a single turn!");
+    assert_eq!(result.history[3].role, tagisan::Role::Assistant);
+}
+
+#[test]
+fn test_tui_debate_event_streaming_state_machine() {
+    use tagisan::tui::{DebateEvent, TuiState};
+
+    let mut state = TuiState::new("Test Architecture Topic");
+
+    // Real-time chunk streaming into Round 1
+    state.apply_event(DebateEvent::Round1Chunk("In my opinion, ".to_string()));
+    state.apply_event(DebateEvent::Round1Chunk("Rust is the superior choice.".to_string()));
+    assert_eq!(state.proponent_text, "In my opinion, Rust is the superior choice.");
+
+    // Real-time chunk streaming into Round 2
+    state.apply_event(DebateEvent::Round2Chunk("However, we must consider ".to_string()));
+    state.apply_event(DebateEvent::Round2Chunk("compile times.".to_string()));
+    assert_eq!(state.adversary_text, "However, we must consider compile times.");
+
+    // Real-time chunk streaming into Round 3
+    state.apply_event(DebateEvent::Round3Chunk("Lakandiwa verdict: ".to_string()));
+    state.apply_event(DebateEvent::Round3Chunk("Balanced approach wins.".to_string()));
+    assert_eq!(state.lakandiwa_text, "Lakandiwa verdict: Balanced approach wins.");
+}

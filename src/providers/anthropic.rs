@@ -41,7 +41,7 @@ impl AnthropicProvider {
     }
 
     fn format_messages<'a>(&self, req: &'a CompletionRequest) -> Vec<AnthropicMessage<'a>> {
-        let mut anthropic_messages = Vec::new();
+        let mut anthropic_messages: Vec<AnthropicMessage<'a>> = Vec::new();
 
         for msg in &req.messages {
             let role_str = match msg.role {
@@ -90,6 +90,13 @@ impl AnthropicProvider {
                             is_error: if *is_error { Some(true) } else { None },
                         });
                     }
+                }
+            }
+
+            if let Some(last) = anthropic_messages.last_mut() {
+                if last.role == role_str {
+                    last.content.extend(blocks);
+                    continue;
                 }
             }
 
