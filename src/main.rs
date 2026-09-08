@@ -7,9 +7,9 @@ use std::sync::Arc;
 use tagisan::{
     AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, CollaborationStrategy,
     CompletionRequest, ContentBlock, DagScheduler, DialecticalDebateStrategy, EngineContext,
-    GeminiProvider, MixtureOfAgentsStrategy, OllamaProvider, OpenAiCompatibleProvider,
+    GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider, OpenAiCompatibleProvider,
     ProviderCapabilities, ReadFileTool, RunCommandTool, StrategyInput, StreamChunkDelta,
-    ToolRegistry, WorkflowEvent, WorkflowPlanner, WriteFileTool,
+    TagisanError, ToolRegistry, WorkflowEvent, WorkflowPlanner, WriteFileTool,
 };
 
 #[derive(Parser)]
@@ -31,11 +31,11 @@ struct Cli {
 enum Commands {
     /// Stream real-time token output from any specific provider
     Stream {
-        /// Provider ID: anthropic, openai, xai, deepseek, gemini, ollama
-        #[arg(short, long, default_value = "ollama")]
+        /// Provider ID: auto, anthropic, openai, xai, deepseek, gemini, ollama (default: auto-detected)
+        #[arg(short, long, default_value = "auto")]
         provider: String,
 
-        /// Model name (e.g. claude-3-5-sonnet-20241022, grok-2-latest, gemini-2.0-flash, llama3.2)
+        /// Model name (defaults to best model for selected provider)
         #[arg(short, long)]
         model: Option<String>,
 
@@ -44,8 +44,8 @@ enum Commands {
     },
     /// Direct single completion query to any provider
     Ask {
-        /// Provider ID: anthropic, openai, xai, deepseek, gemini, ollama
-        #[arg(short, long, default_value = "ollama")]
+        /// Provider ID: auto, anthropic, openai, xai, deepseek, gemini, ollama (default: auto-detected)
+        #[arg(short, long, default_value = "auto")]
         provider: String,
 
         /// Model name
@@ -71,8 +71,8 @@ enum Commands {
     },
     /// Run an Autonomous Multi-Turn Agent with tools (Milestone 2)
     Agent {
-        /// Provider ID: anthropic, openai, xai, deepseek, gemini, ollama
-        #[arg(short, long, default_value = "anthropic")]
+        /// Provider ID: auto, anthropic, openai, xai, deepseek, gemini, ollama (default: auto-detected)
+        #[arg(short, long, default_value = "auto")]
         provider: String,
 
         /// Model name
@@ -107,8 +107,8 @@ enum Commands {
         #[arg(index = 1)]
         objective: Option<String>,
 
-        /// Provider ID: anthropic, openai, xai, deepseek, gemini, ollama
-        #[arg(short, long, default_value = "anthropic")]
+        /// Provider ID: auto, anthropic, openai, xai, deepseek, gemini, ollama (default: auto-detected)
+        #[arg(short, long, default_value = "auto")]
         provider: String,
 
         /// Model name
@@ -205,6 +205,60 @@ fn format_capabilities(caps: ProviderCapabilities) -> String {
     features.join(", ")
 }
 
+fn default_model_for_provider(provider_id: &str) -> String {
+    match provider_id {
+        "gemini" => "gemini-2.0-flash".to_string(),
+        "deepseek" => "deepseek-chat".to_string(),
+        "anthropic" => "claude-3-5-sonnet-20241022".to_string(),
+        "openai" => "gpt-4o".to_string(),
+        "xai" => "grok-2-latest".to_string(),
+        _ => std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "qwen2.5-coder:1.5b".to_string()),
+    }
+}
+
+fn resolve_provider_and_model(
+    ctx: &EngineContext,
+    user_provider: &str,
+    user_model: Option<String>,
+) -> Result<(String, String, Arc<dyn LlmProvider>), TagisanError> {
+    if user_provider != "auto" {
+        let prov = ctx.get_provider(user_provider)?;
+        let model = user_model.unwrap_or_else(|| default_model_for_provider(user_provider));
+        return Ok((user_provider.to_string(), model, prov));
+    }
+
+    // Auto-detection strategy in priority order:
+    // 1. Gemini (100% Free Cloud Tier via Google AI Studio)
+    // 2. DeepSeek (Ultra-cheap Cloud)
+    // 3. Anthropic (Claude 3.5 Sonnet)
+    // 4. OpenAI (GPT-4o)
+    // 5. xAI (Grok-2)
+    // 6. Local Ollama (100% Free Offline)
+    let candidate_keys = [
+        ("gemini", "GEMINI_API_KEY"),
+        ("deepseek", "DEEPSEEK_API_KEY"),
+        ("anthropic", "ANTHROPIC_API_KEY"),
+        ("openai", "OPENAI_API_KEY"),
+        ("xai", "XAI_API_KEY"),
+    ];
+
+    for (id, key_var) in candidate_keys {
+        if std::env::var(key_var).is_ok() {
+            if let Ok(prov) = ctx.get_provider(id) {
+                let model = user_model.unwrap_or_else(|| default_model_for_provider(id));
+                return Ok((id.to_string(), model, prov));
+            }
+        }
+    }
+
+    // Fallback to local Ollama
+    let prov = ctx.get_provider("ollama")?;
+    let model = user_model.unwrap_or_else(|| {
+        std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "qwen2.5-coder:1.5b".to_string())
+    });
+    Ok(("ollama".to_string(), model, prov))
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenvy::dotenv().ok();
@@ -247,21 +301,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Stream { provider, model, prompt } => {
             let ctx = build_engine_context(cli.max_budget);
-            let prov = ctx.get_provider(&provider)?;
-
-            let model_name = model.unwrap_or_else(|| match provider.as_str() {
-                "anthropic" => "claude-3-5-sonnet-20241022".to_string(),
-                "xai" => "grok-2-latest".to_string(),
-                "openai" => "gpt-4o".to_string(),
-                "gemini" => "gemini-2.0-flash".to_string(),
-                "deepseek" => "deepseek-reasoner".to_string(),
-                _ => "llama3.2".to_string(),
-            });
+            let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
 
             println!(
                 "\n{} [{}: {}]...",
                 "Streaming from".bold().magenta(),
-                provider.cyan().bold(),
+                provider_id.cyan().bold(),
                 model_name.yellow()
             );
             println!("Prompt: \"{}\"\n", prompt.italic());
@@ -340,16 +385,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Ask { provider, model, prompt } => {
             let ctx = build_engine_context(cli.max_budget);
-            let prov = ctx.get_provider(&provider)?;
+            let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
 
-            let model_name = model.unwrap_or_else(|| match provider.as_str() {
-                "anthropic" => "claude-3-5-sonnet-20241022".to_string(),
-                "xai" => "grok-2-latest".to_string(),
-                "openai" => "gpt-4o".to_string(),
-                "gemini" => "gemini-2.0-flash".to_string(),
-                "deepseek" => "deepseek-chat".to_string(),
-                _ => "llama3.2".to_string(),
-            });
+            println!(
+                "\n{} [{}: {}]...",
+                "Querying".bold().magenta(),
+                provider_id.cyan().bold(),
+                model_name.yellow()
+            );
 
             let mut session = ChatSession::new();
             session.add_user_message(prompt);
@@ -510,16 +553,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             prompt,
         } => {
             let ctx = build_engine_context(cli.max_budget);
-            let prov = ctx.get_provider(&provider)?;
-
-            let model_name = model.unwrap_or_else(|| match provider.as_str() {
-                "anthropic" => "claude-3-5-sonnet-20241022".to_string(),
-                "xai" => "grok-2-latest".to_string(),
-                "openai" => "gpt-4o".to_string(),
-                "gemini" => "gemini-2.0-flash".to_string(),
-                "deepseek" => "deepseek-chat".to_string(),
-                _ => "llama3.2".to_string(),
-            });
+            let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
 
             // Build Tool Registry
             let mut registry = ToolRegistry::new();
@@ -540,7 +574,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             println!("\n{}", "🤖 Starting Tagisan Autonomous Agent...".bold().magenta());
-            println!("Provider: {} | Model: {}", provider.cyan().bold(), model_name.yellow().bold());
+            println!("Provider: {} | Model: {}", provider_id.cyan().bold(), model_name.yellow().bold());
             println!("Active Tools: [{}]", registry.names().join(", ").green());
             println!("Max Iterations: {}", max_iterations);
             println!("Goal: \"{}\"\n", prompt.italic());
@@ -591,16 +625,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             concurrency,
         } => {
             let ctx = build_engine_context(cli.max_budget);
-            let prov = ctx.get_provider(&provider)?;
-
-            let model_name = model.unwrap_or_else(|| match provider.as_str() {
-                "anthropic" => "claude-3-5-sonnet-20241022".to_string(),
-                "xai" => "grok-2-latest".to_string(),
-                "openai" => "gpt-4o".to_string(),
-                "gemini" => "gemini-2.0-flash".to_string(),
-                "deepseek" => "deepseek-chat".to_string(),
-                _ => "llama3.2".to_string(),
-            });
+            let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
+            println!("Active Engine: {} [{}]", provider_id.cyan().bold(), model_name.yellow().bold());
 
             // Build Tool Registry
             let mut registry = ToolRegistry::new();
