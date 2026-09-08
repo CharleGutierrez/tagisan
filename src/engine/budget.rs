@@ -29,11 +29,24 @@ impl TokenBudgetTracker {
             _ => (1.0, 3.0), // fallback estimate
         };
 
-        let cost_micro = ((prompt_tokens as f64 * prompt_rate) + (completion_tokens as f64 * completion_rate)) as u64;
-        let prev = self.total_micro_usd_spent.fetch_add(cost_micro, Ordering::SeqCst);
-        let total_usd = (prev + cost_micro) as f64 / 1_000_000.0;
+        let cost_micro = ((prompt_tokens as f64 * prompt_rate) + (completion_tokens as f64 * completion_rate)).round() as u64;
+        self.record_micro_usd(cost_micro)
+    }
 
-        if total_usd > self.max_budget_usd {
+    /// Record an exact amount in micro-USD (1 micro-USD = $0.000001)
+    pub fn record_micro_usd(&self, cost_micro: u64) -> Result<f64> {
+        let prev = self.total_micro_usd_spent.fetch_add(cost_micro, Ordering::SeqCst);
+        let new_micro = prev.saturating_add(cost_micro);
+        let total_usd = new_micro as f64 / 1_000_000.0;
+
+        let max_micro = if self.max_budget_usd < 0.0 {
+            0
+        } else {
+            (self.max_budget_usd * 1_000_000.0).round() as u64
+        };
+
+        // Enforce boundary in integer micro-USD to avoid floating point imprecision
+        if new_micro > max_micro {
             return Err(TagisanError::BudgetExceeded {
                 max_budget: self.max_budget_usd,
                 current_spent: total_usd,
@@ -41,6 +54,15 @@ impl TokenBudgetTracker {
         }
 
         Ok(total_usd)
+    }
+
+    /// Record direct cost in USD
+    pub fn record_cost_usd(&self, cost_usd: f64) -> Result<f64> {
+        if cost_usd <= 0.0 {
+            return Ok(self.current_spent_usd());
+        }
+        let cost_micro = (cost_usd * 1_000_000.0).round() as u64;
+        self.record_micro_usd(cost_micro)
     }
 
     pub fn current_spent_usd(&self) -> f64 {

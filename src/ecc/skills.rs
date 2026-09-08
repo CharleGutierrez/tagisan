@@ -41,8 +41,15 @@ impl EccSkill {
         })?;
 
         let frontmatter_str = &rest[..end_idx];
-        let body_start = end_idx + rest[end_idx..].find("---").unwrap() + 3;
-        let body = rest[body_start..].trim().to_string();
+        let after_close = &rest[end_idx..];
+        let delim_pos = after_close.find("---").unwrap_or(0);
+        let mut body_start_offset = delim_pos + 3;
+        if let Some(nl_pos) = after_close[body_start_offset..].find('\n') {
+            body_start_offset += nl_pos + 1;
+        } else {
+            body_start_offset = after_close.len();
+        }
+        let body = after_close.get(body_start_offset..).unwrap_or("").trim().to_string();
 
         let mut name = String::new();
         let mut description = String::new();
@@ -65,7 +72,7 @@ impl EccSkill {
             }
         }
 
-        if name.is_empty() {
+        if name.trim().is_empty() {
             return Err(TagisanError::Execution(
                 "Invalid ECC skill format: missing 'name' field in frontmatter".to_string(),
             ));

@@ -274,7 +274,6 @@ impl DagScheduler {
                 let completed_outputs_clone = completed_outputs.clone();
                 let cancel_token = ctx.cancellation_token.clone();
 
-                // Clone engine context components for spawned task (support any registered provider)
                 let provider_opt = if let Some(ref agent) = task_node.agent {
                     Some(agent.provider.clone())
                 } else {
@@ -294,18 +293,35 @@ impl DagScheduler {
                         None => None,
                     };
 
-                    let result = execute_task_with_retries(
-                        task_node,
-                        upstream_ids,
-                        provider_opt,
-                        budget_tracker_clone,
-                        cancel_token,
-                        completed_outputs_clone,
-                        event_tx_clone,
-                    )
+                    // Guard worker execution against unexpected panics
+                    let execution_res = futures::FutureExt::catch_unwind(std::panic::AssertUnwindSafe(
+                        execute_task_with_retries(
+                            task_node,
+                            upstream_ids,
+                            provider_opt,
+                            budget_tracker_clone,
+                            cancel_token,
+                            completed_outputs_clone,
+                            event_tx_clone,
+                        ),
+                    ))
                     .await;
 
-                    let _ = done_tx_clone.send((ready_id, result));
+                    let final_res = match execution_res {
+                        Ok(res) => res,
+                        Err(panic_payload) => {
+                            let msg = if let Some(s) = panic_payload.downcast_ref::<&str>() {
+                                s.to_string()
+                            } else if let Some(s) = panic_payload.downcast_ref::<String>() {
+                                s.clone()
+                            } else {
+                                "Task worker panicked unexpectedly".to_string()
+                            };
+                            Err(TagisanError::Execution(format!("Panic in task '{ready_id}': {msg}")))
+                        }
+                    };
+
+                    let _ = done_tx_clone.send((ready_id, final_res));
                 });
             }
 
@@ -403,7 +419,6 @@ impl DagScheduler {
         let total_latency = start_time.elapsed();
         let total_cost = ctx.budget_tracker.current_spent_usd();
 
-        // Determine final output: last task in topological order, or single leaf task
         let final_task_id = last_topo_id;
         let final_output = final_task_id
             .as_ref()
@@ -462,7 +477,6 @@ async fn execute_task_with_retries(
     let mut attempt = 1;
     let max_attempts = task.retry_policy.max_retries + 1;
 
-    // Fetch ONLY true upstream outputs for interpolation to prevent global context leakage
     let outputs_snapshot = completed_outputs.lock().await.clone();
     let mut upstream_outputs = HashMap::new();
     for up_id in &upstream_ids {
@@ -488,7 +502,6 @@ async fn execute_task_with_retries(
 
         let attempt_start = Instant::now();
 
-        // Construct mock/ephemeral engine context for this task execution
         let mut task_ctx = EngineContext::new(100.0);
         task_ctx.cancellation_token = cancel_token.clone();
         task_ctx.budget_tracker = budget_tracker.clone();
@@ -511,7 +524,6 @@ async fn execute_task_with_retries(
             }
             agent_cloned.run(&interpolated_prompt, &task_ctx).await
         } else {
-            // If no agent or provider is attached, treat the prompt as direct result (useful for static nodes)
             Ok(crate::agent::AgentResult {
                 final_answer: interpolated_prompt.clone(),
                 history: vec![],
@@ -548,7 +560,6 @@ async fn execute_task_with_retries(
                     return Err(TagisanError::Cancelled);
                 }
 
-                // If error is non-retryable (e.g. BudgetExceeded, Authentication, Cancelled), fail immediately
                 if !err.is_retryable() {
                     error!(
                         "Task '{}' encountered non-retryable fatal error: {:?}",

@@ -51,8 +51,8 @@ pub fn build_ecc_pipeline(
             3. Identify critical edge cases, concurrency invariants, and scale considerations.",
             objective
         ),
-        plan_agent,
     )
+    .with_agent(plan_agent)
     .with_retry_policy(RetryPolicy::exponential(2, Duration::from_secs(2), 2.0));
 
     // 2. Test (TDD Engineer Agent)
@@ -75,8 +75,8 @@ pub fn build_ecc_pipeline(
             3. Provide deterministic assertions that prove the solution works under stress.",
             objective
         ),
-        tdd_agent,
     )
+    .with_agent(tdd_agent)
     .with_retry_policy(RetryPolicy::exponential(2, Duration::from_secs(2), 2.0));
 
     // 3. Implement (Autonomous Coder)
@@ -103,8 +103,8 @@ pub fn build_ecc_pipeline(
             3. Ensure all tests and assertions are guaranteed to pass cleanly.",
             objective
         ),
-        coder_agent,
     )
+    .with_agent(coder_agent)
     .with_retry_policy(RetryPolicy::exponential(2, Duration::from_secs(2), 2.0));
 
     // 4a. Review (Code Reviewer)
@@ -123,8 +123,8 @@ pub fn build_ecc_pipeline(
         1. Scrutinize the implementation for code clarity, maintainability, and idiomatic practices.\n\
         2. Verify proper error handling, modularity, and DRY principles.\n\
         3. Provide categorized feedback ([Blocker], [Suggestion], [Nitpick]).",
-        review_agent,
-    );
+    )
+    .with_agent(review_agent);
 
     // 4b. Security Audit (Security Auditor) - Parallel branch with Review
     let security = presets::security_auditor();
@@ -142,8 +142,8 @@ pub fn build_ecc_pipeline(
         1. Probe for injection vulnerabilities, race conditions, memory leaks, and unchecked inputs.\n\
         2. Identify any unhandled boundary conditions or potential denial-of-service risks.\n\
         3. Recommend concrete hardening steps for any detected vulnerabilities.",
-        security_agent,
-    );
+    )
+    .with_agent(security_agent);
 
     // 5. Verify & Synthesize (Chief Adjudicator / Lakandiwa)
     let verify_agent = AutonomousAgent::new(provider.clone(), model, tools)
@@ -173,8 +173,8 @@ pub fn build_ecc_pipeline(
             3. Summarize testing strategies and deployment readiness.",
             objective
         ),
-        verify_agent,
-    );
+    )
+    .with_agent(verify_agent);
 
     // Register all nodes
     graph.add_task(plan_node)?;

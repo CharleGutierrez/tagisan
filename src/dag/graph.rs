@@ -50,7 +50,8 @@ impl WorkflowGraph {
         Ok(idx)
     }
 
-    /// Add a directed dependency edge: `from_id` must execute before `to_id`
+    /// Add a directed dependency edge: `from_id` must execute before `to_id`.
+    /// Idempotent: adding an existing edge is a no-op to prevent duplicate execution triggers.
     pub fn add_dependency(&mut self, from_id: &str, to_id: &str) -> Result<()> {
         if from_id == to_id {
             return Err(TagisanError::Execution(format!(
@@ -66,6 +67,11 @@ impl WorkflowGraph {
         let to_idx = self.node_map.get(to_id).copied().ok_or_else(|| {
             TagisanError::Execution(format!("Dependency target task '{}' not found", to_id))
         })?;
+
+        // Idempotent edge addition
+        if self.graph.contains_edge(from_idx, to_idx) {
+            return Ok(());
+        }
 
         self.graph.add_edge(from_idx, to_idx, ());
         Ok(())
@@ -139,11 +145,13 @@ impl WorkflowGraph {
             TagisanError::Execution(format!("Task '{}' not found in workflow graph", id))
         })?;
 
-        let upstream = self
+        let mut upstream: Vec<String> = self
             .graph
             .neighbors_directed(idx, Direction::Incoming)
             .map(|neighbor_idx| self.graph[neighbor_idx].id.clone())
             .collect();
+        upstream.sort();
+        upstream.dedup();
 
         Ok(upstream)
     }
@@ -154,11 +162,13 @@ impl WorkflowGraph {
             TagisanError::Execution(format!("Task '{}' not found in workflow graph", id))
         })?;
 
-        let downstream = self
+        let mut downstream: Vec<String> = self
             .graph
             .neighbors_directed(idx, Direction::Outgoing)
             .map(|neighbor_idx| self.graph[neighbor_idx].id.clone())
             .collect();
+        downstream.sort();
+        downstream.dedup();
 
         Ok(downstream)
     }

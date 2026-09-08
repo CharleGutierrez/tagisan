@@ -6,10 +6,10 @@ use std::time::Duration;
 use tagisan::{
     all_ecc_presets, all_ecc_skills, build_ecc_pipeline, find_ecc_preset, find_ecc_skill,
     load_ecc_agents_from_dir, load_ecc_skills_from_dir, resolve_ecc_agent, resolve_ecc_skill,
-    AgentShieldScanner, AgentShieldVerdict, AutonomousAgent, BoxEventStream, CompletionRequest,
-    CompletionResponse, ContentBlock, DagScheduler, EccAgent, EccAuditDebate, EccSkill,
-    EngineContext, FinishReason, LlmProvider, Message, ProviderCapabilities, StrategyInput,
-    TagisanError, TokenUsage, ToolRegistry,
+    AgentShieldScanner, AgentShieldVerdict, AutonomousAgent, BoxEventStream, CollaborationStrategy,
+    CompletionRequest, CompletionResponse, ContentBlock, DagScheduler, EccAgent, EccAuditDebate,
+    EccSkill, EngineContext, FinishReason, LlmProvider, Message, ProviderCapabilities,
+    StrategyInput, TagisanError, TokenUsage, ToolRegistry,
 };
 
 /// Mock provider for testing ECC workflows deterministically

@@ -6,7 +6,7 @@ use std::io::Write;
 use std::sync::Arc;
 use tagisan::{
     all_ecc_presets, all_ecc_skills, build_ecc_pipeline, load_ecc_agents_from_dir,
-    load_ecc_skills_from_dir, resolve_ecc_agent, resolve_ecc_skill, AgentShieldScanner,
+    load_ecc_skills_from_dir, resolve_ecc_agent, resolve_ecc_skill,
     AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, CollaborationStrategy,
     CompletionRequest, ContentBlock, DagScheduler, DialecticalDebateStrategy, EccAuditDebate,
     EngineContext, GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider,

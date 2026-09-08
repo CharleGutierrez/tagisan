@@ -225,7 +225,8 @@ impl AutonomousAgent {
             .rev()
             .find(|m| m.role == crate::types::Role::Assistant)
             .map(|m| m.extract_text())
-            .unwrap_or_else(|| "Maximum tool iterations reached.".to_string());
+            .filter(|t| !t.trim().is_empty())
+            .unwrap_or_else(|| format!("Maximum tool iterations ({}) reached without final answer.", self.max_iterations));
 
         Ok(AgentResult {
             final_answer: last_answer,

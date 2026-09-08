@@ -59,7 +59,7 @@ impl CollaborationStrategy for EccAuditDebate {
             input.prompt
         );
 
-        let mut arch_req = CompletionRequest::new(arch_model.clone(), arch_prompt)
+        let arch_req = CompletionRequest::new(arch_model.clone(), arch_prompt)
             .with_system(arch_persona.system_prompt)
             .with_temperature(0.5)
             .with_cancellation(ctx.cancellation_token.clone());
@@ -104,7 +104,7 @@ impl CollaborationStrategy for EccAuditDebate {
             input.prompt, proposal_text
         );
 
-        let mut sec_req = CompletionRequest::new(sec_model.clone(), sec_prompt)
+        let sec_req = CompletionRequest::new(sec_model.clone(), sec_prompt)
             .with_system(sec_persona.system_prompt)
             .with_temperature(0.3)
             .with_cancellation(ctx.cancellation_token.clone());
@@ -150,7 +150,7 @@ impl CollaborationStrategy for EccAuditDebate {
             input.prompt, proposal_text, critique_text
         );
 
-        let mut adj_req = CompletionRequest::new(adj_model.clone(), adj_prompt)
+        let adj_req = CompletionRequest::new(adj_model.clone(), adj_prompt)
             .with_system("You are the definitive ECC Adjudicator and Chief Engineering Director. Deliver balanced, authoritative, and verified synthesis.")
             .with_temperature(0.2)
             .with_cancellation(ctx.cancellation_token.clone());
