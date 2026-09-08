@@ -4,7 +4,7 @@ use futures::StreamExt;
 use std::env;
 use std::io::Write;
 use std::sync::Arc;
-use tagisan::{
+use crate::{
     all_ecc_presets, all_ecc_skills, build_ecc_pipeline, load_ecc_agents_from_dir,
     load_ecc_skills_from_dir, resolve_ecc_agent, resolve_ecc_skill,
     AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, CollaborationStrategy,
@@ -15,9 +15,9 @@ use tagisan::{
 };
 
 #[derive(Parser)]
-#[command(name = "tagisan")]
+#[command(name = "tgs", bin_name = "tgs")]
 #[command(
-    about = "🇵🇭 Tagisan ng Talino: High-Performance Multi-LLM Collaboration Engine in Rust",
+    about = "🇵🇭 TGS (Tagisan ng Talino): High-Performance Multi-LLM Collaboration, Adversarial Debate & ECC Swarm in Rust",
     long_about = None
 )]
 struct Cli {
@@ -344,8 +344,7 @@ fn resolve_provider_and_model(
     Ok(("ollama".to_string(), model, prov))
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     dotenvy::dotenv().ok();
 
     let cli = Cli::parse();
@@ -572,7 +571,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             if tui {
                 // Interactive Ratatui / Crossterm TUI
-                tagisan::run_debate_tui(prompt, &ctx).await?;
+                crate::run_debate_tui(prompt, &ctx).await?;
                 return Ok(());
             }
 
@@ -1263,7 +1262,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 EccAction::Audit { tui, prompt } => {
                     if tui {
-                        tagisan::run_debate_tui(prompt, &ctx).await?;
+                        crate::run_debate_tui(prompt, &ctx).await?;
                         return Ok(());
                     }
 

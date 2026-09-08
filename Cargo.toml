@@ -4,6 +4,15 @@ version = "0.1.0"
 edition = "2021"
 description = "High-performance Multi-LLM Collaboration, Adversarial Debate & Mixture-of-Agents Engine in Rust"
 authors = ["Charle Gutierrez"]
+default-run = "tgs"
+
+[[bin]]
+name = "tgs"
+path = "src/bin/tgs.rs"
+
+[[bin]]
+name = "tagisan"
+path = "src/bin/tagisan.rs"
 
 [dependencies]
 # Async Runtime & Concurrency

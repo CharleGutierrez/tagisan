@@ -1,7 +1,8 @@
-# 🇵🇭 Tagisan (`tagisan-rs`)
-> **Tagisan ng Talino:** High-Performance Multi-LLM Collaboration, Adversarial Debate, Autonomous Agents & ECC Engineering Swarm in Rust.
+# 🇵🇭 Tagisan (`tgs` / `tagisan-rs`)
+> **Tagisan ng Talino (`tgs`):** High-Performance Multi-LLM Collaboration, Adversarial Debate, Autonomous Agents & ECC Engineering Swarm in Rust.
 
 [![Rust](https://img.shields.io/badge/rust-2021%20edition-orange.svg)](https://www.rust-lang.org/)
+[![Binary](https://img.shields.io/badge/CLI-tgs-brightgreen.svg)](https://github.com/CharleGutierrez/tagisan)
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
 [![Tokio](https://img.shields.io/badge/async-tokio-blue)](https://tokio.rs/)
 [![Petgraph](https://img.shields.io/badge/dag-petgraph-red)](https://github.com/petgraph/petgraph)
@@ -11,7 +12,7 @@
 
 ## 🌟 Overview
 
-**Tagisan** is an asynchronous, zero-cost abstraction engine written in Rust that orchestrates heterogeneous Large Language Models—**Anthropic Claude, xAI Grok, Google Gemini, OpenAI, DeepSeek, and local Ollama**—into a collaborative intelligence swarm.
+**Tagisan** (invoked as **`tgs`**) is an asynchronous, zero-cost abstraction engine written in Rust that orchestrates heterogeneous Large Language Models—**Anthropic Claude, xAI Grok, Google Gemini, OpenAI, DeepSeek, and local Ollama**—into a collaborative intelligence swarm.
 
 Instead of relying on a single AI model (which can hallucinate or produce biased designs), Tagisan enables models to **debate, critique, cross-verify, plan as Directed Acyclic Graphs (DAGs), and execute autonomous tool loops**.
 
@@ -67,8 +68,11 @@ tagisan/
 │       └── tdd-workflow/
 │           └── SKILL.md
 └── src/
-    ├── main.rs                   # Unified CLI application with colored outputs & TUI
     ├── lib.rs                    # Library exports & public crate interface
+    ├── cli.rs                    # Unified CLI implementation & command dispatch
+    ├── bin/                      # Dual binary targets
+    │   ├── tgs.rs                # Primary ultra-fast CLI command (`tgs`)
+    │   └── tagisan.rs            # Full compatibility alias (`tagisan`)
     ├── error.rs                  # TagisanError & Result types
     ├── types/                    # Core message blocks, roles, token usage, tool schemas
     │   └── mod.rs
@@ -134,52 +138,64 @@ OPENAI_API_KEY=sk-proj-...
 
 ---
 
-### 2. Verify System Status & Providers
+### 2. Install CLI Locally (Fast `tgs` Command)
+Install both `tgs` and `tagisan` binaries into `~/.cargo/bin/`:
+
+```bash
+cargo install --path .
+```
+
+You can now use `tgs` directly from anywhere in your terminal! *(Or use `cargo run --`)*
+
+---
+
+### 3. Verify System Status & Providers
 Check configured providers, active API keys, and model capabilities:
 
 ```bash
-cargo run -- status
+tgs status
+# or: cargo run -- status
 ```
 
 ---
 
-### 3. Run Dialectical Debate (`debate`)
+### 4. Run Dialectical Debate (`debate`)
 Pit two frontier models against each other with adjudication:
 
 ```bash
-cargo run -- debate "Should a high-throughput payment engine use an Event-Sourced architecture or CRUD with Postgres?"
+tgs debate "Should a high-throughput payment engine use an Event-Sourced architecture or CRUD with Postgres?"
 ```
 
 To watch the debate unfold in an interactive, multi-pane Terminal User Interface:
 ```bash
-cargo run -- debate --tui "Rust vs Go for high-concurrency microservices"
+tgs debate --tui "Rust vs Go for high-concurrency microservices"
 ```
 
 ---
 
-### 4. Run Mixture-of-Agents (`moa`)
+### 5. Run Mixture-of-Agents (`moa`)
 Execute layered parallel generation and synthesis:
 
 ```bash
-cargo run -- moa "Design a zero-downtime database migration strategy for 100M active records in Rust"
+tgs moa "Design a zero-downtime database migration strategy for 100M active records in Rust"
 ```
 
 ---
 
-### 5. Run an Autonomous Agent (`agent`)
+### 6. Run an Autonomous Agent (`agent`)
 Deploy an autonomous reasoning loop equipped with file system and terminal tools:
 
 ```bash
-cargo run -- agent "Analyze src/lib.rs, identify any missing error types, and document them"
+tgs agent "Analyze src/lib.rs, identify any missing error types, and document them"
 ```
 
 ---
 
-### 6. Run Dynamic DAG Workflows (`workflow`)
+### 7. Run Dynamic DAG Workflows (`workflow`)
 Decompose complex goals into dependency graphs and execute them concurrently:
 
 ```bash
-cargo run -- workflow plan "Design a telemetry metrics collector, write unit tests, and implement the Tokio worker"
+tgs workflow plan "Design a telemetry metrics collector, write unit tests, and implement the Tokio worker"
 ```
 
 ---
@@ -214,7 +230,7 @@ You are a principal database administrator...
 
 List all available built-in and discovered agents:
 ```bash
-cargo run -- ecc list
+tgs ecc list
 ```
 
 ---
@@ -241,12 +257,12 @@ Profile bottlenecks before optimizing. Use atomic primitives where possible...
 
 List all available skills:
 ```bash
-cargo run -- ecc skills
+tgs ecc skills
 ```
 
 Execute an agent with an attached skill:
 ```bash
-cargo run -- ecc run tdd-engineer "Implement a concurrent LRU cache in Rust" --skill tdd-workflow
+tgs ecc run tdd-engineer "Implement a concurrent LRU cache in Rust" --skill tdd-workflow
 ```
 
 ---
@@ -274,7 +290,7 @@ graph TD
 
 Run the pipeline with a single command:
 ```bash
-cargo run -- ecc pipeline "Build an atomic lock-free token bucket rate limiter in Rust"
+tgs ecc pipeline "Build an atomic lock-free token bucket rate limiter in Rust"
 ```
 
 ---
@@ -283,12 +299,12 @@ cargo run -- ecc pipeline "Build an atomic lock-free token bucket rate limiter i
 Pit the **ECC Architect** against the **ECC Security Auditor** in a multi-round debate adjudicated by the **Lakandiwa / Chief Adjudicator**:
 
 ```bash
-cargo run -- ecc audit "Is an in-memory Mutex<HashMap> safe for a high-concurrency payment ledger?"
+tgs ecc audit "Is an in-memory Mutex<HashMap> safe for a high-concurrency payment ledger?"
 ```
 
 Add `--tui` for live multi-pane terminal visualization:
 ```bash
-cargo run -- ecc audit --tui "Should our crypto wallet store unencrypted keys in shared memory?"
+tgs ecc audit --tui "Should our crypto wallet store unencrypted keys in shared memory?"
 ```
 
 ---
@@ -314,18 +330,21 @@ Tagisan tracks token usage and calculates estimated USD costs across all provide
 
 ```bash
 # Terminate execution if session cost exceeds $1.50 USD
-cargo run -- --max-budget 1.50 moa "Generate a distributed consensus benchmark in Rust"
+tgs --max-budget 1.50 moa "Generate a distributed consensus benchmark in Rust"
 ```
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing & Verification
 
-Tagisan includes a comprehensive automated test suite covering unit logic, DAG validation, provider adapters, AgentShield safety, and end-to-end ECC integration:
+Tagisan includes an exhaustive automated test suite covering unit logic, DAG validation, provider adapters, AgentShield safety, and chaos stress tests:
 
 ```bash
-# Run all tests
+# Run all tests (74 tests across 7 test binaries)
 cargo test
+
+# Run the brutal chaos & adversarial stress suite
+cargo test --test brutal_stress_tests
 
 # Run ECC integration tests specifically
 cargo test --test ecc_integration_tests

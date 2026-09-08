@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod cli;
 pub mod dag;
 pub mod ecc;
 pub mod engine;
