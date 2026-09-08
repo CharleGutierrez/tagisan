@@ -1,9 +1,12 @@
 use crate::error::{Result, TagisanError};
-use crate::providers::LlmProvider;
+use crate::providers::{BoxEventStream, LlmProvider};
 use crate::types::{
-    CompletionRequest, CompletionResponse, ContentBlock, FinishReason, Message, Role, TokenUsage,
+    CompletionRequest, CompletionResponse, ContentBlock, FinishReason, Message,
+    ProviderCapabilities, Role, StreamChunk, StreamChunkDelta, TokenUsage,
 };
 use async_trait::async_trait;
+use eventsource_stream::Eventsource;
+use futures::StreamExt;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
@@ -25,19 +28,27 @@ impl OpenAiCompatibleProvider {
         }
     }
 
-    /// Factory for OpenAI
     pub fn openai(api_key: impl Into<String>) -> Self {
         Self::new("openai", "https://api.openai.com/v1", api_key)
     }
 
-    /// Factory for xAI (Grok)
     pub fn xai(api_key: impl Into<String>) -> Self {
         Self::new("xai", "https://api.x.ai/v1", api_key)
     }
 
-    /// Factory for DeepSeek
     pub fn deepseek(api_key: impl Into<String>) -> Self {
         Self::new("deepseek", "https://api.deepseek.com", api_key)
+    }
+
+    fn build_headers(&self) -> Result<HeaderMap> {
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+        headers.insert(
+            AUTHORIZATION,
+            HeaderValue::from_str(&format!("Bearer {}", self.api_key))
+                .map_err(|e| TagisanError::Authentication(self.provider_id.to_string(), e.to_string()))?,
+        );
+        Ok(headers)
     }
 }
 
@@ -49,6 +60,8 @@ struct ChatCompletionPayload<'a> {
     temperature: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     max_tokens: Option<u32>,
+    #[serde(default)]
+    stream: bool,
 }
 
 #[derive(Serialize)]
@@ -77,6 +90,24 @@ struct ApiResponseMessage {
 }
 
 #[derive(Deserialize)]
+struct StreamChatCompletionChunk {
+    choices: Vec<StreamChoice>,
+    usage: Option<ApiUsage>,
+}
+
+#[derive(Deserialize)]
+struct StreamChoice {
+    delta: StreamDelta,
+    finish_reason: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct StreamDelta {
+    content: Option<String>,
+    reasoning_content: Option<String>,
+}
+
+#[derive(Deserialize, Clone)]
 struct ApiUsage {
     prompt_tokens: Option<u32>,
     completion_tokens: Option<u32>,
@@ -88,17 +119,26 @@ impl LlmProvider for OpenAiCompatibleProvider {
         self.provider_id
     }
 
+    fn capabilities(&self, model: &str) -> ProviderCapabilities {
+        let m = model.to_lowercase();
+        let mut caps = ProviderCapabilities::STREAMING | ProviderCapabilities::SYSTEM_PROMPT | ProviderCapabilities::FUNCTION_CALLING;
+
+        if m.contains("r1") || m.contains("reasoner") || m.contains("o1") || m.contains("o3") {
+            caps |= ProviderCapabilities::REASONING_EXTRACTION;
+        }
+        if m.contains("deepseek") {
+            caps |= ProviderCapabilities::PROMPT_CACHING;
+        }
+        if m.contains("gpt-4o") || m.contains("grok-vision") {
+            caps |= ProviderCapabilities::VISION;
+        }
+        caps
+    }
+
     async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse> {
         let start = Instant::now();
         let url = format!("{}/chat/completions", self.base_url.trim_end_matches('/'));
-
-        let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-        headers.insert(
-            AUTHORIZATION,
-            HeaderValue::from_str(&format!("Bearer {}", self.api_key))
-                .map_err(|e| TagisanError::Authentication(self.provider_id.to_string(), e.to_string()))?,
-        );
+        let headers = self.build_headers()?;
 
         let mut api_messages = Vec::new();
         if let Some(sys) = &req.system_prompt {
@@ -127,6 +167,7 @@ impl LlmProvider for OpenAiCompatibleProvider {
             messages: api_messages,
             temperature: req.temperature,
             max_tokens: req.max_tokens,
+            stream: false,
         };
 
         let response = self
@@ -158,7 +199,6 @@ impl LlmProvider for OpenAiCompatibleProvider {
 
         let mut content_blocks = Vec::new();
 
-        // Check if reasoning content is provided (DeepSeek R1 / OpenAI o1/o3)
         if let Some(reasoning) = choice.message.reasoning_content {
             if !reasoning.trim().is_empty() {
                 content_blocks.push(ContentBlock::Thinking {
@@ -170,7 +210,6 @@ impl LlmProvider for OpenAiCompatibleProvider {
 
         let raw_text = choice.message.content.unwrap_or_default();
 
-        // Parse embedded <think>...</think> if returned inside content text (e.g. DeepSeek R1)
         if raw_text.contains("<think>") && raw_text.contains("</think>") {
             if let Some(start_idx) = raw_text.find("<think>") {
                 if let Some(end_idx) = raw_text.find("</think>") {
@@ -220,5 +259,116 @@ impl LlmProvider for OpenAiCompatibleProvider {
             usage,
             latency: start.elapsed(),
         })
+    }
+
+    async fn stream(&self, req: CompletionRequest) -> Result<BoxEventStream> {
+        let url = format!("{}/chat/completions", self.base_url.trim_end_matches('/'));
+        let headers = self.build_headers()?;
+
+        let mut api_messages = Vec::new();
+        if let Some(sys) = &req.system_prompt {
+            api_messages.push(ApiMessage {
+                role: "system",
+                content: sys.clone(),
+            });
+        }
+
+        for msg in &req.messages {
+            let role_str = match msg.role {
+                Role::System => "system",
+                Role::User => "user",
+                Role::Assistant => "assistant",
+                _ => "user",
+            };
+            api_messages.push(ApiMessage {
+                role: role_str,
+                content: msg.extract_text(),
+            });
+        }
+
+        let payload = ChatCompletionPayload {
+            model: &req.model,
+            messages: api_messages,
+            temperature: req.temperature,
+            max_tokens: req.max_tokens,
+            stream: true,
+        };
+
+        let response = self
+            .client
+            .post(&url)
+            .headers(headers)
+            .json(&payload)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let err_text = response.text().await.unwrap_or_default();
+            if status.as_u16() == 429 {
+                return Err(TagisanError::RateLimited(self.provider_id.to_string(), None));
+            }
+            return Err(TagisanError::BadResponse(self.provider_id.to_string(), err_text));
+        }
+
+        let provider_id = self.provider_id;
+        let event_stream = response.bytes_stream().eventsource();
+
+        let mapped = event_stream.filter_map(move |event_res| {
+            async move {
+                match event_res {
+                    Ok(event) => {
+                        let data = event.data.trim();
+                        if data == "[DONE]" {
+                            return Some(Ok(StreamChunk::done(FinishReason::Stop, None)));
+                        }
+                        if data.is_empty() {
+                            return None;
+                        }
+
+                        match serde_json::from_str::<StreamChatCompletionChunk>(data) {
+                            Ok(chunk) => {
+                                let usage = chunk.usage.map(|u| TokenUsage {
+                                    prompt_tokens: u.prompt_tokens.unwrap_or(0),
+                                    completion_tokens: u.completion_tokens.unwrap_or(0),
+                                    reasoning_tokens: None,
+                                    cached_prompt_tokens: None,
+                                    estimated_cost_usd: None,
+                                });
+
+                                if let Some(choice) = chunk.choices.into_iter().next() {
+                                    if let Some(reasoning) = choice.delta.reasoning_content {
+                                        if !reasoning.is_empty() {
+                                            return Some(Ok(StreamChunk {
+                                                delta: StreamChunkDelta::Thinking(reasoning),
+                                                finish_reason: None,
+                                                usage,
+                                            }));
+                                        }
+                                    }
+                                    if let Some(content) = choice.delta.content {
+                                        if !content.is_empty() {
+                                            return Some(Ok(StreamChunk {
+                                                delta: StreamChunkDelta::Text(content),
+                                                finish_reason: choice.finish_reason.map(|_| FinishReason::Stop),
+                                                usage,
+                                            }));
+                                        }
+                                    }
+                                }
+                                None
+                            }
+                            Err(e) => {
+                                tracing::debug!("Failed to parse stream chunk: {}", e);
+                                None
+                            }
+                        }
+                    }
+                    Err(e) => Some(Err(TagisanError::BadResponse(provider_id.to_string(), e.to_string()))),
+                }
+            }
+        });
+
+        Ok(Box::pin(mapped))
     }
 }

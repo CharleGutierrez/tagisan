@@ -1,3 +1,4 @@
+use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -9,7 +10,8 @@ pub enum Role {
     User,
     Assistant,
     Tool,
-    Reasoning, // DeepSeek R1 <think>, OpenAI o1/o3 reasoning
+    /// Dedicated role for explicit reasoning / thinking tokens
+    Reasoning,
 }
 
 /// Content block within a message
@@ -18,6 +20,7 @@ pub enum Role {
 pub enum ContentBlock {
     Text { text: String },
     Thinking { thinking: String, signature: Option<String> },
+    Image { media_type: String, data_base64: String },
     ToolCall {
         id: String,
         name: String,
@@ -69,6 +72,18 @@ impl Message {
         }
     }
 
+    pub fn reasoning(thinking: impl Into<String>) -> Self {
+        Self {
+            role: Role::Reasoning,
+            content: vec![ContentBlock::Thinking {
+                thinking: thinking.into(),
+                signature: None,
+            }],
+            name: None,
+            metadata: HashMap::new(),
+        }
+    }
+
     pub fn extract_text(&self) -> String {
         self.content
             .iter()
@@ -97,6 +112,66 @@ impl Message {
     }
 }
 
+/// Granular incremental chunk emitted during real-time streaming
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum StreamChunkDelta {
+    Text(String),
+    Thinking(String),
+    ToolCallDelta {
+        index: usize,
+        id: Option<String>,
+        name: Option<String>,
+        arguments_delta: Option<String>,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StreamChunk {
+    pub delta: StreamChunkDelta,
+    pub finish_reason: Option<FinishReason>,
+    pub usage: Option<TokenUsage>,
+}
+
+impl StreamChunk {
+    pub fn text(text: impl Into<String>) -> Self {
+        Self {
+            delta: StreamChunkDelta::Text(text.into()),
+            finish_reason: None,
+            usage: None,
+        }
+    }
+
+    pub fn thinking(thinking: impl Into<String>) -> Self {
+        Self {
+            delta: StreamChunkDelta::Thinking(thinking.into()),
+            finish_reason: None,
+            usage: None,
+        }
+    }
+
+    pub fn done(finish_reason: FinishReason, usage: Option<TokenUsage>) -> Self {
+        Self {
+            delta: StreamChunkDelta::Text(String::new()),
+            finish_reason: Some(finish_reason),
+            usage,
+        }
+    }
+}
+
+bitflags! {
+    /// Capabilities supported by a model
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct ProviderCapabilities: u32 {
+        const STREAMING            = 1 << 0;
+        const FUNCTION_CALLING     = 1 << 1;
+        const VISION               = 1 << 2;
+        const SYSTEM_PROMPT        = 1 << 3;
+        const REASONING_EXTRACTION = 1 << 4;
+        const PROMPT_CACHING       = 1 << 5;
+        const JSON_SCHEMA_OUTPUT   = 1 << 6;
+    }
+}
+
 /// Token usage tracking per call
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TokenUsage {
@@ -107,7 +182,7 @@ pub struct TokenUsage {
     pub estimated_cost_usd: Option<f64>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum FinishReason {
     Stop,
     Length,
@@ -160,6 +235,16 @@ impl CompletionRequest {
         self.temperature = Some(temp);
         self
     }
+
+    pub fn with_stream(mut self, stream: bool) -> Self {
+        self.stream = stream;
+        self
+    }
+
+    pub fn with_messages(mut self, messages: Vec<Message>) -> Self {
+        self.messages = messages;
+        self
+    }
 }
 
 /// Universal completion response payload
@@ -172,4 +257,45 @@ pub struct CompletionResponse {
     pub finish_reason: FinishReason,
     pub usage: TokenUsage,
     pub latency: std::time::Duration,
+}
+
+/// Stateful conversation session manager
+#[derive(Debug, Clone, Default)]
+pub struct ChatSession {
+    pub system_prompt: Option<String>,
+    pub history: Vec<Message>,
+}
+
+impl ChatSession {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_system(mut self, system: impl Into<String>) -> Self {
+        self.system_prompt = Some(system.into());
+        self
+    }
+
+    pub fn add_user_message(&mut self, text: impl Into<String>) {
+        self.history.push(Message::user(text));
+    }
+
+    pub fn add_assistant_message(&mut self, text: impl Into<String>) {
+        self.history.push(Message::assistant(text));
+    }
+
+    pub fn add_message(&mut self, message: Message) {
+        self.history.push(message);
+    }
+
+    pub fn build_request(&self, model: impl Into<String>) -> CompletionRequest {
+        CompletionRequest {
+            model: model.into(),
+            messages: self.history.clone(),
+            temperature: Some(0.7),
+            max_tokens: Some(4096),
+            stream: false,
+            system_prompt: self.system_prompt.clone(),
+        }
+    }
 }

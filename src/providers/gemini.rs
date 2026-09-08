@@ -1,9 +1,12 @@
 use crate::error::{Result, TagisanError};
-use crate::providers::LlmProvider;
+use crate::providers::{BoxEventStream, LlmProvider};
 use crate::types::{
-    CompletionRequest, CompletionResponse, ContentBlock, FinishReason, Message, Role, TokenUsage,
+    CompletionRequest, CompletionResponse, ContentBlock, FinishReason, Message,
+    ProviderCapabilities, Role, StreamChunk, StreamChunkDelta, TokenUsage,
 };
 use async_trait::async_trait;
+use eventsource_stream::Eventsource;
+use futures::StreamExt;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
@@ -18,6 +21,14 @@ impl GeminiProvider {
         Self {
             api_key: api_key.into(),
             client: reqwest::Client::new(),
+        }
+    }
+
+    fn sanitize_model(model: &str) -> String {
+        if model.starts_with("models/") {
+            model.to_string()
+        } else {
+            format!("models/{}", model)
         }
     }
 }
@@ -84,14 +95,22 @@ impl LlmProvider for GeminiProvider {
         "gemini"
     }
 
+    fn capabilities(&self, model: &str) -> ProviderCapabilities {
+        let m = model.to_lowercase();
+        let mut caps = ProviderCapabilities::STREAMING
+            | ProviderCapabilities::SYSTEM_PROMPT
+            | ProviderCapabilities::FUNCTION_CALLING
+            | ProviderCapabilities::VISION;
+
+        if m.contains("2.0") || m.contains("flash") {
+            caps |= ProviderCapabilities::PROMPT_CACHING;
+        }
+        caps
+    }
+
     async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse> {
         let start = Instant::now();
-        let model_clean = if req.model.starts_with("models/") {
-            req.model.clone()
-        } else {
-            format!("models/{}", req.model)
-        };
-
+        let model_clean = Self::sanitize_model(&req.model);
         let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/{}:generateContent?key={}",
             model_clean, self.api_key
@@ -195,5 +214,110 @@ impl LlmProvider for GeminiProvider {
             usage,
             latency: start.elapsed(),
         })
+    }
+
+    async fn stream(&self, req: CompletionRequest) -> Result<BoxEventStream> {
+        let model_clean = Self::sanitize_model(&req.model);
+        let url = format!(
+            "https://generativelanguage.googleapis.com/v1beta/{}:streamGenerateContent?alt=sse&key={}",
+            model_clean, self.api_key
+        );
+
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+
+        let mut contents = Vec::new();
+        for msg in &req.messages {
+            let role_str = match msg.role {
+                Role::User => "user",
+                Role::Assistant => "model",
+                _ => "user",
+            };
+            contents.push(GeminiContent {
+                role: role_str.to_string(),
+                parts: vec![GeminiPart {
+                    text: Some(msg.extract_text()),
+                }],
+            });
+        }
+
+        let system_instruction = req.system_prompt.map(|s| GeminiSystemInstruction {
+            parts: vec![GeminiPart { text: Some(s) }],
+        });
+
+        let payload = GeminiGeneratePayload {
+            contents,
+            generation_config: Some(GeminiGenerationConfig {
+                temperature: req.temperature,
+                max_output_tokens: req.max_tokens,
+            }),
+            system_instruction,
+        };
+
+        let response = self
+            .client
+            .post(&url)
+            .headers(headers)
+            .json(&payload)
+            .send()
+            .await?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let err_text = response.text().await.unwrap_or_default();
+            if status.as_u16() == 429 {
+                return Err(TagisanError::RateLimited("gemini".into(), None));
+            }
+            return Err(TagisanError::BadResponse("gemini".into(), err_text));
+        }
+
+        let event_stream = response.bytes_stream().eventsource();
+
+        let mapped = event_stream.filter_map(|event_res| async move {
+            match event_res {
+                Ok(event) => {
+                    let data = event.data.trim();
+                    if data.is_empty() {
+                        return None;
+                    }
+
+                    match serde_json::from_str::<GeminiApiResponse>(data) {
+                        Ok(resp) => {
+                            let usage = resp.usage_metadata.map(|u| TokenUsage {
+                                prompt_tokens: u.prompt_token_count.unwrap_or(0),
+                                completion_tokens: u.candidates_token_count.unwrap_or(0),
+                                reasoning_tokens: None,
+                                cached_prompt_tokens: None,
+                                estimated_cost_usd: None,
+                            });
+
+                            if let Some(candidate) = resp.candidates.and_then(|c| c.into_iter().next()) {
+                                if let Some(content) = candidate.content {
+                                    for part in content.parts {
+                                        if let Some(text) = part.text {
+                                            if !text.is_empty() {
+                                                return Some(Ok(StreamChunk {
+                                                    delta: StreamChunkDelta::Text(text),
+                                                    finish_reason: candidate.finish_reason.map(|_| FinishReason::Stop),
+                                                    usage,
+                                                }));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            None
+                        }
+                        Err(e) => {
+                            tracing::debug!("Failed to parse Gemini stream chunk: {}", e);
+                            None
+                        }
+                    }
+                }
+                Err(e) => Some(Err(TagisanError::BadResponse("gemini".into(), e.to_string()))),
+            }
+        });
+
+        Ok(Box::pin(mapped))
     }
 }
