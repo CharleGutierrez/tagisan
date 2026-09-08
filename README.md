@@ -96,9 +96,35 @@ cargo run -- moa "Design a zero-downtime database migration strategy for 100M ac
 
 ---
 
+### 5. Run ECC Autonomous Engineering Swarm (`ecc`)
+Tagisan natively embeds the agent personas and 5-stage engineering lifecycle from **[ECC (Everything Coding Cloud / Agent Harness OS)](https://github.com/affaan-m/ECC)**:
+
+- **List ECC Presets & Discovered Agents:**
+  ```bash
+  cargo run -- ecc list
+  ```
+
+- **Execute a Specialized ECC Agent (Architect, TDD Engineer, Security Auditor, etc.):**
+  ```bash
+  cargo run -- ecc run architect "Design a high-throughput async event bus in Rust"
+  ```
+
+- **Run the Full 5-Stage ECC Pipeline (`Plan -> Test -> Implement -> (Review || Security) -> Verify`):**
+  ```bash
+  cargo run -- ecc pipeline "Build an atomic lock-free token bucket rate limiter in Rust"
+  ```
+
+- **Adversarial ECC Security & Architecture Audit (Architect vs Security Auditor -> Chief Adjudicator):**
+  ```bash
+  cargo run -- ecc audit "Is an in-memory Mutex<HashMap> safe for a high-concurrency payment ledger?"
+  ```
+
+---
+
 ## 🛡️ Built-in Cost Protection
 Tagisan includes a real-time atomic micro-USD budget tracker. By default, it terminates executions if the session cost exceeds `$5.00` USD. You can customize this threshold with `--max-budget`:
 
 ```bash
 cargo run -- --max-budget 1.50 moa "Your prompt here"
 ```
+

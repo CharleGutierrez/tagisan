@@ -1,0 +1,55 @@
+pub mod agent;
+pub mod audit;
+pub mod pipeline;
+pub mod presets;
+
+pub use agent::EccAgent;
+pub use audit::EccAuditDebate;
+pub use pipeline::build_ecc_pipeline;
+pub use presets::{all_presets, find_preset};
+
+use std::path::Path;
+use tracing::warn;
+
+/// Discover and load all ECC agent definitions (*.md) from a given directory
+pub fn load_agents_from_dir(dir: impl AsRef<Path>) -> Vec<EccAgent> {
+    let mut agents = Vec::new();
+    let dir_ref = dir.as_ref();
+
+    if !dir_ref.is_dir() {
+        return agents;
+    }
+
+    if let Ok(entries) = std::fs::read_dir(dir_ref) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("md") {
+                match EccAgent::from_file(&path) {
+                    Ok(agent) => agents.push(agent),
+                    Err(e) => {
+                        warn!("Failed to load ECC agent from '{}': {}", path.display(), e);
+                    }
+                }
+            }
+        }
+    }
+
+    // Sort alphabetically by name for deterministic order
+    agents.sort_by(|a, b| a.name.cmp(&b.name));
+    agents
+}
+
+/// Retrieve an ECC agent by name, checking built-in presets first, then an optional disk directory
+pub fn resolve_agent(name: &str, custom_dir: Option<&Path>) -> Option<EccAgent> {
+    if let Some(preset) = find_preset(name) {
+        return Some(preset);
+    }
+
+    if let Some(dir) = custom_dir {
+        let loaded = load_agents_from_dir(dir);
+        let lower = name.to_lowercase().replace('_', "-");
+        return loaded.into_iter().find(|a| a.name == lower);
+    }
+
+    None
+}

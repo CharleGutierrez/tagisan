@@ -1,5 +1,6 @@
 pub mod agent;
 pub mod dag;
+pub mod ecc;
 pub mod engine;
 pub mod error;
 pub mod providers;
@@ -7,6 +8,12 @@ pub mod strategies;
 pub mod tools;
 pub mod tui;
 pub mod types;
+
+pub use ecc::{
+    all_presets as all_ecc_presets, build_ecc_pipeline, find_preset as find_ecc_preset,
+    load_agents_from_dir as load_ecc_agents_from_dir, resolve_agent as resolve_ecc_agent,
+    EccAgent, EccAuditDebate,
+};
 
 pub use agent::{AgentResult, AgentStep, AutonomousAgent};
 pub use dag::{

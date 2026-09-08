@@ -5,11 +5,12 @@ use std::env;
 use std::io::Write;
 use std::sync::Arc;
 use tagisan::{
+    all_ecc_presets, build_ecc_pipeline, load_ecc_agents_from_dir, resolve_ecc_agent,
     AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, CollaborationStrategy,
-    CompletionRequest, ContentBlock, DagScheduler, DialecticalDebateStrategy, EngineContext,
-    GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider, OpenAiCompatibleProvider,
-    ProviderCapabilities, ReadFileTool, RunCommandTool, StrategyInput, StreamChunkDelta,
-    TagisanError, ToolRegistry, WorkflowEvent, WorkflowPlanner, WriteFileTool,
+    CompletionRequest, ContentBlock, DagScheduler, DialecticalDebateStrategy, EccAuditDebate,
+    EngineContext, GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider,
+    OpenAiCompatibleProvider, ProviderCapabilities, ReadFileTool, RunCommandTool, StrategyInput,
+    StreamChunkDelta, TagisanError, ToolRegistry, WorkflowEvent, WorkflowPlanner, WriteFileTool,
 };
 
 #[derive(Parser)]
@@ -123,8 +124,77 @@ enum Commands {
         #[arg(long)]
         concurrency: Option<usize>,
     },
+    /// ECC (Everything Coding Cloud) Autonomous Multi-Agent Engineering Operating System
+    Ecc {
+        #[command(subcommand)]
+        action: EccAction,
+    },
     /// Check configured LLM providers, API keys, and model capability bitflags
     Status,
+}
+
+#[derive(Subcommand, Debug)]
+enum EccAction {
+    /// List all available built-in ECC agent presets and discovered agents
+    List {
+        /// Directory containing custom ECC agent definitions (defaults to .ecc/agents)
+        #[arg(long)]
+        dir: Option<String>,
+    },
+    /// Run a specialized ECC agent persona with tool calling
+    Run {
+        /// Name of the ECC agent (e.g. architect, tdd-engineer, code-reviewer, security-auditor, build-resolver)
+        agent: String,
+
+        /// Goal or prompt for the ECC agent
+        prompt: String,
+
+        /// Provider ID: auto, anthropic, openai, xai, deepseek, gemini, ollama
+        #[arg(short, long, default_value = "auto")]
+        provider: String,
+
+        /// Model name override
+        #[arg(short, long)]
+        model: Option<String>,
+
+        /// Comma-separated list of tools: read_file, write_file, run_command, calculator, all
+        #[arg(short, long, default_value = "all")]
+        tools: String,
+
+        /// Maximum autonomous iterations
+        #[arg(long, default_value = "10")]
+        max_iterations: usize,
+
+        /// Directory containing custom ECC agent definitions
+        #[arg(long)]
+        dir: Option<String>,
+    },
+    /// Execute the 5-stage ECC Engineering Workflow Pipeline (Plan -> Test -> Implement -> Review/Security -> Verify)
+    Pipeline {
+        /// High-level engineering objective or feature to build
+        objective: String,
+
+        /// Provider ID: auto, anthropic, openai, xai, deepseek, gemini, ollama
+        #[arg(short, long, default_value = "auto")]
+        provider: String,
+
+        /// Model name override
+        #[arg(short, long)]
+        model: Option<String>,
+
+        /// Comma-separated list of tools: read_file, write_file, run_command, calculator, all
+        #[arg(short, long, default_value = "all")]
+        tools: String,
+
+        /// Maximum concurrency limit for parallel DAG tasks
+        #[arg(long)]
+        concurrency: Option<usize>,
+    },
+    /// Run an Adversarial ECC Engineering Audit (Architect vs Security Auditor -> Chief Adjudicator)
+    Audit {
+        /// Architectural problem or code to audit
+        prompt: String,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -835,6 +905,346 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Err(e) => {
                     eprintln!("\n{}: {:?}", "Workflow Execution Error".red().bold(), e);
                     std::process::exit(1);
+                }
+            }
+        }
+
+        Commands::Ecc { action } => {
+            let ctx = build_engine_context(cli.max_budget);
+
+            match action {
+                EccAction::List { dir } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  🏛️  ECC (Everything Coding Cloud) Autonomous Swarm".bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+                    println!("\n{}", "Built-in Canonical ECC Agent Presets:".bold());
+
+                    for agent in all_ecc_presets() {
+                        let model_str = agent.recommended_model.as_deref().unwrap_or("default");
+                        println!(
+                            "  [•] {:<20} -> {} [{}]\n      ↳ Tools: [{}]",
+                            agent.name.green().bold(),
+                            agent.description.italic(),
+                            model_str.cyan(),
+                            agent.tools.join(", ").yellow()
+                        );
+                    }
+
+                    // Check directory
+                    let custom_path = dir
+                        .map(std::path::PathBuf::from)
+                        .unwrap_or_else(|| std::path::PathBuf::from(".ecc/agents"));
+
+                    if custom_path.exists() {
+                        println!("\n{}", format!("Discovered Agents in '{}':", custom_path.display()).bold());
+                        let custom_agents = load_ecc_agents_from_dir(&custom_path);
+                        if custom_agents.is_empty() {
+                            println!("  (No .md agent files found)");
+                        } else {
+                            for agent in custom_agents {
+                                let model_str = agent.recommended_model.as_deref().unwrap_or("default");
+                                println!(
+                                    "  [+] {:<20} -> {} [{}]\n      ↳ Tools: [{}]",
+                                    agent.name.magenta().bold(),
+                                    agent.description.italic(),
+                                    model_str.cyan(),
+                                    agent.tools.join(", ").yellow()
+                                );
+                            }
+                        }
+                    } else {
+                        println!("\nTip: Place custom ECC markdown files in '.ecc/agents/*.md' to discover them automatically.\n");
+                    }
+                }
+
+                EccAction::Run {
+                    agent,
+                    prompt,
+                    provider,
+                    model,
+                    tools,
+                    max_iterations,
+                    dir,
+                } => {
+                    let custom_dir = dir.as_ref().map(std::path::Path::new);
+                    let ecc_agent = match resolve_ecc_agent(&agent, custom_dir) {
+                        Some(a) => a,
+                        None => {
+                            let default_dir = std::path::Path::new(".ecc/agents");
+                            match resolve_ecc_agent(&agent, Some(default_dir)) {
+                                Some(a) => a,
+                                None => {
+                                    eprintln!(
+                                        "{}: ECC agent '{}' not found. Run 'tagisan ecc list' to see available agents.",
+                                        "Error".red().bold(),
+                                        agent
+                                    );
+                                    std::process::exit(1);
+                                }
+                            }
+                        }
+                    };
+
+                    let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
+
+                    // Build Tool Registry
+                    let mut registry = ToolRegistry::new();
+                    let tool_list: Vec<&str> = tools.split(',').map(|s| s.trim()).collect();
+                    let enable_all = tool_list.contains(&"all");
+
+                    if enable_all || tool_list.contains(&"read_file") || ecc_agent.tools.contains(&"read_file".to_string()) {
+                        registry.register_tool(ReadFileTool::new());
+                    }
+                    if enable_all || tool_list.contains(&"write_file") || ecc_agent.tools.contains(&"write_file".to_string()) {
+                        registry.register_tool(WriteFileTool::new());
+                    }
+                    if enable_all || tool_list.contains(&"run_command") || ecc_agent.tools.contains(&"run_command".to_string()) {
+                        registry.register_tool(RunCommandTool::default());
+                    }
+                    if enable_all || tool_list.contains(&"calculator") || ecc_agent.tools.contains(&"calculator".to_string()) {
+                        registry.register_tool(CalculatorTool::new());
+                    }
+
+                    println!("\n{}", "🏛️ Launching Autonomous ECC Agent...".bold().magenta());
+                    println!("Agent Persona: {} ({})", ecc_agent.name.yellow().bold(), ecc_agent.description.italic());
+                    println!("Engine: {} [{}]", provider_id.cyan().bold(), model_name.yellow().bold());
+                    println!("Active Tools: [{}]", registry.names().join(", ").green());
+                    println!("Prompt: \"{}\"\n", prompt.italic());
+
+                    let autonomous_agent = ecc_agent
+                        .into_autonomous_agent(prov, Some(model_name), registry)
+                        .with_max_iterations(max_iterations);
+
+                    let result = autonomous_agent.run(&prompt, &ctx).await?;
+
+                    println!("\n{}", "================ ECC AGENT EXECUTION TRACE ================".bold().cyan());
+                    for step in &result.steps {
+                        println!("\n{}", format!("--- Iteration {} ---", step.iteration).bold().yellow());
+                        for (id, name, args) in step.assistant_message.extract_tool_calls() {
+                            println!("🔧 Called Tool: {} (ID: {})", name.green().bold(), id.dimmed());
+                            println!("   Args: {}", args);
+                        }
+                        for res in &step.tool_results {
+                            if let ContentBlock::ToolResult { tool_call_id, content, is_error } = res {
+                                if *is_error {
+                                    println!("❌ Result [{}]: {}", tool_call_id.dimmed(), content.red());
+                                } else {
+                                    println!("✔ Result [{}]: {}", tool_call_id.dimmed(), content.dimmed());
+                                }
+                            }
+                        }
+                    }
+
+                    println!("\n{}", "================ FINAL ANSWER ================".bold().green());
+                    println!("{}\n", result.final_answer);
+                    println!("{}", "==============================================".green());
+                    println!(
+                        "Iterations: {} | Total Tokens: {} | Estimated Cost: ${:.4} USD | Latency: {:.2}s",
+                        result.iterations,
+                        result.total_usage.prompt_tokens + result.total_usage.completion_tokens,
+                        result.total_cost_usd,
+                        result.total_latency.as_secs_f32()
+                    );
+                }
+
+                EccAction::Pipeline {
+                    objective,
+                    provider,
+                    model,
+                    tools,
+                    concurrency,
+                } => {
+                    let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
+
+                    println!("{}", "═══════════════════════════════════════════════════════════".bold().blue());
+                    println!("{}", "  🏛️  ECC 5-STAGE MULTI-AGENT ENGINEERING PIPELINE".bold().yellow());
+                    println!("  Plan -> Test -> Implement -> (Review || Security) -> Verify");
+                    println!("{}", "═══════════════════════════════════════════════════════════".bold().blue());
+                    println!("Objective: \"{}\"", objective.italic());
+                    println!("Active Engine: {} [{}]\n", provider_id.cyan().bold(), model_name.yellow().bold());
+
+                    // Build Tool Registry
+                    let mut registry = ToolRegistry::new();
+                    let tool_list: Vec<&str> = tools.split(',').map(|s| s.trim()).collect();
+                    let enable_all = tool_list.contains(&"all");
+
+                    if enable_all || tool_list.contains(&"read_file") {
+                        registry.register_tool(ReadFileTool::new());
+                    }
+                    if enable_all || tool_list.contains(&"write_file") {
+                        registry.register_tool(WriteFileTool::new());
+                    }
+                    if enable_all || tool_list.contains(&"run_command") {
+                        registry.register_tool(RunCommandTool::default());
+                    }
+                    if enable_all || tool_list.contains(&"calculator") {
+                        registry.register_tool(CalculatorTool::new());
+                    }
+
+                    let mut pipeline_graph = build_ecc_pipeline(&objective, prov, &model_name, registry)?;
+
+                    // Display DAG topology
+                    println!("{}", "════════════════ PIPELINE TOPOLOGY ════════════════".bold().blue());
+                    let topo = pipeline_graph.validate()?;
+                    for (i, task_id) in topo.iter().enumerate() {
+                        let task = pipeline_graph.get_task(task_id).unwrap();
+                        let deps = pipeline_graph.upstream_dependencies(task_id)?;
+                        let deps_str = if deps.is_empty() {
+                            "None (Root Task)".italic().dimmed().to_string()
+                        } else {
+                            deps.join(", ").yellow().to_string()
+                        };
+                        println!(
+                            "  {}. [{}] {} | Depends on: [{}]",
+                            i + 1,
+                            task.id.cyan().bold(),
+                            task.name.bold(),
+                            deps_str
+                        );
+                    }
+                    println!("{}\n", "═══════════════════════════════════════════════════".bold().blue());
+
+                    let (event_tx, mut event_rx) = tokio::sync::mpsc::unbounded_channel();
+                    let mut scheduler = DagScheduler::new()
+                        .with_id("ecc_pipeline")
+                        .with_event_sender(event_tx);
+
+                    if let Some(limit) = concurrency {
+                        scheduler = scheduler.with_concurrency_limit(limit);
+                    }
+
+                    let event_printer = tokio::spawn(async move {
+                        while let Some(evt) = event_rx.recv().await {
+                            match evt {
+                                WorkflowEvent::WorkflowStarted { workflow_id, total_tasks } => {
+                                    println!(
+                                        "{} [{}] ({} stages scheduled)",
+                                        "🚀 Pipeline Execution Started:".bold().magenta(),
+                                        workflow_id.cyan(),
+                                        total_tasks
+                                    );
+                                }
+                                WorkflowEvent::TaskStarted { task_id, task_name, attempt } => {
+                                    println!(
+                                        "  {} {} ({}) [Attempt {}]",
+                                        "⏳ Starting Stage:".yellow().bold(),
+                                        task_name.bold(),
+                                        task_id.dimmed(),
+                                        attempt
+                                    );
+                                }
+                                WorkflowEvent::TaskCompleted { task_id, output } => {
+                                    println!(
+                                        "  {} [{}] Finished in {:.2}s ({} tokens)",
+                                        "✔ Completed:".green().bold(),
+                                        task_id.cyan(),
+                                        output.latency.as_secs_f32(),
+                                        output.usage.prompt_tokens + output.usage.completion_tokens
+                                    );
+                                }
+                                WorkflowEvent::TaskFailed { task_id, error, attempts } => {
+                                    println!(
+                                        "  {} [{}] Failed after {} attempts: {}",
+                                        "❌ Failed:".red().bold(),
+                                        task_id.red(),
+                                        attempts,
+                                        error
+                                    );
+                                }
+                                _ => {}
+                            }
+                        }
+                    });
+
+                    let result = scheduler.run(&mut pipeline_graph, &ctx).await;
+                    let _ = event_printer.await;
+
+                    match result {
+                        Ok(wf_res) => {
+                            println!("\n{}", "════════════════ ECC PIPELINE STAGE OUTPUTS ════════════════".bold().green());
+                            for (task_id, output) in &wf_res.task_outputs {
+                                println!("\n{}", format!("--- Stage [{}] ---", task_id).bold().cyan());
+                                println!("Latency: {:.2}s | Tokens: {}", output.latency.as_secs_f32(), output.usage.prompt_tokens + output.usage.completion_tokens);
+                                println!("{}\n", output.text);
+                            }
+
+                            if let Some(final_text) = wf_res.final_output {
+                                println!("{}", "════════════════ FINAL VERIFIED & SYNTHESIZED DELIVERABLE ════════════════".bold().yellow());
+                                println!("{}\n", final_text);
+                                println!("{}", "══════════════════════════════════════════════════════════════════════════".bold().yellow());
+                            }
+
+                            println!(
+                                "Completed Stages: {}/{} | Total Tokens: {} | Total Cost: ${:.4} USD | Total Time: {:.2}s",
+                                wf_res.completed_tasks,
+                                wf_res.completed_tasks + wf_res.failed_tasks,
+                                wf_res.total_usage.prompt_tokens + wf_res.total_usage.completion_tokens,
+                                wf_res.total_cost_usd,
+                                wf_res.total_latency.as_secs_f32()
+                            );
+                        }
+                        Err(e) => {
+                            eprintln!("\n{}: {:?}", "ECC Pipeline Execution Error".red().bold(), e);
+                            std::process::exit(1);
+                        }
+                    }
+                }
+
+                EccAction::Audit { prompt } => {
+                    println!("\n{}", "🛡️  Starting ECC Adversarial Engineering Audit...".bold().magenta());
+                    println!("Architectural Problem / Code: \"{}\"\n", prompt.italic());
+
+                    let architect_spec = if env::var("ANTHROPIC_API_KEY").is_ok() {
+                        ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
+                    } else if env::var("OPENAI_API_KEY").is_ok() {
+                        ("openai".to_string(), "gpt-4o".to_string())
+                    } else if env::var("GEMINI_API_KEY").is_ok() {
+                        ("gemini".to_string(), "gemini-1.5-pro".to_string())
+                    } else {
+                        ("ollama".to_string(), "llama3.2".to_string())
+                    };
+
+                    let security_spec = if env::var("DEEPSEEK_API_KEY").is_ok() {
+                        ("deepseek".to_string(), "deepseek-reasoner".to_string())
+                    } else if env::var("XAI_API_KEY").is_ok() {
+                        ("xai".to_string(), "grok-2-latest".to_string())
+                    } else if env::var("GEMINI_API_KEY").is_ok() {
+                        ("gemini".to_string(), "gemini-2.0-flash".to_string())
+                    } else {
+                        ("ollama".to_string(), "llama3.2".to_string())
+                    };
+
+                    let adjudicator_spec = if env::var("GEMINI_API_KEY").is_ok() {
+                        ("gemini".to_string(), "gemini-1.5-pro".to_string())
+                    } else if env::var("ANTHROPIC_API_KEY").is_ok() {
+                        ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
+                    } else {
+                        ("openai".to_string(), "gpt-4o".to_string())
+                    };
+
+                    let audit = EccAuditDebate::new(architect_spec, security_spec, adjudicator_spec);
+                    let input = StrategyInput {
+                        prompt,
+                        system_instruction: None,
+                    };
+
+                    let output = audit.execute(input, &ctx).await?;
+
+                    for step in &output.intermediate_steps {
+                        println!("\n{}", format!("--- {} ---", step.step_name).bold().cyan());
+                        println!("Agent: {} ({}) | Latency: {:.2}s", step.provider.bold(), step.model.yellow(), step.latency.as_secs_f32());
+                        println!("{}\n", step.message.extract_text());
+                    }
+
+                    println!("{}", "================ DEFINITIVE AUDIT VERDICT ================".bold().green());
+                    println!("{}\n", output.final_answer);
+                    println!("{}", "==========================================================".green());
+                    println!(
+                        "Total Tokens: {} | Estimated Cost: ${:.4} USD | Total Time: {:.2}s",
+                        output.total_usage.prompt_tokens + output.total_usage.completion_tokens,
+                        output.total_cost_usd,
+                        output.total_latency.as_secs_f32()
+                    );
                 }
             }
         }
