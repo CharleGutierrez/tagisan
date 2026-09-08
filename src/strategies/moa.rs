@@ -1,5 +1,5 @@
 use crate::engine::EngineContext;
-use crate::error::Result;
+use crate::error::{Result, TagisanError};
 use crate::strategies::{CollaborationStrategy, IntermediateStep, StrategyInput, StrategyOutput};
 use crate::types::{CompletionRequest, Message, TokenUsage};
 use async_trait::async_trait;
@@ -29,6 +29,10 @@ impl CollaborationStrategy for MixtureOfAgentsStrategy {
     }
 
     async fn execute(&self, input: StrategyInput, ctx: &EngineContext) -> Result<StrategyOutput> {
+        if ctx.cancellation_token.is_cancelled() {
+            return Err(TagisanError::Cancelled);
+        }
+
         let start_time = Instant::now();
         let mut intermediate_steps = Vec::new();
         let mut total_usage = TokenUsage::default();
@@ -41,6 +45,7 @@ impl CollaborationStrategy for MixtureOfAgentsStrategy {
             let model_name = model_name.clone();
             let prompt = input.prompt.clone();
             let sys = input.system_instruction.clone();
+            let cancel_token = ctx.cancellation_token.clone();
 
             proposer_futures.push(async move {
                 let req = CompletionRequest {
@@ -50,6 +55,9 @@ impl CollaborationStrategy for MixtureOfAgentsStrategy {
                     max_tokens: Some(3000),
                     stream: false,
                     system_prompt: sys,
+                    tools: Vec::new(),
+                    tool_choice: None,
+                    cancellation_token: Some(cancel_token),
                 };
                 let resp = provider.complete(req).await;
                 (idx, provider_id, model_name, resp)
@@ -57,6 +65,11 @@ impl CollaborationStrategy for MixtureOfAgentsStrategy {
         }
 
         let proposer_results = futures::future::join_all(proposer_futures).await;
+
+        if ctx.cancellation_token.is_cancelled() {
+            return Err(TagisanError::Cancelled);
+        }
+
         let mut candidate_drafts = Vec::new();
 
         for (idx, provider_id, model_name, comp_res) in proposer_results {
@@ -89,15 +102,22 @@ impl CollaborationStrategy for MixtureOfAgentsStrategy {
                     });
                 }
                 Err(e) => {
+                    if matches!(e, TagisanError::Cancelled) {
+                        return Err(TagisanError::Cancelled);
+                    }
                     tracing::warn!("Proposer {} ({}) failed: {:?}", provider_id, model_name, e);
                 }
             }
         }
 
         if candidate_drafts.is_empty() {
-            return Err(crate::error::TagisanError::Execution(
+            return Err(TagisanError::Execution(
                 "All MoA proposer models failed to return candidate responses.".into(),
             ));
+        }
+
+        if ctx.cancellation_token.is_cancelled() {
+            return Err(TagisanError::Cancelled);
         }
 
         // 2. Synthesize with Master Aggregator
@@ -123,6 +143,9 @@ impl CollaborationStrategy for MixtureOfAgentsStrategy {
             max_tokens: Some(4096),
             stream: false,
             system_prompt: input.system_instruction.clone(),
+            tools: Vec::new(),
+            tool_choice: None,
+            cancellation_token: Some(ctx.cancellation_token.clone()),
         };
 
         let agg_resp = agg_provider.complete(agg_req).await?;

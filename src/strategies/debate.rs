@@ -1,5 +1,5 @@
 use crate::engine::EngineContext;
-use crate::error::Result;
+use crate::error::{Result, TagisanError};
 use crate::strategies::{CollaborationStrategy, IntermediateStep, StrategyInput, StrategyOutput};
 use crate::types::{CompletionRequest, TokenUsage};
 use async_trait::async_trait;
@@ -33,6 +33,10 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
     }
 
     async fn execute(&self, input: StrategyInput, ctx: &EngineContext) -> Result<StrategyOutput> {
+        if ctx.cancellation_token.is_cancelled() {
+            return Err(TagisanError::Cancelled);
+        }
+
         let start_time = Instant::now();
         let mut intermediate_steps = Vec::new();
         let mut total_usage = TokenUsage::default();
@@ -50,8 +54,13 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
             input.prompt
         );
 
-        let thesis_req = CompletionRequest::new(p_model.clone(), thesis_prompt)
-            .with_temperature(0.7);
+        let mut thesis_req = CompletionRequest::new(p_model.clone(), thesis_prompt)
+            .with_temperature(0.7)
+            .with_cancellation(ctx.cancellation_token.clone());
+
+        if let Some(ref sys) = input.system_instruction {
+            thesis_req = thesis_req.with_system(sys.clone());
+        }
 
         let thesis_resp = p_provider.complete(thesis_req).await?;
         ctx.budget_tracker.record(p_model, thesis_resp.usage.prompt_tokens, thesis_resp.usage.completion_tokens)?;
@@ -66,6 +75,10 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
             message: thesis_resp.message,
             latency: thesis_resp.latency,
         });
+
+        if ctx.cancellation_token.is_cancelled() {
+            return Err(TagisanError::Cancelled);
+        }
 
         // ----------------------------------------------------
         // ROUND 2: ANTITHESIS (Adversary critiques & probes bugs)
@@ -83,8 +96,13 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
             input.prompt, thesis_text
         );
 
-        let antithesis_req = CompletionRequest::new(a_model.clone(), antithesis_prompt)
-            .with_temperature(0.4);
+        let mut antithesis_req = CompletionRequest::new(a_model.clone(), antithesis_prompt)
+            .with_temperature(0.4)
+            .with_cancellation(ctx.cancellation_token.clone());
+
+        if let Some(ref sys) = input.system_instruction {
+            antithesis_req = antithesis_req.with_system(sys.clone());
+        }
 
         let antithesis_resp = a_provider.complete(antithesis_req).await?;
         ctx.budget_tracker.record(a_model, antithesis_resp.usage.prompt_tokens, antithesis_resp.usage.completion_tokens)?;
@@ -99,6 +117,10 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
             message: antithesis_resp.message,
             latency: antithesis_resp.latency,
         });
+
+        if ctx.cancellation_token.is_cancelled() {
+            return Err(TagisanError::Cancelled);
+        }
 
         // ----------------------------------------------------
         // ROUND 3: SYNTHESIS / LAKANDIWA (Master Verdict)
@@ -119,8 +141,13 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
             a_provider_id, a_model, antithesis_text
         );
 
-        let synthesis_req = CompletionRequest::new(adj_model.clone(), synthesis_prompt)
-            .with_temperature(0.2);
+        let mut synthesis_req = CompletionRequest::new(adj_model.clone(), synthesis_prompt)
+            .with_temperature(0.2)
+            .with_cancellation(ctx.cancellation_token.clone());
+
+        if let Some(ref sys) = input.system_instruction {
+            synthesis_req = synthesis_req.with_system(sys.clone());
+        }
 
         let synthesis_resp = adj_provider.complete(synthesis_req).await?;
         ctx.budget_tracker.record(adj_model, synthesis_resp.usage.prompt_tokens, synthesis_resp.usage.completion_tokens)?;

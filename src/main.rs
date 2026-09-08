@@ -192,33 +192,53 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
             println!("Prompt: \"{}\"\n", prompt.italic());
 
-            let req = CompletionRequest::new(model_name.clone(), prompt).with_stream(true);
+            let req = CompletionRequest::new(model_name.clone(), prompt)
+                .with_stream(true)
+                .with_cancellation(ctx.cancellation_token.clone());
             let mut stream = prov.stream(req).await?;
 
             let start = std::time::Instant::now();
             let mut is_thinking = false;
+            let mut last_usage = None;
 
             while let Some(chunk_res) = stream.next().await {
                 match chunk_res {
-                    Ok(chunk) => match chunk.delta {
-                        StreamChunkDelta::Thinking(thought) => {
-                            if !is_thinking {
-                                print!("\n{}\n", "--- Model Thinking Block ---".italic().dimmed());
-                                is_thinking = true;
-                            }
-                            print!("{}", thought.dimmed());
-                            std::io::stdout().flush().ok();
+                    Ok(chunk) => {
+                        if let Some(u) = chunk.usage {
+                            last_usage = Some(u);
                         }
-                        StreamChunkDelta::Text(text) => {
-                            if is_thinking {
-                                print!("\n{}\n", "--- Response Output ---".italic().green());
-                                is_thinking = false;
+                        match chunk.delta {
+                            StreamChunkDelta::Thinking(thought) => {
+                                if !is_thinking {
+                                    print!("\n{}\n", "--- Model Thinking Block ---".italic().dimmed());
+                                    is_thinking = true;
+                                }
+                                print!("{}", thought.dimmed());
+                                std::io::stdout().flush().ok();
                             }
-                            print!("{}", text);
-                            std::io::stdout().flush().ok();
+                            StreamChunkDelta::Text(text) => {
+                                if is_thinking {
+                                    print!("\n{}\n", "--- Response Output ---".italic().green());
+                                    is_thinking = false;
+                                }
+                                print!("{}", text);
+                                std::io::stdout().flush().ok();
+                            }
+                            StreamChunkDelta::ToolCallDelta { index, id, name, arguments_delta } => {
+                                if let Some(n) = name {
+                                    print!("\n[Tool Call #{}: {}", index, n);
+                                    if let Some(id_str) = id {
+                                        print!(" (ID: {})", id_str);
+                                    }
+                                    print!("] ");
+                                }
+                                if let Some(args) = arguments_delta {
+                                    print!("{}", args);
+                                }
+                                std::io::stdout().flush().ok();
+                            }
                         }
-                        _ => {}
-                    },
+                    }
                     Err(e) => {
                         eprintln!("\n{}: {:?}", "Stream Error".red().bold(), e);
                         break;
@@ -227,6 +247,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             println!("\n\n{} (Stream finished in {:.2}s)", "✔ Done".green().bold(), start.elapsed().as_secs_f32());
+
+            if let Some(u) = last_usage {
+                let cost_res = ctx.budget_tracker.record(&model_name, u.prompt_tokens, u.completion_tokens);
+                let total_spent = ctx.budget_tracker.current_spent_usd();
+                println!(
+                    "Tokens: {} (Prompt: {}, Output: {}) | Session Spent: ${:.4} USD",
+                    u.prompt_tokens + u.completion_tokens,
+                    u.prompt_tokens,
+                    u.completion_tokens,
+                    total_spent
+                );
+                if let Err(e) = cost_res {
+                    eprintln!("{}: {:?}", "Budget Alert".yellow().bold(), e);
+                }
+            }
         }
 
         Commands::Ask { provider, model, prompt } => {
@@ -245,8 +280,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut session = ChatSession::new();
             session.add_user_message(prompt);
 
-            let req = session.build_request(model_name.clone());
+            let req = session
+                .build_request(model_name.clone())
+                .with_cancellation(ctx.cancellation_token.clone());
             let resp = prov.complete(req).await?;
+
+            ctx.budget_tracker.record(&model_name, resp.usage.prompt_tokens, resp.usage.completion_tokens)?;
 
             if let Some(thinking) = resp.message.extract_thinking() {
                 println!("\n{}", "--- Model Thinking / Reasoning ---".dimmed().italic());
@@ -256,11 +295,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("\n{}", "--- Response ---".bold().green());
             println!("{}\n", resp.message.extract_text());
             println!(
-                "Latency: {:.2}s | Tokens: {} (Prompt: {}, Output: {})",
+                "Latency: {:.2}s | Tokens: {} (Prompt: {}, Output: {}) | Total Spent: ${:.4} USD",
                 resp.latency.as_secs_f32(),
                 resp.usage.prompt_tokens + resp.usage.completion_tokens,
                 resp.usage.prompt_tokens,
-                resp.usage.completion_tokens
+                resp.usage.completion_tokens,
+                ctx.budget_tracker.current_spent_usd()
             );
         }
 

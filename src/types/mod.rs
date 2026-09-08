@@ -1,6 +1,7 @@
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use tokio_util::sync::CancellationToken;
 
 /// Entity producing a message in the conversation
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -31,6 +32,42 @@ pub enum ContentBlock {
         content: String,
         is_error: bool,
     },
+}
+
+impl ContentBlock {
+    pub fn text(text: impl Into<String>) -> Self {
+        Self::Text { text: text.into() }
+    }
+
+    pub fn thinking(thinking: impl Into<String>, signature: Option<String>) -> Self {
+        Self::Thinking {
+            thinking: thinking.into(),
+            signature,
+        }
+    }
+
+    pub fn image(media_type: impl Into<String>, data_base64: impl Into<String>) -> Self {
+        Self::Image {
+            media_type: media_type.into(),
+            data_base64: data_base64.into(),
+        }
+    }
+
+    pub fn tool_call(id: impl Into<String>, name: impl Into<String>, arguments: serde_json::Value) -> Self {
+        Self::ToolCall {
+            id: id.into(),
+            name: name.into(),
+            arguments,
+        }
+    }
+
+    pub fn tool_result(tool_call_id: impl Into<String>, content: impl Into<String>, is_error: bool) -> Self {
+        Self::ToolResult {
+            tool_call_id: tool_call_id.into(),
+            content: content.into(),
+            is_error,
+        }
+    }
 }
 
 /// Universal message format across all models
@@ -84,15 +121,65 @@ impl Message {
         }
     }
 
+    pub fn tool_call(id: impl Into<String>, name: impl Into<String>, arguments: serde_json::Value) -> Self {
+        Self {
+            role: Role::Assistant,
+            content: vec![ContentBlock::ToolCall {
+                id: id.into(),
+                name: name.into(),
+                arguments,
+            }],
+            name: None,
+            metadata: HashMap::new(),
+        }
+    }
+
+    pub fn tool_result(tool_call_id: impl Into<String>, content: impl Into<String>, is_error: bool) -> Self {
+        Self {
+            role: Role::Tool,
+            content: vec![ContentBlock::ToolResult {
+                tool_call_id: tool_call_id.into(),
+                content: content.into(),
+                is_error,
+            }],
+            name: None,
+            metadata: HashMap::new(),
+        }
+    }
+
+    pub fn image(media_type: impl Into<String>, data_base64: impl Into<String>) -> Self {
+        Self {
+            role: Role::User,
+            content: vec![ContentBlock::Image {
+                media_type: media_type.into(),
+                data_base64: data_base64.into(),
+            }],
+            name: None,
+            metadata: HashMap::new(),
+        }
+    }
+
+    pub fn with_name(mut self, name: impl Into<String>) -> Self {
+        self.name = Some(name.into());
+        self
+    }
+
+    pub fn with_metadata(mut self, key: impl Into<String>, value: serde_json::Value) -> Self {
+        self.metadata.insert(key.into(), value);
+        self
+    }
+
     pub fn extract_text(&self) -> String {
-        self.content
+        let texts: Vec<String> = self
+            .content
             .iter()
             .filter_map(|c| match c {
-                ContentBlock::Text { text } => Some(text.as_str()),
+                ContentBlock::Text { text } => Some(text.clone()),
+                ContentBlock::Thinking { thinking, .. } if self.role == Role::Reasoning => Some(thinking.clone()),
                 _ => None,
             })
-            .collect::<Vec<_>>()
-            .join("\n")
+            .collect();
+        texts.join("\n")
     }
 
     pub fn extract_thinking(&self) -> Option<String> {
@@ -109,6 +196,28 @@ impl Message {
         } else {
             Some(thoughts.join("\n"))
         }
+    }
+
+    pub fn extract_tool_calls(&self) -> Vec<(&str, &str, &serde_json::Value)> {
+        self.content
+            .iter()
+            .filter_map(|c| match c {
+                ContentBlock::ToolCall { id, name, arguments } => Some((id.as_str(), name.as_str(), arguments)),
+                _ => None,
+            })
+            .collect()
+    }
+
+    pub fn extract_tool_results(&self) -> Vec<(&str, &str, bool)> {
+        self.content
+            .iter()
+            .filter_map(|c| match c {
+                ContentBlock::ToolResult { tool_call_id, content, is_error } => {
+                    Some((tool_call_id.as_str(), content.as_str(), *is_error))
+                }
+                _ => None,
+            })
+            .collect()
     }
 }
 
@@ -144,6 +253,24 @@ impl StreamChunk {
     pub fn thinking(thinking: impl Into<String>) -> Self {
         Self {
             delta: StreamChunkDelta::Thinking(thinking.into()),
+            finish_reason: None,
+            usage: None,
+        }
+    }
+
+    pub fn tool_call_delta(
+        index: usize,
+        id: Option<String>,
+        name: Option<String>,
+        arguments_delta: Option<String>,
+    ) -> Self {
+        Self {
+            delta: StreamChunkDelta::ToolCallDelta {
+                index,
+                id,
+                name,
+                arguments_delta,
+            },
             finish_reason: None,
             usage: None,
         }
@@ -192,11 +319,21 @@ pub enum FinishReason {
 }
 
 /// Tool definition schema for function calling
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ToolDefinition {
     pub name: String,
     pub description: String,
     pub parameters: serde_json::Value,
+}
+
+impl ToolDefinition {
+    pub fn new(name: impl Into<String>, description: impl Into<String>, parameters: serde_json::Value) -> Self {
+        Self {
+            name: name.into(),
+            description: description.into(),
+            parameters,
+        }
+    }
 }
 
 /// Universal completion request payload
@@ -212,6 +349,12 @@ pub struct CompletionRequest {
     pub stream: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub system_prompt: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tools: Vec<ToolDefinition>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_choice: Option<serde_json::Value>,
+    #[serde(skip)]
+    pub cancellation_token: Option<CancellationToken>,
 }
 
 impl CompletionRequest {
@@ -223,6 +366,9 @@ impl CompletionRequest {
             max_tokens: Some(4096),
             stream: false,
             system_prompt: None,
+            tools: Vec::new(),
+            tool_choice: None,
+            cancellation_token: None,
         }
     }
 
@@ -236,6 +382,11 @@ impl CompletionRequest {
         self
     }
 
+    pub fn with_max_tokens(mut self, max_tokens: u32) -> Self {
+        self.max_tokens = Some(max_tokens);
+        self
+    }
+
     pub fn with_stream(mut self, stream: bool) -> Self {
         self.stream = stream;
         self
@@ -243,6 +394,26 @@ impl CompletionRequest {
 
     pub fn with_messages(mut self, messages: Vec<Message>) -> Self {
         self.messages = messages;
+        self
+    }
+
+    pub fn with_tools(mut self, tools: Vec<ToolDefinition>) -> Self {
+        self.tools = tools;
+        self
+    }
+
+    pub fn with_tool(mut self, tool: ToolDefinition) -> Self {
+        self.tools.push(tool);
+        self
+    }
+
+    pub fn with_tool_choice(mut self, tool_choice: serde_json::Value) -> Self {
+        self.tool_choice = Some(tool_choice);
+        self
+    }
+
+    pub fn with_cancellation(mut self, token: CancellationToken) -> Self {
+        self.cancellation_token = Some(token);
         self
     }
 }
@@ -296,6 +467,9 @@ impl ChatSession {
             max_tokens: Some(4096),
             stream: false,
             system_prompt: self.system_prompt.clone(),
+            tools: Vec::new(),
+            tool_choice: None,
+            cancellation_token: None,
         }
     }
 }

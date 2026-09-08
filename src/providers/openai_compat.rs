@@ -19,7 +19,11 @@ pub struct OpenAiCompatibleProvider {
 }
 
 impl OpenAiCompatibleProvider {
-    pub fn new(provider_id: &'static str, base_url: impl Into<String>, api_key: impl Into<String>) -> Self {
+    pub fn new(
+        provider_id: &'static str,
+        base_url: impl Into<String>,
+        api_key: impl Into<String>,
+    ) -> Self {
         Self {
             provider_id,
             base_url: base_url.into(),
@@ -50,101 +54,17 @@ impl OpenAiCompatibleProvider {
         );
         Ok(headers)
     }
-}
 
-#[derive(Serialize)]
-struct ChatCompletionPayload<'a> {
-    model: &'a str,
-    messages: Vec<ApiMessage<'a>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    temperature: Option<f32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    max_tokens: Option<u32>,
-    #[serde(default)]
-    stream: bool,
-}
-
-#[derive(Serialize)]
-struct ApiMessage<'a> {
-    role: &'a str,
-    content: String,
-}
-
-#[derive(Deserialize)]
-struct ChatCompletionApiResponse {
-    id: Option<String>,
-    choices: Vec<ApiChoice>,
-    usage: Option<ApiUsage>,
-}
-
-#[derive(Deserialize)]
-struct ApiChoice {
-    message: ApiResponseMessage,
-    finish_reason: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct ApiResponseMessage {
-    content: Option<String>,
-    reasoning_content: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct StreamChatCompletionChunk {
-    choices: Vec<StreamChoice>,
-    usage: Option<ApiUsage>,
-}
-
-#[derive(Deserialize)]
-struct StreamChoice {
-    delta: StreamDelta,
-    finish_reason: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct StreamDelta {
-    content: Option<String>,
-    reasoning_content: Option<String>,
-}
-
-#[derive(Deserialize, Clone)]
-struct ApiUsage {
-    prompt_tokens: Option<u32>,
-    completion_tokens: Option<u32>,
-}
-
-#[async_trait]
-impl LlmProvider for OpenAiCompatibleProvider {
-    fn provider_id(&self) -> &'static str {
-        self.provider_id
-    }
-
-    fn capabilities(&self, model: &str) -> ProviderCapabilities {
-        let m = model.to_lowercase();
-        let mut caps = ProviderCapabilities::STREAMING | ProviderCapabilities::SYSTEM_PROMPT | ProviderCapabilities::FUNCTION_CALLING;
-
-        if m.contains("r1") || m.contains("reasoner") || m.contains("o1") || m.contains("o3") {
-            caps |= ProviderCapabilities::REASONING_EXTRACTION;
-        }
-        if m.contains("deepseek") {
-            caps |= ProviderCapabilities::PROMPT_CACHING;
-        }
-        if m.contains("gpt-4o") || m.contains("grok-vision") {
-            caps |= ProviderCapabilities::VISION;
-        }
-        caps
-    }
-
-    async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse> {
-        let start = Instant::now();
-        let url = format!("{}/chat/completions", self.base_url.trim_end_matches('/'));
-        let headers = self.build_headers()?;
-
+    fn format_messages(&self, req: &CompletionRequest) -> Vec<OpenAiMessagePayload> {
         let mut api_messages = Vec::new();
+
         if let Some(sys) = &req.system_prompt {
-            api_messages.push(ApiMessage {
-                role: "system",
-                content: sys.clone(),
+            api_messages.push(OpenAiMessagePayload {
+                role: "system".to_string(),
+                content: Some(serde_json::Value::String(sys.clone())),
+                tool_calls: None,
+                tool_call_id: None,
+                name: None,
             });
         }
 
@@ -156,11 +76,386 @@ impl LlmProvider for OpenAiCompatibleProvider {
                 Role::Tool => "tool",
                 Role::Reasoning => "assistant",
             };
-            api_messages.push(ApiMessage {
-                role: role_str,
-                content: msg.extract_text(),
+
+            let mut tool_calls = Vec::new();
+            let mut tool_call_id = None;
+            let mut content_parts = Vec::new();
+            let mut has_images = false;
+
+            for block in &msg.content {
+                match block {
+                    ContentBlock::Text { text } => {
+                        content_parts.push(serde_json::json!({
+                            "type": "text",
+                            "text": text
+                        }));
+                    }
+                    ContentBlock::Thinking { thinking, .. } => {
+                        content_parts.push(serde_json::json!({
+                            "type": "text",
+                            "text": format!("<think>\n{}\n</think>", thinking)
+                        }));
+                    }
+                    ContentBlock::Image { media_type, data_base64 } => {
+                        has_images = true;
+                        content_parts.push(serde_json::json!({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": format!("data:{};base64,{}", media_type, data_base64)
+                            }
+                        }));
+                    }
+                    ContentBlock::ToolCall { id, name, arguments } => {
+                        tool_calls.push(OpenAiToolCallSerialization {
+                            id: id.clone(),
+                            call_type: "function".to_string(),
+                            function: OpenAiFunctionCallSerialization {
+                                name: name.clone(),
+                                arguments: if arguments.is_string() {
+                                    arguments.as_str().unwrap().to_string()
+                                } else {
+                                    arguments.to_string()
+                                },
+                            },
+                        });
+                    }
+                    ContentBlock::ToolResult { tool_call_id: tid, content, .. } => {
+                        tool_call_id = Some(tid.clone());
+                        content_parts.push(serde_json::json!({
+                            "type": "text",
+                            "text": content
+                        }));
+                    }
+                }
+            }
+
+            let content_val = if has_images {
+                Some(serde_json::Value::Array(content_parts))
+            } else if !content_parts.is_empty() {
+                // If only text parts, combine into single string for maximum compatibility
+                let text_combined: Vec<String> = content_parts
+                    .iter()
+                    .filter_map(|p| p.get("text").and_then(|t| t.as_str()).map(|s| s.to_string()))
+                    .collect();
+                Some(serde_json::Value::String(text_combined.join("\n")))
+            } else {
+                None
+            };
+
+            api_messages.push(OpenAiMessagePayload {
+                role: role_str.to_string(),
+                content: content_val,
+                tool_calls: if tool_calls.is_empty() { None } else { Some(tool_calls) },
+                tool_call_id,
+                name: msg.name.clone(),
             });
         }
+
+        api_messages
+    }
+}
+
+#[derive(Serialize, Debug)]
+struct ChatCompletionPayload<'a> {
+    model: &'a str,
+    messages: Vec<OpenAiMessagePayload>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    temperature: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_tokens: Option<u32>,
+    #[serde(default)]
+    stream: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    stream_options: Option<StreamOptions>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tools: Option<Vec<OpenAiTool<'a>>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tool_choice: Option<&'a serde_json::Value>,
+}
+
+#[derive(Serialize, Debug)]
+struct StreamOptions {
+    include_usage: bool,
+}
+
+#[derive(Serialize, Debug)]
+struct OpenAiTool<'a> {
+    #[serde(rename = "type")]
+    tool_type: &'static str,
+    function: OpenAiFunctionDefinition<'a>,
+}
+
+#[derive(Serialize, Debug)]
+struct OpenAiFunctionDefinition<'a> {
+    name: &'a str,
+    description: &'a str,
+    parameters: &'a serde_json::Value,
+}
+
+#[derive(Serialize, Debug)]
+struct OpenAiMessagePayload {
+    role: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    content: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tool_calls: Option<Vec<OpenAiToolCallSerialization>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tool_call_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    name: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct OpenAiToolCallSerialization {
+    id: String,
+    #[serde(rename = "type")]
+    call_type: String,
+    function: OpenAiFunctionCallSerialization,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct OpenAiFunctionCallSerialization {
+    name: String,
+    arguments: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct ChatCompletionApiResponse {
+    id: Option<String>,
+    choices: Vec<ApiChoice>,
+    usage: Option<ApiUsage>,
+}
+
+#[derive(Deserialize, Debug)]
+struct ApiChoice {
+    message: ApiResponseMessage,
+    finish_reason: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+struct ApiResponseMessage {
+    content: Option<String>,
+    reasoning_content: Option<String>,
+    tool_calls: Option<Vec<OpenAiToolCallSerialization>>,
+}
+
+#[derive(Deserialize, Debug)]
+struct StreamChatCompletionChunk {
+    choices: Vec<StreamChoice>,
+    usage: Option<ApiUsage>,
+}
+
+#[derive(Deserialize, Debug)]
+struct StreamChoice {
+    delta: StreamDelta,
+    finish_reason: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+struct StreamDelta {
+    content: Option<String>,
+    reasoning_content: Option<String>,
+    tool_calls: Option<Vec<StreamToolCallDelta>>,
+}
+
+#[derive(Deserialize, Debug)]
+struct StreamToolCallDelta {
+    index: usize,
+    id: Option<String>,
+    #[allow(dead_code)]
+    #[serde(rename = "type")]
+    call_type: Option<String>,
+    function: Option<StreamFunctionDelta>,
+}
+
+#[derive(Deserialize, Debug)]
+struct StreamFunctionDelta {
+    name: Option<String>,
+    arguments: Option<String>,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+struct ApiUsage {
+    prompt_tokens: Option<u32>,
+    completion_tokens: Option<u32>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ThinkState {
+    Initial,
+    InThinking,
+    AfterThinking,
+}
+
+/// Robust state machine parser to separate real-time `<think>` deltas from standard text deltas
+pub struct StreamingThinkParser {
+    state: ThinkState,
+    buffer: String,
+}
+
+impl StreamingThinkParser {
+    pub fn new() -> Self {
+        Self {
+            state: ThinkState::Initial,
+            buffer: String::new(),
+        }
+    }
+
+    pub fn process(&mut self, chunk: &str) -> Vec<StreamChunkDelta> {
+        self.buffer.push_str(chunk);
+        let mut deltas = Vec::new();
+
+        loop {
+            match self.state {
+                ThinkState::Initial => {
+                    let trimmed = self.buffer.trim_start();
+                    if trimmed.starts_with("<think>") {
+                        if let Some(pos) = self.buffer.find("<think>") {
+                            let before = &self.buffer[..pos];
+                            if !before.is_empty() {
+                                deltas.push(StreamChunkDelta::Text(before.to_string()));
+                            }
+                            let remainder = self.buffer[pos + 7..].to_string();
+                            self.buffer = remainder;
+                            self.state = ThinkState::InThinking;
+                            continue;
+                        }
+                    } else if "<think>".starts_with(trimmed) && !trimmed.is_empty() {
+                        // Partial match of opening tag, wait for more chunks
+                        break;
+                    } else {
+                        if let Some(pos) = self.buffer.find("<think>") {
+                            let before = &self.buffer[..pos];
+                            if !before.is_empty() {
+                                deltas.push(StreamChunkDelta::Text(before.to_string()));
+                            }
+                            let remainder = self.buffer[pos + 7..].to_string();
+                            self.buffer = remainder;
+                            self.state = ThinkState::InThinking;
+                            continue;
+                        }
+                        if !self.buffer.is_empty() {
+                            deltas.push(StreamChunkDelta::Text(std::mem::take(&mut self.buffer)));
+                        }
+                        self.state = ThinkState::AfterThinking;
+                        break;
+                    }
+                    break;
+                }
+                ThinkState::InThinking => {
+                    if let Some(pos) = self.buffer.find("</think>") {
+                        let thinking_text = &self.buffer[..pos];
+                        if !thinking_text.is_empty() {
+                            deltas.push(StreamChunkDelta::Thinking(thinking_text.to_string()));
+                        }
+                        let after = self.buffer[pos + 8..].to_string();
+                        self.buffer = after;
+                        self.state = ThinkState::AfterThinking;
+                        continue;
+                    } else {
+                        let tag = "</think>";
+                        let mut partial_len = 0;
+                        for i in (1..tag.len()).rev() {
+                            if self.buffer.ends_with(&tag[..i]) {
+                                partial_len = i;
+                                break;
+                            }
+                        }
+                        if partial_len > 0 {
+                            let safe_len = self.buffer.len() - partial_len;
+                            if safe_len > 0 {
+                                let thinking_text = self.buffer[..safe_len].to_string();
+                                deltas.push(StreamChunkDelta::Thinking(thinking_text));
+                                self.buffer = self.buffer[safe_len..].to_string();
+                            }
+                        } else if !self.buffer.is_empty() {
+                            deltas.push(StreamChunkDelta::Thinking(std::mem::take(&mut self.buffer)));
+                        }
+                        break;
+                    }
+                }
+                ThinkState::AfterThinking => {
+                    if !self.buffer.is_empty() {
+                        deltas.push(StreamChunkDelta::Text(std::mem::take(&mut self.buffer)));
+                    }
+                    break;
+                }
+            }
+        }
+
+        deltas
+    }
+
+    pub fn finish(&mut self) -> Vec<StreamChunkDelta> {
+        let mut deltas = Vec::new();
+        if !self.buffer.is_empty() {
+            match self.state {
+                ThinkState::InThinking => {
+                    deltas.push(StreamChunkDelta::Thinking(std::mem::take(&mut self.buffer)));
+                }
+                _ => {
+                    deltas.push(StreamChunkDelta::Text(std::mem::take(&mut self.buffer)));
+                }
+            }
+        }
+        deltas
+    }
+}
+
+impl Default for StreamingThinkParser {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[async_trait]
+impl LlmProvider for OpenAiCompatibleProvider {
+    fn provider_id(&self) -> &'static str {
+        self.provider_id
+    }
+
+    fn capabilities(&self, model: &str) -> ProviderCapabilities {
+        let m = model.to_lowercase();
+        let mut caps = ProviderCapabilities::STREAMING
+            | ProviderCapabilities::SYSTEM_PROMPT
+            | ProviderCapabilities::FUNCTION_CALLING;
+
+        if m.contains("r1") || m.contains("reasoner") || m.contains("o1") || m.contains("o3") {
+            caps |= ProviderCapabilities::REASONING_EXTRACTION;
+        }
+        if m.contains("deepseek") {
+            caps |= ProviderCapabilities::PROMPT_CACHING;
+        }
+        if m.contains("gpt-4o") || m.contains("grok-vision") || m.contains("vision") {
+            caps |= ProviderCapabilities::VISION;
+        }
+        caps
+    }
+
+    async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse> {
+        let start = Instant::now();
+        let url = format!("{}/chat/completions", self.base_url.trim_end_matches('/'));
+        let headers = self.build_headers()?;
+
+        let api_messages = self.format_messages(&req);
+
+        let tools = if !req.tools.is_empty() {
+            Some(
+                req.tools
+                    .iter()
+                    .map(|t| OpenAiTool {
+                        tool_type: "function",
+                        function: OpenAiFunctionDefinition {
+                            name: &t.name,
+                            description: &t.description,
+                            parameters: &t.parameters,
+                        },
+                    })
+                    .collect(),
+            )
+        } else {
+            None
+        };
 
         let payload = ChatCompletionPayload {
             model: &req.model,
@@ -168,15 +463,26 @@ impl LlmProvider for OpenAiCompatibleProvider {
             temperature: req.temperature,
             max_tokens: req.max_tokens,
             stream: false,
+            stream_options: None,
+            tools,
+            tool_choice: req.tool_choice.as_ref(),
         };
 
-        let response = self
+        let send_future = self
             .client
             .post(&url)
             .headers(headers)
             .json(&payload)
-            .send()
-            .await?;
+            .send();
+
+        let response = if let Some(token) = &req.cancellation_token {
+            tokio::select! {
+                _ = token.cancelled() => return Err(TagisanError::Cancelled),
+                res = send_future => res?,
+            }
+        } else {
+            send_future.await?
+        };
 
         let status = response.status();
         if !status.is_success() {
@@ -208,18 +514,32 @@ impl LlmProvider for OpenAiCompatibleProvider {
             }
         }
 
+        if let Some(tool_calls) = choice.message.tool_calls {
+            for tc in tool_calls {
+                let parsed_args = serde_json::from_str::<serde_json::Value>(&tc.function.arguments)
+                    .unwrap_or(serde_json::Value::String(tc.function.arguments));
+                content_blocks.push(ContentBlock::ToolCall {
+                    id: tc.id,
+                    name: tc.function.name,
+                    arguments: parsed_args,
+                });
+            }
+        }
+
         let raw_text = choice.message.content.unwrap_or_default();
 
         if raw_text.contains("<think>") && raw_text.contains("</think>") {
             if let Some(start_idx) = raw_text.find("<think>") {
                 if let Some(end_idx) = raw_text.find("</think>") {
-                    let thinking_str = &raw_text[start_idx + 7..end_idx].trim();
+                    let thinking_str = raw_text[start_idx + 7..end_idx].trim().to_string();
                     content_blocks.push(ContentBlock::Thinking {
-                        thinking: thinking_str.to_string(),
+                        thinking: thinking_str,
                         signature: None,
                     });
                     let clean_text = format!("{}{}", &raw_text[..start_idx], &raw_text[end_idx + 8..]).trim().to_string();
-                    content_blocks.push(ContentBlock::Text { text: clean_text });
+                    if !clean_text.is_empty() {
+                        content_blocks.push(ContentBlock::Text { text: clean_text });
+                    }
                 }
             }
         } else if !raw_text.is_empty() {
@@ -230,8 +550,15 @@ impl LlmProvider for OpenAiCompatibleProvider {
             Some("stop") => FinishReason::Stop,
             Some("length") => FinishReason::Length,
             Some("tool_calls") => FinishReason::ToolCalls,
+            Some("content_filter") => FinishReason::ContentFilter,
             Some(other) => FinishReason::Other(other.to_string()),
-            None => FinishReason::Stop,
+            None => {
+                if content_blocks.iter().any(|b| matches!(b, ContentBlock::ToolCall { .. })) {
+                    FinishReason::ToolCalls
+                } else {
+                    FinishReason::Stop
+                }
+            }
         };
 
         let usage = match api_resp.usage {
@@ -265,26 +592,25 @@ impl LlmProvider for OpenAiCompatibleProvider {
         let url = format!("{}/chat/completions", self.base_url.trim_end_matches('/'));
         let headers = self.build_headers()?;
 
-        let mut api_messages = Vec::new();
-        if let Some(sys) = &req.system_prompt {
-            api_messages.push(ApiMessage {
-                role: "system",
-                content: sys.clone(),
-            });
-        }
+        let api_messages = self.format_messages(&req);
 
-        for msg in &req.messages {
-            let role_str = match msg.role {
-                Role::System => "system",
-                Role::User => "user",
-                Role::Assistant => "assistant",
-                _ => "user",
-            };
-            api_messages.push(ApiMessage {
-                role: role_str,
-                content: msg.extract_text(),
-            });
-        }
+        let tools = if !req.tools.is_empty() {
+            Some(
+                req.tools
+                    .iter()
+                    .map(|t| OpenAiTool {
+                        tool_type: "function",
+                        function: OpenAiFunctionDefinition {
+                            name: &t.name,
+                            description: &t.description,
+                            parameters: &t.parameters,
+                        },
+                    })
+                    .collect(),
+            )
+        } else {
+            None
+        };
 
         let payload = ChatCompletionPayload {
             model: &req.model,
@@ -292,15 +618,26 @@ impl LlmProvider for OpenAiCompatibleProvider {
             temperature: req.temperature,
             max_tokens: req.max_tokens,
             stream: true,
+            stream_options: Some(StreamOptions { include_usage: true }),
+            tools,
+            tool_choice: req.tool_choice.as_ref(),
         };
 
-        let response = self
+        let send_future = self
             .client
             .post(&url)
             .headers(headers)
             .json(&payload)
-            .send()
-            .await?;
+            .send();
+
+        let response = if let Some(token) = &req.cancellation_token {
+            tokio::select! {
+                _ = token.cancelled() => return Err(TagisanError::Cancelled),
+                res = send_future => res?,
+            }
+        } else {
+            send_future.await?
+        };
 
         let status = response.status();
         if !status.is_success() {
@@ -312,63 +649,116 @@ impl LlmProvider for OpenAiCompatibleProvider {
         }
 
         let provider_id = self.provider_id;
-        let event_stream = response.bytes_stream().eventsource();
+        let mut event_stream = response.bytes_stream().eventsource();
+        let cancellation_token = req.cancellation_token.clone();
 
-        let mapped = event_stream.filter_map(move |event_res| {
-            async move {
+        let output_stream = async_stream::stream! {
+            let mut think_parser = StreamingThinkParser::new();
+            let mut accumulated_usage: Option<TokenUsage> = None;
+
+            loop {
+                let next_event = if let Some(ref token) = cancellation_token {
+                    tokio::select! {
+                        _ = token.cancelled() => {
+                            yield Err(TagisanError::Cancelled);
+                            return;
+                        }
+                        evt = event_stream.next() => evt,
+                    }
+                } else {
+                    event_stream.next().await
+                };
+
+                let event_res = match next_event {
+                    Some(res) => res,
+                    None => break,
+                };
+
                 match event_res {
                     Ok(event) => {
                         let data = event.data.trim();
                         if data == "[DONE]" {
-                            return Some(Ok(StreamChunk::done(FinishReason::Stop, None)));
+                            for delta in think_parser.finish() {
+                                yield Ok(StreamChunk {
+                                    delta,
+                                    finish_reason: None,
+                                    usage: None,
+                                });
+                            }
+                            yield Ok(StreamChunk::done(FinishReason::Stop, accumulated_usage.clone()));
+                            break;
                         }
                         if data.is_empty() {
-                            return None;
+                            continue;
                         }
 
                         match serde_json::from_str::<StreamChatCompletionChunk>(data) {
                             Ok(chunk) => {
-                                let usage = chunk.usage.map(|u| TokenUsage {
-                                    prompt_tokens: u.prompt_tokens.unwrap_or(0),
-                                    completion_tokens: u.completion_tokens.unwrap_or(0),
-                                    reasoning_tokens: None,
-                                    cached_prompt_tokens: None,
-                                    estimated_cost_usd: None,
-                                });
+                                if let Some(u) = chunk.usage {
+                                    accumulated_usage = Some(TokenUsage {
+                                        prompt_tokens: u.prompt_tokens.unwrap_or(0),
+                                        completion_tokens: u.completion_tokens.unwrap_or(0),
+                                        reasoning_tokens: None,
+                                        cached_prompt_tokens: None,
+                                        estimated_cost_usd: None,
+                                    });
+                                }
 
                                 if let Some(choice) = chunk.choices.into_iter().next() {
                                     if let Some(reasoning) = choice.delta.reasoning_content {
                                         if !reasoning.is_empty() {
-                                            return Some(Ok(StreamChunk {
+                                            yield Ok(StreamChunk {
                                                 delta: StreamChunkDelta::Thinking(reasoning),
                                                 finish_reason: None,
-                                                usage,
-                                            }));
+                                                usage: accumulated_usage.clone(),
+                                            });
                                         }
                                     }
+
+                                    if let Some(tool_calls) = choice.delta.tool_calls {
+                                        for tc in tool_calls {
+                                            yield Ok(StreamChunk {
+                                                delta: StreamChunkDelta::ToolCallDelta {
+                                                    index: tc.index,
+                                                    id: tc.id,
+                                                    name: tc.function.as_ref().and_then(|f| f.name.clone()),
+                                                    arguments_delta: tc.function.and_then(|f| f.arguments),
+                                                },
+                                                finish_reason: None,
+                                                usage: accumulated_usage.clone(),
+                                            });
+                                        }
+                                    }
+
                                     if let Some(content) = choice.delta.content {
                                         if !content.is_empty() {
-                                            return Some(Ok(StreamChunk {
-                                                delta: StreamChunkDelta::Text(content),
-                                                finish_reason: choice.finish_reason.map(|_| FinishReason::Stop),
-                                                usage,
-                                            }));
+                                            let deltas = think_parser.process(&content);
+                                            for delta in deltas {
+                                                yield Ok(StreamChunk {
+                                                    delta,
+                                                    finish_reason: choice.finish_reason.as_deref().map(|r| match r {
+                                                        "tool_calls" => FinishReason::ToolCalls,
+                                                        _ => FinishReason::Stop,
+                                                    }),
+                                                    usage: accumulated_usage.clone(),
+                                                });
+                                            }
                                         }
                                     }
                                 }
-                                None
                             }
                             Err(e) => {
                                 tracing::debug!("Failed to parse stream chunk: {}", e);
-                                None
                             }
                         }
                     }
-                    Err(e) => Some(Err(TagisanError::BadResponse(provider_id.to_string(), e.to_string()))),
+                    Err(e) => {
+                        yield Err(TagisanError::BadResponse(provider_id.to_string(), e.to_string()));
+                    }
                 }
             }
-        });
+        };
 
-        Ok(Box::pin(mapped))
+        Ok(Box::pin(output_stream))
     }
 }

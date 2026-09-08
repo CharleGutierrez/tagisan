@@ -10,12 +10,12 @@ pub use error::{Result, TagisanError};
 pub use providers::anthropic::AnthropicProvider;
 pub use providers::gemini::GeminiProvider;
 pub use providers::ollama::OllamaProvider;
-pub use providers::openai_compat::OpenAiCompatibleProvider;
+pub use providers::openai_compat::{OpenAiCompatibleProvider, StreamingThinkParser};
 pub use providers::{BoxEventStream, LlmProvider};
 pub use strategies::debate::DialecticalDebateStrategy;
 pub use strategies::moa::MixtureOfAgentsStrategy;
 pub use strategies::{CollaborationStrategy, IntermediateStep, StrategyInput, StrategyOutput};
 pub use types::{
     ChatSession, CompletionRequest, CompletionResponse, ContentBlock, FinishReason, Message,
-    ProviderCapabilities, Role, StreamChunk, StreamChunkDelta, TokenUsage,
+    ProviderCapabilities, Role, StreamChunk, StreamChunkDelta, TokenUsage, ToolDefinition,
 };
