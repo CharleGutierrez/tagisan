@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use futures::stream::BoxStream;
 
 pub mod anthropic;
+pub mod cascade;
 pub mod gemini;
 pub mod ollama;
 pub mod openai_compat;
@@ -13,7 +14,7 @@ pub type BoxEventStream = BoxStream<'static, Result<StreamChunk>>;
 /// Unified Trait implemented by all LLM API adapters
 #[async_trait]
 pub trait LlmProvider: Send + Sync {
-    /// Provider identifier (e.g. "anthropic", "openai", "xai", "deepseek", "gemini", "ollama")
+    /// Provider identifier (e.g. "anthropic", "openai", "xai", "deepseek", "gemini", "ollama", "cascade")
     fn provider_id(&self) -> &'static str;
 
     /// Return supported capabilities for the given model

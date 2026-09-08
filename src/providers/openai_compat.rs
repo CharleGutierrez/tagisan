@@ -132,7 +132,6 @@ impl OpenAiCompatibleProvider {
             let content_val = if has_images {
                 Some(serde_json::Value::Array(content_parts))
             } else if !content_parts.is_empty() {
-                // If only text parts, combine into single string for maximum compatibility
                 let text_combined: Vec<String> = content_parts
                     .iter()
                     .filter_map(|p| p.get("text").and_then(|t| t.as_str()).map(|s| s.to_string()))

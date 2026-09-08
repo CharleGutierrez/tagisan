@@ -348,7 +348,6 @@ impl LlmProvider for AnthropicProvider {
             None
         };
 
-        // Note: When thinking is enabled in Anthropic, temperature must not be set or must be 1.0
         let temperature = if thinking.is_some() { None } else { req.temperature };
 
         let payload = AnthropicMessagesPayload {

@@ -330,4 +330,3 @@ fn test_remediation_budget_exceeded_error_handling() {
         panic!("Expected TagisanError::BudgetExceeded");
     }
 }
-

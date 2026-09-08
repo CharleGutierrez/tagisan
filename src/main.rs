@@ -5,9 +5,10 @@ use std::env;
 use std::io::Write;
 use std::sync::Arc;
 use tagisan::{
-    AnthropicProvider, ChatSession, CollaborationStrategy, CompletionRequest,
-    DialecticalDebateStrategy, EngineContext, GeminiProvider, MixtureOfAgentsStrategy,
-    OllamaProvider, OpenAiCompatibleProvider, ProviderCapabilities, StrategyInput, StreamChunkDelta,
+    AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, CollaborationStrategy,
+    CompletionRequest, ContentBlock, DialecticalDebateStrategy, EngineContext, GeminiProvider,
+    MixtureOfAgentsStrategy, OllamaProvider, OpenAiCompatibleProvider, ProviderCapabilities,
+    ReadFileTool, RunCommandTool, StrategyInput, StreamChunkDelta, ToolRegistry, WriteFileTool,
 };
 
 #[derive(Parser)]
@@ -60,7 +61,32 @@ enum Commands {
     },
     /// Execute Dialectical Debate (Thesis -> Antithesis -> Lakandiwa Synthesis)
     Debate {
+        /// Launch interactive multi-pane Terminal User Interface (TUI)
+        #[arg(long)]
+        tui: bool,
+
         /// The problem or architecture decision to debate
+        prompt: String,
+    },
+    /// Run an Autonomous Multi-Turn Agent with tools (Milestone 2)
+    Agent {
+        /// Provider ID: anthropic, openai, xai, deepseek, gemini, ollama
+        #[arg(short, long, default_value = "anthropic")]
+        provider: String,
+
+        /// Model name
+        #[arg(short, long)]
+        model: Option<String>,
+
+        /// Comma-separated list of tools to enable: read_file, write_file, run_command, calculator, all
+        #[arg(short, long, default_value = "all")]
+        tools: String,
+
+        /// Maximum autonomous feedback iterations (default: 10)
+        #[arg(long, default_value = "10")]
+        max_iterations: usize,
+
+        /// The agent goal or task prompt
         prompt: String,
     },
     /// Check configured LLM providers, API keys, and model capability bitflags
@@ -136,12 +162,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenvy::dotenv().ok();
 
     let cli = Cli::parse();
-    println!("{}", "=========================================================".cyan());
-    println!("{}", "  🇵🇭 TAGISAN: Multi-LLM Collaboration Engine in Rust".bold().yellow());
-    println!("{}", "=========================================================".cyan());
 
     match cli.command {
         Commands::Status => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🇵🇭 TAGISAN: Multi-LLM Collaboration Engine in Rust".bold().yellow());
+            println!("{}", "=========================================================".cyan());
             println!("{}", "\nChecking Configured LLM Providers & Capabilities:".bold());
             let ctx = build_engine_context(cli.max_budget);
 
@@ -365,8 +391,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
         }
 
-        Commands::Debate { prompt } => {
+        Commands::Debate { tui, prompt } => {
             let ctx = build_engine_context(cli.max_budget);
+
+            if tui {
+                // Interactive Ratatui / Crossterm TUI
+                tagisan::run_debate_tui(prompt, &ctx).await?;
+                return Ok(());
+            }
+
             println!("\n{}", "⚔️  Starting Dialectical Debate (Tagisan ng Talino)...".bold().magenta());
             println!("Topic: \"{}\"\n", prompt.italic());
 
@@ -418,6 +451,84 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 output.total_usage.prompt_tokens + output.total_usage.completion_tokens,
                 output.total_cost_usd,
                 output.total_latency.as_secs_f32()
+            );
+        }
+
+        Commands::Agent {
+            provider,
+            model,
+            tools,
+            max_iterations,
+            prompt,
+        } => {
+            let ctx = build_engine_context(cli.max_budget);
+            let prov = ctx.get_provider(&provider)?;
+
+            let model_name = model.unwrap_or_else(|| match provider.as_str() {
+                "anthropic" => "claude-3-5-sonnet-20241022".to_string(),
+                "xai" => "grok-2-latest".to_string(),
+                "openai" => "gpt-4o".to_string(),
+                "gemini" => "gemini-2.0-flash".to_string(),
+                "deepseek" => "deepseek-chat".to_string(),
+                _ => "llama3.2".to_string(),
+            });
+
+            // Build Tool Registry
+            let mut registry = ToolRegistry::new();
+            let tool_list: Vec<&str> = tools.split(',').map(|s| s.trim()).collect();
+            let enable_all = tool_list.contains(&"all");
+
+            if enable_all || tool_list.contains(&"read_file") {
+                registry.register_tool(ReadFileTool::new());
+            }
+            if enable_all || tool_list.contains(&"write_file") {
+                registry.register_tool(WriteFileTool::new());
+            }
+            if enable_all || tool_list.contains(&"run_command") {
+                registry.register_tool(RunCommandTool::default());
+            }
+            if enable_all || tool_list.contains(&"calculator") {
+                registry.register_tool(CalculatorTool::new());
+            }
+
+            println!("\n{}", "🤖 Starting Tagisan Autonomous Agent...".bold().magenta());
+            println!("Provider: {} | Model: {}", provider.cyan().bold(), model_name.yellow().bold());
+            println!("Active Tools: [{}]", registry.names().join(", ").green());
+            println!("Max Iterations: {}", max_iterations);
+            println!("Goal: \"{}\"\n", prompt.italic());
+
+            let agent = AutonomousAgent::new(prov, model_name, registry)
+                .with_max_iterations(max_iterations);
+
+            let result = agent.run(&prompt, &ctx).await?;
+
+            println!("\n{}", "================ AGENT EXECUTION TRACE ================".bold().cyan());
+            for step in &result.steps {
+                println!("\n{}", format!("--- Iteration {} ---", step.iteration).bold().yellow());
+                for (id, name, args) in step.assistant_message.extract_tool_calls() {
+                    println!("🔧 Called Tool: {} (ID: {})", name.green().bold(), id.dimmed());
+                    println!("   Args: {}", args);
+                }
+                for res in &step.tool_results {
+                    if let ContentBlock::ToolResult { tool_call_id, content, is_error } = res {
+                        if *is_error {
+                            println!("❌ Result [{}]: {}", tool_call_id.dimmed(), content.red());
+                        } else {
+                            println!("✔ Result [{}]: {}", tool_call_id.dimmed(), content.dimmed());
+                        }
+                    }
+                }
+            }
+
+            println!("\n{}", "================ FINAL ANSWER ================".bold().green());
+            println!("{}\n", result.final_answer);
+            println!("{}", "==============================================".green());
+            println!(
+                "Iterations: {} | Total Tokens: {} | Estimated Cost: ${:.4} USD | Latency: {:.2}s",
+                result.iterations,
+                result.total_usage.prompt_tokens + result.total_usage.completion_tokens,
+                result.total_cost_usd,
+                result.total_latency.as_secs_f32()
             );
         }
     }

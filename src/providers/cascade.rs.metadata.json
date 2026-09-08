@@ -1,0 +1,5 @@
+{
+  "summary":  "src/providers/cascade.rs implementing CascadeProvider fault-tolerant LLM provider",
+  "updatedAt":  "2026-09-08T04:22:21.904949200Z",
+  "userFacing":  true
+}
