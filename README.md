@@ -1,25 +1,54 @@
 # 🇵🇭 Tagisan (`tagisan-rs`)
-> **Tagisan ng Talino:** High-Performance Multi-LLM Collaboration, Adversarial Debate & Mixture-of-Agents Engine in Rust.
+> **Tagisan ng Talino:** High-Performance Multi-LLM Collaboration, Adversarial Debate, Autonomous Agents & ECC Engineering Swarm in Rust.
+
+[![Rust](https://img.shields.io/badge/rust-2021%20edition-orange.svg)](https://www.rust-lang.org/)
+[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
+[![Tokio](https://img.shields.io/badge/async-tokio-blue)](https://tokio.rs/)
+[![Petgraph](https://img.shields.io/badge/dag-petgraph-red)](https://github.com/petgraph/petgraph)
+[![Ratatui](https://img.shields.io/badge/tui-ratatui-green)](https://github.com/ratatui-org/ratatui)
 
 ---
 
 ## 🌟 Overview
+
 **Tagisan** is an asynchronous, zero-cost abstraction engine written in Rust that orchestrates heterogeneous Large Language Models—**Anthropic Claude, xAI Grok, Google Gemini, OpenAI, DeepSeek, and local Ollama**—into a collaborative intelligence swarm.
 
-Instead of relying on a single AI model (which can hallucinate), Tagisan enables models to **debate, critique, cross-verify, and aggregate** their outputs to generate rock-solid, audited code and architectures.
+Instead of relying on a single AI model (which can hallucinate or produce biased designs), Tagisan enables models to **debate, critique, cross-verify, plan as Directed Acyclic Graphs (DAGs), and execute autonomous tool loops**.
+
+Tagisan natively integrates the agent harness and persona architecture of **[ECC (Everything Coding Cloud / Agent Harness OS)](https://github.com/affaan-m/ECC)**, bringing specialized engineering personas, attachable skill modules, automated 5-stage development pipelines, and **AgentShield** runtime security guardrails directly into Rust.
 
 ---
 
-## 🚀 Key Collaboration Strategies
+## 🚀 Key Architectural Pillars
 
 ### 1. ⚔️ Dialectical Debate (*Tagisan ng Talino / Balagtasan*)
-- **Round 1 (Thesis):** Proponent model (e.g. Claude 3.5 Sonnet) writes the initial solution.
-- **Round 2 (Antithesis):** Adversary model (e.g. DeepSeek R1 / Grok 3) ruthlessly probes for logical flaws, edge cases, and vulnerabilities.
-- **Round 3 (Synthesis / Lakandiwa):** Chief Adjudicator (e.g. Google Gemini 1.5 Pro / GPT-4o) evaluates both sides and synthesizes the verified master verdict.
+- **Round 1 (Thesis):** Proponent model (e.g., Claude 3.5 Sonnet) drafts the initial architectural or code solution.
+- **Round 2 (Antithesis):** Adversary model (e.g., DeepSeek R1 / Grok 3) ruthlessly probes for logical flaws, edge cases, and vulnerabilities.
+- **Round 3 (Synthesis / Lakandiwa):** Chief Adjudicator (e.g., Google Gemini 1.5 Pro / GPT-4o) evaluates both sides, balances trade-offs, and synthesizes the hardened verdict.
 
 ### 2. 🛖 Mixture-of-Agents (MoA)
-- **Layer 1 (Parallel Proposers):** Grok, Gemini, and DeepSeek generate candidate drafts concurrently in milliseconds using Tokio async channels.
+- **Layer 1 (Parallel Proposers):** Grok, Gemini, and DeepSeek generate candidate drafts concurrently in milliseconds via Tokio async channels.
 - **Layer 2 (Master Aggregator):** Claude 3.5 Sonnet analyzes, filters, and combines the proposals into a definitive solution.
+
+### 3. 🤖 Autonomous Multi-Turn Agent Loop
+- Equips models with a sandboxed **Tool Registry** (`read_file`, `write_file`, `run_command`, `calculator`).
+- Drives continuous reasoning cycles (`Thought -> Tool Call -> Observation -> Answer`) with configurable recursion limits and automated error recovery.
+
+### 4. 🕸️ Petgraph-Powered DAG Workflow Engine
+- Decomposes high-level objectives into Directed Acyclic Graphs with upstream dependency resolution.
+- Executes independent nodes in parallel with bounded concurrency, real-time event streaming, and dynamic error propagation.
+
+### 5. 🐝 ECC Multi-Agent Engineering Swarm & Skills Catalog
+- Native Rust implementation of the Everything Coding Cloud (ECC) agent architecture.
+- Five specialized built-in personas (`architect`, `tdd-engineer`, `code-reviewer`, `security-auditor`, `build-resolver`) plus dynamic discovery from `.ecc/agents/*.md`.
+- Attachable capabilities from the **ECC Skills Catalog** (`tdd-workflow`, `security-review`, `api-design`, `verification-loop`, plus `.ecc/skills/*/SKILL.md`).
+- Fully automated **5-stage parallel DAG pipeline** (`Plan -> Test -> Implement -> (Review || Security) -> Verify`).
+
+### 6. 🛡️ AgentShield Runtime Security Interceptor
+- Zero-overhead security scanner integrated directly into tool invocation.
+- **Destructive Command Defense:** Blocks root file deletions (`rm -rf /`), disk formatting (`mkfs`), raw block writes (`dd if=`, `> /dev/sda`), and fork bombs (`:(){ :|:& };:`).
+- **Path Traversal Defense:** Prevents directory traversal attacks (`../../../`, sensitive system file access like `/etc/shadow`, `/proc/kcore`, SSH private keys).
+- **Credential Leak Redaction:** Automatically scans and redacts Anthropic (`sk-ant-`), OpenAI (`sk-proj-`), Google Gemini (`AIzaSy`), and xAI (`xai-`) secret keys before output exposure.
 
 ---
 
@@ -28,27 +57,56 @@ Instead of relying on a single AI model (which can hallucinate), Tagisan enables
 ```
 tagisan/
 ├── Cargo.toml
-├── .env.example              # Template for API keys
+├── .env.example                  # Template for API keys
 ├── README.md
+├── .ecc/                         # ECC Agent & Skill definitions (Markdown + YAML frontmatter)
+│   ├── agents/                   # Extensible agent personas (code-explorer.md, debugger.md, ...)
+│   └── skills/                   # Extensible skills catalog (tdd-workflow, security-review, ...)
+│       ├── security-review/
+│       │   └── SKILL.md
+│       └── tdd-workflow/
+│           └── SKILL.md
 └── src/
-    ├── main.rs               # CLI Application with colored outputs
-    ├── lib.rs                # Library exports
-    ├── error.rs              # TagisanError & Result types
-    ├── types/                # Role, ContentBlock, Message, TokenUsage, CompletionRequest/Response
+    ├── main.rs                   # Unified CLI application with colored outputs & TUI
+    ├── lib.rs                    # Library exports & public crate interface
+    ├── error.rs                  # TagisanError & Result types
+    ├── types/                    # Core message blocks, roles, token usage, tool schemas
     │   └── mod.rs
-    ├── providers/            # LLM API Adapters
-    │   ├── mod.rs            # LlmProvider trait
-    │   ├── anthropic.rs      # Claude 3.5 Sonnet / Opus
-    │   ├── openai_compat.rs  # OpenAI, xAI (Grok), DeepSeek (R1 / V3)
-    │   ├── gemini.rs         # Google Gemini 1.5 Pro / 2.0 Flash
-    │   └── ollama.rs         # Local offline inference (localhost:11434)
-    ├── strategies/           # Multi-LLM Collaboration Algorithms
-    │   ├── mod.rs            # CollaborationStrategy trait
-    │   ├── moa.rs            # Mixture-of-Agents parallel runner
-    │   └── debate.rs         # Dialectical Debate (Tagisan ng Talino)
-    └── engine/
-        ├── mod.rs            # EngineContext & Orchestrator
-        └── budget.rs         # Atomic USD Token Cost Tracker
+    ├── providers/                # LLM API adapters & resilient cascade fallbacks
+    │   ├── mod.rs                # LlmProvider trait & ProviderCapabilities bitflags
+    │   ├── anthropic.rs          # Anthropic Claude 3.5 Sonnet / Opus
+    │   ├── openai_compat.rs      # OpenAI, xAI (Grok), DeepSeek (R1 / V3)
+    │   ├── gemini.rs             # Google Gemini 1.5 Pro / 2.0 Flash
+    │   ├── ollama.rs             # Local offline inference (localhost:11434)
+    │   └── cascade.rs            # Multi-provider cascade fallback
+    ├── strategies/               # Multi-LLM consensus & collaboration algorithms
+    │   ├── mod.rs                # CollaborationStrategy trait
+    │   ├── moa.rs                # Mixture-of-Agents parallel runner
+    │   └── debate.rs             # Dialectical Debate (Tagisan ng Talino)
+    ├── agent/                    # Autonomous agent engine
+    │   └── mod.rs                # ReAct loop, tool execution & AgentShield interception
+    ├── tools/                    # Tool definitions & registry
+    │   ├── mod.rs                # Tool trait & ToolRegistry
+    │   └── builtin.rs            # ReadFileTool, WriteFileTool, RunCommandTool, CalculatorTool
+    ├── dag/                      # Directed Acyclic Graph engine
+    │   ├── mod.rs
+    │   ├── graph.rs              # WorkflowGraph topology powered by petgraph
+    │   ├── node.rs               # TaskNode and dependency tracking
+    │   ├── planner.rs            # Objective decomposition into DAGs
+    │   └── scheduler.rs          # Asynchronous Tokio parallel executor
+    ├── ecc/                      # Native ECC (Everything Coding Cloud) Subsystem
+    │   ├── mod.rs
+    │   ├── agent.rs              # EccAgent loader & YAML frontmatter parser
+    │   ├── presets.rs            # Built-in personas (Architect, TDD Engineer, etc.)
+    │   ├── skills.rs             # SKILL.md dynamic catalog loader & parser
+    │   ├── agentshield.rs        # Runtime security scanner & sandbox interceptor
+    │   ├── pipeline.rs           # 5-stage parallel DAG workflow
+    │   └── audit.rs              # Adversarial architecture & security debate
+    ├── engine/                   # Runtime orchestrator
+    │   ├── mod.rs                # EngineContext
+    │   └── budget.rs             # Atomic USD token cost tracker
+    └── tui/                      # Interactive terminal user interface (Ratatui)
+        └── mod.rs
 ```
 
 ---
@@ -56,7 +114,7 @@ tagisan/
 ## 🛠️ Quick Start
 
 ### 1. Set Up API Keys
-Copy `.env.example` to `.env` in the `tagisan` directory:
+Copy `.env.example` to `.env` in the repository root:
 
 ```bash
 cp .env.example .env
@@ -64,18 +122,21 @@ cp .env.example .env
 
 Add any keys you have available:
 ```env
-ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_API_KEY=sk-ant-api03-...
 XAI_API_KEY=xai-...
 GEMINI_API_KEY=AIzaSy...
 DEEPSEEK_API_KEY=sk-...
-OPENAI_API_KEY=sk-...
+OPENAI_API_KEY=sk-proj-...
 ```
 
-*(Note: If no API keys are provided, Tagisan falls back automatically to local Ollama on `localhost:11434`)*
+> [!NOTE]
+> If no external API keys are provided, Tagisan falls back automatically to local offline Ollama at `localhost:11434`.
 
 ---
 
-### 2. Check System Status
+### 2. Verify System Status & Providers
+Check configured providers, active API keys, and model capabilities:
+
 ```bash
 cargo run -- status
 ```
@@ -83,48 +144,195 @@ cargo run -- status
 ---
 
 ### 3. Run Dialectical Debate (`debate`)
+Pit two frontier models against each other with adjudication:
+
 ```bash
 cargo run -- debate "Should a high-throughput payment engine use an Event-Sourced architecture or CRUD with Postgres?"
+```
+
+To watch the debate unfold in an interactive, multi-pane Terminal User Interface:
+```bash
+cargo run -- debate --tui "Rust vs Go for high-concurrency microservices"
 ```
 
 ---
 
 ### 4. Run Mixture-of-Agents (`moa`)
+Execute layered parallel generation and synthesis:
+
 ```bash
 cargo run -- moa "Design a zero-downtime database migration strategy for 100M active records in Rust"
 ```
 
 ---
 
-### 5. Run ECC Autonomous Engineering Swarm (`ecc`)
-Tagisan natively embeds the agent personas and 5-stage engineering lifecycle from **[ECC (Everything Coding Cloud / Agent Harness OS)](https://github.com/affaan-m/ECC)**:
+### 5. Run an Autonomous Agent (`agent`)
+Deploy an autonomous reasoning loop equipped with file system and terminal tools:
 
-- **List ECC Presets & Discovered Agents:**
-  ```bash
-  cargo run -- ecc list
-  ```
-
-- **Execute a Specialized ECC Agent (Architect, TDD Engineer, Security Auditor, etc.):**
-  ```bash
-  cargo run -- ecc run architect "Design a high-throughput async event bus in Rust"
-  ```
-
-- **Run the Full 5-Stage ECC Pipeline (`Plan -> Test -> Implement -> (Review || Security) -> Verify`):**
-  ```bash
-  cargo run -- ecc pipeline "Build an atomic lock-free token bucket rate limiter in Rust"
-  ```
-
-- **Adversarial ECC Security & Architecture Audit (Architect vs Security Auditor -> Chief Adjudicator):**
-  ```bash
-  cargo run -- ecc audit "Is an in-memory Mutex<HashMap> safe for a high-concurrency payment ledger?"
-  ```
+```bash
+cargo run -- agent "Analyze src/lib.rs, identify any missing error types, and document them"
+```
 
 ---
 
-## 🛡️ Built-in Cost Protection
-Tagisan includes a real-time atomic micro-USD budget tracker. By default, it terminates executions if the session cost exceeds `$5.00` USD. You can customize this threshold with `--max-budget`:
+### 6. Run Dynamic DAG Workflows (`workflow`)
+Decompose complex goals into dependency graphs and execute them concurrently:
 
 ```bash
-cargo run -- --max-budget 1.50 moa "Your prompt here"
+cargo run -- workflow plan "Design a telemetry metrics collector, write unit tests, and implement the Tokio worker"
 ```
 
+---
+
+## 🐝 ECC Multi-Agent Engineering Swarm
+
+Tagisan natively incorporates the **Everything Coding Cloud (ECC)** agent specification, bringing specialized roles, modular skills, structured engineering pipelines, and runtime security to your Rust workflows.
+
+### Built-in Agent Personas
+Tagisan includes 5 pre-configured engineering personas:
+
+| Agent Persona | Role & Focus | Recommended Model |
+|---|---|---|
+| `architect` | System architecture, concurrency patterns, non-functional requirements, data flow | `claude-3-5-sonnet` |
+| `tdd-engineer` | Test-driven development, edge-case coverage, unit & integration tests | `deepseek-reasoner` / `claude-3-5-sonnet` |
+| `code-reviewer` | Code hygiene, idiomatic Rust, memory safety, SOLID principles | `claude-3-5-sonnet` |
+| `security-auditor` | Threat modeling, injection/overflow risks, credential leak prevention | `gemini-1.5-pro` / `deepseek-reasoner` |
+| `build-resolver` | Compilation diagnostics, borrow checker fixes, Cargo dependency conflicts | `claude-3-5-sonnet` |
+
+You can also drop custom Markdown agent definitions with YAML frontmatter into `.ecc/agents/`:
+```markdown
+---
+name: database-specialist
+description: PostgreSQL index and schema optimization expert
+tools: read_file, write_file, run_command
+model: claude-3-5-sonnet-20241022
+---
+
+# System Prompt
+You are a principal database administrator...
+```
+
+List all available built-in and discovered agents:
+```bash
+cargo run -- ecc list
+```
+
+---
+
+### ECC Skills Catalog
+Skills are reusable capability modules that can be dynamically attached to any agent via `--skill <skill_name>`.
+
+Built-in skills include:
+- `tdd-workflow`: Enforces Red-Green-Refactor, test assertion rigor, and edge-case isolation.
+- `security-review`: Guides vulnerability audits, input sanitization, and OWASP Top 10 defenses.
+- `api-design`: Enforces RESTful / gRPC idiomatic contracts, semantic versioning, and backward compatibility.
+- `verification-loop`: Guides iterative build-and-test loops until clean compilation is achieved.
+
+Custom skills can be placed in `.ecc/skills/<skill-name>/SKILL.md`:
+```markdown
+---
+name: async-optimization
+description: Tokio and lock-free concurrency tuning skill
+---
+
+# Instructions
+Profile bottlenecks before optimizing. Use atomic primitives where possible...
+```
+
+List all available skills:
+```bash
+cargo run -- ecc skills
+```
+
+Execute an agent with an attached skill:
+```bash
+cargo run -- ecc run tdd-engineer "Implement a concurrent LRU cache in Rust" --skill tdd-workflow
+```
+
+---
+
+### 5-Stage Parallel DAG Pipeline (`ecc pipeline`)
+Run an end-to-end engineering lifecycle for any feature or codebase requirement:
+
+```mermaid
+graph TD
+    Plan["Stage 1: Plan (Architect)"] --> Test["Stage 2: Test (TDD Engineer)"]
+    Test --> Implement["Stage 3: Implement (TDD Engineer)"]
+    Implement --> Review["Stage 4a: Review (Code Reviewer)"]
+    Implement --> Security["Stage 4b: Security (Security Auditor)"]
+    Review --> Verify["Stage 5: Verify (Build Resolver)"]
+    Security --> Verify
+```
+
+1. **Stage 1 (Plan):** The `architect` produces a detailed specification and module breakdown.
+2. **Stage 2 (Test):** The `tdd-engineer` writes failing unit and boundary tests based on the specification.
+3. **Stage 3 (Implement):** The `tdd-engineer` writes the code required to satisfy the tests.
+4. **Stage 4 (Parallel Audit):**
+   - **4a (Review):** The `code-reviewer` checks style, safety, and idiomatic conventions.
+   - **4b (Security):** The `security-auditor` conducts threat modeling and security verification concurrently.
+5. **Stage 5 (Verify):** The `build-resolver` confirms compilation, executes test suites, and synthesizes the final report.
+
+Run the pipeline with a single command:
+```bash
+cargo run -- ecc pipeline "Build an atomic lock-free token bucket rate limiter in Rust"
+```
+
+---
+
+### Adversarial Architecture & Security Audit (`ecc audit`)
+Pit the **ECC Architect** against the **ECC Security Auditor** in a multi-round debate adjudicated by the **Lakandiwa / Chief Adjudicator**:
+
+```bash
+cargo run -- ecc audit "Is an in-memory Mutex<HashMap> safe for a high-concurrency payment ledger?"
+```
+
+Add `--tui` for live multi-pane terminal visualization:
+```bash
+cargo run -- ecc audit --tui "Should our crypto wallet store unencrypted keys in shared memory?"
+```
+
+---
+
+## 🛡️ AgentShield Runtime Security Guardrail
+
+AgentShield is a built-in security interceptor that guards tool execution in real time:
+
+- **Command Interception:** Evaluates all shell execution requests before they touch the operating system. Destructive operations (`rm -rf /`, `mkfs`, fork bombs, disk rewrites) are immediately blocked with a `ThreatLevel::Critical` verdict.
+- **Path Isolation:** Restricts file reading and writing to the project workspace. Deep relative traversals (`../../../`) and sensitive files (`/etc/shadow`, `/proc/kcore`, SSH private keys) are blocked.
+- **Secret Redaction:** Outgoing text and logs are passed through an automated redaction filter to ensure API tokens (`sk-ant-`, `sk-proj-`, `AIzaSy`, `xai-`) are never leaked in reports or traces.
+
+```
+[AgentShield] Probing tool call: run_command("rm -rf /")
+[AgentShield] 🚨 BLOCK [ThreatLevel::Critical]: Attempted recursive deletion of root filesystem
+```
+
+---
+
+## 💰 Built-in Cost & Budget Protection
+
+Tagisan tracks token usage and calculates estimated USD costs across all providers atomically. You can set strict budget limits to prevent accidental overages:
+
+```bash
+# Terminate execution if session cost exceeds $1.50 USD
+cargo run -- --max-budget 1.50 moa "Generate a distributed consensus benchmark in Rust"
+```
+
+---
+
+## 🧪 Testing
+
+Tagisan includes a comprehensive automated test suite covering unit logic, DAG validation, provider adapters, AgentShield safety, and end-to-end ECC integration:
+
+```bash
+# Run all tests
+cargo test
+
+# Run ECC integration tests specifically
+cargo test --test ecc_integration_tests
+```
+
+---
+
+## 📄 License
+
+This project is dual-licensed under the **MIT License** and the **Apache 2.0 License**. See [LICENSE](LICENSE) for details.
