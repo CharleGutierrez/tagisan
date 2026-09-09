@@ -13,6 +13,8 @@ use crate::{
     OpenAiCompatibleProvider, ProviderCapabilities, ReadFileTool, RunCommandTool, StrategyInput,
     StreamChunkDelta, TagisanError, ToolRegistry, ViewImageTool, WorkflowEvent, WorkflowPlanner, WriteFileTool,
     McpManager, WorktreeSandbox,
+    InteractiveRepl, SessionStore,
+    SwarmCoordinator, SwarmMember, TeamConsensusEngine, VotingRule,
 };
 
 #[derive(Parser)]
@@ -190,6 +192,51 @@ enum Commands {
     /// Start a Model Context Protocol (MCP) Server over stdio JSON-RPC 2.0 (Milestone 7)
     #[command(name = "serve-mcp")]
     ServeMcp,
+    /// Multi-Agent Swarm Orchestration & Team Collaboration (Milestone 8)
+    Swarm {
+        #[command(subcommand)]
+        action: SwarmAction,
+    },
+    /// Multi-Agent Peer Review & Consensus Voting Protocol (Milestone 8)
+    Consensus {
+        /// Voting rule: majority, unanimous, supermajority, borda (default: majority)
+        #[arg(short, long, default_value = "majority")]
+        rule: String,
+
+        /// Path to an artifact file or direct proposal text to review
+        artifact: String,
+    },
+    /// Interactive Multi-Turn Agent Session REPL (Milestone 8)
+    Repl {
+        /// Initial agent persona (e.g. architect, tdd-engineer, code-reviewer, security-auditor)
+        #[arg(short, long)]
+        agent: Option<String>,
+
+        /// Model name (defaults to auto-detected)
+        #[arg(short, long)]
+        model: Option<String>,
+
+        /// Provider ID: auto, anthropic, openai, xai, deepseek, gemini, ollama (default: auto)
+        #[arg(short, long, default_value = "auto")]
+        provider: String,
+
+        /// Enable long-term vector memory
+        #[arg(long)]
+        memory: bool,
+
+        /// Run in an isolated Git worktree sandbox
+        #[arg(long)]
+        sandbox: bool,
+
+        /// Resume a previously saved session by ID
+        #[arg(long)]
+        resume: Option<String>,
+    },
+    /// Persistent Agent Session Management (Milestone 8)
+    Session {
+        #[command(subcommand)]
+        action: SessionAction,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -254,6 +301,66 @@ enum MemoryAction {
     Stats,
     /// Clear and wipe persistent memory
     Clear,
+}
+
+#[derive(Subcommand, Debug)]
+enum SwarmAction {
+    /// Execute task via Lead Agent with dynamic specialist delegation
+    Run {
+        /// High-level goal or task prompt
+        prompt: String,
+
+        /// Comma-separated list of agent personas in swarm (default: architect,tdd-engineer,security-auditor)
+        #[arg(short, long, default_value = "architect,tdd-engineer,security-auditor")]
+        agents: String,
+
+        /// Lead agent name (default: architect)
+        #[arg(long, default_value = "architect")]
+        lead: String,
+    },
+    /// Execute sequential multi-stage pipeline across agents
+    Pipeline {
+        /// Initial task description or input
+        prompt: String,
+
+        /// Comma-separated list of agent stages (default: architect,tdd-engineer,code-reviewer,security-auditor)
+        #[arg(short, long, default_value = "architect,tdd-engineer,code-reviewer,security-auditor")]
+        stages: String,
+    },
+    /// Broadcast prompt to all swarm members concurrently and collect evaluations
+    Broadcast {
+        /// Prompt or code to broadcast
+        prompt: String,
+
+        /// Comma-separated list of agents (default: architect,tdd-engineer,security-auditor)
+        #[arg(short, long, default_value = "architect,tdd-engineer,security-auditor")]
+        agents: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum SessionAction {
+    /// List all saved sessions
+    List,
+    /// Resume an interactive session
+    Resume {
+        /// Session ID to resume
+        id: String,
+    },
+    /// Export session transcript to Markdown
+    Export {
+        /// Session ID to export
+        id: String,
+
+        /// Optional output file path (defaults to stdout)
+        #[arg(short, long)]
+        output: Option<String>,
+    },
+    /// Delete a saved session
+    Delete {
+        /// Session ID to delete
+        id: String,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -1972,6 +2079,310 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         let _ = std::fs::remove_file(&default_path);
                     }
                     println!("{} Cleared Tagisan persistent memory file: {}", "✔".green().bold(), default_path.display());
+                }
+            }
+        }
+
+        Commands::Swarm { action } => {
+            let ctx = build_engine_context(cli.max_budget);
+            match action {
+                SwarmAction::Run { prompt, agents, lead } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  🐝  Tagisan Swarm: Lead Agent Orchestration".bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let agent_names: Vec<&str> = agents.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
+                    let mut coordinator = SwarmCoordinator::new();
+
+                    for name in &agent_names {
+                        let preset = crate::ecc::find_preset(name);
+                        let role = preset.as_ref().map(|p| p.description.as_str()).unwrap_or("General Engineering Specialist");
+                        let sys_prompt = preset.as_ref().map(|p| p.system_prompt.clone());
+                        let (_, model_name, prov) = resolve_provider_and_model(&ctx, "auto", None)?;
+                        let member = SwarmMember::new(*name, role, model_name, prov)
+                            .with_tools(ToolRegistry::with_builtins());
+                        let member = if let Some(sys) = sys_prompt {
+                            member.with_system_prompt(sys)
+                        } else {
+                            member
+                        };
+                        coordinator.register_member(member);
+                    }
+                    coordinator.set_lead(&lead);
+
+                    println!("Lead Agent:  {}", lead.bold().green());
+                    println!("Specialists: {}", agents.cyan());
+                    println!("Task:        {}\n", prompt.italic());
+
+                    let start = std::time::Instant::now();
+                    let res = coordinator.run_lead(&prompt, &ctx).await?;
+
+                    println!("\n{}", "=========================================================".cyan());
+                    println!("{}", "  🏁  Swarm Deliverable Summary".bold().green());
+                    println!("{}", "=========================================================".cyan());
+                    println!("Completed in {} iteration(s) ({:.2}s)", res.iterations, start.elapsed().as_secs_f32());
+                    println!("Total Tokens: {} | Total Cost: ${:.4} USD",
+                        res.total_usage.prompt_tokens + res.total_usage.completion_tokens,
+                        res.total_cost_usd
+                    );
+                    println!("\n{}\n", res.final_answer);
+                }
+                SwarmAction::Pipeline { prompt, stages } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  ⛓️   Tagisan Swarm: Sequential Pipeline Execution".bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let stage_names: Vec<&str> = stages.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
+                    let mut coordinator = SwarmCoordinator::new();
+
+                    for name in &stage_names {
+                        let preset = crate::ecc::find_preset(name);
+                        let role = preset.as_ref().map(|p| p.description.as_str()).unwrap_or("Specialist");
+                        let sys_prompt = preset.as_ref().map(|p| p.system_prompt.clone());
+                        let (_, model_name, prov) = resolve_provider_and_model(&ctx, "auto", None)?;
+                        let member = SwarmMember::new(*name, role, model_name, prov)
+                            .with_tools(ToolRegistry::with_builtins());
+                        let member = if let Some(sys) = sys_prompt {
+                            member.with_system_prompt(sys)
+                        } else {
+                            member
+                        };
+                        coordinator.register_member(member);
+                    }
+
+                    println!("Stages: {}\nTask:   {}\n", stages.cyan().bold(), prompt.italic());
+                    let res = coordinator.execute_pipeline(&stage_names, &prompt, &ctx).await?;
+
+                    for stage in &res.stages {
+                        println!("{}", "---------------------------------------------------------".dimmed());
+                        println!("Stage {}: {} ({})", stage.stage_index + 1, stage.agent_name.bold().green(), stage.role.cyan());
+                        let preview: String = stage.result.final_answer.lines().take(5).collect::<Vec<_>>().join("\n");
+                        println!("{}\n", preview);
+                    }
+
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  🏁  Pipeline Final Output".bold().green());
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}\n", res.final_answer);
+                }
+                SwarmAction::Broadcast { prompt, agents } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  📡  Tagisan Swarm: Concurrent Multi-Agent Broadcast".bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let agent_names: Vec<&str> = agents.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
+                    let mut coordinator = SwarmCoordinator::new();
+
+                    for name in &agent_names {
+                        let preset = crate::ecc::find_preset(name);
+                        let role = preset.as_ref().map(|p| p.description.as_str()).unwrap_or("Specialist");
+                        let sys_prompt = preset.as_ref().map(|p| p.system_prompt.clone());
+                        let (_, model_name, prov) = resolve_provider_and_model(&ctx, "auto", None)?;
+                        let member = SwarmMember::new(*name, role, model_name, prov)
+                            .with_tools(ToolRegistry::with_builtins());
+                        let member = if let Some(sys) = sys_prompt {
+                            member.with_system_prompt(sys)
+                        } else {
+                            member
+                        };
+                        coordinator.register_member(member);
+                    }
+
+                    println!("Broadcast Members: {}", agents.cyan().bold());
+                    println!("Prompt:            {}\n", prompt.italic());
+
+                    let results = coordinator.execute_broadcast(&prompt, &ctx).await?;
+                    for (name, res) in results {
+                        println!("{}", "---------------------------------------------------------".dimmed());
+                        println!("Agent: {}", name.bold().green());
+                        println!("Tokens: {} | Latency: {:.2}s",
+                            res.total_usage.prompt_tokens + res.total_usage.completion_tokens,
+                            res.total_latency.as_secs_f32()
+                        );
+                        println!("{}\n", res.final_answer);
+                    }
+                }
+            }
+        }
+
+        Commands::Consensus { rule, artifact } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  ⚖️   Tagisan Team Consensus & Peer Review Engine".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let ctx = build_engine_context(cli.max_budget);
+            let voting_rule = match rule.to_lowercase().as_str() {
+                "unanimous" => VotingRule::Unanimous,
+                "supermajority" | "super" => VotingRule::SuperMajority(0.66),
+                "borda" | "weighted_borda" => VotingRule::WeightedBorda,
+                _ => VotingRule::Majority,
+            };
+
+            let artifact_content = if std::path::Path::new(&artifact).exists() {
+                println!("Loading artifact from file: {}", artifact.cyan().bold());
+                std::fs::read_to_string(&artifact)?
+            } else {
+                artifact.clone()
+            };
+
+            println!("Voting Rule:  {:?}", voting_rule);
+            println!("Artifact:     {} byte(s)\n", artifact_content.len());
+
+            let mut coordinator = SwarmCoordinator::new();
+            for name in &["architect", "security-auditor", "code-reviewer"] {
+                let preset = crate::ecc::find_preset(name);
+                let role = preset.as_ref().map(|p| p.description.as_str()).unwrap_or("Reviewer");
+                let sys_prompt = preset.as_ref().map(|p| p.system_prompt.clone());
+                let (_, model_name, prov) = resolve_provider_and_model(&ctx, "auto", None)?;
+                let mut member = SwarmMember::new(*name, role, model_name, prov);
+                if let Some(sys) = sys_prompt {
+                    member = member.with_system_prompt(sys);
+                }
+                coordinator.register_member(member);
+            }
+
+            let engine = TeamConsensusEngine::new();
+            let verdict = engine.run_consensus_review(&coordinator, &artifact_content, voting_rule, &ctx).await?;
+
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🗳️   Consensus Evaluation Results".bold().magenta());
+            println!("{}", "=========================================================".cyan());
+
+            let status_badge = if verdict.approved {
+                "APPROVED".bold().green()
+            } else {
+                "REJECTED / REVISION REQUIRED".bold().red()
+            };
+            println!("Final Verdict:        {}", status_badge);
+            println!("Approval Ratio:       {:.1}% ({}/{} reviewers)", verdict.approval_ratio * 100.0,
+                verdict.reviews.iter().filter(|r| r.approved).count(), verdict.voters_count);
+            println!("Average Quality:      {:.2} / 10", verdict.average_score);
+
+            if !verdict.criterion_averages.is_empty() {
+                println!("\nCriterion Breakdown:");
+                for (crit, avg) in &verdict.criterion_averages {
+                    println!("  - {:<18}: {:.2} / 10", crit.bold().cyan(), avg);
+                }
+            }
+
+            if let Some(ref win) = verdict.winning_option {
+                println!("\nPreferred Option (Borda): {}", win.bold().yellow());
+            }
+
+            if !verdict.action_items.is_empty() {
+                println!("\nAction Items & Risks ({}):", verdict.action_items.len());
+                for item in &verdict.action_items {
+                    println!("  ⚠️  {}", item.yellow());
+                }
+            }
+
+            println!("\nSynthesis Summary:\n{}\n", verdict.synthesis);
+        }
+
+        Commands::Repl { agent, model, provider, memory, sandbox, resume } => {
+            let ctx = build_engine_context(cli.max_budget);
+            let store = SessionStore::new();
+
+            let mut repl = if let Some(ref session_id) = resume {
+                let session_record = store.load(session_id)?;
+                let (_, model_name, prov) = resolve_provider_and_model(&ctx, &provider, Some(session_record.model.clone()))?;
+                let mut autonomous_agent = AutonomousAgent::new(prov, model_name, ToolRegistry::with_builtins());
+                if let Some(ref sys) = session_record.system_prompt {
+                    autonomous_agent = autonomous_agent.with_system_prompt(sys.clone());
+                }
+                InteractiveRepl::new(autonomous_agent, session_id.clone(), session_record.model.clone(), ctx.clone())
+            } else {
+                let session_id = format!("repl-{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs());
+                let (_, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
+                let mut autonomous_agent = AutonomousAgent::new(prov, model_name.clone(), ToolRegistry::with_builtins());
+
+                if let Some(ref persona) = agent {
+                    if let Some(preset) = crate::ecc::find_preset(persona) {
+                        autonomous_agent = autonomous_agent.with_system_prompt(preset.system_prompt.clone());
+                    }
+                }
+
+                if memory {
+                    let vec_store = std::sync::Arc::new(crate::memory::VectorStore::load_or_default());
+                    let emb_prov = crate::memory::default_embedding_provider();
+                    autonomous_agent = autonomous_agent.with_memory(vec_store, emb_prov);
+                }
+
+                let mut rep = InteractiveRepl::new(autonomous_agent, session_id, model_name, ctx.clone());
+                if let Some(ref persona) = agent {
+                    rep.session_record.agent_persona = Some(persona.clone());
+                }
+                rep
+            };
+
+            if sandbox {
+                let sb = WorktreeSandbox::new(".")?;
+                repl = repl.with_sandbox(sb);
+            }
+
+            repl.start().await?;
+        }
+
+        Commands::Session { action } => {
+            let store = SessionStore::new();
+            match action {
+                SessionAction::List => {
+                    let list = store.list()?;
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  📁  Tagisan Saved Agent Sessions".bold().magenta());
+                    println!("{}", "=========================================================".cyan());
+
+                    if list.is_empty() {
+                        println!("No saved sessions found in {:?}.", store.base_dir());
+                        return Ok(());
+                    }
+
+                    println!("{:<24} {:<20} {:<10} {:<10} {:<24}",
+                        "Session ID".bold().cyan(),
+                        "Model".bold().yellow(),
+                        "Messages".bold().green(),
+                        "Cost (USD)".bold().green(),
+                        "Last Updated".bold().white()
+                    );
+                    println!("{}", "-".repeat(90).dimmed());
+
+                    for s in list {
+                        println!("{:<24} {:<20} {:<10} ${:<9.4} {:<24}",
+                            s.id.cyan(),
+                            s.model.yellow(),
+                            s.message_count,
+                            s.total_cost_usd,
+                            s.updated_at.dimmed()
+                        );
+                    }
+                }
+                SessionAction::Resume { id } => {
+                    let ctx = build_engine_context(cli.max_budget);
+                    let session_record = store.load(&id)?;
+                    let (_, model_name, prov) = resolve_provider_and_model(&ctx, "auto", Some(session_record.model.clone()))?;
+                    let mut autonomous_agent = AutonomousAgent::new(prov, model_name.clone(), ToolRegistry::with_builtins());
+                    if let Some(ref sys) = session_record.system_prompt {
+                        autonomous_agent = autonomous_agent.with_system_prompt(sys.clone());
+                    }
+                    let mut repl = InteractiveRepl::new(autonomous_agent, id.clone(), model_name, ctx);
+                    repl.session_record = session_record;
+                    repl.start().await?;
+                }
+                SessionAction::Export { id, output } => {
+                    let md = store.export_markdown(&id)?;
+                    if let Some(out_path) = output {
+                        std::fs::write(&out_path, &md)?;
+                        println!("{} Exported session '{}' to Markdown at: {}", "✔".green().bold(), id.cyan(), out_path.yellow().bold());
+                    } else {
+                        println!("{md}");
+                    }
+                }
+                SessionAction::Delete { id } => {
+                    if store.delete(&id)? {
+                        println!("{} Deleted session '{}' successfully.", "✔".green().bold(), id.cyan());
+                    } else {
+                        println!("{}: Session '{}' was not found.", "Warning".yellow().bold(), id);
+                    }
                 }
             }
         }

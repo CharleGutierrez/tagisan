@@ -15,6 +15,7 @@ use crate::providers::LlmProvider;
 use crate::strategies::debate::DialecticalDebateStrategy;
 use crate::strategies::moa::MixtureOfAgentsStrategy;
 use crate::strategies::{CollaborationStrategy, StrategyInput};
+use crate::swarm::{SessionStore, SwarmCoordinator, SwarmMember, TeamConsensusEngine, VotingRule};
 use crate::tools::ToolRegistry;
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -229,6 +230,60 @@ impl McpServer {
                 name: "tagisan_status".to_string(),
                 description: Some(
                     "Inspect available Tagisan LLM providers, registered API keys, and model capability bitflags.".to_string(),
+                ),
+                input_schema: json!({
+                    "type": "object",
+                    "properties": {}
+                }),
+            },
+            McpToolDefinition {
+                name: "tagisan_swarm_run".to_string(),
+                description: Some(
+                    "Execute a task using an Autonomous Multi-Agent Swarm with Lead Orchestration and dynamic peer delegation.".to_string(),
+                ),
+                input_schema: json!({
+                    "type": "object",
+                    "properties": {
+                        "task": {
+                            "type": "string",
+                            "description": "The complex task or coding objective for the swarm to achieve"
+                        },
+                        "agents": {
+                            "type": "string",
+                            "description": "Comma-separated list of agent personas (default: architect,tdd-engineer,security-auditor)"
+                        },
+                        "lead": {
+                            "type": "string",
+                            "description": "Designated lead agent name (default: architect)"
+                        }
+                    },
+                    "required": ["task"]
+                }),
+            },
+            McpToolDefinition {
+                name: "tagisan_consensus_vote".to_string(),
+                description: Some(
+                    "Conduct a multi-agent peer review and consensus vote on an artifact or code diff across specialist reviewers.".to_string(),
+                ),
+                input_schema: json!({
+                    "type": "object",
+                    "properties": {
+                        "artifact": {
+                            "type": "string",
+                            "description": "The code, diff, or architecture proposal to review"
+                        },
+                        "rule": {
+                            "type": "string",
+                            "description": "Voting rule: majority, unanimous, supermajority, or borda (default: majority)"
+                        }
+                    },
+                    "required": ["artifact"]
+                }),
+            },
+            McpToolDefinition {
+                name: "tagisan_session_list".to_string(),
+                description: Some(
+                    "Query and list persistent Tagisan agent sessions stored on disk.".to_string(),
                 ),
                 input_schema: json!({
                     "type": "object",
@@ -710,6 +765,180 @@ impl McpServer {
                 McpToolCallResult {
                     content: vec![McpContentBlock::Text { text: status_text }],
                     is_error: false,
+                }
+            }
+
+            "tagisan_swarm_run" => {
+                let task = match arguments.get("task").and_then(|v| v.as_str()) {
+                    Some(t) => t,
+                    None => {
+                        return McpToolCallResult {
+                            content: vec![McpContentBlock::Text {
+                                text: "Error: Missing required parameter 'task'".to_string(),
+                            }],
+                            is_error: true,
+                        };
+                    }
+                };
+
+                let agents_str = arguments
+                    .get("agents")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("architect,tdd-engineer,security-auditor");
+                let lead_agent = arguments
+                    .get("lead")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("architect");
+
+                let (_, p_model, provider) = match self.resolve_primary_provider() {
+                    Ok(p) => p,
+                    Err(e) => {
+                        return McpToolCallResult {
+                            content: vec![McpContentBlock::Text {
+                                text: format!("Error resolving provider for swarm: {e}"),
+                            }],
+                            is_error: true,
+                        };
+                    }
+                };
+
+                let mut coordinator = SwarmCoordinator::new();
+                for name in agents_str.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()) {
+                    let preset = crate::ecc::find_preset(name);
+                    let role = preset.as_ref().map(|p| p.description.as_str()).unwrap_or("Engineering Specialist");
+                    let sys_prompt = preset.as_ref().map(|p| p.system_prompt.clone());
+                    let mut member = SwarmMember::new(name, role, p_model.clone(), provider.clone())
+                        .with_tools(self.tools.clone());
+                    if let Some(sys) = sys_prompt {
+                        member = member.with_system_prompt(sys);
+                    }
+                    coordinator.register_member(member);
+                }
+                coordinator.set_lead(lead_agent);
+
+                match coordinator.run_lead(task, &self.ctx).await {
+                    Ok(res) => McpToolCallResult {
+                        content: vec![McpContentBlock::Text {
+                            text: format!(
+                                "## 🐝 Tagisan Swarm Execution Result\n\n{}\n\n---\n*Completed in {} iteration(s) | Cost: ${:.4}*",
+                                res.final_answer, res.iterations, res.total_cost_usd
+                            ),
+                        }],
+                        is_error: false,
+                    },
+                    Err(e) => McpToolCallResult {
+                        content: vec![McpContentBlock::Text {
+                            text: format!("Swarm execution failed: {e}"),
+                        }],
+                        is_error: true,
+                    },
+                }
+            }
+
+            "tagisan_consensus_vote" => {
+                let artifact = match arguments.get("artifact").and_then(|v| v.as_str()) {
+                    Some(a) => a,
+                    None => {
+                        return McpToolCallResult {
+                            content: vec![McpContentBlock::Text {
+                                text: "Error: Missing required parameter 'artifact'".to_string(),
+                            }],
+                            is_error: true,
+                        };
+                    }
+                };
+
+                let rule_str = arguments
+                    .get("rule")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("majority");
+                let voting_rule = match rule_str.to_lowercase().as_str() {
+                    "unanimous" => VotingRule::Unanimous,
+                    "supermajority" | "super" => VotingRule::SuperMajority(0.66),
+                    "borda" | "weighted_borda" => VotingRule::WeightedBorda,
+                    _ => VotingRule::Majority,
+                };
+
+                let (_, p_model, provider) = match self.resolve_primary_provider() {
+                    Ok(p) => p,
+                    Err(e) => {
+                        return McpToolCallResult {
+                            content: vec![McpContentBlock::Text {
+                                text: format!("Error resolving provider for consensus review: {e}"),
+                            }],
+                            is_error: true,
+                        };
+                    }
+                };
+
+                let mut coordinator = SwarmCoordinator::new();
+                for name in &["architect", "security-auditor", "code-reviewer"] {
+                    let preset = crate::ecc::find_preset(name);
+                    let role = preset.as_ref().map(|p| p.description.as_str()).unwrap_or("Reviewer");
+                    let sys_prompt = preset.as_ref().map(|p| p.system_prompt.clone());
+                    let mut member = SwarmMember::new(*name, role, p_model.clone(), provider.clone());
+                    if let Some(sys) = sys_prompt {
+                        member = member.with_system_prompt(sys);
+                    }
+                    coordinator.register_member(member);
+                }
+
+                let engine = TeamConsensusEngine::new();
+                match engine.run_consensus_review(&coordinator, artifact, voting_rule, &self.ctx).await {
+                    Ok(verdict) => {
+                        let mut out = format!(
+                            "## ⚖️ Tagisan Consensus Verdict\n\n- **Status:** {}\n- **Approval Ratio:** {:.1}%\n- **Average Score:** {:.2}/10\n\n{}\n\n",
+                            if verdict.approved { "APPROVED" } else { "REJECTED / REVISION REQUIRED" },
+                            verdict.approval_ratio * 100.0,
+                            verdict.average_score,
+                            verdict.synthesis
+                        );
+                        if !verdict.action_items.is_empty() {
+                            out.push_str("**Identified Risks & Action Items:**\n");
+                            for item in &verdict.action_items {
+                                out.push_str(&format!("- {item}\n"));
+                            }
+                        }
+                        McpToolCallResult {
+                            content: vec![McpContentBlock::Text { text: out }],
+                            is_error: false,
+                        }
+                    }
+                    Err(e) => McpToolCallResult {
+                        content: vec![McpContentBlock::Text {
+                            text: format!("Consensus review failed: {e}"),
+                        }],
+                        is_error: true,
+                    },
+                }
+            }
+
+            "tagisan_session_list" => {
+                let store = SessionStore::new();
+                match store.list() {
+                    Ok(sessions) => {
+                        let mut text = format!("## 📁 Tagisan Saved Sessions ({})\n\n", sessions.len());
+                        if sessions.is_empty() {
+                            text.push_str("*No saved sessions found.*");
+                        } else {
+                            for s in sessions {
+                                text.push_str(&format!(
+                                    "- **`{}`** — {} (Model: `{}`, Messages: {}, Cost: ${:.4}, Updated: `{}`)\n",
+                                    s.id, s.title, s.model, s.message_count, s.total_cost_usd, s.updated_at
+                                ));
+                            }
+                        }
+                        McpToolCallResult {
+                            content: vec![McpContentBlock::Text { text }],
+                            is_error: false,
+                        }
+                    }
+                    Err(e) => McpToolCallResult {
+                        content: vec![McpContentBlock::Text {
+                            text: format!("Failed to list sessions: {e}"),
+                        }],
+                        is_error: true,
+                    },
                 }
             }
 

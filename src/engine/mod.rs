@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
+#[derive(Clone)]
 pub struct EngineContext {
     providers: HashMap<String, Arc<dyn LlmProvider>>,
     pub budget_tracker: Arc<TokenBudgetTracker>,

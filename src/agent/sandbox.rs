@@ -14,6 +14,18 @@ pub struct WorktreeSandbox {
 }
 
 impl WorktreeSandbox {
+    /// Create a new isolated Git worktree sandbox with an auto-generated unique branch name
+    pub fn new(repo_root: impl AsRef<Path>) -> Result<Self> {
+        let branch_name = format!(
+            "tagisan/sandbox-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis()
+        );
+        Self::create(repo_root, branch_name)
+    }
+
     /// Create a new isolated Git worktree sandbox branched from HEAD or `base_branch`
     pub fn create(repo_root: impl AsRef<Path>, branch_name: impl Into<String>) -> Result<Self> {
         let repo_root = repo_root.as_ref().to_path_buf();

@@ -95,4 +95,8 @@ impl TokenBudgetTracker {
     pub fn current_spent_usd(&self) -> f64 {
         self.total_micro_usd_spent.load(Ordering::Relaxed) as f64 / 1_000_000.0
     }
+
+    pub fn max_budget_usd(&self) -> f64 {
+        self.max_budget_usd
+    }
 }

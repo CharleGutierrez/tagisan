@@ -8,6 +8,7 @@ pub mod mcp;
 pub mod memory;
 pub mod providers;
 pub mod strategies;
+pub mod swarm;
 pub mod tools;
 pub mod tui;
 pub mod types;
@@ -55,6 +56,11 @@ pub use tools::builtin::{
     WriteFileTool,
 };
 pub use tools::{ToolHandler, ToolRegistry};
+pub use swarm::{
+    AgentReview, ConsensusVerdict, DelegateTaskTool, InteractiveRepl, PipelineExecutionResult,
+    PipelineStageOutput, ReplCommand, ReviewCriterion, SessionMetadata, SessionRecord, SessionStore,
+    SwarmCoordinator, SwarmMember, TeamConsensusEngine, VotingRule,
+};
 pub use tui::run_debate_tui;
 pub use types::{
     ChatSession, CompletionRequest, CompletionResponse, ContentBlock, FinishReason, Message,

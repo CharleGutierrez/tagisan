@@ -510,6 +510,82 @@ For autonomous code generation and experimentation, Tagisan provides `WorktreeSa
 
 ---
 
+## 🐝 Autonomous Swarm Orchestration, Team Consensus & Interactive REPL (Milestone 8)
+
+Tagisan features a full distributed multi-agent swarm engine that elevates autonomous agents into coordinated teams with dynamic delegation, peer review consensus protocols, persistent session checkpointing, and a live interactive REPL.
+
+### 1. Swarm Orchestration (`tgs swarm`)
+- **Lead Agent Orchestration (`run`):** The designated Lead Agent (`architect`) drives execution and dynamically invokes `delegate_task(target_agent, task)` at runtime to assign subtasks to domain experts (`tdd-engineer`, `security-auditor`, `code-reviewer`):
+  ```bash
+  tgs swarm run "Design and implement a zero-allocation circular buffer in Rust" --agents architect,tdd-engineer,security-auditor --lead architect
+  ```
+- **Sequential Multi-Stage Pipeline (`pipeline`):** Hands off deliverables across specialists, with each agent refining and verifying the previous output:
+  ```bash
+  tgs swarm pipeline "Create an async rate limiter" --stages architect,tdd-engineer,code-reviewer,security-auditor
+  ```
+- **Concurrent Multi-Agent Broadcast (`broadcast`):** Dispatches prompts to all swarm members concurrently via Tokio async tasks:
+  ```bash
+  tgs swarm broadcast "Audit our cryptographic nonce generation for collision risk"
+  ```
+
+### 2. Team Consensus & Peer Review Engine (`tgs consensus`)
+Conducts mathematical multi-agent evaluations of code, diffs, or architecture proposals:
+- **Supported Voting Rules:** `majority` (>50%), `unanimous` (100%), `supermajority` (66%+), or `borda` (positional Borda count ranking).
+- **Quality Criteria:** Evaluates across Correctness, Security, Maintainability, and Performance with automated risk synthesis and action items:
+  ```bash
+  # Evaluate a source file with strict unanimous voting
+  tgs consensus src/agent/mod.rs --rule unanimous
+
+  # Evaluate an architecture proposal with positional Borda count ranking
+  tgs consensus "Should we use raft or paxos for leader election?" --rule borda
+  ```
+
+### 3. Interactive Multi-Turn Agent REPL (`tgs repl`)
+A persistent conversational terminal session with live tool execution, memory auto-recall, and instant slash commands:
+```bash
+# Launch interactive REPL with architect persona and long-term memory
+tgs repl --agent architect --memory
+
+# Launch inside an isolated Git worktree sandbox
+tgs repl --sandbox
+
+# Resume a previous session
+tgs repl --resume repl-1725890000
+```
+
+**Supported Slash Commands:**
+- `/help`: Display command manual and keybindings.
+- `/agent <persona>`: Switch agent persona on the fly (`architect`, `tdd-engineer`, etc.).
+- `/skill <name>`: Dynamically attach an ECC skill (`tdd-workflow`, `security-review`).
+- `/model <name>`: Switch active model mid-conversation.
+- `/tools`: List active registered tools.
+- `/memory`: Inspect vector memory statistics or query stored chunks.
+- `/sandbox`: Inspect worktree sandbox path, base commit, and active diff.
+- `/save [id]`: Save session checkpoint to disk.
+- `/load <id>`: Load previously saved session.
+- `/clear`: Clear conversation history.
+- `/budget`: Display real-time token usage and USD costs.
+- `/history`: Overview of all conversation turns.
+- `/exit`: Cleanly exit the session.
+
+### 4. Persistent Session Management (`tgs session`)
+Sessions are stored atomically in `.tagisan/sessions/<id>.json`:
+```bash
+# List all saved sessions with token counts and costs
+tgs session list
+
+# Resume a saved session
+tgs session resume <session_id>
+
+# Export session transcript to Markdown
+tgs session export <session_id> --output session.md
+
+# Delete a session
+tgs session delete <session_id>
+```
+
+---
+
 ## 💰 Built-in Cost & Budget Protection
 
 Tagisan tracks token usage and calculates estimated USD costs across all providers atomically, with a 90% discount calculation on cached prompt tokens. You can set strict budget limits to prevent accidental overages:
@@ -526,11 +602,17 @@ tgs --max-budget 1.50 moa "Generate a distributed consensus benchmark in Rust"
 Tagisan includes an exhaustive automated test suite covering unit logic, DAG validation, provider adapters, AgentShield safety, MCP client/server integration, vector RAG memory, git sandboxing, and chaos stress tests:
 
 ```bash
-# Run all tests (114 tests across 12 test binaries)
+# Run all tests (130 tests across 14 test binaries)
 cargo test
+
+# Run Milestone 8 Autonomous Swarm, Consensus & REPL test suite
+cargo test --test milestone8_swarm_tests
 
 # Run Milestone 7 Native MCP Server & Git Sandbox test suite
 cargo test --test milestone7_mcp_server_tests
+
+# Run Milestone 7 Brutal Stress & Adversarial Protocol test suite
+cargo test --test milestone7_brutal_tests
 
 # Run Milestone 6 Memory & RAG test suite specifically
 cargo test --test milestone6_memory_tests
