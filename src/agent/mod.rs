@@ -45,6 +45,7 @@ pub struct AutonomousAgent {
     pub agentshield_enabled: bool,
     pub memory: Option<Arc<VectorStore>>,
     pub embedding_provider: Option<Arc<dyn EmbeddingProvider>>,
+    pub working_dir: Option<std::path::PathBuf>,
 }
 
 impl AutonomousAgent {
@@ -64,12 +65,19 @@ impl AutonomousAgent {
             agentshield_enabled: true,
             memory: None,
             embedding_provider: None,
+            working_dir: None,
         }
     }
 
     /// Enable or disable AgentShield security scanner for tool calls and secret redaction
     pub fn with_agentshield(mut self, enabled: bool) -> Self {
         self.agentshield_enabled = enabled;
+        self
+    }
+
+    /// Set an isolated working directory / sandbox path for agent execution
+    pub fn with_working_dir(mut self, path: impl Into<std::path::PathBuf>) -> Self {
+        self.working_dir = Some(path.into());
         self
     }
 

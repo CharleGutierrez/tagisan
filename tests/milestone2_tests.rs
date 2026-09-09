@@ -429,7 +429,7 @@ async fn test_cascade_provider_non_retryable_error_does_not_cascade() {
 async fn test_autonomous_agent_parallel_multi_tool_execution() {
     let mut registry = ToolRegistry::new();
     registry.register(Arc::new(CalculatorTool));
-    registry.register(Arc::new(ReadFileTool));
+    registry.register(Arc::new(ReadFileTool::new()));
 
     // Scripted provider that in Turn 1 calls 2 tools in parallel
     let p = Arc::new(MockScriptedProvider::new(

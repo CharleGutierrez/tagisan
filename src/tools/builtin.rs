@@ -15,11 +15,18 @@ use tokio::time::timeout;
 
 /// Tool for reading file contents safely from local disk
 #[derive(Debug, Default, Clone)]
-pub struct ReadFileTool;
+pub struct ReadFileTool {
+    pub working_dir: Option<std::path::PathBuf>,
+}
 
 impl ReadFileTool {
     pub fn new() -> Self {
-        Self
+        Self { working_dir: None }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<std::path::PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
     }
 }
 
@@ -53,13 +60,23 @@ impl ToolHandler for ReadFileTool {
             .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path'".to_string()))?;
 
         let path = Path::new(path_str);
-        if !path.exists() {
-            return Err(TagisanError::Execution(format!("File does not exist: {path_str}")));
+        let target_path = if path.is_relative() {
+            if let Some(ref base) = self.working_dir {
+                base.join(path)
+            } else {
+                path.to_path_buf()
+            }
+        } else {
+            path.to_path_buf()
+        };
+
+        if !target_path.exists() {
+            return Err(TagisanError::Execution(format!("File does not exist: {}", target_path.display())));
         }
 
-        tokio::fs::read_to_string(path)
+        tokio::fs::read_to_string(&target_path)
             .await
-            .map_err(|e| TagisanError::Execution(format!("Failed to read file '{path_str}': {e}")))
+            .map_err(|e| TagisanError::Execution(format!("Failed to read file '{}': {e}", target_path.display())))
     }
 }
 
@@ -69,11 +86,18 @@ impl ToolHandler for ReadFileTool {
 
 /// Tool for writing/creating files safely on the local filesystem
 #[derive(Debug, Default, Clone)]
-pub struct WriteFileTool;
+pub struct WriteFileTool {
+    pub working_dir: Option<std::path::PathBuf>,
+}
 
 impl WriteFileTool {
     pub fn new() -> Self {
-        Self
+        Self { working_dir: None }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<std::path::PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
     }
 }
 
@@ -116,7 +140,17 @@ impl ToolHandler for WriteFileTool {
             .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'content'".to_string()))?;
 
         let path = Path::new(path_str);
-        if let Some(parent) = path.parent() {
+        let target_path = if path.is_relative() {
+            if let Some(ref base) = self.working_dir {
+                base.join(path)
+            } else {
+                path.to_path_buf()
+            }
+        } else {
+            path.to_path_buf()
+        };
+
+        if let Some(parent) = target_path.parent() {
             if !parent.as_os_str().is_empty() {
                 tokio::fs::create_dir_all(parent).await.map_err(|e| {
                     TagisanError::Execution(format!("Failed to create parent directory '{parent:?}': {e}"))
@@ -124,15 +158,11 @@ impl ToolHandler for WriteFileTool {
             }
         }
 
-        tokio::fs::write(path, content)
-            .await
-            .map_err(|e| TagisanError::Execution(format!("Failed to write to file '{path_str}': {e}")))?;
+        tokio::fs::write(&target_path, content).await.map_err(|e| {
+            TagisanError::Execution(format!("Failed to write to file '{}': {e}", target_path.display()))
+        })?;
 
-        Ok(format!(
-            "Successfully wrote {} bytes to '{}'.",
-            content.len(),
-            path_str
-        ))
+        Ok(format!("Successfully wrote {} bytes to {}", content.len(), target_path.display()))
     }
 }
 
@@ -144,12 +174,14 @@ impl ToolHandler for WriteFileTool {
 #[derive(Debug, Clone)]
 pub struct RunCommandTool {
     pub default_timeout: Duration,
+    pub working_dir: Option<std::path::PathBuf>,
 }
 
 impl Default for RunCommandTool {
     fn default() -> Self {
         Self {
             default_timeout: Duration::from_secs(30),
+            working_dir: None,
         }
     }
 }
@@ -158,7 +190,13 @@ impl RunCommandTool {
     pub fn new(timeout_duration: Duration) -> Self {
         Self {
             default_timeout: timeout_duration,
+            working_dir: None,
         }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<std::path::PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
     }
 }
 
@@ -210,6 +248,10 @@ impl ToolHandler for RunCommandTool {
             c.args(["-c", command_str]);
             c
         };
+
+        if let Some(ref dir) = self.working_dir {
+            cmd.current_dir(dir);
+        }
 
         cmd.kill_on_drop(true);
 

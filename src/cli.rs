@@ -12,7 +12,7 @@ use crate::{
     EngineContext, GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider,
     OpenAiCompatibleProvider, ProviderCapabilities, ReadFileTool, RunCommandTool, StrategyInput,
     StreamChunkDelta, TagisanError, ToolRegistry, ViewImageTool, WorkflowEvent, WorkflowPlanner, WriteFileTool,
-    McpManager,
+    McpManager, WorktreeSandbox,
 };
 
 #[derive(Parser)]
@@ -117,6 +117,10 @@ enum Commands {
         /// Enable long-term vector memory (.tagisan/memory.json)
         #[arg(long)]
         memory: bool,
+
+        /// Run the agent in an isolated Git worktree sandbox
+        #[arg(long)]
+        sandbox: bool,
 
         /// The agent goal or task prompt
         prompt: String,
@@ -846,31 +850,69 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             mcp_config,
             mcp,
             memory,
+            sandbox,
             prompt,
         } => {
             let ctx = build_engine_context(cli.max_budget);
             let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
 
-            // Build Tool Registry
-            let mut registry = ToolRegistry::new();
-            let tool_list: Vec<&str> = tools.split(',').map(|s| s.trim()).collect();
-            let enable_all = tool_list.contains(&"all");
+            // Build Tool Registry & Optional Worktree Sandbox
+            let mut sandbox_holder = None;
+            let mut registry = if sandbox {
+                let branch_name = format!("tgs-sandbox-{}", std::process::id());
+                match WorktreeSandbox::create(".", &branch_name) {
+                    Ok(sb) => {
+                        println!("🔒 Git Worktree Sandbox: Provisioned branch '{}' at '{}'", branch_name.yellow(), sb.path().display().to_string().cyan());
+                        let reg = ToolRegistry::with_builtins_in_dir(sb.path());
+                        sandbox_holder = Some(sb);
+                        reg
+                    }
+                    Err(e) => {
+                        eprintln!("⚠️ Failed to initialize Git worktree sandbox ({e}), falling back to local workspace");
+                        let mut reg = ToolRegistry::new();
+                        let tool_list: Vec<&str> = tools.split(',').map(|s| s.trim()).collect();
+                        let enable_all = tool_list.contains(&"all");
 
-            if enable_all || tool_list.contains(&"read_file") {
-                registry.register_tool(ReadFileTool::new());
-            }
-            if enable_all || tool_list.contains(&"write_file") {
-                registry.register_tool(WriteFileTool::new());
-            }
-            if enable_all || tool_list.contains(&"run_command") {
-                registry.register_tool(RunCommandTool::default());
-            }
-            if enable_all || tool_list.contains(&"calculator") {
-                registry.register_tool(CalculatorTool::new());
-            }
-            if enable_all || tool_list.contains(&"view_image") {
-                registry.register_tool(ViewImageTool::new());
-            }
+                        if enable_all || tool_list.contains(&"read_file") {
+                            reg.register_tool(ReadFileTool::new());
+                        }
+                        if enable_all || tool_list.contains(&"write_file") {
+                            reg.register_tool(WriteFileTool::new());
+                        }
+                        if enable_all || tool_list.contains(&"run_command") {
+                            reg.register_tool(RunCommandTool::default());
+                        }
+                        if enable_all || tool_list.contains(&"calculator") {
+                            reg.register_tool(CalculatorTool::new());
+                        }
+                        if enable_all || tool_list.contains(&"view_image") {
+                            reg.register_tool(ViewImageTool::new());
+                        }
+                        reg
+                    }
+                }
+            } else {
+                let mut reg = ToolRegistry::new();
+                let tool_list: Vec<&str> = tools.split(',').map(|s| s.trim()).collect();
+                let enable_all = tool_list.contains(&"all");
+
+                if enable_all || tool_list.contains(&"read_file") {
+                    reg.register_tool(ReadFileTool::new());
+                }
+                if enable_all || tool_list.contains(&"write_file") {
+                    reg.register_tool(WriteFileTool::new());
+                }
+                if enable_all || tool_list.contains(&"run_command") {
+                    reg.register_tool(RunCommandTool::default());
+                }
+                if enable_all || tool_list.contains(&"calculator") {
+                    reg.register_tool(CalculatorTool::new());
+                }
+                if enable_all || tool_list.contains(&"view_image") {
+                    reg.register_tool(ViewImageTool::new());
+                }
+                reg
+            };
 
             let _mcp_manager = load_and_register_mcp_tools(mcp, mcp_config.as_deref(), &mut registry).await?;
 
@@ -895,6 +937,10 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let mut agent = AutonomousAgent::new(prov, model_name, registry)
                 .with_agentshield(shield_active)
                 .with_max_iterations(max_iterations);
+
+            if let Some(ref sb) = sandbox_holder {
+                agent = agent.with_working_dir(sb.path());
+            }
 
             if memory {
                 let mem_store = Arc::new(crate::memory::VectorStore::load_or_default());
@@ -949,6 +995,18 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 sanitized_result.total_cost_usd,
                 sanitized_result.total_latency.as_secs_f32()
             );
+
+            if let Some(mut sb) = sandbox_holder {
+                if let Ok(diff) = sb.diff() {
+                    if !diff.trim().is_empty() {
+                        println!("\n{}", "================ SANDBOX GIT DIFF ================".bold().yellow());
+                        println!("{}", diff.trim());
+                        println!("{}", "==================================================".yellow());
+                    }
+                }
+                let _ = sb.cleanup();
+                println!("🧹 Git Worktree Sandbox cleaned up.");
+            }
         }
 
         Commands::Workflow {

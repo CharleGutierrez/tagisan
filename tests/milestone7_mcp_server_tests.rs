@@ -35,7 +35,7 @@ async fn test_mcp_server_initialize_handshake() {
     assert!(res.is_some(), "Initialize request must produce a response");
     let resp = res.unwrap();
 
-    assert_eq!(resp.id, Some(1));
+    assert_eq!(resp.id, Some(1.into()));
     assert!(resp.error.is_none(), "Handshake must not return an error");
 
     let result: McpInitializeResult =
@@ -73,7 +73,7 @@ async fn test_mcp_server_ping_probe() {
     assert!(res.is_some());
     let resp = res.unwrap();
 
-    assert_eq!(resp.id, Some(42));
+    assert_eq!(resp.id, Some(42.into()));
     assert!(resp.error.is_none());
     assert_eq!(resp.result, Some(json!({})));
 }
@@ -91,7 +91,7 @@ async fn test_mcp_server_tools_list_catalog() {
     assert!(res.is_some());
     let resp = res.unwrap();
 
-    assert_eq!(resp.id, Some(10));
+    assert_eq!(resp.id, Some(10.into()));
     assert!(resp.error.is_none());
 
     let result = resp.result.expect("Must have result");
@@ -180,7 +180,7 @@ async fn test_mcp_server_execute_status_tool() {
     assert!(res.is_some());
     let resp = res.unwrap();
 
-    assert_eq!(resp.id, Some(20));
+    assert_eq!(resp.id, Some(20.into()));
     assert!(resp.error.is_none());
 
     let call_res: McpToolCallResult =
@@ -225,7 +225,7 @@ async fn test_mcp_server_execute_builtin_calculator() {
     assert!(res.is_some());
     let resp = res.unwrap();
 
-    assert_eq!(resp.id, Some(30));
+    assert_eq!(resp.id, Some(30.into()));
     assert!(resp.error.is_none());
 
     let call_res: McpToolCallResult =
@@ -276,7 +276,7 @@ async fn test_mcp_server_memory_search_populated() {
     assert!(res.is_some());
     let resp = res.unwrap();
 
-    assert_eq!(resp.id, Some(40));
+    assert_eq!(resp.id, Some(40.into()));
     assert!(resp.error.is_none());
 
     let call_res: McpToolCallResult =
@@ -308,7 +308,7 @@ async fn test_mcp_server_unknown_method_and_unknown_tool() {
     assert!(res.is_some());
     let resp = res.unwrap();
 
-    assert_eq!(resp.id, Some(50));
+    assert_eq!(resp.id, Some(50.into()));
     assert!(resp.result.is_none());
     assert!(resp.error.is_some());
     let err = resp.error.unwrap();
@@ -328,7 +328,7 @@ async fn test_mcp_server_unknown_method_and_unknown_tool() {
     assert!(res2.is_some());
     let resp2 = res2.unwrap();
 
-    assert_eq!(resp2.id, Some(51));
+    assert_eq!(resp2.id, Some(51.into()));
     assert!(resp2.error.is_none());
     let call_res: McpToolCallResult =
         serde_json::from_value(resp2.result.expect("Result required")).expect("McpToolCallResult");

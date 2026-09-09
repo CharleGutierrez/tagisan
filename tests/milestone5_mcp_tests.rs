@@ -95,7 +95,7 @@ fn test_jsonrpc_protocol_messages() {
         }
     }"#;
     let resp: JsonRpcResponse = serde_json::from_str(resp_json).expect("Deserialize response failed");
-    assert_eq!(resp.id, Some(42));
+    assert_eq!(resp.id, Some(42.into()));
     assert!(resp.error.is_none());
     assert!(resp.result.is_some());
 

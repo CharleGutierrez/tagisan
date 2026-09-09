@@ -1,21 +1,101 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+/// Polymorphic JSON-RPC 2.0 identifier (String, Number, or Null)
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RequestId {
+    Number(i64),
+    String(String),
+}
+
+impl std::fmt::Display for RequestId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RequestId::Number(n) => write!(f, "{n}"),
+            RequestId::String(s) => write!(f, "{s}"),
+        }
+    }
+}
+
+impl From<u64> for RequestId {
+    fn from(n: u64) -> Self {
+        RequestId::Number(n as i64)
+    }
+}
+
+impl From<i64> for RequestId {
+    fn from(n: i64) -> Self {
+        RequestId::Number(n)
+    }
+}
+
+impl From<i32> for RequestId {
+    fn from(n: i32) -> Self {
+        RequestId::Number(n as i64)
+    }
+}
+
+impl From<String> for RequestId {
+    fn from(s: String) -> Self {
+        RequestId::String(s)
+    }
+}
+
+impl From<&str> for RequestId {
+    fn from(s: &str) -> Self {
+        RequestId::String(s.to_string())
+    }
+}
+
+impl PartialEq<u64> for RequestId {
+    fn eq(&self, other: &u64) -> bool {
+        match self {
+            RequestId::Number(n) => *n >= 0 && (*n as u64) == *other,
+            _ => false,
+        }
+    }
+}
+
+impl PartialEq<RequestId> for u64 {
+    fn eq(&self, other: &RequestId) -> bool {
+        other == self
+    }
+}
+
+impl PartialEq<i64> for RequestId {
+    fn eq(&self, other: &i64) -> bool {
+        match self {
+            RequestId::Number(n) => *n == *other,
+            _ => false,
+        }
+    }
+}
+
+impl PartialEq<&str> for RequestId {
+    fn eq(&self, other: &&str) -> bool {
+        match self {
+            RequestId::String(s) => s == *other,
+            _ => false,
+        }
+    }
+}
+
 /// Standard JSON-RPC 2.0 Request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
     pub jsonrpc: String,
-    pub id: u64,
+    pub id: RequestId,
     pub method: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params: Option<Value>,
 }
 
 impl JsonRpcRequest {
-    pub fn new(id: u64, method: impl Into<String>, params: Option<Value>) -> Self {
+    pub fn new(id: impl Into<RequestId>, method: impl Into<String>, params: Option<Value>) -> Self {
         Self {
             jsonrpc: "2.0".to_string(),
-            id,
+            id: id.into(),
             method: method.into(),
             params,
         }
@@ -46,7 +126,7 @@ impl JsonRpcNotification {
 pub struct JsonRpcResponse {
     pub jsonrpc: String,
     #[serde(default)]
-    pub id: Option<u64>,
+    pub id: Option<RequestId>,
     #[serde(default)]
     pub result: Option<Value>,
     #[serde(default)]
@@ -54,16 +134,16 @@ pub struct JsonRpcResponse {
 }
 
 impl JsonRpcResponse {
-    pub fn success(id: u64, result: Value) -> Self {
+    pub fn success(id: impl Into<RequestId>, result: Value) -> Self {
         Self {
             jsonrpc: "2.0".to_string(),
-            id: Some(id),
+            id: Some(id.into()),
             result: Some(result),
             error: None,
         }
     }
 
-    pub fn error(id: Option<u64>, code: i64, message: impl Into<String>) -> Self {
+    pub fn error(id: Option<RequestId>, code: i64, message: impl Into<String>) -> Self {
         Self {
             jsonrpc: "2.0".to_string(),
             id,

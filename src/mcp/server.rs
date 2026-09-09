@@ -249,8 +249,8 @@ impl McpServer {
         defs
     }
 
-    /// Resolve default primary provider for autonomous tools
-    fn resolve_primary_provider(&self) -> Result<(String, String, Arc<dyn LlmProvider>)> {
+    /// Resolve all available providers and default models for multi-agent collaboration
+    fn resolve_available_providers(&self) -> Vec<(String, String, Arc<dyn LlmProvider>)> {
         let candidate_keys = [
             ("gemini", "GEMINI_API_KEY", "gemini-2.0-flash"),
             ("deepseek", "DEEPSEEK_API_KEY", "deepseek-chat"),
@@ -259,12 +259,28 @@ impl McpServer {
             ("xai", "XAI_API_KEY", "grok-2-latest"),
         ];
 
+        let mut list = Vec::new();
         for (id, key_var, def_model) in candidate_keys {
             if std::env::var(key_var).is_ok() {
                 if let Ok(prov) = self.ctx.get_provider(id) {
-                    return Ok((id.to_string(), def_model.to_string(), prov));
+                    list.push((id.to_string(), def_model.to_string(), prov));
                 }
             }
+        }
+
+        if let Ok(prov) = self.ctx.get_provider("ollama") {
+            let model = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "qwen2.5-coder:1.5b".to_string());
+            list.push(("ollama".to_string(), model, prov));
+        }
+
+        list
+    }
+
+    /// Resolve default primary provider for autonomous tools
+    fn resolve_primary_provider(&self) -> Result<(String, String, Arc<dyn LlmProvider>)> {
+        let available = self.resolve_available_providers();
+        if let Some(first) = available.into_iter().next() {
+            return Ok(first);
         }
 
         let prov = self.ctx.get_provider("ollama")?;
@@ -288,24 +304,39 @@ impl McpServer {
                     }
                 };
 
-                let provider_res = self.resolve_primary_provider();
-                let (p_id, p_model, _) = match provider_res {
-                    Ok(p) => p,
-                    Err(e) => {
-                        return McpToolCallResult {
-                            content: vec![McpContentBlock::Text {
-                                text: format!("Error resolving provider for debate: {e}"),
-                            }],
-                            is_error: true,
-                        };
-                    }
+                let available = self.resolve_available_providers();
+                let (proponent, adversary, lakandiwa) = if available.len() >= 3 {
+                    (
+                        (available[0].0.clone(), available[0].1.clone()),
+                        (available[1].0.clone(), available[1].1.clone()),
+                        (available[2].0.clone(), available[2].1.clone()),
+                    )
+                } else if available.len() == 2 {
+                    (
+                        (available[0].0.clone(), available[0].1.clone()),
+                        (available[1].0.clone(), available[1].1.clone()),
+                        (available[0].0.clone(), available[0].1.clone()),
+                    )
+                } else {
+                    let (p_id, p_model, _) = match self.resolve_primary_provider() {
+                        Ok(p) => p,
+                        Err(e) => {
+                            return McpToolCallResult {
+                                content: vec![McpContentBlock::Text {
+                                    text: format!("Error resolving provider for debate: {e}"),
+                                }],
+                                is_error: true,
+                            };
+                        }
+                    };
+                    (
+                        (p_id.clone(), p_model.clone()),
+                        (p_id.clone(), p_model.clone()),
+                        (p_id, p_model),
+                    )
                 };
 
-                let strategy = DialecticalDebateStrategy::new(
-                    (p_id.clone(), p_model.clone()),
-                    (p_id.clone(), p_model.clone()),
-                    (p_id, p_model),
-                );
+                let strategy = DialecticalDebateStrategy::new(proponent, adversary, lakandiwa);
 
                 let input = StrategyInput {
                     prompt: prompt.to_string(),
@@ -350,23 +381,32 @@ impl McpServer {
                     }
                 };
 
-                let (p_id, p_model, _) = match self.resolve_primary_provider() {
-                    Ok(p) => p,
-                    Err(e) => {
-                        return McpToolCallResult {
-                            content: vec![McpContentBlock::Text {
-                                text: format!("Error resolving provider for MoA: {e}"),
-                            }],
-                            is_error: true,
-                        };
+                let available = self.resolve_available_providers();
+                let (proposers, aggregator) = if available.len() >= 2 {
+                    let mut props = Vec::new();
+                    for item in &available[..available.len().min(3)] {
+                        props.push((item.0.clone(), item.1.clone()));
                     }
+                    let agg = (available[0].0.clone(), available[0].1.clone());
+                    (props, agg)
+                } else {
+                    let (p_id, p_model, _) = match self.resolve_primary_provider() {
+                        Ok(p) => p,
+                        Err(e) => {
+                            return McpToolCallResult {
+                                content: vec![McpContentBlock::Text {
+                                    text: format!("Error resolving provider for MoA: {e}"),
+                                }],
+                                is_error: true,
+                            };
+                        }
+                    };
+                    (
+                        vec![(p_id.clone(), p_model.clone()), (p_id.clone(), p_model.clone())],
+                        (p_id, p_model),
+                    )
                 };
 
-                let proposers = vec![
-                    (p_id.clone(), p_model.clone()),
-                    (p_id.clone(), p_model.clone()),
-                ];
-                let aggregator = (p_id, p_model);
                 let strategy = MixtureOfAgentsStrategy::new(proposers, aggregator);
 
                 let input = StrategyInput {
@@ -762,32 +802,48 @@ impl McpServer {
                 continue;
             }
 
-            match serde_json::from_str::<JsonRpcRequest>(trimmed) {
-                Ok(req) => {
-                    if let Some(resp) = self.handle_request(req).await {
-                        if let Ok(serialized) = serde_json::to_string(&resp) {
-                            let payload = format!("{}\n", serialized);
-                            if let Err(e) = writer.write_all(payload.as_bytes()).await {
-                                eprintln!("Failed to write to stdio: {e}");
-                                break;
+            let parsed_json = match serde_json::from_str::<Value>(trimmed) {
+                Ok(v) => v,
+                Err(_) => {
+                    let err_resp = JsonRpcResponse::error(None, -32700, "Parse error");
+                    if let Ok(serialized) = serde_json::to_string(&err_resp) {
+                        let payload = format!("{}\n", serialized);
+                        let _ = writer.write_all(payload.as_bytes()).await;
+                        let _ = writer.flush().await;
+                    }
+                    continue;
+                }
+            };
+
+            // If it has an "id" field, it is a Request and MUST produce a response
+            if let Some(raw_id) = parsed_json.get("id") {
+                let req_id: Option<crate::mcp::protocol::RequestId> = serde_json::from_value(raw_id.clone()).ok();
+                match serde_json::from_value::<JsonRpcRequest>(parsed_json) {
+                    Ok(req) => {
+                        if let Some(resp) = self.handle_request(req).await {
+                            if let Ok(serialized) = serde_json::to_string(&resp) {
+                                let payload = format!("{}\n", serialized);
+                                if let Err(e) = writer.write_all(payload.as_bytes()).await {
+                                    eprintln!("Failed to write to stdio: {e}");
+                                    break;
+                                }
+                                let _ = writer.flush().await;
                             }
-                            let _ = writer.flush().await;
                         }
                     }
-                }
-                Err(_) => {
-                    // Try parsing as notification
-                    if let Ok(notif) = serde_json::from_str::<crate::mcp::protocol::JsonRpcNotification>(trimmed) {
-                        debug!("Received notification: {}", notif.method);
-                    } else {
-                        // Emit JSON-RPC parse error
-                        let err_resp = JsonRpcResponse::error(None, -32700, "Parse error");
+                    Err(e) => {
+                        let err_resp = JsonRpcResponse::error(req_id, -32600, format!("Invalid Request: {e}"));
                         if let Ok(serialized) = serde_json::to_string(&err_resp) {
                             let payload = format!("{}\n", serialized);
                             let _ = writer.write_all(payload.as_bytes()).await;
                             let _ = writer.flush().await;
                         }
                     }
+                }
+            } else {
+                // No "id" field: standard JSON-RPC 2.0 notification
+                if let Ok(notif) = serde_json::from_value::<crate::mcp::protocol::JsonRpcNotification>(parsed_json) {
+                    debug!("Received notification: {}", notif.method);
                 }
             }
         }

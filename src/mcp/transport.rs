@@ -1,6 +1,6 @@
 use crate::error::{Result, TagisanError};
 use crate::mcp::config::McpServerConfig;
-use crate::mcp::protocol::{JsonRpcNotification, JsonRpcRequest, JsonRpcResponse};
+use crate::mcp::protocol::{JsonRpcNotification, JsonRpcRequest, JsonRpcResponse, RequestId};
 use std::collections::HashMap;
 use std::process::Stdio;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -12,7 +12,7 @@ use tokio::sync::{oneshot, Mutex};
 use tokio::time::timeout;
 use tracing::{debug, warn};
 
-type PendingRequests = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<JsonRpcResponse>>>>>;
+type PendingRequests = Arc<Mutex<HashMap<RequestId, oneshot::Sender<Result<JsonRpcResponse>>>>>;
 
 /// Transport communicating with an MCP server via stdio JSON-RPC 2.0
 pub struct StdioTransport {
@@ -115,9 +115,9 @@ impl StdioTransport {
 
                         match serde_json::from_value::<JsonRpcResponse>(val) {
                             Ok(resp) => {
-                                if let Some(id) = resp.id {
+                                if let Some(ref id) = resp.id {
                                     let mut map = pending_clone.lock().await;
-                                    if let Some(tx) = map.remove(&id) {
+                                    if let Some(tx) = map.remove(id) {
                                         let _ = tx.send(Ok(resp));
                                     } else {
                                         debug!(
@@ -190,11 +190,11 @@ impl StdioTransport {
         }
 
         let (tx, rx) = oneshot::channel();
-        let req_id = req.id;
+        let req_id = req.id.clone();
 
         {
             let mut map = self.pending.lock().await;
-            map.insert(req_id, tx);
+            map.insert(req_id.clone(), tx);
         }
 
         let serialized = serde_json::to_string(&req).map_err(|e| {

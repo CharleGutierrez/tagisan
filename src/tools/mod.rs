@@ -53,6 +53,18 @@ impl ToolRegistry {
         registry
     }
 
+    /// Create a registry pre-populated with built-in tools bound to a specific working directory / sandbox
+    pub fn with_builtins_in_dir(dir: impl Into<std::path::PathBuf>) -> Self {
+        let dir = dir.into();
+        let mut registry = Self::new();
+        registry.register_tool(builtin::ReadFileTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::WriteFileTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::RunCommandTool::default().with_working_dir(dir));
+        registry.register_tool(builtin::CalculatorTool::new());
+        registry.register_tool(builtin::ViewImageTool::new());
+        registry
+    }
+
     /// Register a tool wrapped in an Arc
     pub fn register(&mut self, tool: Arc<dyn ToolHandler>) {
         self.tools.insert(tool.name().to_string(), tool);

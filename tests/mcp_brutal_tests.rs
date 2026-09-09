@@ -155,7 +155,7 @@ fn test_jsonrpc_server_request_detection() {
 // =========================================================================
 
 #[test]
-fn test_jsonrpc_string_and_negative_ids_fail_in_tagisan() {
+fn test_jsonrpc_string_and_negative_ids_succeed_in_tagisan() {
     let string_id_resp = r#"{
         "jsonrpc": "2.0",
         "id": "req-uuid-12345",
@@ -166,8 +166,12 @@ fn test_jsonrpc_string_and_negative_ids_fail_in_tagisan() {
 
     let parse_res: Result<JsonRpcResponse, _> = serde_json::from_str(string_id_resp);
     assert!(
-        parse_res.is_err(),
-        "CONFIRMED PROTOCOL GAP: Tagisan JsonRpcResponse id is hardcoded as Option<u64>, failing on standard String IDs!"
+        parse_res.is_ok(),
+        "Tagisan JsonRpcResponse must support standard String IDs!"
+    );
+    assert_eq!(
+        parse_res.unwrap().id,
+        Some(tagisan::mcp::protocol::RequestId::String("req-uuid-12345".to_string()))
     );
 
     let negative_id_resp = r#"{
@@ -178,8 +182,12 @@ fn test_jsonrpc_string_and_negative_ids_fail_in_tagisan() {
 
     let parse_neg: Result<JsonRpcResponse, _> = serde_json::from_str(negative_id_resp);
     assert!(
-        parse_neg.is_err(),
-        "CONFIRMED PROTOCOL GAP: JsonRpcResponse id fails on negative integer IDs!"
+        parse_neg.is_ok(),
+        "JsonRpcResponse must support negative integer IDs!"
+    );
+    assert_eq!(
+        parse_neg.unwrap().id,
+        Some(tagisan::mcp::protocol::RequestId::Number(-1))
     );
 }
 

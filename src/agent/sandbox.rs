@@ -9,6 +9,7 @@ pub struct WorktreeSandbox {
     repo_root: PathBuf,
     worktree_path: PathBuf,
     branch_name: String,
+    base_commit: String,
     cleaned_up: bool,
 }
 
@@ -17,6 +18,14 @@ impl WorktreeSandbox {
     pub fn create(repo_root: impl AsRef<Path>, branch_name: impl Into<String>) -> Result<Self> {
         let repo_root = repo_root.as_ref().to_path_buf();
         let branch_name = branch_name.into();
+
+        // Capture base commit before adding worktree
+        let base_commit = Command::new("git")
+            .current_dir(&repo_root)
+            .args(["rev-parse", "HEAD"])
+            .output()
+            .map(|out| String::from_utf8_lossy(&out.stdout).trim().to_string())
+            .unwrap_or_else(|_| "HEAD".to_string());
 
         let unique_id = format!(
             "tagisan_worktree_{}_{}",
@@ -29,9 +38,10 @@ impl WorktreeSandbox {
         let worktree_path = std::env::temp_dir().join(unique_id);
 
         info!(
-            "Provisioning Git worktree sandbox on branch '{}' at '{}'...",
+            "Provisioning Git worktree sandbox on branch '{}' at '{}' (base: {})...",
             branch_name,
-            worktree_path.display()
+            worktree_path.display(),
+            base_commit
         );
 
         let output = Command::new("git")
@@ -58,6 +68,7 @@ impl WorktreeSandbox {
             repo_root,
             worktree_path,
             branch_name,
+            base_commit,
             cleaned_up: false,
         })
     }
@@ -130,15 +141,20 @@ impl WorktreeSandbox {
         Ok(String::from_utf8_lossy(&rev_out.stdout).trim().to_string())
     }
 
-    /// Get diff of changes against base
+    /// Get diff of changes against base commit
     pub fn diff(&self) -> Result<String> {
         let out = Command::new("git")
             .current_dir(&self.worktree_path)
-            .args(["diff", "HEAD"])
+            .args(["diff", &self.base_commit])
             .output()
             .map_err(|e| TagisanError::Execution(format!("git diff failed: {e}")))?;
 
         Ok(String::from_utf8_lossy(&out.stdout).to_string())
+    }
+
+    /// Access the base commit SHA this sandbox was branched from
+    pub fn base_commit(&self) -> &str {
+        &self.base_commit
     }
 
     /// Clean up the worktree and remove the branch if desired
