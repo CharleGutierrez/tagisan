@@ -13,6 +13,7 @@ pub mod swarm;
 pub mod tools;
 pub mod tui;
 pub mod types;
+pub mod vella;
 
 pub use bun::{
     tagisan_ffi_blake3_digest, tagisan_ffi_cosine_similarity, tagisan_ffi_shield_scan,
@@ -78,4 +79,9 @@ pub use tui::run_debate_tui;
 pub use types::{
     ChatSession, CompletionRequest, CompletionResponse, ContentBlock, FinishReason, Message,
     ProviderCapabilities, Role, StreamChunk, StreamChunkDelta, TokenUsage, ToolDefinition,
+};
+pub use vella::{
+    DomainActionProposal, VellaAppManager, VellaDebateGovernor, VellaDebateVerdict,
+    VellaEventBridgeTool, VellaMedicineTool, VellaPolicyGovernor, VellaRoboticsTool,
+    VellaScadaTool, VellaStreamBridge, VellaTradingTool,
 };

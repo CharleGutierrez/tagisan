@@ -22,6 +22,7 @@ pub enum ReplCommand {
     Budget,
     History,
     Bun(String),
+    Vella(String),
     Exit,
     UserPrompt(String),
 }
@@ -88,6 +89,7 @@ impl InteractiveRepl {
             "/memory" | "/mem" => ReplCommand::Memory,
             "/sandbox" | "/box" => ReplCommand::Sandbox,
             "/bun" => ReplCommand::Bun(arg),
+            "/vella" => ReplCommand::Vella(arg),
             "/save" | "/s" => {
                 let name = if arg.is_empty() { None } else { Some(arg) };
                 ReplCommand::Save(name)
@@ -151,6 +153,7 @@ impl InteractiveRepl {
                     {}      Display memory stats or search memory\n\
                     {}     Inspect git worktree sandbox status & diff\n\
                     {}  Evaluate TypeScript/JavaScript on the fly via Bun\n\
+                    {} Interact with Vella Sovereign OS & hardware E-Stop\n\
                     {}   Save session checkpoint\n\
                     {}     Load previously saved session\n\
                     {}      Clear conversational history\n\
@@ -166,6 +169,7 @@ impl InteractiveRepl {
                     "/memory".bold().green(),
                     "/sandbox".bold().green(),
                     "/bun <ts_code>".bold().green(),
+                    "/vella <cmd>".bold().green(),
                     "/save [id]".bold().green(),
                     "/load <id>".bold().green(),
                     "/clear".bold().green(),
@@ -278,6 +282,63 @@ impl InteractiveRepl {
                         Ok(Some(output))
                     }
                     Err(e) => Ok(Some(format!("Bun execution error: {e}"))),
+                }
+            }
+            ReplCommand::Vella(arg) => {
+                let parts: Vec<&str> = arg.split_whitespace().collect();
+                let subcmd = parts.first().copied().unwrap_or("status");
+                let mgr = crate::vella::VellaAppManager::with_default_schemas();
+
+                match subcmd {
+                    "status" => {
+                        let e_stop = mgr.governor.is_e_stop_active().await;
+                        Ok(Some(format!(
+                            "{}\n  - E-Stop Active: {}\n  - Max Order Value: ${:.2}\n  - Max Robot Velocity: {:.1} m/s\n  - Allowed SCADA Coils: [{}, {}]",
+                            "⚡ Vella Sovereign Control Plane:".bold().cyan(),
+                            if e_stop { "YES (TRIPPED)".bold().red() } else { "NO (ARMED)".bold().green() },
+                            mgr.governor.max_order_value_usd,
+                            mgr.governor.max_robot_velocity_ms,
+                            mgr.governor.allowed_scada_coils.0,
+                            mgr.governor.allowed_scada_coils.1
+                        )))
+                    }
+                    "estop" => {
+                        mgr.governor.set_e_stop(true, "Triggered via REPL /vella estop").await;
+                        Ok(Some("🚨 EMERGENCY STOP LATCHED across all physical actuators and drone kinematic buses.".bold().red().to_string()))
+                    }
+                    "clear_estop" => {
+                        mgr.governor.set_e_stop(false, "Cleared via REPL /vella clear_estop").await;
+                        Ok(Some("✅ EMERGENCY STOP CLEARED. Actuation pathways re-armed.".bold().green().to_string()))
+                    }
+                    "schemas" => {
+                        #[cfg(feature = "vella")]
+                        {
+                            let reg = mgr.schema_registry.read().await;
+                            let schemas = reg.all();
+                            let mut out = format!("Vella Active Schemas ({}):\n", schemas.len());
+                            for s in schemas {
+                                out.push_str(&format!("  - {} (table: {}, category: {}, fields: {})\n",
+                                    s.name.bold().green(), s.table_name, s.category, s.fields.len()
+                                ));
+                            }
+                            Ok(Some(out))
+                        }
+                        #[cfg(not(feature = "vella"))]
+                        {
+                            Ok(Some("Vella schemas disabled without feature.".to_string()))
+                        }
+                    }
+                    "audit" => {
+                        let log = mgr.governor.audit_log.read().await;
+                        let mut out = format!("Vella Policy Audit Entries ({}):\n", log.len());
+                        for entry in log.iter() {
+                            out.push_str(&format!("  {}\n", entry));
+                        }
+                        Ok(Some(out))
+                    }
+                    _ => Ok(Some(format!(
+                        "Usage: /vella <status | estop | clear_estop | schemas | audit>"
+                    ))),
                 }
             }
             ReplCommand::Save(opt_name) => {

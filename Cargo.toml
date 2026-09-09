@@ -51,5 +51,14 @@ crossterm = { version = "0.28", features = ["event-stream"] }
 # Logging & Telemetry
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-rusqlite = { version = "0.40.2", features = ["bundled"] }
+rusqlite = { version = "0.29", features = ["bundled"] }
 libc = "0.2.189"
+
+# Vella Framework Integration & FHE Shield
+vella = { path = "../Vella", optional = true }
+tfhe = { version = "1.7.0", features = ["boolean", "integer", "shortint"], optional = true }
+
+[features]
+default = ["vella"]
+vella = ["dep:vella", "tfhe"]
+tfhe = ["dep:tfhe"]

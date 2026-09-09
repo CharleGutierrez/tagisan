@@ -20,6 +20,11 @@ pub use bun::{
 };
 pub use bun_compile::BunCompileTool;
 pub use bun_serve::{BunServeTool, BunStreamBusTool};
+pub use crate::vella::{
+    VellaDefenseDrillTool, VellaDigitalTwinTool, VellaEventBridgeTool, VellaFheShieldTool,
+    VellaMedicineTool, VellaRoboticsTool, VellaScadaTool, VellaScaffolderTool,
+    VellaSpaceCopilotTool, VellaTradingTool, VellaVectorSyncTool, VellaWeb3GuardianTool,
+};
 
 /// Trait implemented by all tools executable by autonomous agents
 #[async_trait]
@@ -69,6 +74,20 @@ impl ToolRegistry {
         registry.register_tool(bun_serve::BunServeTool::new());
         registry.register_tool(bun_serve::BunStreamBusTool::new());
         registry.register_tool(bun_compile::BunCompileTool::new());
+        // Vella Phase 1 Domain Tools
+        registry.register_tool(crate::vella::VellaTradingTool::default());
+        registry.register_tool(crate::vella::VellaScadaTool::default());
+        registry.register_tool(crate::vella::VellaRoboticsTool::default());
+        registry.register_tool(crate::vella::VellaMedicineTool::default());
+        registry.register_tool(crate::vella::VellaEventBridgeTool::default());
+        // Vella Phase 2 Deep-Systems Superpowers
+        registry.register_tool(crate::vella::VellaVectorSyncTool::default());
+        registry.register_tool(crate::vella::VellaDigitalTwinTool::default());
+        registry.register_tool(crate::vella::VellaWeb3GuardianTool::default());
+        registry.register_tool(crate::vella::VellaFheShieldTool::default());
+        registry.register_tool(crate::vella::VellaSpaceCopilotTool::default());
+        registry.register_tool(crate::vella::VellaScaffolderTool::default());
+        registry.register_tool(crate::vella::VellaDefenseDrillTool::default());
         registry
     }
 
@@ -91,6 +110,20 @@ impl ToolRegistry {
         registry.register_tool(bun_serve::BunServeTool::new().with_working_dir(dir.clone()));
         registry.register_tool(bun_serve::BunStreamBusTool::new().with_working_dir(dir.clone()));
         registry.register_tool(bun_compile::BunCompileTool::new().with_working_dir(dir));
+        // Vella Phase 1 Domain Tools
+        registry.register_tool(crate::vella::VellaTradingTool::default());
+        registry.register_tool(crate::vella::VellaScadaTool::default());
+        registry.register_tool(crate::vella::VellaRoboticsTool::default());
+        registry.register_tool(crate::vella::VellaMedicineTool::default());
+        registry.register_tool(crate::vella::VellaEventBridgeTool::default());
+        // Vella Phase 2 Deep-Systems Superpowers
+        registry.register_tool(crate::vella::VellaVectorSyncTool::default());
+        registry.register_tool(crate::vella::VellaDigitalTwinTool::default());
+        registry.register_tool(crate::vella::VellaWeb3GuardianTool::default());
+        registry.register_tool(crate::vella::VellaFheShieldTool::default());
+        registry.register_tool(crate::vella::VellaSpaceCopilotTool::default());
+        registry.register_tool(crate::vella::VellaScaffolderTool::default());
+        registry.register_tool(crate::vella::VellaDefenseDrillTool::default());
         registry
     }
 
@@ -131,7 +164,9 @@ impl ToolRegistry {
 
     /// List all registered tool names
     pub fn names(&self) -> Vec<String> {
-        self.tools.keys().cloned().collect()
+        let mut names: Vec<String> = self.tools.keys().cloned().collect();
+        names.sort();
+        names
     }
 
     /// Generate universal ToolDefinition schemas for LLM completion requests

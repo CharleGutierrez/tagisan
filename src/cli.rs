@@ -242,6 +242,58 @@ enum Commands {
         #[command(subcommand)]
         action: BunAction,
     },
+    /// Vella Sovereign Framework: SCADA, Robotics, Trading, Medicine & Sovereign Governance
+    Vella {
+        #[command(subcommand)]
+        action: VellaAction,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum VellaAction {
+    /// Inspect Vella Framework & Sovereign Policy Governor status
+    Status,
+    /// Trigger emergency stop (E-Stop) across physical actuators and robotics
+    Estop {
+        /// Reason for emergency stop
+        #[arg(short, long, default_value = "CLI operator triggered E-Stop")]
+        reason: String,
+    },
+    /// Clear emergency stop (E-Stop) latch
+    ClearEstop {
+        /// Reason for clearing E-Stop
+        #[arg(short, long, default_value = "Operator verified system safety")]
+        reason: String,
+    },
+    /// List registered sovereign model schemas in Vella
+    Schemas,
+    /// Inspect domain safety policy audit log
+    Audit,
+    /// Run an adversarial debate governance vote over a high-stakes proposal
+    Debate {
+        /// Target domain (trading, scada, robotics, medicine)
+        #[arg(short, long, default_value = "scada")]
+        domain: String,
+        /// Action type (e.g. coil_actuation, order_execution, estop_override)
+        #[arg(short, long, default_value = "coil_actuation")]
+        action_type: String,
+        /// Target device/symbol
+        #[arg(short, long, default_value = "VALVE_MAIN_COOLANT")]
+        target: String,
+        /// Parameters JSON string (default: '{"coil_address": 10, "state": true}')
+        #[arg(short, long, default_value = "{\"coil_address\": 10, \"state\": true}")]
+        parameters: String,
+    },
+    /// Execute a domain tool directly (trading, scada, robotics, medicine, events)
+    Tool {
+        /// Tool name: trading, scada, robotics, medicine, events
+        tool: String,
+        /// Action parameter (e.g. match, read_register, e_stop, molecular_docking, publish)
+        action: String,
+        /// Additional parameters as JSON string
+        #[arg(short, long, default_value = "{}")]
+        args: String,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -2491,6 +2543,10 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Bun { action } => {
             handle_bun_command(action).await?;
         }
+
+        Commands::Vella { action } => {
+            handle_vella_command(action).await?;
+        }
     }
 
     Ok(())
@@ -2578,5 +2634,161 @@ async fn handle_bun_command(action: BunAction) -> Result<(), Box<dyn std::error:
             println!("{output}");
         }
     }
+    Ok(())
+}
+
+async fn handle_vella_command(action: VellaAction) -> Result<(), Box<dyn std::error::Error>> {
+    let mgr = crate::vella::VellaAppManager::with_default_schemas();
+
+    match action {
+        VellaAction::Status => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  ⚡ VELLA SOVEREIGN FRAMEWORK & DOMAIN GOVERNOR".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+            let e_stop = mgr.governor.is_e_stop_active().await;
+            println!("  Operational State:      {}", if e_stop { "🚨 EMERGENCY STOP LATCHED".bold().red() } else { "✅ ACTIVE / NOMINAL".bold().green() });
+            println!("  Max Trade Order Value:  ${:.2} USD", mgr.governor.max_order_value_usd);
+            println!("  Max Order Size:         {} contracts", mgr.governor.max_order_size);
+            println!("  Max Permitted Leverage: {:.1}x", mgr.governor.max_leverage);
+            println!("  Allowed SCADA Coils:    [{}, {}]", mgr.governor.allowed_scada_coils.0, mgr.governor.allowed_scada_coils.1);
+            println!("  Max Robot Velocity:     {:.1} m/s", mgr.governor.max_robot_velocity_ms);
+            println!("  Debate Governance:      {}", "MANDATORY FOR HIGH-STAKES".bold().cyan());
+            #[cfg(feature = "vella")]
+            {
+                let reg = mgr.schema_registry.read().await;
+                println!("  Vella Model Schemas:    {} registered", reg.len());
+            }
+            println!("{}", "=========================================================".cyan());
+        }
+
+        VellaAction::Estop { reason } => {
+            mgr.governor.set_e_stop(true, &reason).await;
+            println!("{}", format!("🚨 [VELLA E-STOP LATCHED]: {}", reason).bold().red());
+            println!("{}", "All physical SCADA actuators and drone kinematics are BLOCKED.".yellow());
+        }
+
+        VellaAction::ClearEstop { reason } => {
+            mgr.governor.set_e_stop(false, &reason).await;
+            println!("{}", format!("✅ [VELLA E-STOP CLEARED]: {}", reason).bold().green());
+            println!("{}", "Actuation and flight channels successfully re-armed.".cyan());
+        }
+
+        VellaAction::Schemas => {
+            #[cfg(feature = "vella")]
+            {
+                let reg = mgr.schema_registry.read().await;
+                let schemas = reg.all();
+                println!("{}", format!("Vella Registered Model Schemas ({}):", schemas.len()).bold().cyan());
+                for s in schemas {
+                    println!("\n  📦 Model: {} (Table: '{}', Category: '{}')", s.name.bold().yellow(), s.table_name, s.category);
+                    if let Some(ref d) = s.description {
+                        println!("     Description: {}", d.italic());
+                    }
+                    println!("     Fields ({})", s.fields.len());
+                    for f in &s.fields {
+                        println!("       - {}: {:?}", f.name.bold(), f.field_type);
+                    }
+                }
+            }
+            #[cfg(not(feature = "vella"))]
+            {
+                println!("Vella feature is disabled in compilation.");
+            }
+        }
+
+        VellaAction::Audit => {
+            let log = mgr.governor.audit_log.read().await;
+            println!("{}", format!("Vella Sovereign Policy Audit Log ({} records):", log.len()).bold().cyan());
+            if log.is_empty() {
+                println!("  (No audit events recorded yet)");
+            } else {
+                for (idx, entry) in log.iter().enumerate() {
+                    println!("  [{:03}] {}", idx + 1, entry);
+                }
+            }
+        }
+
+        VellaAction::Debate { domain, action_type, target, parameters } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  ⚖️  VELLA ADVERSARIAL DEBATE GOVERNOR".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+            let params_val: serde_json::Value = serde_json::from_str(&parameters)
+                .map_err(|e| format!("Invalid parameters JSON: {e}"))?;
+
+            let proposal = crate::vella::DomainActionProposal::new(
+                &domain,
+                &action_type,
+                &target,
+                params_val,
+                "cli_operator",
+            );
+
+            let debate_gov = crate::vella::VellaDebateGovernor::new(mgr.governor.clone());
+            let verdict = debate_gov.debate_and_govern(&proposal, None).await?;
+
+            println!("Domain:      {}", verdict.domain.bold().cyan());
+            println!("Action Type: {}", verdict.action_type.bold().yellow());
+            println!("Target:      {}", verdict.target.bold());
+            println!("\n{}", "--- 1. Proponent Thesis ---".green().bold());
+            println!("{}", verdict.proposer_thesis);
+            println!("\n{}", "--- 2. Security Auditor Antithesis ---".red().bold());
+            println!("{}", verdict.auditor_antithesis);
+            println!("\n{}", "--- 3. Chief Adjudicator Synthesis ---".magenta().bold());
+            println!("{}", verdict.judge_synthesis);
+            println!("\n{}", "--- Borda Count Points ---".blue().bold());
+            for (opt, pts) in &verdict.borda_points {
+                println!("  - {}: {} points", opt.bold(), pts);
+            }
+            println!("\n{}", "=========================================================".cyan());
+            if verdict.approved {
+                println!("  FINAL VERDICT: {}", "AUTHORIZED FOR EXECUTION".bold().green());
+            } else {
+                println!("  FINAL VERDICT: {}", "BLOCKED / REVISION REQUIRED".bold().red());
+            }
+            println!("{}", "=========================================================".cyan());
+        }
+
+        VellaAction::Tool { tool, action: tool_action, args } => {
+            let mut parsed_args: serde_json::Value = serde_json::from_str(&args)
+                .map_err(|e| format!("Invalid args JSON: {e}"))?;
+            if let Some(obj) = parsed_args.as_object_mut() {
+                obj.insert("action".to_string(), serde_json::json!(tool_action));
+            }
+
+            let output = match tool.to_lowercase().as_str() {
+                "trading" => {
+                    let t = crate::vella::VellaTradingTool::new(mgr.governor.clone());
+                    t.execute(parsed_args).await?
+                }
+                "scada" => {
+                    let t = crate::vella::VellaScadaTool::new(mgr.governor.clone());
+                    t.execute(parsed_args).await?
+                }
+                "robotics" => {
+                    let t = crate::vella::VellaRoboticsTool::new(mgr.governor.clone());
+                    t.execute(parsed_args).await?
+                }
+                "medicine" => {
+                    let t = crate::vella::VellaMedicineTool::new(mgr.governor.clone());
+                    t.execute(parsed_args).await?
+                }
+                "events" => {
+                    #[cfg(feature = "vella")]
+                    {
+                        let t = crate::vella::VellaEventBridgeTool::new(mgr.event_bus(), mgr.governor.clone());
+                        t.execute(parsed_args).await?
+                    }
+                    #[cfg(not(feature = "vella"))]
+                    {
+                        "Vella feature not enabled".to_string()
+                    }
+                }
+                _ => return Err(format!("Unknown Vella tool '{}'. Available: trading, scada, robotics, medicine, events", tool).into()),
+            };
+
+            println!("{}", output);
+        }
+    }
+
     Ok(())
 }
