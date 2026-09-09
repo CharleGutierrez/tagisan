@@ -173,6 +173,11 @@ impl VectorStore {
         self.data.read().map(|g| g.documents.len()).unwrap_or(0)
     }
 
+    /// Return a clone of all stored vector documents
+    pub fn documents(&self) -> Vec<VectorDocument> {
+        self.data.read().map(|g| g.documents.clone()).unwrap_or_default()
+    }
+
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }

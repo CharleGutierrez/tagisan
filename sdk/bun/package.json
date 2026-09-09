@@ -1,0 +1,30 @@
+{
+  "name": "@tagisan/sdk",
+  "version": "0.1.0",
+  "description": "Official Bun & TypeScript SDK for Tagisan Multi-LLM Engine",
+  "main": "index.ts",
+  "module": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "test": "bun test",
+    "build": "bun build ./index.ts --outdir ./dist --target bun"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "tagisan",
+    "bun",
+    "typescript",
+    "llm",
+    "multi-agent",
+    "debate",
+    "dag",
+    "ai"
+  ],
+  "author": "Charle Gutierrez",
+  "license": "MIT"
+}

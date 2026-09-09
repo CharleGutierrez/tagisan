@@ -6,6 +6,11 @@ description = "High-performance Multi-LLM Collaboration, Adversarial Debate & Mi
 authors = ["Charle Gutierrez"]
 default-run = "tgs"
 
+[lib]
+name = "tagisan"
+path = "src/lib.rs"
+crate-type = ["rlib", "cdylib"]
+
 [[bin]]
 name = "tgs"
 path = "src/bin/tgs.rs"
@@ -15,6 +20,7 @@ name = "tagisan"
 path = "src/bin/tagisan.rs"
 
 [dependencies]
+blake3 = "1.5"
 # Async Runtime & Concurrency
 tokio = { version = "1.43", features = ["full"] }
 tokio-util = { version = "0.7", features = ["io"] }
@@ -45,3 +51,5 @@ crossterm = { version = "0.28", features = ["event-stream"] }
 # Logging & Telemetry
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+libc = "0.2.189"

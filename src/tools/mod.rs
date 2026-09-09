@@ -1,4 +1,7 @@
 pub mod builtin;
+pub mod bun;
+pub mod bun_compile;
+pub mod bun_serve;
 
 use crate::error::Result;
 use crate::types::{ContentBlock, ToolDefinition};
@@ -11,6 +14,12 @@ pub use builtin::{
     CalculatorTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool, ViewImageTool,
     WriteFileTool,
 };
+pub use bun::{
+    extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,
+    BunInstallTool, BunRunTool, BunTestTool,
+};
+pub use bun_compile::BunCompileTool;
+pub use bun_serve::{BunServeTool, BunStreamBusTool};
 
 /// Trait implemented by all tools executable by autonomous agents
 #[async_trait]
@@ -50,6 +59,16 @@ impl ToolRegistry {
         registry.register_tool(builtin::RunCommandTool::default());
         registry.register_tool(builtin::CalculatorTool::new());
         registry.register_tool(builtin::ViewImageTool::new());
+        registry.register_tool(bun::BunEvalTool::new());
+        registry.register_tool(bun::BunRunTool::new());
+        registry.register_tool(bun::BunTestTool::new());
+        registry.register_tool(bun::BunInstallTool::new());
+        registry.register_tool(bun::BunBuildTool::new());
+        registry.register_tool(bun::BunAutoResolveTool::new());
+        registry.register_tool(bun::BunHmrTool::new());
+        registry.register_tool(bun_serve::BunServeTool::new());
+        registry.register_tool(bun_serve::BunStreamBusTool::new());
+        registry.register_tool(bun_compile::BunCompileTool::new());
         registry
     }
 
@@ -59,9 +78,19 @@ impl ToolRegistry {
         let mut registry = Self::new();
         registry.register_tool(builtin::ReadFileTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::WriteFileTool::new().with_working_dir(dir.clone()));
-        registry.register_tool(builtin::RunCommandTool::default().with_working_dir(dir));
+        registry.register_tool(builtin::RunCommandTool::default().with_working_dir(dir.clone()));
         registry.register_tool(builtin::CalculatorTool::new());
         registry.register_tool(builtin::ViewImageTool::new());
+        registry.register_tool(bun::BunEvalTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(bun::BunRunTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(bun::BunTestTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(bun::BunInstallTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(bun::BunBuildTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(bun::BunAutoResolveTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(bun::BunHmrTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(bun_serve::BunServeTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(bun_serve::BunStreamBusTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(bun_compile::BunCompileTool::new().with_working_dir(dir));
         registry
     }
 

@@ -21,6 +21,7 @@ pub enum ReplCommand {
     Clear,
     Budget,
     History,
+    Bun(String),
     Exit,
     UserPrompt(String),
 }
@@ -72,9 +73,11 @@ impl InteractiveRepl {
             return ReplCommand::UserPrompt(trimmed.to_string());
         }
 
-        let mut parts = trimmed.split_whitespace();
-        let cmd = parts.next().unwrap_or("");
-        let arg = parts.collect::<Vec<&str>>().join(" ");
+        let (cmd, arg) = if let Some(space_idx) = trimmed.find(char::is_whitespace) {
+            (&trimmed[..space_idx], trimmed[space_idx..].trim().to_string())
+        } else {
+            (trimmed, String::new())
+        };
 
         match cmd.to_lowercase().as_str() {
             "/help" | "/h" | "/?" => ReplCommand::Help,
@@ -84,6 +87,7 @@ impl InteractiveRepl {
             "/tools" | "/t" => ReplCommand::Tools,
             "/memory" | "/mem" => ReplCommand::Memory,
             "/sandbox" | "/box" => ReplCommand::Sandbox,
+            "/bun" => ReplCommand::Bun(arg),
             "/save" | "/s" => {
                 let name = if arg.is_empty() { None } else { Some(arg) };
                 ReplCommand::Save(name)
@@ -146,6 +150,7 @@ impl InteractiveRepl {
                     {}       List registered tools\n\
                     {}      Display memory stats or search memory\n\
                     {}     Inspect git worktree sandbox status & diff\n\
+                    {}  Evaluate TypeScript/JavaScript on the fly via Bun\n\
                     {}   Save session checkpoint\n\
                     {}     Load previously saved session\n\
                     {}      Clear conversational history\n\
@@ -160,6 +165,7 @@ impl InteractiveRepl {
                     "/tools".bold().green(),
                     "/memory".bold().green(),
                     "/sandbox".bold().green(),
+                    "/bun <ts_code>".bold().green(),
                     "/save [id]".bold().green(),
                     "/load <id>".bold().green(),
                     "/clear".bold().green(),
@@ -238,6 +244,40 @@ impl InteractiveRepl {
                     )))
                 } else {
                     Ok(Some("Git worktree sandbox is not active for this session.".to_string()))
+                }
+            }
+            ReplCommand::Bun(code) => {
+                if code.trim().is_empty() {
+                    return Ok(Some("Usage: /bun <ts_code> (e.g. /bun console.log(Math.sqrt(42)))".to_string()));
+                }
+                let runtime = match crate::bun::BunRuntime::new() {
+                    Ok(rt) => rt,
+                    Err(e) => return Ok(Some(format!("Bun runtime not available: {e}"))),
+                };
+                let cwd = self.sandbox.as_ref().map(|s| s.path().to_path_buf());
+                match runtime.eval(&code, std::time::Duration::from_secs(30), None, cwd).await {
+                    Ok(res) => {
+                        let mut output = format!("Bun execution completed in {}ms (exit code: {})\n", res.duration_ms, res.exit_code);
+                        if !res.stdout.is_empty() {
+                            output.push_str("--- STDOUT ---\n");
+                            output.push_str(&res.stdout);
+                            if !res.stdout.ends_with('\n') {
+                                output.push('\n');
+                            }
+                        }
+                        if !res.stderr.is_empty() {
+                            output.push_str("--- STDERR ---\n");
+                            output.push_str(&res.stderr);
+                            if !res.stderr.ends_with('\n') {
+                                output.push('\n');
+                            }
+                        }
+                        if res.stdout.is_empty() && res.stderr.is_empty() {
+                            output.push_str("(no output)");
+                        }
+                        Ok(Some(output))
+                    }
+                    Err(e) => Ok(Some(format!("Bun execution error: {e}"))),
                 }
             }
             ReplCommand::Save(opt_name) => {

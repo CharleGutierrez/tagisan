@@ -11,7 +11,7 @@ use crate::{
     CompletionRequest, ContentBlock, DagScheduler, DialecticalDebateStrategy, EccAuditDebate,
     EngineContext, GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider,
     OpenAiCompatibleProvider, ProviderCapabilities, ReadFileTool, RunCommandTool, StrategyInput,
-    StreamChunkDelta, TagisanError, ToolRegistry, ViewImageTool, WorkflowEvent, WorkflowPlanner, WriteFileTool,
+    StreamChunkDelta, TagisanError, ToolHandler, ToolRegistry, ViewImageTool, WorkflowEvent, WorkflowPlanner, WriteFileTool,
     McpManager, WorktreeSandbox,
     InteractiveRepl, SessionStore,
     SwarmCoordinator, SwarmMember, TeamConsensusEngine, VotingRule,
@@ -237,6 +237,107 @@ enum Commands {
         #[command(subcommand)]
         action: SessionAction,
     },
+    /// Bun ultra-fast JavaScript/TypeScript runtime, bundler, and test runner
+    Bun {
+        #[command(subcommand)]
+        action: BunAction,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum BunAction {
+    /// Evaluate TypeScript or JavaScript code snippet directly
+    Eval {
+        /// Code string to execute
+        code: String,
+        /// Execution timeout in seconds (default: 30)
+        #[arg(short, long, default_value = "30")]
+        timeout: u64,
+        /// Working directory
+        #[arg(short, long)]
+        cwd: Option<String>,
+    },
+    /// Execute a TypeScript or JavaScript file
+    Run {
+        /// Script path to execute
+        script: String,
+        /// Execution timeout in seconds (default: 30)
+        #[arg(short, long, default_value = "30")]
+        timeout: u64,
+        /// Working directory
+        #[arg(short, long)]
+        cwd: Option<String>,
+        /// Arguments passed to the script
+        #[arg(trailing_var_arg = true)]
+        args: Vec<String>,
+    },
+    /// Run Bun test runner on files or test suites
+    Test {
+        /// Target test file, directory, or pattern (default: '.')
+        #[arg(default_value = ".")]
+        target: String,
+        /// Execution timeout in seconds (default: 60)
+        #[arg(short, long, default_value = "60")]
+        timeout: u64,
+        /// Working directory
+        #[arg(short, long)]
+        cwd: Option<String>,
+        /// Additional arguments for bun test
+        #[arg(trailing_var_arg = true)]
+        args: Vec<String>,
+    },
+    /// Install npm packages using Bun's package manager
+    Install {
+        /// Packages to install (if empty, runs 'bun install' to install package.json)
+        packages: Vec<String>,
+        /// Save as development dependency (--dev / -d)
+        #[arg(short = 'd', long)]
+        dev: bool,
+        /// Execution timeout in seconds (default: 120)
+        #[arg(short, long, default_value = "120")]
+        timeout: u64,
+        /// Working directory
+        #[arg(short, long)]
+        cwd: Option<String>,
+    },
+    /// Bundle and optimize TypeScript/JavaScript entry points
+    Build {
+        /// Entrypoint script (e.g. index.ts)
+        entrypoint: String,
+        /// Output directory for bundled artifacts (default: ./dist)
+        #[arg(short, long, default_value = "./dist")]
+        outdir: String,
+        /// Minify the bundle output
+        #[arg(short, long)]
+        minify: bool,
+        /// Target environment: browser, bun, node (default: bun)
+        #[arg(long, default_value = "bun")]
+        target: String,
+        /// Execution timeout in seconds (default: 60)
+        #[arg(short, long, default_value = "60")]
+        timeout: u64,
+        /// Working directory
+        #[arg(short, long)]
+        cwd: Option<String>,
+    },
+    /// Compile a TypeScript/JavaScript script into a standalone zero-dependency native binary executable
+    Compile {
+        /// Entrypoint script (e.g. cli.ts)
+        entrypoint: String,
+        /// Output binary file path (e.g. ./my_app)
+        outfile: String,
+        /// Minify the compiled executable
+        #[arg(short, long)]
+        minify: bool,
+        /// Compile with bytecode cache
+        #[arg(short, long)]
+        bytecode: bool,
+        /// Execution timeout in seconds (default: 120)
+        #[arg(short, long, default_value = "120")]
+        timeout: u64,
+    },
+    /// Display Bun runtime version, path, and host environment information
+    Info,
 }
 
 #[derive(Subcommand, Debug)]
@@ -2386,7 +2487,96 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
+
+        Commands::Bun { action } => {
+            handle_bun_command(action).await?;
+        }
     }
 
+    Ok(())
+}
+
+async fn handle_bun_command(action: BunAction) -> Result<(), Box<dyn std::error::Error>> {
+    match action {
+        BunAction::Info => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🥟  Bun Ultra-Fast JS/TS Runtime & Bundler Integration".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            match crate::bun::BunRuntime::new() {
+                Ok(runtime) => {
+                    let ver = runtime.version().await.unwrap_or_else(|_| "unknown".to_string());
+                    println!("  [✓] Bun Binary:       {}", runtime.bun_path().display().to_string().green().bold());
+                    println!("  [✓] Bun Version:      {}", ver.cyan().bold());
+                    println!("  [✓] Runtime Status:   {}", "Ready & Available".green());
+                    println!("  [✓] Top-level Await:  {}", "Supported natively".green());
+                    println!("  [✓] ESM & TypeScript: {}", "Zero-config native execution".green());
+                    println!("  [✓] Bundler & Test:   {}", "Integrated with AgentShield safety".green());
+                }
+                Err(e) => {
+                    println!("  [✗] Bun Runtime:      {}", "Not Discovered".red().bold());
+                    println!("      ↳ Error: {}", e);
+                    println!("\n  To install Bun, run: curl -fsSL https://bun.sh/install | bash");
+                }
+            }
+        }
+        BunAction::Eval { code, timeout, cwd } => {
+            let runtime = crate::bun::BunRuntime::new()?;
+            let cwd_path = cwd.map(std::path::PathBuf::from);
+            let res = runtime.eval(&code, std::time::Duration::from_secs(timeout), None, cwd_path).await?;
+            print!("{}", res.combined_output());
+            if !res.success {
+                std::process::exit(res.exit_code);
+            }
+        }
+        BunAction::Run { script, timeout, cwd, args } => {
+            let runtime = crate::bun::BunRuntime::new()?;
+            let cwd_path = cwd.map(std::path::PathBuf::from);
+            let res = runtime.run_script(&script, &args, std::time::Duration::from_secs(timeout), None, cwd_path).await?;
+            print!("{}", res.combined_output());
+            if !res.success {
+                std::process::exit(res.exit_code);
+            }
+        }
+        BunAction::Test { target, timeout, cwd, args } => {
+            let runtime = crate::bun::BunRuntime::new()?;
+            let cwd_path = cwd.map(std::path::PathBuf::from);
+            let res = runtime.test(&target, &args, std::time::Duration::from_secs(timeout), cwd_path).await?;
+            print!("{}", res.combined_output());
+            if !res.success {
+                std::process::exit(res.exit_code);
+            }
+        }
+        BunAction::Install { packages, dev, timeout, cwd } => {
+            let runtime = crate::bun::BunRuntime::new()?;
+            let cwd_path = cwd.map(std::path::PathBuf::from);
+            let res = runtime.install(&packages, dev, std::time::Duration::from_secs(timeout), cwd_path).await?;
+            print!("{}", res.combined_output());
+            if !res.success {
+                std::process::exit(res.exit_code);
+            }
+        }
+        BunAction::Build { entrypoint, outdir, minify, target, timeout, cwd } => {
+            let runtime = crate::bun::BunRuntime::new()?;
+            let cwd_path = cwd.map(std::path::PathBuf::from);
+            let res = runtime.build(&entrypoint, &outdir, minify, &target, std::time::Duration::from_secs(timeout), cwd_path).await?;
+            print!("{}", res.combined_output());
+            if !res.success {
+                std::process::exit(res.exit_code);
+            }
+        }
+        BunAction::Compile { entrypoint, outfile, minify, bytecode, timeout } => {
+            let tool = crate::tools::bun_compile::BunCompileTool::new();
+            let args = serde_json::json!({
+                "entrypoint": entrypoint,
+                "outfile": outfile,
+                "minify": minify,
+                "bytecode": bytecode,
+                "timeout_secs": timeout
+            });
+            let output = tool.execute(args).await?;
+            println!("{output}");
+        }
+    }
     Ok(())
 }

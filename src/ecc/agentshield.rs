@@ -49,6 +49,39 @@ impl AgentShieldScanner {
 
                 Self::scan_file_path(path)
             }
+            "bun_eval" | "bun_run" | "bun_test" | "bun_install" | "bun_build" | "bun" | "bun_compile" | "bun_serve" => {
+                let path = arguments
+                    .get("file_path")
+                    .or_else(|| arguments.get("path"))
+                    .or_else(|| arguments.get("entrypoint"))
+                    .or_else(|| arguments.get("target"))
+                    .or_else(|| arguments.get("outfile"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+
+                if !path.is_empty() {
+                    let path_verdict = Self::scan_file_path(path);
+                    if let AgentShieldVerdict::Block { .. } = path_verdict {
+                        return path_verdict;
+                    }
+                }
+
+                let code = arguments
+                    .get("code")
+                    .or_else(|| arguments.get("script"))
+                    .or_else(|| arguments.get("script_content"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+
+                if !code.is_empty() {
+                    let code_verdict = Self::scan_code(code);
+                    if let AgentShieldVerdict::Block { .. } = code_verdict {
+                        return code_verdict;
+                    }
+                }
+
+                AgentShieldVerdict::Allow
+            }
             _ => AgentShieldVerdict::Allow,
         }
     }
@@ -293,6 +326,91 @@ impl AgentShieldScanner {
             i += 1;
         }
         res
+    }
+
+    /// Scan JavaScript/TypeScript code for malicious patterns, credential theft, fork bombs, and destruction
+    pub fn scan_code(code: &str) -> AgentShieldVerdict {
+        let normalized = code.to_lowercase();
+
+        // 1. Check shell command patterns within code
+        let cmd_verdict = Self::scan_command(code);
+        if let AgentShieldVerdict::Block { .. } = cmd_verdict {
+            return cmd_verdict;
+        }
+
+        // 2. Check for JS/TS fork bombs and explosive loops
+        if normalized.contains(":(){ :|:& };:")
+            || normalized.contains(":(){:|:&};:")
+            || normalized.contains("forkbomb")
+            || (normalized.contains("while(true)") && (normalized.contains("fork") || normalized.contains("spawn")))
+            || (normalized.contains("while (true)") && (normalized.contains("fork") || normalized.contains("spawn")))
+            || (normalized.contains("while(1)") && (normalized.contains("fork") || normalized.contains("spawn")))
+            || (normalized.contains("for(;;)") && (normalized.contains("fork") || normalized.contains("spawn")))
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Fork bomb or infinite process spawning pattern detected in script".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        // 3. Sensitive file access targets in JS/TS (e.g. Bun.file("/etc/shadow"), readFileSync, etc.)
+        let sensitive_targets = [
+            ("/etc/shadow", "Attempt to access system password hashes", ThreatLevel::Critical),
+            ("etc/shadow", "Attempt to access system password hashes", ThreatLevel::Critical),
+            ("/etc/passwd", "Attempt to access system user accounts", ThreatLevel::Medium),
+            ("etc/passwd", "Attempt to access system user accounts", ThreatLevel::Medium),
+            ("/etc/sudoers", "Attempt to access sudoers security configuration", ThreatLevel::Critical),
+            ("id_rsa", "Attempt to access private SSH keys", ThreatLevel::High),
+            ("id_ed25519", "Attempt to access private SSH keys", ThreatLevel::High),
+            (".ssh/id_rsa", "Attempt to access private SSH keys", ThreatLevel::High),
+            (".ssh/id_ed25519", "Attempt to access private SSH keys", ThreatLevel::High),
+        ];
+
+        for (target, reason, level) in sensitive_targets {
+            if normalized.contains(target) {
+                return AgentShieldVerdict::Block {
+                    reason: reason.to_string(),
+                    threat_level: level,
+                };
+            }
+        }
+
+        // 4. Destructive filesystem operations via Node / Bun APIs
+        let cleaned = normalized.replace(['\'', '"', '[', ']', ',', '`'], " ");
+        let cleaned_collapsed: String = cleaned.split_whitespace().collect::<Vec<_>>().join(" ");
+
+        if cleaned_collapsed.contains("rm -rf /")
+            || cleaned_collapsed.contains("rm -fr /")
+            || cleaned_collapsed.contains("rm -r /")
+            || cleaned_collapsed.contains("rm --recursive /")
+            || cleaned_collapsed.contains("rm -rf ~")
+            || cleaned_collapsed.contains("rm -rf /*")
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Attempted recursive deletion of root or critical filesystem hierarchy".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        let destructive_patterns = [
+            ("rmdirsync(\"/\"", "Attempted deletion of root directory via Node API", ThreatLevel::Critical),
+            ("unlinksync(\"/\"", "Attempted unlinking of root filesystem via Node API", ThreatLevel::Critical),
+            ("rmsync(\"/\"", "Attempted deletion of root filesystem via Node API", ThreatLevel::Critical),
+            ("mkfs", "Attempted disk formatting filesystem command", ThreatLevel::Critical),
+            ("/dev/sd", "Direct access to raw storage block device", ThreatLevel::Critical),
+            ("/dev/nvme", "Direct access to NVMe block device", ThreatLevel::Critical),
+        ];
+
+        for (pattern, reason, level) in destructive_patterns {
+            if normalized.contains(pattern) {
+                return AgentShieldVerdict::Block {
+                    reason: reason.to_string(),
+                    threat_level: level,
+                };
+            }
+        }
+
+        AgentShieldVerdict::Allow
     }
 
     /// Scan file paths for path traversal or sensitive system file access

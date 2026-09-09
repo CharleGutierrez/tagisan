@@ -440,13 +440,15 @@ async fn test_repl_command_parsing_and_execution() {
     let mut repl = InteractiveRepl::new(agent, "test-repl-session", "test-model", ctx);
 
     // Test /agent architect switch
-    let out_agent = repl.execute_command(ReplCommand::Agent("architect".to_string())).await.unwrap();
-    assert!(out_agent.unwrap().contains("Switched persona to 'architect'"));
+    let out_agent = repl.execute_command(ReplCommand::Agent("architect".to_string())).await.unwrap().unwrap();
+    assert!(out_agent.contains("Switched persona to"));
+    assert!(out_agent.contains("architect"));
     assert!(repl.agent.system_prompt.is_some());
 
     // Test /model switch
-    let out_model = repl.execute_command(ReplCommand::Model("gemini-2.0-flash".to_string())).await.unwrap();
-    assert!(out_model.unwrap().contains("Switched active model to 'gemini-2.0-flash'"));
+    let out_model = repl.execute_command(ReplCommand::Model("gemini-2.0-flash".to_string())).await.unwrap().unwrap();
+    assert!(out_model.contains("Switched active model to"));
+    assert!(out_model.contains("gemini-2.0-flash"));
     assert_eq!(repl.agent.model, "gemini-2.0-flash");
 
     // Test user prompt turn

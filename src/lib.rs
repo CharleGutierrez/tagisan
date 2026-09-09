@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod bun;
 pub mod cli;
 pub mod dag;
 pub mod ecc;
@@ -13,6 +14,12 @@ pub mod tools;
 pub mod tui;
 pub mod types;
 
+pub use bun::{
+    tagisan_ffi_blake3_digest, tagisan_ffi_cosine_similarity, tagisan_ffi_shield_scan,
+    tagisan_ffi_version, BunExecutionResult, BunRuntime, BunSandbox, BunSandboxConfig, BunWorker,
+    BunWorkerPool, DiagnosticSeverity, TagisanSqliteStore, TsDiagnostic, TsDiagnosticParser,
+    WorkerPoolStats,
+};
 pub use ecc::{
     all_built_in_skills as all_ecc_skills, all_presets as all_ecc_presets, build_ecc_pipeline,
     find_built_in_skill as find_ecc_skill, find_preset as find_ecc_preset,
@@ -55,6 +62,12 @@ pub use tools::builtin::{
     CalculatorTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool, ViewImageTool,
     WriteFileTool,
 };
+pub use tools::bun::{
+    extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,
+    BunInstallTool, BunRunTool, BunTestTool,
+};
+pub use tools::bun_compile::BunCompileTool;
+pub use tools::bun_serve::{BunServeTool, BunStreamBusTool};
 pub use tools::{ToolHandler, ToolRegistry};
 pub use swarm::{
     AgentReview, ConsensusVerdict, DelegateTaskTool, InteractiveRepl, PipelineExecutionResult,

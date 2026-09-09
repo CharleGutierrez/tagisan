@@ -28,29 +28,66 @@ impl StdioTransport {
     pub async fn spawn(server_name: impl Into<String>, config: &McpServerConfig) -> Result<Self> {
         let name = server_name.into();
 
+        let discovered_bun = crate::bun::BunRuntime::find_bun();
+        let acceleration_enabled = std::env::var("TAGISAN_DISABLE_BUN_ACCELERATION").is_err();
+
+        let mut executable = config.command.clone();
+        let mut extra_args: Vec<String> = Vec::new();
+
+        if acceleration_enabled {
+            if let Some(ref bun_bin) = discovered_bun {
+                let prog = config.command.as_str();
+                if prog == "bun" {
+                    executable = bun_bin.to_string_lossy().to_string();
+                } else if prog == "bunx" {
+                    let bunx_candidate = bun_bin.with_file_name(if cfg!(target_os = "windows") { "bunx.exe" } else { "bunx" });
+                    if bunx_candidate.is_file() {
+                        executable = bunx_candidate.to_string_lossy().to_string();
+                    } else {
+                        executable = bun_bin.to_string_lossy().to_string();
+                        extra_args.push("x".to_string());
+                    }
+                } else if prog == "node" {
+                    debug!("[MCP Server '{}'] Accelerating 'node' runtime via Bun: {}", name, bun_bin.display());
+                    executable = bun_bin.to_string_lossy().to_string();
+                } else if prog == "npx" {
+                    let bunx_candidate = bun_bin.with_file_name(if cfg!(target_os = "windows") { "bunx.exe" } else { "bunx" });
+                    if bunx_candidate.is_file() {
+                        debug!("[MCP Server '{}'] Accelerating 'npx' command via Bunx: {}", name, bunx_candidate.display());
+                        executable = bunx_candidate.to_string_lossy().to_string();
+                    } else {
+                        debug!("[MCP Server '{}'] Accelerating 'npx' command via Bun x: {}", name, bun_bin.display());
+                        executable = bun_bin.to_string_lossy().to_string();
+                        extra_args.push("x".to_string());
+                    }
+                }
+            }
+        }
+
         let mut cmd = if cfg!(target_os = "windows") {
-            // Windows handling: resolve .cmd/.bat if needed (including npx, npm, uvx, pnpm, yarn)
-            let prog = &config.command;
-            let needs_cmd = prog == "npx"
-                || prog == "npm"
-                || prog == "uvx"
-                || prog == "pnpm"
-                || prog == "yarn"
-                || prog.ends_with(".cmd")
-                || prog.ends_with(".bat");
+            // Windows handling: resolve .cmd/.bat if needed (including npm, uvx, pnpm, yarn)
+            let needs_cmd = executable == "npm"
+                || executable == "uvx"
+                || executable == "pnpm"
+                || executable == "yarn"
+                || executable.ends_with(".cmd")
+                || executable.ends_with(".bat");
 
             if needs_cmd {
                 let mut c = Command::new("cmd.exe");
-                c.args(["/C", prog]);
+                c.args(["/C", &executable]);
+                c.args(&extra_args);
                 c.args(&config.args);
                 c
             } else {
-                let mut c = Command::new(prog);
+                let mut c = Command::new(&executable);
+                c.args(&extra_args);
                 c.args(&config.args);
                 c
             }
         } else {
-            let mut c = Command::new(&config.command);
+            let mut c = Command::new(&executable);
+            c.args(&extra_args);
             c.args(&config.args);
             c
         };
