@@ -21,7 +21,7 @@ pub use ecc::{
     EccAuditDebate, EccSkill, ThreatLevel as EccThreatLevel,
 };
 
-pub use agent::{AgentResult, AgentStep, AutonomousAgent};
+pub use agent::{AgentResult, AgentStep, AutonomousAgent, WorktreeSandbox};
 pub use dag::{
     extract_json_block, interpolate_prompt, DagScheduler, PlannedTask, PlannedWorkflow,
     RetryPolicy, TaskNode, TaskOutput, TaskStatus, WorkflowEvent, WorkflowGraph, WorkflowPlanner,
@@ -47,7 +47,7 @@ pub use strategies::moa::MixtureOfAgentsStrategy;
 pub use strategies::{CollaborationStrategy, IntermediateStep, StrategyInput, StrategyOutput};
 pub use mcp::{
     JsonRpcError, JsonRpcNotification, JsonRpcRequest, JsonRpcResponse, McpClient, McpConfig,
-    McpContentBlock, McpInitializeResult, McpManager, McpServerConfig, McpServerInfo,
+    McpContentBlock, McpInitializeResult, McpManager, McpServer, McpServerConfig, McpServerInfo,
     McpToolCallResult, McpToolDefinition, McpToolWrapper, StdioTransport,
 };
 pub use tools::builtin::{

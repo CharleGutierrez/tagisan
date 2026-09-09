@@ -183,10 +183,15 @@ enum Commands {
     },
     /// Check configured LLM providers, API keys, and model capability bitflags
     Status,
+    /// Start a Model Context Protocol (MCP) Server over stdio JSON-RPC 2.0 (Milestone 7)
+    #[command(name = "serve-mcp")]
+    ServeMcp,
 }
 
 #[derive(Subcommand, Debug)]
 enum McpAction {
+    /// Run Tagisan as a standard Model Context Protocol (MCP) server over stdio JSON-RPC 2.0
+    Serve,
     /// List all configured MCP servers and discover their published tools
     List {
         /// Optional path to mcp.json configuration file
@@ -1635,8 +1640,17 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
+        Commands::ServeMcp => {
+            let server = crate::mcp::McpServer::default_server();
+            server.run_default_stdio().await?;
+        }
+
         Commands::Mcp { action } => {
             match action {
+                McpAction::Serve => {
+                    let server = crate::mcp::McpServer::default_server();
+                    server.run_default_stdio().await?;
+                }
                 McpAction::List { config } => {
                     println!("{}", "=========================================================".cyan());
                     println!("{}", "  🔌  Model Context Protocol (MCP) Server Discovery".bold().yellow());

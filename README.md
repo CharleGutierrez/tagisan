@@ -457,6 +457,59 @@ tgs ecc pipeline "Add streaming tokenizer cache" --memory
 
 ---
 
+## 🌐 Native Model Context Protocol (MCP) Server & Git Sandboxing (Milestone 7)
+
+Tagisan can act as a native, bidirectional **MCP Server** running over standard JSON-RPC 2.0 stdio (`tgs serve-mcp` or `tgs mcp serve`). External AI environments like **Claude Desktop**, **Cursor**, **Zed**, and **Windsurf** can connect directly to Tagisan and utilize all of Tagisan's multi-agent capabilities as first-class tools.
+
+### 1. Published MCP Tool Catalog
+When external clients connect to Tagisan's MCP server, the following tools are published:
+- `tagisan_debate`: Execute 3-round Dialectical Debate (*Balagtasan*) with thesis, adversarial antithesis, and Lakandiwa synthesis.
+- `tagisan_moa`: Execute parallel Mixture-of-Agents across multiple models with definitive aggregation.
+- `tagisan_agent`: Autonomous Multi-Turn ReAct Agent with filesystem, bash, math, image viewing, and memory search.
+- `tagisan_workflow_plan`: Decompose objectives into acyclic DAG multi-agent execution plans.
+- `tagisan_ecc_pipeline`: Trigger the 5-Stage Engineering Pipeline (Spec -> Architecture -> Implementation -> Verification -> Shield Review).
+- `tagisan_memory_search`: Search local persistent vector memory for relevant semantic code snippets.
+- `tagisan_memory_index`: Index workspace files into vector memory with `.gitignore` filtering.
+- `tagisan_status`: Inspect registered providers, API keys, budget usage, and model capability bitflags.
+- Plus standard built-in tools (`calculator`, `read_file`, `write_file`, `run_command`, `view_image`).
+
+### 2. Claude Desktop Integration
+Add Tagisan to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "tagisan": {
+      "command": "tgs",
+      "args": ["serve-mcp"]
+    }
+  }
+}
+```
+
+### 3. Cursor / Zed / Windsurf Integration
+Add to your project's `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "tagisan": {
+      "command": "tgs",
+      "args": ["serve-mcp"]
+    }
+  }
+}
+```
+
+### 4. Git Worktree Sandboxing
+For autonomous code generation and experimentation, Tagisan provides `WorktreeSandbox`:
+- Automatically spawns an isolated Git branch in a temporary working tree.
+- Executes agent bash commands and file operations safely isolated from your working branch.
+- Generates git diffs and commits changes independently.
+- Guarantees deterministic cleanup of temporary worktrees and branches on drop or completion.
+
+---
+
 ## 💰 Built-in Cost & Budget Protection
 
 Tagisan tracks token usage and calculates estimated USD costs across all providers atomically, with a 90% discount calculation on cached prompt tokens. You can set strict budget limits to prevent accidental overages:
@@ -470,16 +523,19 @@ tgs --max-budget 1.50 moa "Generate a distributed consensus benchmark in Rust"
 
 ## 🧪 Testing & Verification
 
-Tagisan includes an exhaustive automated test suite covering unit logic, DAG validation, provider adapters, AgentShield safety, MCP client integration, vector RAG memory, and chaos stress tests:
+Tagisan includes an exhaustive automated test suite covering unit logic, DAG validation, provider adapters, AgentShield safety, MCP client/server integration, vector RAG memory, git sandboxing, and chaos stress tests:
 
 ```bash
-# Run all tests (106 tests across 11 test binaries)
+# Run all tests (114 tests across 12 test binaries)
 cargo test
+
+# Run Milestone 7 Native MCP Server & Git Sandbox test suite
+cargo test --test milestone7_mcp_server_tests
 
 # Run Milestone 6 Memory & RAG test suite specifically
 cargo test --test milestone6_memory_tests
 
-# Run Milestone 5 MCP test suite specifically
+# Run Milestone 5 MCP Client test suite specifically
 cargo test --test milestone5_mcp_tests
 
 # Run the MCP brutal stress & protocol adversarial suite
