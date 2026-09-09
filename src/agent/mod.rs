@@ -1,6 +1,9 @@
 use crate::engine::EngineContext;
 use crate::error::{Result, TagisanError};
+use crate::memory::embedding::EmbeddingProvider;
+use crate::memory::store::VectorStore;
 use crate::providers::LlmProvider;
+use crate::tools::builtin::{SaveMemoryTool, SearchMemoryTool};
 use crate::tools::ToolRegistry;
 use crate::types::{ChatSession, CompletionRequest, ContentBlock, Message, TokenUsage};
 use std::sync::Arc;
@@ -37,10 +40,12 @@ pub struct AutonomousAgent {
     pub max_iterations: usize,
     pub temperature: Option<f32>,
     pub agentshield_enabled: bool,
+    pub memory: Option<Arc<VectorStore>>,
+    pub embedding_provider: Option<Arc<dyn EmbeddingProvider>>,
 }
 
 impl AutonomousAgent {
-    /// Create a new AutonomousAgent instance
+    /// Create a new AutonomousAgent instance (AgentShield security enabled by default)
     pub fn new(
         provider: Arc<dyn LlmProvider>,
         model: impl Into<String>,
@@ -53,13 +58,29 @@ impl AutonomousAgent {
             system_prompt: None,
             max_iterations: 10,
             temperature: Some(0.7),
-            agentshield_enabled: false,
+            agentshield_enabled: true,
+            memory: None,
+            embedding_provider: None,
         }
     }
 
-    /// Enable or disable AgentShield security scanner for tool calls
+    /// Enable or disable AgentShield security scanner for tool calls and secret redaction
     pub fn with_agentshield(mut self, enabled: bool) -> Self {
         self.agentshield_enabled = enabled;
+        self
+    }
+
+    /// Attach a long-term vector memory store and embedding provider, automatically registering
+    /// `search_memory` and `save_memory` tools and enabling semantic context retrieval
+    pub fn with_memory(
+        mut self,
+        memory: Arc<VectorStore>,
+        embedding_provider: Arc<dyn EmbeddingProvider>,
+    ) -> Self {
+        self.tools.register_tool(SearchMemoryTool::new(memory.clone(), embedding_provider.clone()));
+        self.tools.register_tool(SaveMemoryTool::new(memory.clone(), embedding_provider.clone()));
+        self.memory = Some(memory);
+        self.embedding_provider = Some(embedding_provider);
         self
     }
 
@@ -81,13 +102,121 @@ impl AutonomousAgent {
         self
     }
 
+    /// Sanitize arbitrary text using AgentShield secret redaction
+    pub fn sanitize_text(text: &str) -> String {
+        crate::ecc::AgentShieldScanner::redact_secrets(text)
+    }
+
+    /// Redact recognized secrets in a single ContentBlock
+    pub fn sanitize_content_block(block: ContentBlock) -> ContentBlock {
+        match block {
+            ContentBlock::Text { text } => ContentBlock::Text {
+                text: crate::ecc::AgentShieldScanner::redact_secrets(&text),
+            },
+            ContentBlock::Thinking { thinking, signature } => ContentBlock::Thinking {
+                thinking: crate::ecc::AgentShieldScanner::redact_secrets(&thinking),
+                signature,
+            },
+            ContentBlock::ToolResult { tool_call_id, content, is_error } => ContentBlock::ToolResult {
+                tool_call_id,
+                content: crate::ecc::AgentShieldScanner::redact_secrets(&content),
+                is_error,
+            },
+            ContentBlock::ToolCall { id, name, arguments } => {
+                let args_str = arguments.to_string();
+                let redacted_args_str = crate::ecc::AgentShieldScanner::redact_secrets(&args_str);
+                let sanitized_args = serde_json::from_str(&redacted_args_str).unwrap_or(arguments);
+                ContentBlock::ToolCall {
+                    id,
+                    name,
+                    arguments: sanitized_args,
+                }
+            }
+            other => other,
+        }
+    }
+
+    /// Redact recognized secrets in all content blocks of a Message
+    pub fn sanitize_message(mut message: Message) -> Message {
+        message.content = message
+            .content
+            .into_iter()
+            .map(Self::sanitize_content_block)
+            .collect();
+        message
+    }
+
+    /// Redact recognized secrets in an AgentStep (assistant message and tool results)
+    pub fn sanitize_step(mut step: AgentStep) -> AgentStep {
+        step.assistant_message = Self::sanitize_message(step.assistant_message);
+        step.tool_results = step
+            .tool_results
+            .into_iter()
+            .map(Self::sanitize_content_block)
+            .collect();
+        step
+    }
+
+    /// Redact secrets in an entire AgentResult
+    pub fn sanitize_agent_result(mut result: AgentResult) -> AgentResult {
+        result.final_answer = crate::ecc::AgentShieldScanner::redact_secrets(&result.final_answer);
+        result.history = result.history.into_iter().map(Self::sanitize_message).collect();
+        result.steps = result.steps.into_iter().map(Self::sanitize_step).collect();
+        result
+    }
+
     /// Execute the autonomous agent on a single user prompt
     pub async fn run(&self, prompt: &str, ctx: &EngineContext) -> Result<AgentResult> {
+        self.run_with_content(vec![ContentBlock::text(prompt)], ctx).await
+    }
+
+    /// Execute the autonomous agent with multiple content blocks (e.g. text + vision image)
+    pub async fn run_with_content(
+        &self,
+        content: Vec<ContentBlock>,
+        ctx: &EngineContext,
+    ) -> Result<AgentResult> {
         let mut session = ChatSession::new();
         if let Some(ref sys) = self.system_prompt {
             session = session.with_system(sys.clone());
         }
-        session.add_user_message(prompt);
+
+        // Contextual memory recall: auto-retrieve top-3 matching items if memory is enabled
+        let mut final_content = content;
+        if let (Some(memory), Some(provider)) = (&self.memory, &self.embedding_provider) {
+            let prompt_text: String = final_content
+                .iter()
+                .filter_map(|b| {
+                    if let ContentBlock::Text { text } = b {
+                        Some(text.as_str())
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(" ");
+
+            if !prompt_text.trim().is_empty() {
+                if let Ok(emb) = provider.embed_text(&prompt_text).await {
+                    let hits = memory.search(&emb, 3, 0.05);
+                    if !hits.is_empty() {
+                        let mut memory_context = String::from("[LONG-TERM MEMORY & CODEBASE CONTEXT]\nThe following relevant context was retrieved from persistent memory:\n\n");
+                        for (i, hit) in hits.iter().enumerate() {
+                            let doc = &hit.document;
+                            let file_path = doc.metadata.get("file_path").map(|s| s.as_str()).unwrap_or(&doc.id);
+                            memory_context.push_str(&format!(
+                                "Hit #{}: {} (relevance score: {:.2})\n{}\n\n",
+                                i + 1, file_path, hit.score, doc.text.trim()
+                            ));
+                        }
+                        memory_context.push_str("[END CONTEXT]\n\n");
+                        final_content.insert(0, ContentBlock::text(memory_context));
+                    }
+                }
+            }
+        }
+
+        session.add_user_message_with_blocks(final_content);
 
         self.execute_session(&mut session, ctx).await
     }
@@ -134,12 +263,21 @@ impl AutonomousAgent {
             // Call LLM provider
             let response = self.provider.complete(req).await?;
 
-            // Record budget
-            ctx.budget_tracker.record(
-                &self.model,
-                response.usage.prompt_tokens,
-                response.usage.completion_tokens,
-            )?;
+            // Record budget with prompt caching discount if cached tokens present
+            if let Some(cached) = response.usage.cached_prompt_tokens {
+                ctx.budget_tracker.record_with_cache(
+                    &self.model,
+                    response.usage.prompt_tokens,
+                    response.usage.completion_tokens,
+                    cached,
+                )?;
+            } else {
+                ctx.budget_tracker.record(
+                    &self.model,
+                    response.usage.prompt_tokens,
+                    response.usage.completion_tokens,
+                )?;
+            }
 
             // Accumulate usage
             total_usage.prompt_tokens += response.usage.prompt_tokens;
@@ -147,8 +285,16 @@ impl AutonomousAgent {
             if let Some(rt) = response.usage.reasoning_tokens {
                 total_usage.reasoning_tokens = Some(total_usage.reasoning_tokens.unwrap_or(0) + rt);
             }
+            if let Some(cached) = response.usage.cached_prompt_tokens {
+                total_usage.cached_prompt_tokens = Some(total_usage.cached_prompt_tokens.unwrap_or(0) + cached);
+            }
 
-            let assistant_msg = response.message.clone();
+            // Redact assistant message if AgentShield is enabled
+            let assistant_msg = if self.agentshield_enabled {
+                Self::sanitize_message(response.message.clone())
+            } else {
+                response.message.clone()
+            };
             session.add_message(assistant_msg.clone());
 
             let tool_calls = assistant_msg.extract_tool_calls();
@@ -197,7 +343,13 @@ impl AutonomousAgent {
                 }
 
                 debug!("Executing tool call '{}' with ID '{}'", name, id);
-                let result_block = self.tools.execute_call(id, name, args).await;
+                let mut result_block = self.tools.execute_call(id, name, args).await;
+
+                // AgentShield runtime secret redaction for tool outputs
+                if self.agentshield_enabled {
+                    result_block = Self::sanitize_content_block(result_block);
+                }
+
                 tool_results.push(result_block);
             }
 
@@ -219,7 +371,7 @@ impl AutonomousAgent {
         );
 
         // Extract last known text or fallback
-        let last_answer = session
+        let mut last_answer = session
             .history
             .iter()
             .rev()
@@ -227,6 +379,10 @@ impl AutonomousAgent {
             .map(|m| m.extract_text())
             .filter(|t| !t.trim().is_empty())
             .unwrap_or_else(|| format!("Maximum tool iterations ({}) reached without final answer.", self.max_iterations));
+
+        if self.agentshield_enabled {
+            last_answer = crate::ecc::AgentShieldScanner::redact_secrets(&last_answer);
+        }
 
         Ok(AgentResult {
             final_answer: last_answer,

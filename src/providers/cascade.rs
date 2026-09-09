@@ -66,6 +66,7 @@ impl CascadeProvider {
             TagisanError::Cancelled => false,
             TagisanError::Serialization(_) => false,
             TagisanError::Execution(_) => false,
+            TagisanError::Io(_) => false,
         }
     }
 }

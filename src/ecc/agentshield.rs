@@ -24,18 +24,26 @@ pub struct AgentShieldScanner;
 impl AgentShieldScanner {
     /// Scan tool invocations before execution to block destructive actions or credential exfiltration
     pub fn scan_tool_call(tool_name: &str, arguments: &serde_json::Value) -> AgentShieldVerdict {
-        match tool_name {
-            "run_command" => {
+        // Strip namespace prefix if tool is namespaced from an MCP server (e.g. `filesystem__read_file` -> `read_file`)
+        let base_name = tool_name.rsplit("__").next().unwrap_or(tool_name);
+
+        match base_name {
+            "run_command" | "bash" | "sh" | "shell" | "terminal" | "execute" | "cmd" => {
                 let cmd = arguments
                     .get("command")
+                    .or_else(|| arguments.get("cmd"))
+                    .or_else(|| arguments.get("script"))
                     .and_then(|v| v.as_str())
                     .unwrap_or_default();
 
                 Self::scan_command(cmd)
             }
-            "read_file" | "write_file" => {
+            "read_file" | "write_file" | "edit_file" | "delete_file" | "view_image" => {
                 let path = arguments
                     .get("path")
+                    .or_else(|| arguments.get("file_path"))
+                    .or_else(|| arguments.get("filepath"))
+                    .or_else(|| arguments.get("uri"))
                     .and_then(|v| v.as_str())
                     .unwrap_or_default();
 
@@ -364,7 +372,7 @@ impl AgentShieldScanner {
         let mut sanitized = content.to_string();
 
         let patterns = [
-            ("sk-ant-api03-", "[REDACTED_ANTHROPIC_KEY]"),
+            ("sk-ant-", "[REDACTED_ANTHROPIC_KEY]"),
             ("sk-proj-", "[REDACTED_OPENAI_KEY]"),
             ("AIzaSy", "[REDACTED_GEMINI_KEY]"),
             ("xai-", "[REDACTED_XAI_KEY]"),

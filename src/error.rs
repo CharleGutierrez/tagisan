@@ -34,6 +34,9 @@ pub enum TagisanError {
 
     #[error("Execution error: {0}")]
     Execution(String),
+
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),
 }
 
 impl TagisanError {
@@ -50,6 +53,7 @@ impl TagisanError {
             Self::BadResponse(..) => true,
             Self::Serialization(..) => false,
             Self::Execution(..) => false,
+            Self::Io(..) => false,
         }
     }
 }

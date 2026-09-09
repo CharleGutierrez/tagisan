@@ -53,6 +53,45 @@ impl ContentBlock {
         }
     }
 
+    /// Load an image file from disk, detecting format from extension and encoding to Base64
+    pub fn from_image_file(path: impl AsRef<std::path::Path>) -> Result<Self, crate::error::TagisanError> {
+        let path_ref = path.as_ref();
+        let ext = path_ref
+            .extension()
+            .and_then(|e| e.to_str())
+            .map(|e| e.to_lowercase())
+            .unwrap_or_default();
+
+        let media_type = match ext.as_str() {
+            "png" => "image/png",
+            "jpg" | "jpeg" => "image/jpeg",
+            "webp" => "image/webp",
+            "gif" => "image/gif",
+            other => {
+                return Err(crate::error::TagisanError::Execution(format!(
+                    "Unsupported image format '.{}'. Supported formats: .png, .jpg, .jpeg, .webp, .gif",
+                    other
+                )));
+            }
+        };
+
+        let bytes = std::fs::read(path_ref).map_err(|e| {
+            crate::error::TagisanError::Execution(format!(
+                "Failed to read image file '{}': {}",
+                path_ref.display(),
+                e
+            ))
+        })?;
+
+        use base64::prelude::*;
+        let data_base64 = BASE64_STANDARD.encode(&bytes);
+
+        Ok(ContentBlock::Image {
+            media_type: media_type.to_string(),
+            data_base64,
+        })
+    }
+
     pub fn tool_call(id: impl Into<String>, name: impl Into<String>, arguments: serde_json::Value) -> Self {
         Self::ToolCall {
             id: id.into(),
@@ -95,6 +134,15 @@ impl Message {
         Self {
             role: Role::User,
             content: vec![ContentBlock::Text { text: text.into() }],
+            name: None,
+            metadata: HashMap::new(),
+        }
+    }
+
+    pub fn user_with_content(content: Vec<ContentBlock>) -> Self {
+        Self {
+            role: Role::User,
+            content,
             name: None,
             metadata: HashMap::new(),
         }
@@ -458,6 +506,10 @@ impl ChatSession {
 
     pub fn add_user_message(&mut self, text: impl Into<String>) {
         self.history.push(Message::user(text));
+    }
+
+    pub fn add_user_message_with_blocks(&mut self, blocks: Vec<ContentBlock>) {
+        self.history.push(Message::user_with_content(blocks));
     }
 
     pub fn add_assistant_message(&mut self, text: impl Into<String>) {

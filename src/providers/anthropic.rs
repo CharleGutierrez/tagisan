@@ -529,8 +529,10 @@ impl LlmProvider for AnthropicProvider {
 
         let output_stream = async_stream::stream! {
             let mut accumulated_prompt_tokens = 0u32;
+            let mut accumulated_output_tokens = 0u32;
             let mut accumulated_cache_read_tokens = None;
             let mut active_tools: std::collections::HashMap<usize, (String, String)> = std::collections::HashMap::new();
+            let mut last_finish_reason: Option<FinishReason> = None;
 
             loop {
                 let next_event = if let Some(ref token) = cancellation_token {
@@ -612,7 +614,11 @@ impl LlmProvider for AnthropicProvider {
                                     Some(other) => Some(FinishReason::Other(other.to_string())),
                                     None => None,
                                 };
+                                if reason.is_some() {
+                                    last_finish_reason = reason.clone();
+                                }
                                 let out_tokens = usage.as_ref().and_then(|u| u.output_tokens).unwrap_or(0);
+                                accumulated_output_tokens = out_tokens;
                                 let tok_usage = TokenUsage {
                                     prompt_tokens: accumulated_prompt_tokens,
                                     completion_tokens: out_tokens,
@@ -627,7 +633,15 @@ impl LlmProvider for AnthropicProvider {
                                 });
                             }
                             Ok(AnthropicStreamEvent::MessageStop) => {
-                                yield Ok(StreamChunk::done(FinishReason::Stop, None));
+                                let final_usage = Some(TokenUsage {
+                                    prompt_tokens: accumulated_prompt_tokens,
+                                    completion_tokens: accumulated_output_tokens,
+                                    reasoning_tokens: None,
+                                    cached_prompt_tokens: accumulated_cache_read_tokens,
+                                    estimated_cost_usd: None,
+                                });
+                                let final_reason = last_finish_reason.clone().unwrap_or(FinishReason::Stop);
+                                yield Ok(StreamChunk::done(final_reason, final_usage));
                             }
                             Ok(AnthropicStreamEvent::Error { error }) => {
                                 yield Err(TagisanError::BadResponse("anthropic".into(), error.message));

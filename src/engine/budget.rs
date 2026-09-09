@@ -1,4 +1,5 @@
 use crate::error::{Result, TagisanError};
+use crate::types::TokenUsage;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 pub struct TokenBudgetTracker {
@@ -14,8 +15,14 @@ impl TokenBudgetTracker {
         }
     }
 
-    /// Record token usage and return current total USD spent
-    pub fn record(&self, model: &str, prompt_tokens: u32, completion_tokens: u32) -> Result<f64> {
+    /// Record token usage with prompt caching discount and return current total USD spent
+    pub fn record_with_cache(
+        &self,
+        model: &str,
+        prompt_tokens: u32,
+        completion_tokens: u32,
+        cached_prompt_tokens: u32,
+    ) -> Result<f64> {
         let (prompt_rate, completion_rate) = match model.to_lowercase() {
             m if m.contains("claude-3-5-sonnet") || m.contains("claude-3.5-sonnet") => (3.0, 15.0),
             m if m.contains("claude-3-5-haiku") => (0.8, 4.0),
@@ -29,8 +36,28 @@ impl TokenBudgetTracker {
             _ => (1.0, 3.0), // fallback estimate
         };
 
-        let cost_micro = ((prompt_tokens as f64 * prompt_rate) + (completion_tokens as f64 * completion_rate)).round() as u64;
+        // Cached tokens receive a 90% discount (0.1x of prompt rate)
+        let uncached_prompt = prompt_tokens.saturating_sub(cached_prompt_tokens);
+        let prompt_cost = (uncached_prompt as f64 * prompt_rate)
+            + (cached_prompt_tokens as f64 * prompt_rate * 0.1);
+        let completion_cost = completion_tokens as f64 * completion_rate;
+
+        let cost_micro = (prompt_cost + completion_cost).round() as u64;
         self.record_micro_usd(cost_micro)
+    }
+
+    /// Record token usage without caching discount and return current total USD spent
+    pub fn record(&self, model: &str, prompt_tokens: u32, completion_tokens: u32) -> Result<f64> {
+        self.record_with_cache(model, prompt_tokens, completion_tokens, 0)
+    }
+
+    /// Convenient helper to record usage from a TokenUsage struct
+    pub fn record_usage(&self, model: &str, usage: &TokenUsage) -> Result<f64> {
+        if let Some(cached) = usage.cached_prompt_tokens {
+            self.record_with_cache(model, usage.prompt_tokens, usage.completion_tokens, cached)
+        } else {
+            self.record(model, usage.prompt_tokens, usage.completion_tokens)
+        }
     }
 
     /// Record an exact amount in micro-USD (1 micro-USD = $0.000001)

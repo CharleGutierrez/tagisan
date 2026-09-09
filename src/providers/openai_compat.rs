@@ -654,6 +654,7 @@ impl LlmProvider for OpenAiCompatibleProvider {
         let output_stream = async_stream::stream! {
             let mut think_parser = StreamingThinkParser::new();
             let mut accumulated_usage: Option<TokenUsage> = None;
+            let mut last_finish_reason: Option<FinishReason> = None;
 
             loop {
                 let next_event = if let Some(ref token) = cancellation_token {
@@ -684,7 +685,8 @@ impl LlmProvider for OpenAiCompatibleProvider {
                                     usage: None,
                                 });
                             }
-                            yield Ok(StreamChunk::done(FinishReason::Stop, accumulated_usage.clone()));
+                            let final_reason = last_finish_reason.unwrap_or(FinishReason::Stop);
+                            yield Ok(StreamChunk::done(final_reason, accumulated_usage.clone()));
                             break;
                         }
                         if data.is_empty() {
@@ -704,6 +706,15 @@ impl LlmProvider for OpenAiCompatibleProvider {
                                 }
 
                                 if let Some(choice) = chunk.choices.into_iter().next() {
+                                    if let Some(ref fr) = choice.finish_reason {
+                                        last_finish_reason = Some(match fr.as_str() {
+                                            "tool_calls" => FinishReason::ToolCalls,
+                                            "length" => FinishReason::Length,
+                                            "content_filter" => FinishReason::ContentFilter,
+                                            _ => FinishReason::Stop,
+                                        });
+                                    }
+
                                     if let Some(reasoning) = choice.delta.reasoning_content {
                                         if !reasoning.is_empty() {
                                             yield Ok(StreamChunk {
@@ -723,7 +734,7 @@ impl LlmProvider for OpenAiCompatibleProvider {
                                                     name: tc.function.as_ref().and_then(|f| f.name.clone()),
                                                     arguments_delta: tc.function.and_then(|f| f.arguments),
                                                 },
-                                                finish_reason: None,
+                                                finish_reason: last_finish_reason.clone(),
                                                 usage: accumulated_usage.clone(),
                                             });
                                         }
@@ -735,10 +746,7 @@ impl LlmProvider for OpenAiCompatibleProvider {
                                             for delta in deltas {
                                                 yield Ok(StreamChunk {
                                                     delta,
-                                                    finish_reason: choice.finish_reason.as_deref().map(|r| match r {
-                                                        "tool_calls" => FinishReason::ToolCalls,
-                                                        _ => FinishReason::Stop,
-                                                    }),
+                                                    finish_reason: last_finish_reason.clone(),
                                                     usage: accumulated_usage.clone(),
                                                 });
                                             }

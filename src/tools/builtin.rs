@@ -1,8 +1,10 @@
 use super::ToolHandler;
 use crate::error::{Result, TagisanError};
+use crate::types::ContentBlock;
 use async_trait::async_trait;
 use serde_json::{json, Value};
 use std::path::Path;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::process::Command;
 use tokio::time::timeout;
@@ -304,6 +306,251 @@ impl ToolHandler for CalculatorTool {
 }
 
 // =========================================================================
+// 5. ViewImageTool
+// =========================================================================
+
+/// Tool for inspecting an image file, returning its format, dimensions/size, and base64 preview
+#[derive(Debug, Default, Clone)]
+pub struct ViewImageTool;
+
+impl ViewImageTool {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for ViewImageTool {
+    fn name(&self) -> &'static str {
+        "view_image"
+    }
+
+    fn description(&self) -> &'static str {
+        "Inspect an image file on disk, validating format (.png, .jpg, .jpeg, .webp, .gif), computing file size, and encoding to Base64 for multimodal LLM vision analysis."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "The local filesystem path to the image file (.png, .jpg, .jpeg, .webp, or .gif)."
+                }
+            },
+            "required": ["path"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let path_str = arguments
+            .get("path")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path'".to_string()))?;
+
+        let block = ContentBlock::from_image_file(path_str)?;
+        if let ContentBlock::Image { media_type, data_base64 } = block {
+            let byte_count = std::fs::metadata(path_str)
+                .map(|m| m.len())
+                .unwrap_or(0);
+            Ok(format!(
+                "Image validated and loaded successfully from '{}'. Format: {}, Size: {} bytes, Base64 payload: {} chars.",
+                path_str,
+                media_type,
+                byte_count,
+                data_base64.len()
+            ))
+        } else {
+            Err(TagisanError::Execution("Failed to process image content block".to_string()))
+        }
+    }
+}
+
+// =========================================================================
+// 6. SearchMemoryTool
+// =========================================================================
+
+/// Tool that searches long-term vector memory and indexed codebase chunks
+#[derive(Clone)]
+pub struct SearchMemoryTool {
+    store: Arc<crate::memory::VectorStore>,
+    provider: Arc<dyn crate::memory::EmbeddingProvider>,
+}
+
+impl SearchMemoryTool {
+    pub fn new(store: Arc<crate::memory::VectorStore>, provider: Arc<dyn crate::memory::EmbeddingProvider>) -> Self {
+        Self { store, provider }
+    }
+}
+
+#[async_trait]
+impl ToolHandler for SearchMemoryTool {
+    fn name(&self) -> &'static str {
+        "search_memory"
+    }
+
+    fn description(&self) -> &'static str {
+        "Search long-term vector memory and indexed codebase chunks using semantic similarity"
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The search query or concept to locate in codebase chunks or episodic memory"
+                },
+                "top_k": {
+                    "type": "integer",
+                    "description": "Maximum number of top matches to return (default: 5)"
+                },
+                "threshold": {
+                    "type": "number",
+                    "description": "Minimum similarity score between 0.0 and 1.0 (default: 0.15)"
+                }
+            },
+            "required": ["query"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let query = arguments
+            .get("query")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'query'".to_string()))?;
+
+        let top_k = arguments
+            .get("top_k")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(5) as usize;
+
+        let threshold = arguments
+            .get("threshold")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.15) as f32;
+
+        let query_embedding = self.provider.embed_text(query).await?;
+        let hits = self.store.search(&query_embedding, top_k, threshold);
+
+        if hits.is_empty() {
+            return Ok(format!("No relevant memory chunks found matching query: \"{query}\" (threshold: {threshold:.2})"));
+        }
+
+        let mut output = format!("Found {} relevant memory chunks for \"{}\":\n\n", hits.len(), query);
+        for (i, hit) in hits.iter().enumerate() {
+            let doc = &hit.document;
+            let file_path = doc.metadata.get("file_path").map(|s| s.as_str()).unwrap_or(&doc.id);
+            let start = doc.metadata.get("start_line").map(|s| s.as_str()).unwrap_or("?");
+            let end = doc.metadata.get("end_line").map(|s| s.as_str()).unwrap_or("?");
+            let lang = doc.metadata.get("language").map(|s| s.as_str()).unwrap_or("text");
+
+            output.push_str(&format!(
+                "[{}] {} (Lines {}-{}, Score: {:.3}, Lang: {})\n```{}\n{}\n```\n\n",
+                i + 1,
+                file_path,
+                start,
+                end,
+                hit.score,
+                lang,
+                lang,
+                doc.text.trim()
+            ));
+        }
+
+        Ok(output.trim_end().to_string())
+    }
+}
+
+// =========================================================================
+// 7. SaveMemoryTool
+// =========================================================================
+
+/// Tool that saves an insight, decision, or summary into long-term episodic memory
+#[derive(Clone)]
+pub struct SaveMemoryTool {
+    store: Arc<crate::memory::VectorStore>,
+    provider: Arc<dyn crate::memory::EmbeddingProvider>,
+    persistence_path: Option<std::path::PathBuf>,
+}
+
+impl SaveMemoryTool {
+    pub fn new(store: Arc<crate::memory::VectorStore>, provider: Arc<dyn crate::memory::EmbeddingProvider>) -> Self {
+        Self {
+            store,
+            provider,
+            persistence_path: Some(crate::memory::VectorStore::default_path()),
+        }
+    }
+
+    pub fn with_persistence_path(mut self, path: impl Into<std::path::PathBuf>) -> Self {
+        self.persistence_path = Some(path.into());
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for SaveMemoryTool {
+    fn name(&self) -> &'static str {
+        "save_memory"
+    }
+
+    fn description(&self) -> &'static str {
+        "Save a key architectural decision, insight, debugging solution, or summary into long-term episodic memory"
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "tag": {
+                    "type": "string",
+                    "description": "Category tag: decision, architecture, debugging, insight, summary"
+                },
+                "summary": {
+                    "type": "string",
+                    "description": "Concise 1-2 sentence description of what to remember"
+                },
+                "details": {
+                    "type": "string",
+                    "description": "Detailed explanation, code snippet, or steps to persist"
+                }
+            },
+            "required": ["tag", "summary"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let tag = arguments
+            .get("tag")
+            .and_then(|v| v.as_str())
+            .unwrap_or("insight");
+
+        let summary = arguments
+            .get("summary")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'summary'".to_string()))?;
+
+        let details = arguments
+            .get("details")
+            .and_then(|v| v.as_str())
+            .unwrap_or_default();
+
+        let episodic = crate::memory::EpisodicMemory::new();
+        let doc_id = episodic.record(&self.store, self.provider.as_ref(), tag, summary, details).await?;
+
+        if let Some(ref path) = self.persistence_path {
+            let _ = self.store.save_to_file(path);
+        }
+
+        Ok(format!(
+            "Successfully saved episodic memory item [{}] under tag '{}'. Memory id: {}",
+            summary, tag, doc_id
+        ))
+    }
+}
+
+// =========================================================================
 // Math Expression Parser & Evaluator (Pratt / Recursive Descent)
 // =========================================================================
 
@@ -357,6 +604,21 @@ fn tokenize(expr: &str) -> std::result::Result<Vec<Token>, String> {
                 while i < chars.len() && (chars[i].is_ascii_digit() || chars[i] == '.') {
                     num_str.push(chars[i]);
                     i += 1;
+                }
+                // Support scientific notation (e.g., 1e5, 2.5e-3, 1E+6)
+                if i < chars.len() && (chars[i] == 'e' || chars[i] == 'E') {
+                    if i + 1 < chars.len() && (chars[i + 1].is_ascii_digit() || chars[i + 1] == '+' || chars[i + 1] == '-') {
+                        num_str.push(chars[i]);
+                        i += 1;
+                        if i < chars.len() && (chars[i] == '+' || chars[i] == '-') {
+                            num_str.push(chars[i]);
+                            i += 1;
+                        }
+                        while i < chars.len() && chars[i].is_ascii_digit() {
+                            num_str.push(chars[i]);
+                            i += 1;
+                        }
+                    }
                 }
                 let num: f64 = num_str.parse().map_err(|_| format!("Invalid number: '{num_str}'"))?;
                 tokens.push(Token::Number(num));
@@ -505,6 +767,21 @@ impl Parser {
                 "sin" => self.parse_func_arg(|v| Ok(v.sin())),
                 "cos" => self.parse_func_arg(|v| Ok(v.cos())),
                 "tan" => self.parse_func_arg(|v| Ok(v.tan())),
+                "asin" => self.parse_func_arg(|v| {
+                    if v < -1.0 || v > 1.0 {
+                        Err("Domain error: asin argument must be in [-1, 1]".to_string())
+                    } else {
+                        Ok(v.asin())
+                    }
+                }),
+                "acos" => self.parse_func_arg(|v| {
+                    if v < -1.0 || v > 1.0 {
+                        Err("Domain error: acos argument must be in [-1, 1]".to_string())
+                    } else {
+                        Ok(v.acos())
+                    }
+                }),
+                "atan" => self.parse_func_arg(|v| Ok(v.atan())),
                 "ln" => self.parse_func_arg(|v| {
                     if v <= 0.0 {
                         Err("Logarithm of non-positive number".to_string())

@@ -7,6 +7,11 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+pub use builtin::{
+    CalculatorTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool, ViewImageTool,
+    WriteFileTool,
+};
+
 /// Trait implemented by all tools executable by autonomous agents
 #[async_trait]
 pub trait ToolHandler: Send + Sync {
@@ -44,6 +49,7 @@ impl ToolRegistry {
         registry.register_tool(builtin::WriteFileTool::new());
         registry.register_tool(builtin::RunCommandTool::default());
         registry.register_tool(builtin::CalculatorTool::new());
+        registry.register_tool(builtin::ViewImageTool::new());
         registry
     }
 
@@ -65,6 +71,11 @@ impl ToolRegistry {
     /// Check if a tool exists in the registry
     pub fn contains(&self, name: &str) -> bool {
         self.tools.contains_key(name)
+    }
+
+    /// Check if a tool exists in the registry (alias for contains)
+    pub fn has_tool(&self, name: &str) -> bool {
+        self.contains(name)
     }
 
     /// Number of registered tools

@@ -51,6 +51,19 @@ Tagisan natively integrates the agent harness and persona architecture of **[ECC
 - **Path Traversal Defense:** Prevents directory traversal attacks (`../../../`, sensitive system file access like `/etc/shadow`, `/proc/kcore`, SSH private keys).
 - **Credential Leak Redaction:** Automatically scans and redacts Anthropic (`sk-ant-`), OpenAI (`sk-proj-`), Google Gemini (`AIzaSy`), and xAI (`xai-`) secret keys before output exposure.
 
+### 7. 🔌 Model Context Protocol (MCP) Client Subsystem
+- **JSON-RPC 2.0 stdio Transport:** Connects asynchronously to standard MCP servers (e.g., SQLite, GitHub, Filesystem, Postgres, Memory) via spawned child processes.
+- **Dynamic Configuration & Discovery:** Auto-discovers server definitions from `mcp.json`, `tagisan.mcp.json`, or `.tagisan/mcp.json`.
+- **Universal ToolRegistry Adapter:** Seamlessly maps external MCP tool definitions into Tagisan's `ToolHandler` trait with namespace isolation (`<server>__<tool>`).
+- **Security-Audited Execution:** All MCP tool calls are vetted by AgentShield prior to execution, and all returned payloads are scrubbed for credential leaks.
+
+### 8. 🧠 Persistent Long-Term Memory & Local Vector RAG Subsystem
+- **100% Offline-First Vector Math:** Built-in `FastHashEmbeddingProvider` (256-dim word and n-gram hashing with L2 unit normalization) delivers zero-dependency, zero-API-key semantic embeddings out of the box.
+- **Pluggable Neural Embeddings:** First-class support for OpenAI (`text-embedding-3-small`), Google Gemini (`text-embedding-004`), and local Ollama (`nomic-embed-text`).
+- **Sliding-Window Code Chunking:** `CodeChunker` splits source files with configurable window and overlap lines, preserving language metadata and exact line boundaries.
+- **Persistent Atomic Vector Store:** Thread-safe vector store persisting to `.tagisan/memory.json` via atomic rename operations to prevent corruption.
+- **Episodic Memory & Agent Recall:** Auto-injects top-3 relevant context chunks into `AutonomousAgent` before execution, and equips agents with `search_memory` and `save_memory` tools.
+
 ---
 
 ## 📦 Project Structure
@@ -59,6 +72,7 @@ Tagisan natively integrates the agent harness and persona architecture of **[ECC
 tagisan/
 ├── Cargo.toml
 ├── .env.example                  # Template for API keys
+├── mcp.example.json              # Template for MCP server definitions
 ├── README.md
 ├── .ecc/                         # ECC Agent & Skill definitions (Markdown + YAML frontmatter)
 │   ├── agents/                   # Extensible agent personas (code-explorer.md, debugger.md, ...)
@@ -91,13 +105,28 @@ tagisan/
     │   └── mod.rs                # ReAct loop, tool execution & AgentShield interception
     ├── tools/                    # Tool definitions & registry
     │   ├── mod.rs                # Tool trait & ToolRegistry
-    │   └── builtin.rs            # ReadFileTool, WriteFileTool, RunCommandTool, CalculatorTool
+    │   └── builtin.rs            # ReadFileTool, WriteFileTool, RunCommandTool, CalculatorTool, ViewImageTool, SearchMemoryTool, SaveMemoryTool
+    ├── memory/                   # Persistent Vector Memory & Codebase RAG Subsystem (Milestone 6)
+    │   ├── mod.rs
+    │   ├── embedding.rs          # EmbeddingProvider trait, vector math, FastHash (offline), Ollama, OpenAI, Gemini
+    │   ├── chunking.rs           # CodeChunker sliding window & language detection
+    │   ├── store.rs              # Thread-safe VectorStore & atomic disk serialization (.tagisan/memory.json)
+    │   ├── index.rs              # CodebaseIndexer tree traversal with .gitignore exclusions
+    │   └── episodic.rs           # EpisodicMemory recording decisions, insights & architecture invariants
     ├── dag/                      # Directed Acyclic Graph engine
     │   ├── mod.rs
     │   ├── graph.rs              # WorkflowGraph topology powered by petgraph
     │   ├── node.rs               # TaskNode and dependency tracking
     │   ├── planner.rs            # Objective decomposition into DAGs
     │   └── scheduler.rs          # Asynchronous Tokio parallel executor
+    ├── mcp/                      # Model Context Protocol (MCP) Client Subsystem (Milestone 5)
+    │   ├── mod.rs
+    │   ├── protocol.rs           # JSON-RPC 2.0 messages & MCP schemas
+    │   ├── config.rs             # mcp.json loader & discovery
+    │   ├── transport.rs          # Async line-delimited stdio transport
+    │   ├── client.rs             # Handshake, tools/list, tools/call
+    │   ├── adapter.rs            # McpToolWrapper implementing ToolHandler
+    │   └── manager.rs            # Multi-server orchestrator & tool registration
     ├── ecc/                      # Native ECC (Everything Coding Cloud) Subsystem
     │   ├── mod.rs
     │   ├── agent.rs              # EccAgent loader & YAML frontmatter parser
@@ -108,7 +137,7 @@ tagisan/
     │   └── audit.rs              # Adversarial architecture & security debate
     ├── engine/                   # Runtime orchestrator
     │   ├── mod.rs                # EngineContext
-    │   └── budget.rs             # Atomic USD token cost tracker
+    │   └── budget.rs             # Atomic USD token cost tracker with prompt cache discounts
     └── tui/                      # Interactive terminal user interface (Ratatui)
         └── mod.rs
 ```
@@ -324,9 +353,113 @@ AgentShield is a built-in security interceptor that guards tool execution in rea
 
 ---
 
+## 🔌 Model Context Protocol (MCP) Client Subsystem
+
+Tagisan natively implements the Anthropic **Model Context Protocol (MCP)** specification over standard JSON-RPC 2.0 stdio, allowing your agents, swarms, and pipelines to connect to hundreds of community and enterprise MCP servers without writing glue code.
+
+### 1. Configure MCP Servers
+Create an `mcp.json`, `tagisan.mcp.json`, or `.tagisan/mcp.json` file in your workspace:
+
+```json
+{
+  "mcpServers": {
+    "sqlite": {
+      "command": "uvx",
+      "args": ["mcp-server-sqlite", "--db-path", "app.db"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    },
+    "git": {
+      "command": "uvx",
+      "args": ["mcp-server-git", "--repository", "."]
+    }
+  }
+}
+```
+
+*(See [mcp.example.json](mcp.example.json) for a template).*
+
+### 2. Discover & Test MCP Servers
+List all configured servers and explore their published tools:
+```bash
+tgs mcp list
+```
+
+Perform an initialization handshake with a specific server:
+```bash
+tgs mcp test sqlite
+```
+
+Directly execute an MCP tool from the command line with AgentShield validation:
+```bash
+tgs mcp call sqlite read_query '{"query": "SELECT name FROM sqlite_master WHERE type=\"table\";"}'
+```
+
+### 3. Equip Agents & Swarms with External MCP Tools
+Pass `--mcp` to automatically load all discovered MCP tools into any agent, ECC swarm, or workflow:
+
+```bash
+# Autonomous Agent with both built-in and external MCP tools
+tgs agent "Analyze the schema of test.db and list all tables" --mcp
+
+# Specify a custom config path
+tgs agent "Inspect the git commit history" --mcp-config ./custom-mcp.json
+
+# Specialized ECC Persona with MCP capabilities
+tgs ecc run architect "Audit our database architecture and indexes" --mcp
+
+# Dynamic Multi-Agent DAG Workflow with MCP tools
+tgs workflow plan "Query the SQLite database, format the report, and commit via Git" --mcp
+```
+
+---
+
+## 🧠 Persistent Long-Term Memory & Local Vector RAG (Milestone 6)
+
+Tagisan features a native, asynchronous vector database and RAG subsystem stored in `.tagisan/memory.json`. It indexes source code into sliding-window line chunks, hashes semantic features offline with `FastHash` (or neural providers), and auto-retrieves relevant codebase context during autonomous runs.
+
+### 1. Codebase Indexing & Semantic Search
+```bash
+# Index current directory into long-term vector memory
+tgs memory index .
+
+# Index specific source directory
+tgs memory index src/memory
+
+# Search indexed chunks semantically with similarity scoring
+tgs memory search "cosine similarity"
+
+# Search with custom top-k and similarity threshold
+tgs memory search "database connection" --top-k 10 --threshold 0.10
+
+# Display memory storage statistics (documents, dimensions, file size)
+tgs memory stats
+
+# Clear and wipe persistent memory
+tgs memory clear
+```
+
+### 2. Autonomous Agent Context Recall
+Pass `--memory` to automatically pre-retrieve top-3 matching codebase chunks and register `search_memory` and `save_memory` tools:
+
+```bash
+# Autonomous Agent with persistent memory recall
+tgs agent "Refactor our vector similarity functions for performance" --memory
+
+# ECC Persona with long-term memory
+tgs ecc run architect "Design the next subsystem matching our existing conventions" --memory
+
+# 5-Stage Engineering Pipeline with memory RAG
+tgs ecc pipeline "Add streaming tokenizer cache" --memory
+```
+
+---
+
 ## 💰 Built-in Cost & Budget Protection
 
-Tagisan tracks token usage and calculates estimated USD costs across all providers atomically. You can set strict budget limits to prevent accidental overages:
+Tagisan tracks token usage and calculates estimated USD costs across all providers atomically, with a 90% discount calculation on cached prompt tokens. You can set strict budget limits to prevent accidental overages:
 
 ```bash
 # Terminate execution if session cost exceeds $1.50 USD
@@ -337,11 +470,20 @@ tgs --max-budget 1.50 moa "Generate a distributed consensus benchmark in Rust"
 
 ## 🧪 Testing & Verification
 
-Tagisan includes an exhaustive automated test suite covering unit logic, DAG validation, provider adapters, AgentShield safety, and chaos stress tests:
+Tagisan includes an exhaustive automated test suite covering unit logic, DAG validation, provider adapters, AgentShield safety, MCP client integration, vector RAG memory, and chaos stress tests:
 
 ```bash
-# Run all tests (74 tests across 7 test binaries)
+# Run all tests (106 tests across 11 test binaries)
 cargo test
+
+# Run Milestone 6 Memory & RAG test suite specifically
+cargo test --test milestone6_memory_tests
+
+# Run Milestone 5 MCP test suite specifically
+cargo test --test milestone5_mcp_tests
+
+# Run the MCP brutal stress & protocol adversarial suite
+cargo test --test mcp_brutal_tests
 
 # Run the brutal chaos & adversarial stress suite
 cargo test --test brutal_stress_tests

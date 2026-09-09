@@ -4,7 +4,6 @@ use crate::dag::node::{RetryPolicy, TaskNode};
 use crate::engine::EngineContext;
 use crate::error::{Result, TagisanError};
 use crate::providers::LlmProvider;
-use crate::tools::builtin::{CalculatorTool, ReadFileTool, RunCommandTool, WriteFileTool};
 use crate::tools::ToolRegistry;
 use crate::types::CompletionRequest;
 use serde::{Deserialize, Serialize};
@@ -48,7 +47,7 @@ Decomposition Guidelines:
 1. Divide complex problems into modular, parallelizable tasks (e.g. independent research or analysis branches).
 2. For downstream tasks that need previous outputs, specify their dependencies in `dependencies` array.
 3. In downstream `prompt_template`, reference upstream outputs using `{upstream_task_id.output}` placeholders.
-4. Select appropriate tools for each task (e.g. `read_file`, `write_file`, `run_command`, `calculator`).
+4. Select appropriate tools for each task from the available tools list (e.g. `read_file`, `write_file`, `run_command`, `calculator`, or namespaced MCP tools).
 5. Ensure the graph is strictly acyclic (NO circular dependencies).
 6. Provide a clean, robust final synthesis task that aggregates upstream findings.
 
@@ -83,13 +82,9 @@ pub struct WorkflowPlanner {
 }
 
 impl WorkflowPlanner {
-    /// Create a new WorkflowPlanner
+    /// Create a new WorkflowPlanner with default built-in tools
     pub fn new(provider: Arc<dyn LlmProvider>, model: impl Into<String>) -> Self {
-        let mut tools = ToolRegistry::new();
-        tools.register_tool(ReadFileTool::new());
-        tools.register_tool(WriteFileTool::new());
-        tools.register_tool(RunCommandTool::default());
-        tools.register_tool(CalculatorTool::new());
+        let tools = ToolRegistry::with_builtins();
 
         Self {
             provider,
@@ -106,9 +101,15 @@ impl WorkflowPlanner {
 
     /// Build the prompt for LLM goal decomposition
     pub fn build_planner_prompt(&self, goal: &str) -> String {
+        let tool_names = self.available_tools.names();
+        let tools_clause = if tool_names.is_empty() {
+            String::new()
+        } else {
+            format!("\n\nAvailable tools that can be assigned to tasks: [{}]", tool_names.join(", "))
+        };
         format!(
-            "Decompose the following complex user objective into an optimal, parallelizable multi-agent DAG workflow:\n\nObjective: \"{}\"",
-            goal
+            "Decompose the following complex user objective into an optimal, parallelizable multi-agent DAG workflow:\n\nObjective: \"{}\"{}",
+            goal, tools_clause
         )
     }
 

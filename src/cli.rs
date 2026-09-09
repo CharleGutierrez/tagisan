@@ -11,7 +11,8 @@ use crate::{
     CompletionRequest, ContentBlock, DagScheduler, DialecticalDebateStrategy, EccAuditDebate,
     EngineContext, GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider,
     OpenAiCompatibleProvider, ProviderCapabilities, ReadFileTool, RunCommandTool, StrategyInput,
-    StreamChunkDelta, TagisanError, ToolRegistry, WorkflowEvent, WorkflowPlanner, WriteFileTool,
+    StreamChunkDelta, TagisanError, ToolRegistry, ViewImageTool, WorkflowEvent, WorkflowPlanner, WriteFileTool,
+    McpManager,
 };
 
 #[derive(Parser)]
@@ -41,6 +42,10 @@ enum Commands {
         #[arg(short, long)]
         model: Option<String>,
 
+        /// Optional path to an image file for multimodal vision analysis (.png, .jpg, .jpeg, .webp, .gif)
+        #[arg(short, long)]
+        image: Option<String>,
+
         /// User query or prompt
         prompt: String,
     },
@@ -53,6 +58,10 @@ enum Commands {
         /// Model name
         #[arg(short, long)]
         model: Option<String>,
+
+        /// Optional path to an image file for multimodal vision analysis (.png, .jpg, .jpeg, .webp, .gif)
+        #[arg(short, long)]
+        image: Option<String>,
 
         /// User prompt
         prompt: String,
@@ -81,13 +90,33 @@ enum Commands {
         #[arg(short, long)]
         model: Option<String>,
 
-        /// Comma-separated list of tools to enable: read_file, write_file, run_command, calculator, all
+        /// Comma-separated list of tools to enable: read_file, write_file, run_command, calculator, view_image, all
         #[arg(short, long, default_value = "all")]
         tools: String,
 
         /// Maximum autonomous feedback iterations (default: 10)
         #[arg(long, default_value = "10")]
         max_iterations: usize,
+
+        /// Optional path to an image file for multimodal vision analysis (.png, .jpg, .jpeg, .webp, .gif)
+        #[arg(short, long)]
+        image: Option<String>,
+
+        /// Disable AgentShield security interception (safety is enabled by default)
+        #[arg(long)]
+        no_shield: bool,
+
+        /// Optional path to mcp.json configuration file to load external MCP tools
+        #[arg(long)]
+        mcp_config: Option<String>,
+
+        /// Enable loading external tools from discovered mcp.json
+        #[arg(long)]
+        mcp: bool,
+
+        /// Enable long-term vector memory (.tagisan/memory.json)
+        #[arg(long)]
+        memory: bool,
 
         /// The agent goal or task prompt
         prompt: String,
@@ -124,14 +153,98 @@ enum Commands {
         /// Maximum concurrency limit for parallel DAG tasks
         #[arg(long)]
         concurrency: Option<usize>,
+
+        /// Optional path to mcp.json configuration file to load external MCP tools
+        #[arg(long)]
+        mcp_config: Option<String>,
+
+        /// Enable loading external tools from discovered mcp.json
+        #[arg(long)]
+        mcp: bool,
+
+        /// Enable long-term vector memory (.tagisan/memory.json)
+        #[arg(long)]
+        memory: bool,
     },
     /// ECC (Everything Coding Cloud) Autonomous Multi-Agent Engineering Operating System
     Ecc {
         #[command(subcommand)]
         action: EccAction,
     },
+    /// Model Context Protocol (MCP) Client: inspect servers, list tools, and execute calls
+    Mcp {
+        #[command(subcommand)]
+        action: McpAction,
+    },
+    /// Long-term vector memory and semantic codebase RAG subsystem (Milestone 6)
+    Memory {
+        #[command(subcommand)]
+        action: MemoryAction,
+    },
     /// Check configured LLM providers, API keys, and model capability bitflags
     Status,
+}
+
+#[derive(Subcommand, Debug)]
+enum McpAction {
+    /// List all configured MCP servers and discover their published tools
+    List {
+        /// Optional path to mcp.json configuration file
+        #[arg(short, long)]
+        config: Option<String>,
+    },
+    /// Test connection and initialize handshake with a specific MCP server
+    Test {
+        /// Server name as defined in mcp.json
+        server: String,
+
+        /// Optional path to mcp.json configuration file
+        #[arg(short, long)]
+        config: Option<String>,
+    },
+    /// Directly execute an MCP tool on a specified server
+    Call {
+        /// Server name as defined in mcp.json
+        server: String,
+
+        /// Tool name to execute
+        tool: String,
+
+        /// Arguments as JSON string (e.g. '{"path":"."}')
+        #[arg(default_value = "{}")]
+        arguments: String,
+
+        /// Optional path to mcp.json configuration file
+        #[arg(short, long)]
+        config: Option<String>,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum MemoryAction {
+    /// Index source files in a directory into long-term vector memory
+    Index {
+        /// Path to directory to index (defaults to current directory '.')
+        #[arg(default_value = ".")]
+        path: String,
+    },
+    /// Search indexed memory and codebase semantically
+    Search {
+        /// Search query
+        query: String,
+
+        /// Maximum number of results to display
+        #[arg(short, long, default_value = "5")]
+        top_k: usize,
+
+        /// Minimum similarity threshold between 0.0 and 1.0
+        #[arg(long, default_value = "0.05")]
+        threshold: f32,
+    },
+    /// Display statistics about indexed long-term memory
+    Stats,
+    /// Clear and wipe persistent memory
+    Clear,
 }
 
 #[derive(Subcommand, Debug)]
@@ -168,13 +281,29 @@ enum EccAction {
         #[arg(short, long)]
         model: Option<String>,
 
-        /// Comma-separated list of tools: read_file, write_file, run_command, calculator, all
+        /// Comma-separated list of tools: read_file, write_file, run_command, calculator, view_image, all
         #[arg(short, long, default_value = "all")]
         tools: String,
 
         /// Maximum autonomous iterations
         #[arg(long, default_value = "10")]
         max_iterations: usize,
+
+        /// Disable AgentShield security interception (safety is enabled by default)
+        #[arg(long)]
+        no_shield: bool,
+
+        /// Optional path to mcp.json configuration file to load external MCP tools
+        #[arg(long)]
+        mcp_config: Option<String>,
+
+        /// Enable loading external tools from discovered mcp.json
+        #[arg(long)]
+        mcp: bool,
+
+        /// Enable long-term vector memory (.tagisan/memory.json)
+        #[arg(long)]
+        memory: bool,
 
         /// Directory containing custom ECC agent definitions
         #[arg(long)]
@@ -200,6 +329,18 @@ enum EccAction {
         /// Maximum concurrency limit for parallel DAG tasks
         #[arg(long)]
         concurrency: Option<usize>,
+
+        /// Optional path to mcp.json configuration file to load external MCP tools
+        #[arg(long)]
+        mcp_config: Option<String>,
+
+        /// Enable loading external tools from discovered mcp.json
+        #[arg(long)]
+        mcp: bool,
+
+        /// Enable long-term vector memory (.tagisan/memory.json)
+        #[arg(long)]
+        memory: bool,
     },
     /// Run an Adversarial ECC Engineering Audit (Architect vs Security Auditor -> Chief Adjudicator)
     Audit {
@@ -344,6 +485,49 @@ fn resolve_provider_and_model(
     Ok(("ollama".to_string(), model, prov))
 }
 
+async fn load_and_register_mcp_tools(
+    mcp_enabled: bool,
+    mcp_config_path: Option<&str>,
+    registry: &mut ToolRegistry,
+) -> Result<Option<McpManager>, Box<dyn std::error::Error>> {
+    if !mcp_enabled && mcp_config_path.is_none() {
+        return Ok(None);
+    }
+
+    let mut manager = match McpManager::load(mcp_config_path.map(std::path::Path::new)) {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("{}: Failed to load MCP config: {}", "Warning".yellow().bold(), e);
+            return Ok(None);
+        }
+    };
+
+    if manager.is_empty() {
+        println!("No MCP servers found in configuration.");
+        return Ok(None);
+    }
+
+    println!("{}", "🔌 Connecting to configured MCP server(s)...".bold().cyan());
+    match manager.connect_all().await {
+        Ok(discovered) => {
+            for (server_name, tools) in &discovered {
+                println!("  [✓] Server '{}' connected ({} tool(s) discovered)", server_name.green().bold(), tools.len());
+                for t in tools {
+                    let desc = t.description.as_deref().unwrap_or("No description");
+                    println!("      ↳ {}: {}", t.name.cyan(), desc);
+                }
+            }
+            let count = manager.populate_tool_registry(registry, true);
+            println!("Registered {} external MCP tool(s) into tool registry.\n", count);
+        }
+        Err(e) => {
+            eprintln!("{}: MCP connection error: {}", "Warning".yellow().bold(), e);
+        }
+    }
+
+    Ok(Some(manager))
+}
+
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
     dotenvy::dotenv().ok();
 
@@ -383,7 +567,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             println!("\nTip: Configure API keys in your .env file to enable cloud providers.\n");
         }
 
-        Commands::Stream { provider, model, prompt } => {
+        Commands::Stream { provider, model, image, prompt } => {
             let ctx = build_engine_context(cli.max_budget);
             let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
 
@@ -393,9 +577,18 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 provider_id.cyan().bold(),
                 model_name.yellow()
             );
-            println!("Prompt: \"{}\"\n", prompt.italic());
+            println!("Prompt: \"{}\"", prompt.italic());
 
-            let req = CompletionRequest::new(model_name.clone(), prompt)
+            let mut user_blocks = vec![ContentBlock::text(prompt)];
+            if let Some(ref img_path) = image {
+                let img_block = ContentBlock::from_image_file(img_path)?;
+                println!("Attached Multimodal Image: {}", img_path.cyan().bold());
+                user_blocks.push(img_block);
+            }
+            println!();
+
+            let req = CompletionRequest::new(model_name.clone(), "")
+                .with_messages(vec![crate::types::Message::user_with_content(user_blocks)])
                 .with_stream(true)
                 .with_cancellation(ctx.cancellation_token.clone());
             let mut stream = prov.stream(req).await?;
@@ -452,13 +645,14 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             println!("\n\n{} (Stream finished in {:.2}s)", "✔ Done".green().bold(), start.elapsed().as_secs_f32());
 
             if let Some(u) = last_usage {
-                let cost_res = ctx.budget_tracker.record(&model_name, u.prompt_tokens, u.completion_tokens);
+                let cost_res = ctx.budget_tracker.record_usage(&model_name, &u);
                 let total_spent = ctx.budget_tracker.current_spent_usd();
                 println!(
-                    "Tokens: {} (Prompt: {}, Output: {}) | Session Spent: ${:.4} USD",
+                    "Tokens: {} (Prompt: {}, Output: {}, Cached: {}) | Session Spent: ${:.4} USD",
                     u.prompt_tokens + u.completion_tokens,
                     u.prompt_tokens,
                     u.completion_tokens,
+                    u.cached_prompt_tokens.unwrap_or(0),
                     total_spent
                 );
                 if let Err(e) = cost_res {
@@ -467,7 +661,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        Commands::Ask { provider, model, prompt } => {
+        Commands::Ask { provider, model, image, prompt } => {
             let ctx = build_engine_context(cli.max_budget);
             let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
 
@@ -478,15 +672,22 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 model_name.yellow()
             );
 
+            let mut user_blocks = vec![ContentBlock::text(prompt)];
+            if let Some(ref img_path) = image {
+                let img_block = ContentBlock::from_image_file(img_path)?;
+                println!("Attached Multimodal Image: {}\n", img_path.cyan().bold());
+                user_blocks.push(img_block);
+            }
+
             let mut session = ChatSession::new();
-            session.add_user_message(prompt);
+            session.add_user_message_with_blocks(user_blocks);
 
             let req = session
                 .build_request(model_name.clone())
                 .with_cancellation(ctx.cancellation_token.clone());
             let resp = prov.complete(req).await?;
 
-            ctx.budget_tracker.record(&model_name, resp.usage.prompt_tokens, resp.usage.completion_tokens)?;
+            ctx.budget_tracker.record_usage(&model_name, &resp.usage)?;
 
             if let Some(thinking) = resp.message.extract_thinking() {
                 println!("\n{}", "--- Model Thinking / Reasoning ---".dimmed().italic());
@@ -496,11 +697,12 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             println!("\n{}", "--- Response ---".bold().green());
             println!("{}\n", resp.message.extract_text());
             println!(
-                "Latency: {:.2}s | Tokens: {} (Prompt: {}, Output: {}) | Total Spent: ${:.4} USD",
+                "Latency: {:.2}s | Tokens: {} (Prompt: {}, Output: {}, Cached: {}) | Total Spent: ${:.4} USD",
                 resp.latency.as_secs_f32(),
                 resp.usage.prompt_tokens + resp.usage.completion_tokens,
                 resp.usage.prompt_tokens,
                 resp.usage.completion_tokens,
+                resp.usage.cached_prompt_tokens.unwrap_or(0),
                 ctx.budget_tracker.current_spent_usd()
             );
         }
@@ -634,6 +836,11 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             model,
             tools,
             max_iterations,
+            image,
+            no_shield,
+            mcp_config,
+            mcp,
+            memory,
             prompt,
         } => {
             let ctx = build_engine_context(cli.max_budget);
@@ -656,24 +863,65 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             if enable_all || tool_list.contains(&"calculator") {
                 registry.register_tool(CalculatorTool::new());
             }
+            if enable_all || tool_list.contains(&"view_image") {
+                registry.register_tool(ViewImageTool::new());
+            }
 
+            let _mcp_manager = load_and_register_mcp_tools(mcp, mcp_config.as_deref(), &mut registry).await?;
+
+            let shield_active = !no_shield;
             println!("\n{}", "🤖 Starting Tagisan Autonomous Agent...".bold().magenta());
             println!("Provider: {} | Model: {}", provider_id.cyan().bold(), model_name.yellow().bold());
             println!("Active Tools: [{}]", registry.names().join(", ").green());
+            println!(
+                "AgentShield Guardrails: {}",
+                if shield_active {
+                    "ACTIVE (Enabled by Default)".green().bold()
+                } else {
+                    "DISABLED (--no-shield)".red().bold()
+                }
+            );
             println!("Max Iterations: {}", max_iterations);
+            if let Some(ref img_path) = image {
+                println!("Attached Multimodal Image: {}", img_path.cyan().bold());
+            }
             println!("Goal: \"{}\"\n", prompt.italic());
 
-            let agent = AutonomousAgent::new(prov, model_name, registry)
+            let mut agent = AutonomousAgent::new(prov, model_name, registry)
+                .with_agentshield(shield_active)
                 .with_max_iterations(max_iterations);
 
-            let result = agent.run(&prompt, &ctx).await?;
+            if memory {
+                let mem_store = Arc::new(crate::memory::VectorStore::load_or_default());
+                let emb_prov = crate::memory::default_embedding_provider();
+                println!("Long-Term Memory: Active ({} documents in {:?})", mem_store.len(), crate::memory::VectorStore::default_path());
+                agent = agent.with_memory(mem_store, emb_prov);
+            }
+
+            let result = if let Some(ref img_path) = image {
+                let img_block = ContentBlock::from_image_file(img_path)?;
+                agent.run_with_content(vec![ContentBlock::text(&prompt), img_block], &ctx).await?
+            } else {
+                agent.run(&prompt, &ctx).await?
+            };
+
+            let sanitized_result = if shield_active {
+                AutonomousAgent::sanitize_agent_result(result)
+            } else {
+                result
+            };
 
             println!("\n{}", "================ AGENT EXECUTION TRACE ================".bold().cyan());
-            for step in &result.steps {
+            for step in &sanitized_result.steps {
                 println!("\n{}", format!("--- Iteration {} ---", step.iteration).bold().yellow());
                 for (id, name, args) in step.assistant_message.extract_tool_calls() {
+                    let sanitized_args = if shield_active {
+                        AutonomousAgent::sanitize_text(&args.to_string())
+                    } else {
+                        args.to_string()
+                    };
                     println!("🔧 Called Tool: {} (ID: {})", name.green().bold(), id.dimmed());
-                    println!("   Args: {}", args);
+                    println!("   Args: {}", sanitized_args);
                 }
                 for res in &step.tool_results {
                     if let ContentBlock::ToolResult { tool_call_id, content, is_error } = res {
@@ -687,14 +935,14 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             println!("\n{}", "================ FINAL ANSWER ================".bold().green());
-            println!("{}\n", result.final_answer);
+            println!("{}\n", sanitized_result.final_answer);
             println!("{}", "==============================================".green());
             println!(
                 "Iterations: {} | Total Tokens: {} | Estimated Cost: ${:.4} USD | Latency: {:.2}s",
-                result.iterations,
-                result.total_usage.prompt_tokens + result.total_usage.completion_tokens,
-                result.total_cost_usd,
-                result.total_latency.as_secs_f32()
+                sanitized_result.iterations,
+                sanitized_result.total_usage.prompt_tokens + sanitized_result.total_usage.completion_tokens,
+                sanitized_result.total_cost_usd,
+                sanitized_result.total_latency.as_secs_f32()
             );
         }
 
@@ -707,6 +955,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             model,
             tools,
             concurrency,
+            mcp_config,
+            mcp,
+            memory,
         } => {
             let ctx = build_engine_context(cli.max_budget);
             let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
@@ -728,6 +979,16 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
             if enable_all || tool_list.contains(&"calculator") {
                 registry.register_tool(CalculatorTool::new());
+            }
+
+            let _mcp_manager = load_and_register_mcp_tools(mcp, mcp_config.as_deref(), &mut registry).await?;
+
+            if memory {
+                let mem_store = Arc::new(crate::memory::VectorStore::load_or_default());
+                let emb_prov = crate::memory::default_embedding_provider();
+                println!("Long-Term Memory: Active ({} documents in {:?})", mem_store.len(), crate::memory::VectorStore::default_path());
+                registry.register_tool(crate::tools::builtin::SearchMemoryTool::new(mem_store.clone(), emb_prov.clone()));
+                registry.register_tool(crate::tools::builtin::SaveMemoryTool::new(mem_store, emb_prov));
             }
 
             // Determine execution mode (Plan vs Run pipeline vs Positional Objective)
@@ -1016,6 +1277,10 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     model,
                     tools,
                     max_iterations,
+                    no_shield,
+                    mcp_config,
+                    mcp,
+                    memory,
                     dir,
                 } => {
                     let custom_dir = dir.as_ref().map(std::path::Path::new);
@@ -1074,25 +1339,58 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     if enable_all || tool_list.contains(&"calculator") || ecc_agent.tools.contains(&"calculator".to_string()) {
                         registry.register_tool(CalculatorTool::new());
                     }
+                    if enable_all || tool_list.contains(&"view_image") || ecc_agent.tools.contains(&"view_image".to_string()) {
+                        registry.register_tool(ViewImageTool::new());
+                    }
 
+                    let _mcp_manager = load_and_register_mcp_tools(mcp, mcp_config.as_deref(), &mut registry).await?;
+
+                    let shield_active = !no_shield;
                     println!("\n{}", "🏛️ Launching Autonomous ECC Agent...".bold().magenta());
                     println!("Agent Persona: {} ({})", ecc_agent.name.yellow().bold(), ecc_agent.description.italic());
                     println!("Engine: {} [{}]", provider_id.cyan().bold(), model_name.yellow().bold());
                     println!("Active Tools: [{}]", registry.names().join(", ").green());
+                    println!(
+                        "AgentShield Guardrails: {}",
+                        if shield_active {
+                            "ACTIVE (Enabled by Default)".green().bold()
+                        } else {
+                            "DISABLED (--no-shield)".red().bold()
+                        }
+                    );
                     println!("Prompt: \"{}\"\n", prompt.italic());
 
-                    let autonomous_agent = ecc_agent
+                    let mut autonomous_agent = ecc_agent
                         .into_autonomous_agent(prov, Some(model_name), registry)
+                        .with_agentshield(shield_active)
                         .with_max_iterations(max_iterations);
+
+                    if memory {
+                        let mem_store = Arc::new(crate::memory::VectorStore::load_or_default());
+                        let emb_prov = crate::memory::default_embedding_provider();
+                        println!("Long-Term Memory: Active ({} documents in {:?})", mem_store.len(), crate::memory::VectorStore::default_path());
+                        autonomous_agent = autonomous_agent.with_memory(mem_store, emb_prov);
+                    }
 
                     let result = autonomous_agent.run(&prompt, &ctx).await?;
 
+                    let sanitized_result = if shield_active {
+                        AutonomousAgent::sanitize_agent_result(result)
+                    } else {
+                        result
+                    };
+
                     println!("\n{}", "================ ECC AGENT EXECUTION TRACE ================".bold().cyan());
-                    for step in &result.steps {
+                    for step in &sanitized_result.steps {
                         println!("\n{}", format!("--- Iteration {} ---", step.iteration).bold().yellow());
                         for (id, name, args) in step.assistant_message.extract_tool_calls() {
+                            let sanitized_args = if shield_active {
+                                AutonomousAgent::sanitize_text(&args.to_string())
+                            } else {
+                                args.to_string()
+                            };
                             println!("🔧 Called Tool: {} (ID: {})", name.green().bold(), id.dimmed());
-                            println!("   Args: {}", args);
+                            println!("   Args: {}", sanitized_args);
                         }
                         for res in &step.tool_results {
                             if let ContentBlock::ToolResult { tool_call_id, content, is_error } = res {
@@ -1106,14 +1404,14 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     }
 
                     println!("\n{}", "================ FINAL ANSWER ================".bold().green());
-                    println!("{}\n", result.final_answer);
+                    println!("{}\n", sanitized_result.final_answer);
                     println!("{}", "==============================================".green());
                     println!(
                         "Iterations: {} | Total Tokens: {} | Estimated Cost: ${:.4} USD | Latency: {:.2}s",
-                        result.iterations,
-                        result.total_usage.prompt_tokens + result.total_usage.completion_tokens,
-                        result.total_cost_usd,
-                        result.total_latency.as_secs_f32()
+                        sanitized_result.iterations,
+                        sanitized_result.total_usage.prompt_tokens + sanitized_result.total_usage.completion_tokens,
+                        sanitized_result.total_cost_usd,
+                        sanitized_result.total_latency.as_secs_f32()
                     );
                 }
 
@@ -1123,6 +1421,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     model,
                     tools,
                     concurrency,
+                    mcp_config,
+                    mcp,
+                    memory,
                 } => {
                     let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
 
@@ -1149,6 +1450,16 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     if enable_all || tool_list.contains(&"calculator") {
                         registry.register_tool(CalculatorTool::new());
+                    }
+
+                    let _mcp_manager = load_and_register_mcp_tools(mcp, mcp_config.as_deref(), &mut registry).await?;
+
+                    if memory {
+                        let mem_store = Arc::new(crate::memory::VectorStore::load_or_default());
+                        let emb_prov = crate::memory::default_embedding_provider();
+                        println!("Long-Term Memory: Active ({} documents in {:?})", mem_store.len(), crate::memory::VectorStore::default_path());
+                        registry.register_tool(crate::tools::builtin::SearchMemoryTool::new(mem_store.clone(), emb_prov.clone()));
+                        registry.register_tool(crate::tools::builtin::SaveMemoryTool::new(mem_store, emb_prov));
                     }
 
                     let mut pipeline_graph = build_ecc_pipeline(&objective, prov, &model_name, registry)?;
@@ -1320,6 +1631,275 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         output.total_cost_usd,
                         output.total_latency.as_secs_f32()
                     );
+                }
+            }
+        }
+
+        Commands::Mcp { action } => {
+            match action {
+                McpAction::List { config } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  🔌  Model Context Protocol (MCP) Server Discovery".bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let mut manager = match McpManager::load(config.as_deref().map(std::path::Path::new)) {
+                        Ok(m) => m,
+                        Err(e) => {
+                            eprintln!("{}: Failed to load MCP configuration: {}", "Error".red().bold(), e);
+                            std::process::exit(1);
+                        }
+                    };
+
+                    let server_names = manager.server_names();
+                    if server_names.is_empty() {
+                        println!("\nNo MCP servers configured.");
+                        println!("Tip: Define servers in 'mcp.json' or 'tagisan.mcp.json'. Example:\n");
+                        println!("{{\n  \"mcpServers\": {{\n    \"sqlite\": {{\n      \"command\": \"uvx\",\n      \"args\": [\"mcp-server-sqlite\", \"--db-path\", \"test.db\"]\n    }}\n  }}\n}}");
+                        return Ok(());
+                    }
+
+                    println!("\nConfigured MCP Servers ({}):", server_names.len());
+                    for name in &server_names {
+                        if let Some(srv_cfg) = manager.config().mcp_servers.get(name) {
+                            println!("  [•] {:<20} -> {} {}", name.cyan().bold(), srv_cfg.command.green(), srv_cfg.args.join(" ").dimmed());
+                        }
+                    }
+
+                    println!("\nConnecting and discovering published tools...");
+                    match manager.connect_all().await {
+                        Ok(discovered) => {
+                            for (server_name, tools) in discovered {
+                                println!("\n{}", format!("Server [{}] ({} tools):", server_name, tools.len()).bold().green());
+                                if tools.is_empty() {
+                                    println!("  (No tools published)");
+                                } else {
+                                    for t in tools {
+                                        let desc = t.description.as_deref().unwrap_or("No description");
+                                        println!("  [+] {:<24} -> {}", t.name.yellow().bold(), desc);
+                                        let schema_str = serde_json::to_string(&t.input_schema).unwrap_or_default();
+                                        println!("      ↳ Schema: {}", schema_str.dimmed());
+                                    }
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("{}: Failed to query MCP tools: {}", "Error".red().bold(), e);
+                        }
+                    }
+                    manager.shutdown_all().await;
+                }
+
+                McpAction::Test { server, config } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", format!("  🔌  Testing MCP Server: {}", server).bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let mut manager = match McpManager::load(config.as_deref().map(std::path::Path::new)) {
+                        Ok(m) => m,
+                        Err(e) => {
+                            eprintln!("{}: Failed to load MCP configuration: {}", "Error".red().bold(), e);
+                            std::process::exit(1);
+                        }
+                    };
+
+                    let start = std::time::Instant::now();
+                    match manager.connect_server(&server).await {
+                        Ok(client) => {
+                            let duration = start.elapsed();
+                            println!("{} Handshake successful in {:.2}s!", "✔".green().bold(), duration.as_secs_f32());
+                            println!("Server Name: {}", client.server_name.cyan().bold());
+                            println!("Protocol Version: {}", client.protocol_version.yellow());
+                            if let Some(ref info) = client.server_info {
+                                let ver = info.version.as_deref().unwrap_or("unknown");
+                                println!("Implementation: {} (v{})", info.name.green(), ver.dimmed());
+                            }
+
+                            // Perform standard MCP ping probe
+                            let ping_start = std::time::Instant::now();
+                            match client.ping().await {
+                                Ok(()) => {
+                                    println!("{} MCP ping probe successful in {:.2}ms!", "✔".green().bold(), ping_start.elapsed().as_secs_f32() * 1000.0);
+                                }
+                                Err(e) => {
+                                    println!("{} MCP ping probe warning/unsupported: {}", "⚠".yellow().bold(), e);
+                                }
+                            }
+
+                            match client.list_tools().await {
+                                Ok(tools) => {
+                                    println!("\nPublished Tools ({}):", tools.len());
+                                    for t in tools {
+                                        let desc = t.description.as_deref().unwrap_or("No description");
+                                        println!("  • {:<20} - {}", t.name.cyan().bold(), desc);
+                                    }
+                                }
+                                Err(e) => {
+                                    eprintln!("Failed to list tools: {}", e);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("\n{} Connection failed: {}", "❌".red().bold(), e);
+                            std::process::exit(1);
+                        }
+                    }
+                    manager.shutdown_all().await;
+                }
+
+                McpAction::Call {
+                    server,
+                    tool,
+                    arguments,
+                    config,
+                } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", format!("  🛠️  Executing MCP Tool: {}::{}", server, tool).bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let parsed_args: serde_json::Value = match serde_json::from_str(&arguments) {
+                        Ok(v) => v,
+                        Err(e) => {
+                            eprintln!("{}: Invalid arguments JSON: {}", "Error".red().bold(), e);
+                            std::process::exit(1);
+                        }
+                    };
+
+                    let mut manager = match McpManager::load(config.as_deref().map(std::path::Path::new)) {
+                        Ok(m) => m,
+                        Err(e) => {
+                            eprintln!("{}: Failed to load MCP configuration: {}", "Error".red().bold(), e);
+                            std::process::exit(1);
+                        }
+                    };
+
+                    let client = match manager.connect_server(&server).await {
+                        Ok(c) => c,
+                        Err(e) => {
+                            eprintln!("{}: Could not connect to server '{}': {}", "Error".red().bold(), server, e);
+                            std::process::exit(1);
+                        }
+                    };
+
+                    println!("Server: {}", server.cyan().bold());
+                    println!("Tool:   {}", tool.yellow().bold());
+                    println!("Args:   {}\n", arguments.dimmed());
+
+                    // AgentShield scanning on tool call
+                    let verdict = crate::AgentShieldScanner::scan_tool_call(&tool, &parsed_args);
+                    if let crate::AgentShieldVerdict::Block { reason, threat_level } = verdict {
+                        eprintln!("{}: Call blocked by AgentShield [{:?}]: {}", "Security Alert".red().bold(), threat_level, reason);
+                        std::process::exit(1);
+                    }
+                    if let Some(cmd) = parsed_args.get("command").and_then(|v| v.as_str()) {
+                        if let crate::AgentShieldVerdict::Block { reason, threat_level } = crate::AgentShieldScanner::scan_command(cmd) {
+                            eprintln!("{}: Command argument blocked by AgentShield [{:?}]: {}", "Security Alert".red().bold(), threat_level, reason);
+                            std::process::exit(1);
+                        }
+                    }
+
+                    let start = std::time::Instant::now();
+                    match client.call_tool(&tool, parsed_args).await {
+                        Ok(call_result) => {
+                            let duration = start.elapsed();
+                            let sanitized = AutonomousAgent::sanitize_text(&call_result.extract_text());
+                            if call_result.is_error {
+                                println!("{} Tool execution reported error (took {:.2}s):\n{}", "❌".red().bold(), duration.as_secs_f32(), sanitized.red());
+                            } else {
+                                println!("{} Execution succeeded (took {:.2}s):\n", "✔".green().bold(), duration.as_secs_f32());
+                                println!("{}\n", sanitized);
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("{} Execution failed: {}", "❌".red().bold(), e);
+                            std::process::exit(1);
+                        }
+                    }
+                    manager.shutdown_all().await;
+                }
+            }
+        }
+
+        Commands::Memory { action } => {
+            match action {
+                MemoryAction::Index { path } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", format!("  🧠  Indexing Codebase into Memory: {}", path).bold().magenta());
+                    println!("{}", "=========================================================".cyan());
+
+                    let store = crate::memory::VectorStore::load_or_default();
+                    let provider = crate::memory::default_embedding_provider();
+                    println!("Embedding Provider: {} ({} dims)", provider.provider_id().cyan().bold(), provider.dimensions());
+
+                    let indexer = crate::memory::CodebaseIndexer::new(provider);
+                    let start = std::time::Instant::now();
+                    let count = indexer.index_directory(&path, &store).await?;
+
+                    let default_path = crate::memory::VectorStore::default_path();
+                    store.save_to_file(&default_path)?;
+
+                    println!("\n{} Indexed {} total chunks in {:.2}s!", "✔".green().bold(), count, start.elapsed().as_secs_f32());
+                    println!("Persistent Memory File: {}", default_path.display().to_string().yellow());
+                }
+                MemoryAction::Search { query, top_k, threshold } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", format!("  🔍  Semantic Memory Search: \"{}\"", query).bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let store = crate::memory::VectorStore::load_or_default();
+                    if store.is_empty() {
+                        println!("{}: Memory store is empty. Index your codebase first with `tgs memory index`.", "Note".yellow().bold());
+                        return Ok(());
+                    }
+
+                    let provider = crate::memory::default_embedding_provider();
+                    let emb = provider.embed_text(&query).await?;
+                    let hits = store.search(&emb, top_k, threshold);
+
+                    if hits.is_empty() {
+                        println!("No relevant matches found above threshold {threshold:.2}.");
+                        return Ok(());
+                    }
+
+                    println!("\nTop {} Match(es):\n", hits.len());
+                    for (i, hit) in hits.iter().enumerate() {
+                        let doc = &hit.document;
+                        let file_path = doc.metadata.get("file_path").map(|s| s.as_str()).unwrap_or(&doc.id);
+                        let start_line = doc.metadata.get("start_line").map(|s| s.as_str()).unwrap_or("?");
+                        let end_line = doc.metadata.get("end_line").map(|s| s.as_str()).unwrap_or("?");
+                        let lang = doc.metadata.get("language").map(|s| s.as_str()).unwrap_or("text");
+
+                        println!(
+                            "  {}. {} (Lines {}-{}, [{}]) | Similarity: {}",
+                            i + 1,
+                            file_path.cyan().bold(),
+                            start_line,
+                            end_line,
+                            lang.yellow(),
+                            format!("{:.3}", hit.score).green().bold()
+                        );
+                        let preview: String = doc.text.lines().take(4).collect::<Vec<_>>().join("\n");
+                        println!("     {}\n", preview.dimmed());
+                    }
+                }
+                MemoryAction::Stats => {
+                    let default_path = crate::memory::VectorStore::default_path();
+                    let store = crate::memory::VectorStore::load_or_default();
+                    let stats = store.stats(Some(&default_path));
+
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  📊  Tagisan Persistent Memory Statistics".bold().magenta());
+                    println!("{}", "=========================================================".cyan());
+                    println!("Storage File:         {}", stats.file_path.unwrap_or_else(|| "none".to_string()).yellow());
+                    println!("Total Documents:      {}", stats.total_documents.to_string().cyan().bold());
+                    println!("Embedding Dimension:  {}", stats.embedding_dimensions.to_string().green());
+                    println!("File Size on Disk:    {} bytes", stats.storage_bytes.to_string().yellow());
+                }
+                MemoryAction::Clear => {
+                    let default_path = crate::memory::VectorStore::default_path();
+                    if default_path.exists() {
+                        let _ = std::fs::remove_file(&default_path);
+                    }
+                    println!("{} Cleared Tagisan persistent memory file: {}", "✔".green().bold(), default_path.display());
                 }
             }
         }

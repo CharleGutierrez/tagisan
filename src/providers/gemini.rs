@@ -33,13 +33,22 @@ impl GeminiProvider {
     }
 
     fn format_contents(&self, req: &CompletionRequest) -> Vec<GeminiContent> {
+        let mut tool_id_to_name: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+        for msg in &req.messages {
+            for block in &msg.content {
+                if let ContentBlock::ToolCall { id, name, .. } = block {
+                    tool_id_to_name.insert(id.clone(), name.clone());
+                }
+            }
+        }
+
         let mut contents: Vec<GeminiContent> = Vec::new();
 
         for msg in &req.messages {
             let role_str = match msg.role {
                 Role::User => "user",
                 Role::Assistant => "model",
-                Role::Tool => "function",
+                Role::Tool => "user", // In Gemini API v1beta, functionResponse parts must reside in 'user' role
                 Role::Reasoning => "model",
                 Role::System => "user",
             };
@@ -87,12 +96,23 @@ impl GeminiProvider {
                         });
                     }
                     ContentBlock::ToolResult { tool_call_id, content, is_error } => {
+                        let fn_name = tool_id_to_name
+                            .get(tool_call_id)
+                            .cloned()
+                            .unwrap_or_else(|| {
+                                if let Some((name, _)) = tool_call_id.split_once(':') {
+                                    name.to_string()
+                                } else {
+                                    tool_call_id.clone()
+                                }
+                            });
+
                         parts.push(GeminiPart {
                             text: None,
                             inline_data: None,
                             function_call: None,
                             function_response: Some(GeminiFunctionResponse {
-                                name: tool_call_id.clone(),
+                                name: fn_name,
                                 response: serde_json::json!({
                                     "result": content,
                                     "is_error": is_error
@@ -333,7 +353,7 @@ impl LlmProvider for GeminiProvider {
                 if let Some(fc) = part.function_call {
                     has_tool_calls = true;
                     content_blocks.push(ContentBlock::ToolCall {
-                        id: format!("gemini_call_{}", idx),
+                        id: format!("{}:gemini_{}", fc.name, idx),
                         name: fc.name,
                         arguments: fc.args,
                     });
@@ -518,7 +538,7 @@ impl LlmProvider for GeminiProvider {
                                                 yield Ok(StreamChunk {
                                                     delta: StreamChunkDelta::ToolCallDelta {
                                                         index: idx,
-                                                        id: Some(format!("gemini_call_{}", idx)),
+                                                        id: Some(format!("{}:gemini_{}", fc.name, idx)),
                                                         name: Some(fc.name),
                                                         arguments_delta: Some(fc.args.to_string()),
                                                     },

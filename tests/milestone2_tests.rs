@@ -192,6 +192,15 @@ async fn test_builtin_calculator_tool_expressions() {
         ("floor(3.9)", "3"),
         ("ceil(3.1)", "4"),
         ("round(3.6)", "4"),
+        ("1e3", "1000"),
+        ("2.5e-2", "0.025"),
+        ("1E+4", "10000"),
+        ("sin(0)", "0"),
+        ("cos(0)", "1"),
+        ("tan(0)", "0"),
+        ("asin(0)", "0"),
+        ("acos(1)", "0"),
+        ("atan(0)", "0"),
     ];
 
     for (expr, expected) in cases {

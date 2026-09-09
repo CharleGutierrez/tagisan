@@ -4,6 +4,8 @@ pub mod dag;
 pub mod ecc;
 pub mod engine;
 pub mod error;
+pub mod mcp;
+pub mod memory;
 pub mod providers;
 pub mod strategies;
 pub mod tools;
@@ -28,6 +30,12 @@ pub use dag::{
 pub use engine::budget::TokenBudgetTracker;
 pub use engine::EngineContext;
 pub use error::{Result, TagisanError};
+pub use memory::{
+    cosine_similarity, default_embedding_provider, dot_product, l2_norm, normalize_vector,
+    Chunk, ChunkMetadata, CodeChunker, CodebaseIndexer, EmbeddingProvider, EpisodicMemory,
+    FastHashEmbeddingProvider, GeminiEmbeddingProvider, MemoryStats, OllamaEmbeddingProvider,
+    OpenAiEmbeddingProvider, SearchResult, VectorDocument, VectorStore,
+};
 pub use providers::anthropic::AnthropicProvider;
 pub use providers::cascade::{CascadeEntry, CascadeProvider};
 pub use providers::gemini::GeminiProvider;
@@ -37,7 +45,15 @@ pub use providers::{BoxEventStream, LlmProvider};
 pub use strategies::debate::DialecticalDebateStrategy;
 pub use strategies::moa::MixtureOfAgentsStrategy;
 pub use strategies::{CollaborationStrategy, IntermediateStep, StrategyInput, StrategyOutput};
-pub use tools::builtin::{CalculatorTool, ReadFileTool, RunCommandTool, WriteFileTool};
+pub use mcp::{
+    JsonRpcError, JsonRpcNotification, JsonRpcRequest, JsonRpcResponse, McpClient, McpConfig,
+    McpContentBlock, McpInitializeResult, McpManager, McpServerConfig, McpServerInfo,
+    McpToolCallResult, McpToolDefinition, McpToolWrapper, StdioTransport,
+};
+pub use tools::builtin::{
+    CalculatorTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool, ViewImageTool,
+    WriteFileTool,
+};
 pub use tools::{ToolHandler, ToolRegistry};
 pub use tui::run_debate_tui;
 pub use types::{
