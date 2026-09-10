@@ -632,6 +632,13 @@ cargo test --test ecc_integration_tests
 
 ---
 
+## 🗺️ Architecture Blueprints & RFCs
+
+- [**RFC-001: Universal Protocol & Ecosystem Integrations**](ROADMAP_EXTENSIONS.md) — Pluggable external vector databases (Qdrant, PgVector), OpenTelemetry APM instrumentation, and automated swarm evaluation (`tgs eval`).
+- [**RFC-002: Universal Plugin Architecture & GitHub Ecosystem Integration**](ROADMAP_PLUGINS.md) — Multi-runtime execution engines (WASM/Extism, Bun/TypeScript, Model Context Protocol, Native cdylib), capability-based sandboxing, and curated GitHub plugins catalog.
+
+---
+
 ## 📄 License
 
 This project is dual-licensed under the **MIT License** and the **Apache 2.0 License**. See [LICENSE](LICENSE) for details.
