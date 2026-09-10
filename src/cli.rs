@@ -529,6 +529,10 @@ enum EccAction {
         /// Directory containing custom ECC skills (defaults to .ecc/skills)
         #[arg(long)]
         dir: Option<String>,
+
+        /// Optional search query to test hybrid lexical-semantic skill dispatching
+        #[arg(short, long)]
+        query: Option<String>,
     },
     /// Run a specialized ECC agent persona with tool calling
     Run {
@@ -1148,6 +1152,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         if enable_all || tool_list.contains(&"view_image") {
                             reg.register_tool(ViewImageTool::new());
                         }
+                        if enable_all || tool_list.contains(&"search_skills") {
+                            reg.register_tool(crate::tools::builtin::SearchSkillsTool::with_default());
+                        }
                         reg
                     }
                 }
@@ -1170,6 +1177,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 if enable_all || tool_list.contains(&"view_image") {
                     reg.register_tool(ViewImageTool::new());
+                }
+                if enable_all || tool_list.contains(&"search_skills") {
+                    reg.register_tool(crate::tools::builtin::SearchSkillsTool::with_default());
                 }
                 reg
             };
@@ -1197,6 +1207,22 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let mut agent = AutonomousAgent::new(prov, model_name, registry)
                 .with_agentshield(shield_active)
                 .with_max_iterations(max_iterations);
+
+            let dispatcher = crate::ecc::skills::global_dispatcher();
+            let top_skills = dispatcher.dispatch(&prompt, 2, None);
+            if !top_skills.is_empty() && top_skills[0].score >= 20.0 {
+                println!("{}", "⚡ Auto-Equipped Engineering Skills:".bold().cyan());
+                for s in &top_skills {
+                    println!("   • {} [Score: {:.1} | Domain: {}] - {}", s.skill.name.yellow().bold(), s.score, s.domain.green(), s.skill.description.italic());
+                    let mut current_prompt = agent.system_prompt.unwrap_or_default();
+                    current_prompt.push_str(&format!(
+                        "\n\n--- AUTO-EQUIPPED SPECIALIZED ENGINEERING SKILL: {} (Score: {:.1}) ---\n{}\n",
+                        s.skill.name, s.score, s.skill.instructions
+                    ));
+                    agent.system_prompt = Some(current_prompt);
+                }
+                println!();
+            }
 
             if let Some(ref sb) = sandbox_holder {
                 agent = agent.with_working_dir(sb.path());
@@ -1555,7 +1581,39 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
 
-                EccAction::Skills { dir } => {
+                EccAction::Skills { dir, query } => {
+                    if let Some(ref q) = query {
+                        let start = std::time::Instant::now();
+                        let dispatcher = crate::ecc::skills::global_dispatcher();
+                        let matches = dispatcher.dispatch(q, 10, None);
+                        let elapsed = start.elapsed();
+
+                        println!("{}", "=========================================================".cyan());
+                        println!("  🔍  ECC Skills Dispatcher Query: \"{}\"", q.bold().yellow());
+                        println!("{}", "=========================================================".cyan());
+                        println!("Ranked {} skills in {:.2?}:\n", dispatcher.len(), elapsed);
+
+                        if matches.is_empty() {
+                            println!("  (No matching skills found)");
+                        } else {
+                            for (i, m) in matches.iter().enumerate() {
+                                println!(
+                                    "  {}. {} [Score: {:.1} | Domain: {}]\n     {}",
+                                    i + 1,
+                                    m.skill.name.cyan().bold(),
+                                    m.score,
+                                    m.domain.green(),
+                                    m.skill.description.italic()
+                                );
+                                if !m.matched_triggers.is_empty() {
+                                    println!("     Triggers matched: {:?}", m.matched_triggers);
+                                }
+                                println!();
+                            }
+                        }
+                        return Ok(());
+                    }
+
                     println!("{}", "=========================================================".cyan());
                     println!("{}", "  📚  ECC (Everything Coding Cloud) Skills Catalog".bold().yellow());
                     println!("{}", "=========================================================".cyan());
@@ -1625,21 +1683,50 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     };
 
-                    // If a skill was attached, inject it into the agent's system prompt
+                    let dispatcher = crate::ecc::skills::global_dispatcher();
+
+                    // Skill Attachment: Explicit or Automated Right-Skills-for-Right-Job Dispatch
                     if let Some(ref skill_name) = skill {
-                        let skills_dir = std::path::Path::new(".ecc/skills");
-                        if let Some(attached_skill) = resolve_ecc_skill(skill_name, Some(skills_dir)) {
-                            println!("Attached Skill: {} ({})", attached_skill.name.cyan().bold(), attached_skill.description.italic());
-                            ecc_agent.system_prompt.push_str(&format!(
-                                "\n\n--- Attached ECC Skill: {} ---\n{}",
-                                attached_skill.name, attached_skill.instructions
-                            ));
+                        if skill_name == "auto" {
+                            let top_skills = dispatcher.dispatch(&prompt, 2, None);
+                            if !top_skills.is_empty() {
+                                println!("{}", "⚡ Auto-Equipped Engineering Skills:".bold().cyan());
+                                for s in &top_skills {
+                                    println!("   • {} [Score: {:.1} | Domain: {}] - {}", s.skill.name.yellow().bold(), s.score, s.domain.green(), s.skill.description.italic());
+                                    ecc_agent.system_prompt.push_str(&format!(
+                                        "\n\n--- Auto-Equipped ECC Skill: {} (Score: {:.1}) ---\n{}",
+                                        s.skill.name, s.score, s.skill.instructions
+                                    ));
+                                }
+                            }
                         } else {
-                            eprintln!(
-                                "{}: ECC skill '{}' not found. Run 'tagisan ecc skills' to view available skills.",
-                                "Warning".yellow().bold(),
-                                skill_name
-                            );
+                            let skills_dir = std::path::Path::new(".ecc/skills");
+                            if let Some(attached_skill) = resolve_ecc_skill(skill_name, Some(skills_dir)) {
+                                println!("Attached Skill: {} ({})", attached_skill.name.cyan().bold(), attached_skill.description.italic());
+                                ecc_agent.system_prompt.push_str(&format!(
+                                    "\n\n--- Attached ECC Skill: {} ---\n{}",
+                                    attached_skill.name, attached_skill.instructions
+                                ));
+                            } else {
+                                eprintln!(
+                                    "{}: ECC skill '{}' not found. Run 'tagisan ecc skills' to view available skills.",
+                                    "Warning".yellow().bold(),
+                                    skill_name
+                                );
+                            }
+                        }
+                    } else {
+                        // Fully automated dispatch when --skill is omitted
+                        let top_skills = dispatcher.dispatch(&prompt, 2, None);
+                        if !top_skills.is_empty() {
+                            println!("{}", "⚡ Auto-Equipped Engineering Skills:".bold().cyan());
+                            for s in &top_skills {
+                                println!("   • {} [Score: {:.1} | Domain: {}] - {}", s.skill.name.yellow().bold(), s.score, s.domain.green(), s.skill.description.italic());
+                                ecc_agent.system_prompt.push_str(&format!(
+                                    "\n\n--- Auto-Equipped ECC Skill: {} (Score: {:.1}) ---\n{}",
+                                    s.skill.name, s.score, s.skill.instructions
+                                ));
+                            }
                         }
                     }
 
@@ -1664,6 +1751,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     if enable_all || tool_list.contains(&"view_image") || ecc_agent.tools.contains(&"view_image".to_string()) {
                         registry.register_tool(ViewImageTool::new());
+                    }
+                    if enable_all || tool_list.contains(&"search_skills") || ecc_agent.tools.contains(&"search_skills".to_string()) {
+                        registry.register_tool(crate::tools::builtin::SearchSkillsTool::with_default());
                     }
 
                     let _mcp_manager = load_and_register_mcp_tools(mcp, mcp_config.as_deref(), &mut registry).await?;

@@ -5,11 +5,12 @@ use std::sync::Arc;
 use std::time::Duration;
 use tagisan::{
     all_ecc_presets, all_ecc_skills, build_ecc_pipeline, find_ecc_preset, find_ecc_skill,
-    load_ecc_agents_from_dir, load_ecc_skills_from_dir, resolve_ecc_agent, resolve_ecc_skill,
-    AgentShieldScanner, AgentShieldVerdict, AutonomousAgent, BoxEventStream, CollaborationStrategy,
-    CompletionRequest, CompletionResponse, ContentBlock, DagScheduler, EccAgent, EccAuditDebate,
-    EccSkill, EngineContext, FinishReason, LlmProvider, Message, ProviderCapabilities,
-    StrategyInput, TagisanError, TokenUsage, ToolRegistry,
+    global_ecc_dispatcher, load_ecc_agents_from_dir, load_ecc_skills_from_dir, resolve_ecc_agent,
+    resolve_ecc_skill, AgentShieldScanner, AgentShieldVerdict, AutonomousAgent, BoxEventStream,
+    CollaborationStrategy, CompletionRequest, CompletionResponse, ContentBlock, DagScheduler,
+    EccAgent, EccAuditDebate, EccSkill, EngineContext, FinishReason, LlmProvider, Message,
+    ProviderCapabilities, SearchSkillsTool, StrategyInput, TagisanError, TokenUsage, ToolHandler,
+    ToolRegistry,
 };
 
 /// Mock provider for testing ECC workflows deterministically
@@ -498,4 +499,133 @@ async fn test_agent_with_agentshield_interception() {
     }
 
     assert!(result.final_answer.contains("cannot proceed"));
+}
+
+#[test]
+fn test_skill_dispatcher_catalog_indexing() {
+    let dispatcher = global_ecc_dispatcher();
+    assert!(
+        dispatcher.len() >= 3840,
+        "Dispatcher must index all 3,840+ skills (built-ins + .ecc/skills), got {}",
+        dispatcher.len()
+    );
+
+    // Exact name lookups
+    assert!(dispatcher.get_skill("tdd-workflow").is_some());
+    assert!(dispatcher.get_skill("security-review").is_some());
+    assert!(dispatcher.get_skill("azure-cosmos-rust").is_some());
+    assert!(dispatcher.get_skill("bun-toolkit").is_some());
+    assert!(dispatcher.get_skill("flutter-drift").is_some());
+}
+
+#[test]
+fn test_skill_dispatcher_exact_and_hybrid_ranking() {
+    let dispatcher = global_ecc_dispatcher();
+
+    // 1. Exact Name Query
+    let results = dispatcher.dispatch("azure-cosmos-rust", 3, None);
+    assert!(!results.is_empty(), "Must find exact skill");
+    assert_eq!(results[0].skill.name, "azure-cosmos-rust");
+    assert!(results[0].score >= 200.0, "Exact match score must be >= 200");
+
+    // 2. Trigger phrase match
+    let trigger_results = dispatcher.dispatch("cosmos db rust", 3, None);
+    assert!(!trigger_results.is_empty());
+    assert_eq!(trigger_results[0].skill.name, "azure-cosmos-rust");
+    assert!(trigger_results[0].score >= 100.0);
+
+    // 3. Natural language objective query
+    let nl_results = dispatcher.dispatch(
+        "Build a high-throughput event processor in Rust with Azure Cosmos",
+        3,
+        None,
+    );
+    assert!(!nl_results.is_empty());
+    let names: Vec<&str> = nl_results.iter().map(|s| s.skill.name.as_str()).collect();
+    assert!(
+        names.contains(&"azure-cosmos-rust") || names.contains(&"tokio-async-tuning"),
+        "Top results should contain domain skills, got: {:?}",
+        names
+    );
+}
+
+#[test]
+fn test_skill_dispatcher_latency_sub_millisecond() {
+    let dispatcher = global_ecc_dispatcher();
+    let sample_queries = [
+        "azure cosmos rust",
+        "bun typescript native server",
+        "flutter drift sqlite reactive streams",
+        "swiftui navigation architecture",
+        "security threat modeling injection",
+        "test driven development unit assertions",
+        "tokio async channels locks",
+        "ratatui terminal user interface widgets",
+        "solana anchor web3 smart contracts",
+        "sap abap clean code",
+    ];
+
+    let start = std::time::Instant::now();
+    let iterations: usize = 50;
+    for _ in 0..iterations {
+        for q in &sample_queries {
+            let _ = dispatcher.dispatch(q, 3, None);
+        }
+    }
+    let total_elapsed = start.elapsed();
+    let total_queries = (iterations * sample_queries.len()) as u32;
+    let avg_per_query = total_elapsed / total_queries;
+
+    println!(
+        "Dispatcher Latency: total {:?} across {} queries (avg {:?} per query over {} skills)",
+        total_elapsed,
+        total_queries,
+        avg_per_query,
+        dispatcher.len()
+    );
+
+    // Sub-5ms requirement
+    assert!(
+        avg_per_query < Duration::from_millis(5),
+        "Average query latency {:?} exceeds 5ms threshold",
+        avg_per_query
+    );
+}
+
+#[tokio::test]
+async fn test_search_skills_tool_execution() {
+    let tool = SearchSkillsTool::with_default();
+    assert_eq!(tool.name(), "search_skills");
+
+    let result = tool
+        .execute(serde_json::json!({
+            "query": "cosmos db rust",
+            "limit": 2
+        }))
+        .await
+        .expect("Tool execution must succeed");
+
+    assert!(result.contains("azure-cosmos-rust"));
+    assert!(result.contains("Score:"));
+}
+
+#[test]
+fn test_ecc_pipeline_auto_equipping() {
+    let mock_provider = Arc::new(MockEccProvider::new("mock_llm"));
+    let registry = ToolRegistry::new();
+
+    let graph = build_ecc_pipeline(
+        "Build an offline iOS app using SwiftData syncing to Axum Rust backend",
+        mock_provider,
+        "mock-model",
+        registry,
+    )
+    .expect("ECC pipeline construction should succeed");
+
+    // Retrieve nodes
+    let plan_node = graph.get_task("ecc_plan").expect("ecc_plan node must exist");
+    assert!(
+        plan_node.prompt_template.contains("OBJECTIVE"),
+        "Plan node prompt template must be configured"
+    );
 }

@@ -11,8 +11,8 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub use builtin::{
-    CalculatorTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool, ViewImageTool,
-    WriteFileTool,
+    CalculatorTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool,
+    SearchSkillsTool, ViewImageTool, WriteFileTool,
 };
 pub use bun::{
     extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,
@@ -74,6 +74,7 @@ impl ToolRegistry {
         registry.register_tool(bun_serve::BunServeTool::new());
         registry.register_tool(bun_serve::BunStreamBusTool::new());
         registry.register_tool(bun_compile::BunCompileTool::new());
+        registry.register_tool(builtin::SearchSkillsTool::with_default());
         // Vella Phase 1 Domain Tools
         registry.register_tool(crate::vella::VellaTradingTool::default());
         registry.register_tool(crate::vella::VellaScadaTool::default());
@@ -100,6 +101,7 @@ impl ToolRegistry {
         registry.register_tool(builtin::RunCommandTool::default().with_working_dir(dir.clone()));
         registry.register_tool(builtin::CalculatorTool::new());
         registry.register_tool(builtin::ViewImageTool::new());
+        registry.register_tool(builtin::SearchSkillsTool::with_default());
         registry.register_tool(bun::BunEvalTool::new().with_working_dir(dir.clone()));
         registry.register_tool(bun::BunRunTool::new().with_working_dir(dir.clone()));
         registry.register_tool(bun::BunTestTool::new().with_working_dir(dir.clone()));

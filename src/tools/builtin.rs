@@ -593,6 +593,89 @@ impl ToolHandler for SaveMemoryTool {
 }
 
 // =========================================================================
+// 8. SearchSkillsTool
+// =========================================================================
+
+/// Tool that searches and discovers engineering skills from the 3,840+ skill catalog
+#[derive(Clone, Default)]
+pub struct SearchSkillsTool {
+    dispatcher: Option<Arc<crate::ecc::skills::SkillDispatcher>>,
+}
+
+impl SearchSkillsTool {
+    pub fn new(dispatcher: Arc<crate::ecc::skills::SkillDispatcher>) -> Self {
+        Self {
+            dispatcher: Some(dispatcher),
+        }
+    }
+
+    pub fn with_default() -> Self {
+        Self { dispatcher: None }
+    }
+}
+
+#[async_trait]
+impl ToolHandler for SearchSkillsTool {
+    fn name(&self) -> &'static str {
+        "search_skills"
+    }
+
+    fn description(&self) -> &'static str {
+        "Search and discover available engineering skills from the 3,840+ skill repository based on task objectives, technology keywords, or triggers. Returns skill names, descriptions, relevance scores, and operational instructions."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Technical task, framework, SDK, or architecture concept to find skills for."
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of skills to return (default: 3, max: 10)."
+                },
+                "domain": {
+                    "type": "string",
+                    "description": "Optional domain filter (e.g., 'azure', 'rust', 'bun', 'security', 'sap', 'test')."
+                },
+                "include_instructions": {
+                    "type": "boolean",
+                    "description": "Whether to include full operational instructions in the output (default: true)."
+                }
+            },
+            "required": ["query"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let query = arguments
+            .get("query")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'query'".to_string()))?;
+
+        let limit = arguments
+            .get("limit")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(3)
+            .clamp(1, 10) as usize;
+
+        let domain = arguments.get("domain").and_then(|v| v.as_str());
+        let include_instructions = arguments
+            .get("include_instructions")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(true);
+
+        if let Some(ref disp) = self.dispatcher {
+            Ok(disp.search_and_format(query, limit, domain, include_instructions))
+        } else {
+            Ok(crate::ecc::skills::global_dispatcher().search_and_format(query, limit, domain, include_instructions))
+        }
+    }
+}
+
+// =========================================================================
 // Math Expression Parser & Evaluator (Pratt / Recursive Descent)
 // =========================================================================
 

@@ -24,10 +24,11 @@ pub use bun::{
 pub use ecc::{
     all_built_in_skills as all_ecc_skills, all_presets as all_ecc_presets, build_ecc_pipeline,
     find_built_in_skill as find_ecc_skill, find_preset as find_ecc_preset,
-    load_agents_from_dir as load_ecc_agents_from_dir,
+    global_dispatcher as global_ecc_dispatcher, load_agents_from_dir as load_ecc_agents_from_dir,
     load_skills_from_dir as load_ecc_skills_from_dir, resolve_agent as resolve_ecc_agent,
-    resolve_skill as resolve_ecc_skill, AgentShieldScanner, AgentShieldVerdict, EccAgent,
-    EccAuditDebate, EccSkill, ThreatLevel as EccThreatLevel,
+    resolve_skill as resolve_ecc_skill, AgentShieldScanner, AgentShieldVerdict, DispatchedSkill,
+    EccAgent, EccAuditDebate, EccSkill, SkillDispatcher, SkillMetadata,
+    ThreatLevel as EccThreatLevel,
 };
 
 pub use agent::{AgentResult, AgentStep, AutonomousAgent, WorktreeSandbox};
@@ -60,8 +61,8 @@ pub use mcp::{
     McpToolCallResult, McpToolDefinition, McpToolWrapper, StdioTransport,
 };
 pub use tools::builtin::{
-    CalculatorTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool, ViewImageTool,
-    WriteFileTool,
+    CalculatorTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool,
+    SearchSkillsTool, ViewImageTool, WriteFileTool,
 };
 pub use tools::bun::{
     extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,

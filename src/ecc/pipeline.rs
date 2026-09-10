@@ -29,14 +29,43 @@ pub fn build_ecc_pipeline(
     objective: &str,
     provider: Arc<dyn LlmProvider>,
     model: &str,
-    tools: ToolRegistry,
+    mut tools: ToolRegistry,
 ) -> Result<WorkflowGraph> {
+    // 0. Ensure search_skills discovery tool is available to all pipeline agents
+    if !tools.contains("search_skills") {
+        tools.register_tool(crate::tools::builtin::SearchSkillsTool::with_default());
+    }
+
+    let dispatcher = crate::ecc::skills::global_dispatcher();
+
+    // Helper: Dynamically auto-equip relevant engineering skills into system prompt
+    let equip_skills = |base_prompt: &str, stage_query: &str, domain_bias: Option<&str>| -> String {
+        let full_query = format!("{} {}", objective, stage_query);
+        let dispatched = dispatcher.dispatch(&full_query, 2, domain_bias);
+        let mut prompt = base_prompt.to_string();
+        if !dispatched.is_empty() {
+            prompt.push_str("\n\n--- AUTO-EQUIPPED SPECIALIZED ENGINEERING SKILLS ---");
+            for d in dispatched {
+                prompt.push_str(&format!(
+                    "\n\n### Skill: {} (Match Score: {:.1} | Domain: {})\n{}\n",
+                    d.skill.name, d.score, d.domain, d.skill.instructions
+                ));
+            }
+        }
+        prompt
+    };
+
     let mut graph = WorkflowGraph::new();
 
     // 1. Plan (Architect Agent)
     let architect = presets::architect();
+    let arch_prompt = equip_skills(
+        &architect.system_prompt,
+        "system architecture modular boundary design API contracts",
+        Some("architecture"),
+    );
     let plan_agent = AutonomousAgent::new(provider.clone(), model, tools.clone())
-        .with_system_prompt(architect.system_prompt)
+        .with_system_prompt(arch_prompt)
         .with_temperature(0.5)
         .with_agentshield(true);
 
@@ -57,8 +86,13 @@ pub fn build_ecc_pipeline(
 
     // 2. Test (TDD Engineer Agent)
     let tdd = presets::tdd_engineer();
+    let tdd_prompt = equip_skills(
+        &tdd.system_prompt,
+        "test driven development unit tests assertions fuzzing regression verification",
+        Some("test"),
+    );
     let tdd_agent = AutonomousAgent::new(provider.clone(), model, tools.clone())
-        .with_system_prompt(tdd.system_prompt)
+        .with_system_prompt(tdd_prompt)
         .with_temperature(0.3)
         .with_agentshield(true);
 
@@ -80,11 +114,14 @@ pub fn build_ecc_pipeline(
     .with_retry_policy(RetryPolicy::exponential(2, Duration::from_secs(2), 2.0));
 
     // 3. Implement (Autonomous Coder)
+    let coder_prompt = equip_skills(
+        "You are a Senior Implementation Engineer operating under the ECC framework.\n\
+        Write clean, idiomatic, fully functional, and production-grade code that satisfies the architecture and passes all tests.",
+        "production implementation clean idiomatic resilience",
+        None,
+    );
     let coder_agent = AutonomousAgent::new(provider.clone(), model, tools.clone())
-        .with_system_prompt(
-            "You are a Senior Implementation Engineer operating under the ECC framework.\n\
-            Write clean, idiomatic, fully functional, and production-grade code that satisfies the architecture and passes all tests.",
-        )
+        .with_system_prompt(coder_prompt)
         .with_temperature(0.2)
         .with_agentshield(true);
 
@@ -109,8 +146,13 @@ pub fn build_ecc_pipeline(
 
     // 4a. Review (Code Reviewer)
     let reviewer = presets::code_reviewer();
+    let review_prompt = equip_skills(
+        &reviewer.system_prompt,
+        "code review cleanliness cyclomatic complexity standards",
+        Some("review"),
+    );
     let review_agent = AutonomousAgent::new(provider.clone(), model, tools.clone())
-        .with_system_prompt(reviewer.system_prompt)
+        .with_system_prompt(review_prompt)
         .with_temperature(0.4)
         .with_agentshield(true);
 
@@ -128,8 +170,13 @@ pub fn build_ecc_pipeline(
 
     // 4b. Security Audit (Security Auditor) - Parallel branch with Review
     let security = presets::security_auditor();
+    let sec_prompt = equip_skills(
+        &security.system_prompt,
+        "security audit threat modeling injection memory safety vulnerability",
+        Some("security"),
+    );
     let security_agent = AutonomousAgent::new(provider.clone(), model, tools.clone())
-        .with_system_prompt(security.system_prompt)
+        .with_system_prompt(sec_prompt)
         .with_temperature(0.3)
         .with_agentshield(true);
 
@@ -146,11 +193,14 @@ pub fn build_ecc_pipeline(
     .with_agent(security_agent);
 
     // 5. Verify & Synthesize (Chief Adjudicator / Lakandiwa)
+    let verify_prompt = equip_skills(
+        "You are the Chief Verification Adjudicator under the ECC framework.\n\
+        Synthesize all upstream outputs into a rock-solid, production-verified final deliverable.",
+        "verification evaluation adjudication rubrics hallucination",
+        Some("verification"),
+    );
     let verify_agent = AutonomousAgent::new(provider.clone(), model, tools)
-        .with_system_prompt(
-            "You are the Chief Verification Adjudicator under the ECC framework.\n\
-            Synthesize all upstream outputs into a rock-solid, production-verified final deliverable.",
-        )
+        .with_system_prompt(verify_prompt)
         .with_temperature(0.2)
         .with_agentshield(true);
 

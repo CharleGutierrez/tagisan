@@ -11,7 +11,8 @@ pub use audit::EccAuditDebate;
 pub use pipeline::build_ecc_pipeline;
 pub use presets::{all_presets, find_preset};
 pub use skills::{
-    all_built_in_skills, find_built_in_skill, load_skills_from_dir, resolve_skill, EccSkill,
+    all_built_in_skills, find_built_in_skill, global_dispatcher, load_skills_from_dir,
+    resolve_skill, DispatchedSkill, EccSkill, SkillDispatcher, SkillMetadata,
 };
 
 use std::path::Path;
