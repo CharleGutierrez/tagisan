@@ -248,13 +248,17 @@ fn start_debate_task(
     let ctx_budget = ctx.budget_tracker.clone();
     let ctx_cancel = ctx.cancellation_token.clone();
 
+    let default_ollama = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "llama3.2".to_string());
+
     // Determine configured providers for 3 roles
     let proponent = if std::env::var("ANTHROPIC_API_KEY").is_ok() {
         ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
     } else if std::env::var("OPENAI_API_KEY").is_ok() {
         ("openai".to_string(), "gpt-4o".to_string())
+    } else if std::env::var("GEMINI_API_KEY").is_ok() {
+        ("gemini".to_string(), "gemini-2.0-flash".to_string())
     } else {
-        ("ollama".to_string(), "llama3.2".to_string())
+        ("ollama".to_string(), default_ollama.clone())
     };
 
     let adversary = if std::env::var("DEEPSEEK_API_KEY").is_ok() {
@@ -264,15 +268,17 @@ fn start_debate_task(
     } else if std::env::var("GEMINI_API_KEY").is_ok() {
         ("gemini".to_string(), "gemini-2.0-flash".to_string())
     } else {
-        ("ollama".to_string(), "llama3.2".to_string())
+        ("ollama".to_string(), default_ollama.clone())
     };
 
     let adjudicator = if std::env::var("GEMINI_API_KEY").is_ok() {
         ("gemini".to_string(), "gemini-1.5-pro".to_string())
     } else if std::env::var("ANTHROPIC_API_KEY").is_ok() {
         ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
-    } else {
+    } else if std::env::var("OPENAI_API_KEY").is_ok() {
         ("openai".to_string(), "gpt-4o".to_string())
+    } else {
+        ("ollama".to_string(), default_ollama.clone())
     };
 
     let p_prov_id = proponent.0.clone();

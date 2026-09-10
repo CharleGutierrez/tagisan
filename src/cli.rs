@@ -640,6 +640,10 @@ enum WorkflowAction {
     },
 }
 
+fn default_ollama_model() -> String {
+    env::var("OLLAMA_MODEL").unwrap_or_else(|_| "llama3.2".to_string())
+}
+
 fn build_engine_context(max_budget: f64) -> EngineContext {
     let mut ctx = EngineContext::new(max_budget);
 
@@ -999,7 +1003,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 proposers.push(("openai".to_string(), "gpt-4o-mini".to_string()));
             }
             if proposers.is_empty() {
-                proposers.push(("ollama".to_string(), "llama3.2".to_string()));
+                proposers.push(("ollama".to_string(), default_ollama_model()));
             }
 
             let aggregator = if env::var("ANTHROPIC_API_KEY").is_ok() {
@@ -1009,7 +1013,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             } else if env::var("OPENAI_API_KEY").is_ok() {
                 ("openai".to_string(), "gpt-4o".to_string())
             } else {
-                ("ollama".to_string(), "llama3.2".to_string())
+                ("ollama".to_string(), default_ollama_model())
             };
 
             let moa = MixtureOfAgentsStrategy::new(proposers, aggregator);
@@ -1057,8 +1061,10 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
             } else if env::var("OPENAI_API_KEY").is_ok() {
                 ("openai".to_string(), "gpt-4o".to_string())
+            } else if env::var("GEMINI_API_KEY").is_ok() {
+                ("gemini".to_string(), "gemini-2.0-flash".to_string())
             } else {
-                ("ollama".to_string(), "llama3.2".to_string())
+                ("ollama".to_string(), default_ollama_model())
             };
 
             let adversary = if env::var("DEEPSEEK_API_KEY").is_ok() {
@@ -1068,15 +1074,17 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             } else if env::var("GEMINI_API_KEY").is_ok() {
                 ("gemini".to_string(), "gemini-2.0-flash".to_string())
             } else {
-                ("ollama".to_string(), "llama3.2".to_string())
+                ("ollama".to_string(), default_ollama_model())
             };
 
             let adjudicator = if env::var("GEMINI_API_KEY").is_ok() {
                 ("gemini".to_string(), "gemini-1.5-pro".to_string())
             } else if env::var("ANTHROPIC_API_KEY").is_ok() {
                 ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
-            } else {
+            } else if env::var("OPENAI_API_KEY").is_ok() {
                 ("openai".to_string(), "gpt-4o".to_string())
+            } else {
+                ("ollama".to_string(), default_ollama_model())
             };
 
             let debate = DialecticalDebateStrategy::new(proponent, adversary, adjudicator);
@@ -2000,7 +2008,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     } else if env::var("GEMINI_API_KEY").is_ok() {
                         ("gemini".to_string(), "gemini-1.5-pro".to_string())
                     } else {
-                        ("ollama".to_string(), "llama3.2".to_string())
+                        ("ollama".to_string(), default_ollama_model())
                     };
 
                     let security_spec = if env::var("DEEPSEEK_API_KEY").is_ok() {
@@ -2010,15 +2018,17 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     } else if env::var("GEMINI_API_KEY").is_ok() {
                         ("gemini".to_string(), "gemini-2.0-flash".to_string())
                     } else {
-                        ("ollama".to_string(), "llama3.2".to_string())
+                        ("ollama".to_string(), default_ollama_model())
                     };
 
                     let adjudicator_spec = if env::var("GEMINI_API_KEY").is_ok() {
                         ("gemini".to_string(), "gemini-1.5-pro".to_string())
                     } else if env::var("ANTHROPIC_API_KEY").is_ok() {
                         ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
-                    } else {
+                    } else if env::var("OPENAI_API_KEY").is_ok() {
                         ("openai".to_string(), "gpt-4o".to_string())
+                    } else {
+                        ("ollama".to_string(), default_ollama_model())
                     };
 
                     let audit = EccAuditDebate::new(architect_spec, security_spec, adjudicator_spec);
