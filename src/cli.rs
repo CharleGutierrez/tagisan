@@ -1499,6 +1499,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                                 total_latency.as_secs_f32(),
                                 total_cost_usd
                             );
+                            break;
                         }
                         WorkflowEvent::WorkflowFailed { workflow_id, error } => {
                             println!(
@@ -1507,13 +1508,15 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                                 workflow_id.cyan(),
                                 error.red()
                             );
+                            break;
                         }
                     }
                 }
             });
 
             let result = scheduler.run(&mut workflow_graph, &ctx).await;
-            let _ = event_printer.await;
+            drop(scheduler);
+            let _ = tokio::time::timeout(std::time::Duration::from_millis(500), event_printer).await;
 
             match result {
                 Ok(wf_res) => {
@@ -1958,13 +1961,35 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                                         error
                                     );
                                 }
+                                WorkflowEvent::WorkflowCompleted { workflow_id, total_tasks, completed_tasks, total_latency, total_cost_usd, .. } => {
+                                    println!(
+                                        "\n{} [{}] (Completed: {}/{}, Time: {:.2}s, Spent: ${:.4} USD)",
+                                        "🎉 Pipeline Finished Successfully!".green().bold(),
+                                        workflow_id.cyan(),
+                                        completed_tasks,
+                                        total_tasks,
+                                        total_latency.as_secs_f32(),
+                                        total_cost_usd
+                                    );
+                                    break;
+                                }
+                                WorkflowEvent::WorkflowFailed { workflow_id, error } => {
+                                    println!(
+                                        "\n{} [{}] Error: {}",
+                                        "💥 Pipeline Failed!".red().bold(),
+                                        workflow_id.cyan(),
+                                        error.red()
+                                    );
+                                    break;
+                                }
                                 _ => {}
                             }
                         }
                     });
 
                     let result = scheduler.run(&mut pipeline_graph, &ctx).await;
-                    let _ = event_printer.await;
+                    drop(scheduler);
+                    let _ = tokio::time::timeout(std::time::Duration::from_millis(500), event_printer).await;
 
                     match result {
                         Ok(wf_res) => {
