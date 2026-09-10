@@ -644,40 +644,45 @@ fn default_ollama_model() -> String {
     env::var("OLLAMA_MODEL").unwrap_or_else(|_| "llama3.2".to_string())
 }
 
+fn is_valid_key(key: &str) -> bool {
+    let k = key.trim();
+    !k.is_empty() && !k.starts_with("your_") && !k.ends_with("_key_here")
+}
+
 fn build_engine_context(max_budget: f64) -> EngineContext {
     let mut ctx = EngineContext::new(max_budget);
 
     // Register Anthropic if key exists
     if let Ok(key) = env::var("ANTHROPIC_API_KEY") {
-        if !key.trim().is_empty() {
+        if is_valid_key(&key) {
             ctx.register_provider(Arc::new(AnthropicProvider::new(key)));
         }
     }
 
     // Register OpenAI if key exists
     if let Ok(key) = env::var("OPENAI_API_KEY") {
-        if !key.trim().is_empty() {
+        if is_valid_key(&key) {
             ctx.register_provider(Arc::new(OpenAiCompatibleProvider::openai(key)));
         }
     }
 
     // Register xAI (Grok) if key exists
     if let Ok(key) = env::var("XAI_API_KEY") {
-        if !key.trim().is_empty() {
+        if is_valid_key(&key) {
             ctx.register_provider(Arc::new(OpenAiCompatibleProvider::xai(key)));
         }
     }
 
     // Register DeepSeek if key exists
     if let Ok(key) = env::var("DEEPSEEK_API_KEY") {
-        if !key.trim().is_empty() {
+        if is_valid_key(&key) {
             ctx.register_provider(Arc::new(OpenAiCompatibleProvider::deepseek(key)));
         }
     }
 
     // Register Google Gemini if key exists
     if let Ok(key) = env::var("GEMINI_API_KEY") {
-        if !key.trim().is_empty() {
+        if is_valid_key(&key) {
             ctx.register_provider(Arc::new(GeminiProvider::new(key)));
         }
     }
@@ -806,7 +811,7 @@ async fn load_and_register_mcp_tools(
 }
 
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
-    dotenvy::dotenv().ok();
+    dotenvy::dotenv_override().ok();
 
     let cli = Cli::parse();
 
