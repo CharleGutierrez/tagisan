@@ -50,6 +50,7 @@ Decomposition Guidelines:
 4. Select appropriate tools for each task from the available tools list (e.g. `read_file`, `write_file`, `run_command`, `calculator`, or namespaced MCP tools).
 5. Ensure the graph is strictly acyclic (NO circular dependencies).
 6. Provide a clean, robust final synthesis task that aggregates upstream findings.
+7. The `dependencies` array MUST ONLY contain exact `id` strings of tasks declared in this JSON. NEVER use generic placeholders like 'all_subtasks' or 'previous_tasks' - explicitly list the real task IDs.
 
 Output Format:
 You MUST respond ONLY with a valid JSON object strictly matching this schema:
@@ -198,10 +199,50 @@ impl WorkflowPlanner {
             graph.add_task(task_node)?;
         }
 
-        // 2. Add all dependency edges
-        for task in &planned.tasks {
+        // 2. Add all dependency edges with resilient resolution
+        let all_task_ids: Vec<String> = planned.tasks.iter().map(|t| t.id.clone()).collect();
+
+        for (i, task) in planned.tasks.iter().enumerate() {
             for dep in &task.dependencies {
-                graph.add_dependency(dep, &task.id)?;
+                let d = dep.trim();
+                if d.is_empty() {
+                    continue;
+                }
+                let dep_lower = d.to_lowercase();
+                if dep_lower == "all_subtasks"
+                    || dep_lower == "all"
+                    || dep_lower == "previous_tasks"
+                    || dep_lower == "all_tasks"
+                    || dep_lower == "*"
+                {
+                    // Automatically connect to all preceding tasks in the workflow
+                    for prev in &planned.tasks[..i] {
+                        if prev.id != task.id {
+                            let _ = graph.add_dependency(&prev.id, &task.id);
+                        }
+                    }
+                } else if all_task_ids.contains(&d.to_string()) {
+                    if d != task.id {
+                        let _ = graph.add_dependency(d, &task.id);
+                    }
+                } else {
+                    // Try fuzzy matching or substring match against known task IDs
+                    let matched = all_task_ids.iter().find(|id| {
+                        let id_l = id.to_lowercase();
+                        id_l.contains(&dep_lower) || dep_lower.contains(&id_l)
+                    });
+                    if let Some(real_id) = matched {
+                        if real_id != &task.id {
+                            let _ = graph.add_dependency(real_id, &task.id);
+                        }
+                    } else {
+                        tracing::warn!(
+                            "Ignoring unresolvable dependency '{}' on task '{}'",
+                            d,
+                            task.id
+                        );
+                    }
+                }
             }
         }
 
@@ -310,4 +351,44 @@ pub fn extract_json_block(text: &str) -> Result<String> {
 
     // 3. Return trimmed text as last attempt
     Ok(trimmed.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::OllamaProvider;
+
+    #[test]
+    fn test_all_subtasks_dependency_resolution() {
+        let planner = WorkflowPlanner::new(Arc::new(OllamaProvider::default_local()), "test-model");
+        let ctx = EngineContext::new(5.0);
+
+        let json = r#"{
+            "workflow_name": "Test Workflow",
+            "tasks": [
+                {
+                    "id": "task_a",
+                    "name": "Task A",
+                    "prompt_template": "Do A",
+                    "dependencies": []
+                },
+                {
+                    "id": "task_b",
+                    "name": "Task B",
+                    "prompt_template": "Do B",
+                    "dependencies": []
+                },
+                {
+                    "id": "synthesis",
+                    "name": "Final Synthesis",
+                    "prompt_template": "Combine",
+                    "dependencies": ["all_subtasks"]
+                }
+            ]
+        }"#;
+
+        let graph = planner.parse_plan_json(json, None, &ctx).expect("Should parse and resolve all_subtasks");
+        let order = graph.validate().expect("DAG should be valid and acyclic");
+        assert_eq!(order.last().unwrap(), "synthesis");
+    }
 }
