@@ -251,31 +251,31 @@ fn start_debate_task(
     let default_ollama = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "llama3.2".to_string());
 
     // Determine configured providers for 3 roles
-    let proponent = if std::env::var("ANTHROPIC_API_KEY").is_ok() {
+    let proponent = if ctx.get_provider("anthropic").is_ok() {
         ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
-    } else if std::env::var("OPENAI_API_KEY").is_ok() {
+    } else if ctx.get_provider("openai").is_ok() {
         ("openai".to_string(), "gpt-4o".to_string())
-    } else if std::env::var("GEMINI_API_KEY").is_ok() {
+    } else if ctx.get_provider("gemini").is_ok() {
         ("gemini".to_string(), "gemini-2.0-flash".to_string())
     } else {
         ("ollama".to_string(), default_ollama.clone())
     };
 
-    let adversary = if std::env::var("DEEPSEEK_API_KEY").is_ok() {
+    let adversary = if ctx.get_provider("deepseek").is_ok() {
         ("deepseek".to_string(), "deepseek-reasoner".to_string())
-    } else if std::env::var("XAI_API_KEY").is_ok() {
+    } else if ctx.get_provider("xai").is_ok() {
         ("xai".to_string(), "grok-2-latest".to_string())
-    } else if std::env::var("GEMINI_API_KEY").is_ok() {
+    } else if ctx.get_provider("gemini").is_ok() {
         ("gemini".to_string(), "gemini-2.0-flash".to_string())
     } else {
         ("ollama".to_string(), default_ollama.clone())
     };
 
-    let adjudicator = if std::env::var("GEMINI_API_KEY").is_ok() {
+    let adjudicator = if ctx.get_provider("gemini").is_ok() {
         ("gemini".to_string(), "gemini-1.5-pro".to_string())
-    } else if std::env::var("ANTHROPIC_API_KEY").is_ok() {
+    } else if ctx.get_provider("anthropic").is_ok() {
         ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
-    } else if std::env::var("OPENAI_API_KEY").is_ok() {
+    } else if ctx.get_provider("openai").is_ok() {
         ("openai".to_string(), "gpt-4o".to_string())
     } else {
         ("ollama".to_string(), default_ollama.clone())

@@ -995,27 +995,27 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             println!("Prompt: \"{}\"\n", prompt.italic());
 
             let mut proposers = Vec::new();
-            if env::var("XAI_API_KEY").is_ok() {
+            if ctx.get_provider("xai").is_ok() {
                 proposers.push(("xai".to_string(), "grok-2-latest".to_string()));
             }
-            if env::var("GEMINI_API_KEY").is_ok() {
+            if ctx.get_provider("gemini").is_ok() {
                 proposers.push(("gemini".to_string(), "gemini-2.0-flash".to_string()));
             }
-            if env::var("DEEPSEEK_API_KEY").is_ok() {
+            if ctx.get_provider("deepseek").is_ok() {
                 proposers.push(("deepseek".to_string(), "deepseek-chat".to_string()));
             }
-            if env::var("OPENAI_API_KEY").is_ok() && proposers.is_empty() {
+            if ctx.get_provider("openai").is_ok() && proposers.is_empty() {
                 proposers.push(("openai".to_string(), "gpt-4o-mini".to_string()));
             }
             if proposers.is_empty() {
                 proposers.push(("ollama".to_string(), default_ollama_model()));
             }
 
-            let aggregator = if env::var("ANTHROPIC_API_KEY").is_ok() {
+            let aggregator = if ctx.get_provider("anthropic").is_ok() {
                 ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
-            } else if env::var("GEMINI_API_KEY").is_ok() {
+            } else if ctx.get_provider("gemini").is_ok() {
                 ("gemini".to_string(), "gemini-1.5-pro".to_string())
-            } else if env::var("OPENAI_API_KEY").is_ok() {
+            } else if ctx.get_provider("openai").is_ok() {
                 ("openai".to_string(), "gpt-4o".to_string())
             } else {
                 ("ollama".to_string(), default_ollama_model())
@@ -1062,31 +1062,31 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             println!("\n{}", "⚔️  Starting Dialectical Debate (Tagisan ng Talino)...".bold().magenta());
             println!("Topic: \"{}\"\n", prompt.italic());
 
-            let proponent = if env::var("ANTHROPIC_API_KEY").is_ok() {
+            let proponent = if ctx.get_provider("anthropic").is_ok() {
                 ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
-            } else if env::var("OPENAI_API_KEY").is_ok() {
+            } else if ctx.get_provider("openai").is_ok() {
                 ("openai".to_string(), "gpt-4o".to_string())
-            } else if env::var("GEMINI_API_KEY").is_ok() {
+            } else if ctx.get_provider("gemini").is_ok() {
                 ("gemini".to_string(), "gemini-2.0-flash".to_string())
             } else {
                 ("ollama".to_string(), default_ollama_model())
             };
 
-            let adversary = if env::var("DEEPSEEK_API_KEY").is_ok() {
+            let adversary = if ctx.get_provider("deepseek").is_ok() {
                 ("deepseek".to_string(), "deepseek-reasoner".to_string())
-            } else if env::var("XAI_API_KEY").is_ok() {
+            } else if ctx.get_provider("xai").is_ok() {
                 ("xai".to_string(), "grok-2-latest".to_string())
-            } else if env::var("GEMINI_API_KEY").is_ok() {
+            } else if ctx.get_provider("gemini").is_ok() {
                 ("gemini".to_string(), "gemini-2.0-flash".to_string())
             } else {
                 ("ollama".to_string(), default_ollama_model())
             };
 
-            let adjudicator = if env::var("GEMINI_API_KEY").is_ok() {
+            let adjudicator = if ctx.get_provider("gemini").is_ok() {
                 ("gemini".to_string(), "gemini-1.5-pro".to_string())
-            } else if env::var("ANTHROPIC_API_KEY").is_ok() {
+            } else if ctx.get_provider("anthropic").is_ok() {
                 ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
-            } else if env::var("OPENAI_API_KEY").is_ok() {
+            } else if ctx.get_provider("openai").is_ok() {
                 ("openai".to_string(), "gpt-4o".to_string())
             } else {
                 ("ollama".to_string(), default_ollama_model())
@@ -2006,31 +2006,31 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     println!("\n{}", "🛡️  Starting ECC Adversarial Engineering Audit...".bold().magenta());
                     println!("Architectural Problem / Code: \"{}\"\n", prompt.italic());
 
-                    let architect_spec = if env::var("ANTHROPIC_API_KEY").is_ok() {
+                    let architect_spec = if ctx.get_provider("anthropic").is_ok() {
                         ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
-                    } else if env::var("OPENAI_API_KEY").is_ok() {
+                    } else if ctx.get_provider("openai").is_ok() {
                         ("openai".to_string(), "gpt-4o".to_string())
-                    } else if env::var("GEMINI_API_KEY").is_ok() {
+                    } else if ctx.get_provider("gemini").is_ok() {
                         ("gemini".to_string(), "gemini-1.5-pro".to_string())
                     } else {
                         ("ollama".to_string(), default_ollama_model())
                     };
 
-                    let security_spec = if env::var("DEEPSEEK_API_KEY").is_ok() {
+                    let security_spec = if ctx.get_provider("deepseek").is_ok() {
                         ("deepseek".to_string(), "deepseek-reasoner".to_string())
-                    } else if env::var("XAI_API_KEY").is_ok() {
+                    } else if ctx.get_provider("xai").is_ok() {
                         ("xai".to_string(), "grok-2-latest".to_string())
-                    } else if env::var("GEMINI_API_KEY").is_ok() {
+                    } else if ctx.get_provider("gemini").is_ok() {
                         ("gemini".to_string(), "gemini-2.0-flash".to_string())
                     } else {
                         ("ollama".to_string(), default_ollama_model())
                     };
 
-                    let adjudicator_spec = if env::var("GEMINI_API_KEY").is_ok() {
+                    let adjudicator_spec = if ctx.get_provider("gemini").is_ok() {
                         ("gemini".to_string(), "gemini-1.5-pro".to_string())
-                    } else if env::var("ANTHROPIC_API_KEY").is_ok() {
+                    } else if ctx.get_provider("anthropic").is_ok() {
                         ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
-                    } else if env::var("OPENAI_API_KEY").is_ok() {
+                    } else if ctx.get_provider("openai").is_ok() {
                         ("openai".to_string(), "gpt-4o".to_string())
                     } else {
                         ("ollama".to_string(), default_ollama_model())
