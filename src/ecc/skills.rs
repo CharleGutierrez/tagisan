@@ -169,6 +169,13 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         hexagonal_architecture(),
         backend_patterns(),
         coding_standards(),
+        structured_analysis_yourdon(),
+        modular_coupling_cohesion(),
+        data_dictionary_minispecs(),
+        domain_driven_design(),
+        design_by_contract(),
+        statechart_fsm_modeling(),
+        data_intensive_architecture(),
     ]
 }
 
@@ -503,6 +510,174 @@ pub fn coding_standards() -> EccSkill {
 2. Zero Dead Code: Eliminate unused variables, dead imports, and obsolete comments.
 3. Consistent Formatting: Follow standard linters and formatters (`cargo fmt`, `cargo clippy`, `prettier`).
 4. Self-Documenting Code: Name identifiers for intent rather than implementation mechanics.
+"#,
+    )
+}
+
+/// 21. Structured Analysis Yourdon Skill
+pub fn structured_analysis_yourdon() -> EccSkill {
+    EccSkill::new(
+        "structured-analysis-yourdon",
+        "Modern Structured Analysis (Edward Yourdon): environmental modeling, context diagrams, event-response lists, leveled DFDs, and state transition diagrams",
+        r#"# Modern Structured Analysis & Design (Edward Yourdon)
+
+## 1. The Environmental Model (System Boundary Definition)
+- Statement of Purpose: Define a concise 1-2 sentence statement defining exact objective and boundaries.
+- Context Diagram (DFD Level-0): Represent the system as a single process 0 surrounded by external terminators.
+- Event-Response List: Categorize stimuli into External Events (actors), Temporal Events (time), and State Events (internal thresholds).
+
+## 2. The Behavioral Model (Leveled DFDs)
+- Event Partitioning (DFD Level-1): Draw exactly one process bubble per event in the event list.
+- Data Stores: Shared memory/databases between processes.
+- Level-2 Decomposition: Decompose complex process bubbles until leaf nodes represent single cohesive transformations.
+
+## 3. State Transition Diagrams (STDs)
+- Model time-dependent behavior: States, Transitions, Guard Conditions, and Actions.
+- Ensure exhaustive event handling with zero unhandled state deadlocks.
+"#,
+    )
+}
+
+/// 22. Modular Coupling & Cohesion Skill
+pub fn modular_coupling_cohesion() -> EccSkill {
+    EccSkill::new(
+        "modular-coupling-cohesion",
+        "Structured Systems Design (Meilir Page-Jones): module cohesion hierarchy, coupling reduction, fan-in/fan-out bounds, and transform/transaction factoring",
+        r#"# Modular Systems Design: Cohesion & Coupling (Meilir Page-Jones)
+
+## 1. The 7 Levels of Module Cohesion (Target: Functional Cohesion)
+1. Functional (Highest): Performs exactly one problem-related task. Every line contributes to that task.
+2. Sequential: Output of one step is direct input to the next step.
+3. Communicational: Operates on the same shared input data set.
+4. Procedural (Avoid): Grouped solely by execution order.
+5. Temporal (Avoid): Grouped solely because they execute at the same time (e.g. init_everything).
+6. Logical (Dangerous): Multi-branch switch doing unrelated tasks based on a flag.
+7. Coincidental (Forbidden): Arbitrary groupings (e.g. utils.ts, misc.rs).
+
+## 2. The 5 Levels of Module Coupling (Target: Data Coupling)
+1. Data (Best): Modules communicate solely by passing discrete, typed arguments.
+2. Stamp: Passing composite structs when only a few fields are needed; prune to pass only what is needed.
+3. Control (Avoid): Passing flags (is_admin, mode) that alter internal control flow.
+4. Common (Dangerous): Communicating via global shared mutable memory.
+5. Content (Forbidden): Directly accessing or mutating another module's internal state.
+
+## 3. Structural Factoring Heuristics
+- Fan-out <= 7 (a module coordinates at most 7 subordinates).
+- High fan-in is encouraged (maximize reuse of pure logic).
+- File limit <= 300 lines, function limit <= 50 lines.
+"#,
+    )
+}
+
+/// 23. Data Dictionary & Mini-Specs Skill
+pub fn data_dictionary_minispecs() -> EccSkill {
+    EccSkill::new(
+        "data-dictionary-minispecs",
+        "Structured System Specification (Tom DeMarco): formal data dictionary definitions, structured English mini-specifications, and DFD conservation balancing",
+        r#"# Structured Specification & Mini-Specs (Tom DeMarco)
+
+## 1. Formal Data Dictionary Notation
+- `=` is composed of (definition)
+- `+` AND (concatenation)
+- `[ | ]` OR (exclusive choice / discriminated union)
+- `{}` Iteration / Array (0 or more occurrences)
+- `()` Optional field (0 or 1 occurrence)
+- `*...*` Semantic comment / unit invariant
+
+## 2. Structured English Mini-Specifications
+- Imperative Action Verbs: COMPUTE, VALIDATE, LOOKUP, DISPATCH, PERSIST, EMIT.
+- Deterministic Control Structures: IF/THEN/ELSE, CASE/OF, FOR EACH, WHILE.
+- Zero Ambiguity: Eliminate vague adjectives; all thresholds must be concrete constants.
+
+## 3. Conservation & Balancing Rules
+- Rule of Data Conservation: A process cannot create data from nothing or discard necessary data.
+- Rule of Leveled Balancing: Child diagram inputs and outputs must exactly equal parent process bubble inputs and outputs.
+"#,
+    )
+}
+
+/// 24. Domain-Driven Design Skill
+pub fn domain_driven_design() -> EccSkill {
+    EccSkill::new(
+        "domain-driven-design",
+        "Domain-Driven Design (Eric Evans & Vlad Khononov): Ubiquitous Language, Bounded Contexts, Aggregate Roots, Value Objects, Domain Events, and Anti-Corruption Layers",
+        r#"# Domain-Driven Design (Eric Evans & Vlad Khononov)
+
+## 1. Strategic Design
+- Ubiquitous Language: Shared, strictly defined domain vocabulary in code and speech.
+- Bounded Contexts: Explicit architectural and linguistic boundaries; never merge contexts into god-models.
+- Anti-Corruption Layer (ACL): Translate external/legacy models into pure internal domain types.
+
+## 2. Tactical Design
+- Value Objects: Immutable, self-validating, structural equality, no identity (e.g. Money, DocketNumber).
+- Entities: Enduring identity across lifecycle; mutate only via domain methods.
+- Aggregates & Aggregate Roots: Transactional consistency boundary; external callers reference ONLY the root.
+- Domain Events: Past-tense immutable records (CaseRaffled, FeePaid) decoupling side effects.
+"#,
+    )
+}
+
+/// 25. Design by Contract Skill
+pub fn design_by_contract() -> EccSkill {
+    EccSkill::new(
+        "design-by-contract",
+        "Design by Contract (Bertrand Meyer): preconditions, postconditions, class invariants, defensive boundary validation, and fail-fast invariant enforcement",
+        r#"# Design by Contract (Bertrand Meyer)
+
+## 1. The Contract Triad
+- Preconditions (`require`): Obligations on the caller. Violation indicates a caller bug; fail-fast.
+- Postconditions (`ensure`): Guarantees made by the callee. Violation indicates a callee bug.
+- Class/Aggregate Invariants (`invariant`): Truths that must hold before and after every public method.
+
+## 2. Contract Principles
+- Distinguish contract violations (programmer bugs -> panic/assert) from expected domain errors (user inputs -> Result::Err).
+- Never catch and swallow contract violations.
+- Derive property tests directly from contract preconditions and postconditions.
+"#,
+    )
+}
+
+/// 26. Statechart & FSM Modeling Skill
+pub fn statechart_fsm_modeling() -> EccSkill {
+    EccSkill::new(
+        "statechart-fsm-modeling",
+        "Hierarchical Statecharts & FSM Modeling (David Harel & Ian Horrocks): finite state machines, orthogonal regions, guarded transitions, entry/exit actions, and deadlock-free event lifecycles",
+        r#"# Hierarchical Statecharts & FSM Modeling (David Harel & Ian Horrocks)
+
+## 1. Statechart Formalisms
+- Superstates & Substates: Hierarchical state clustering to eliminate transition explosion.
+- Orthogonal Regions: Concurrent independent state machines in a single entity (e.g. Judicial Track || Financial Track).
+- Guarded Transitions: Event [GuardCondition] / Action -> TargetState.
+- Entry/Exit Actions: Guaranteed execution on entering and leaving states.
+
+## 2. Determinism & Safety
+- Run-to-Completion: Events are fully processed before the next event begins.
+- Exhaustive Coverage: In Rust/TypeScript, model states as closed enums; handle every event explicitly.
+- Make invalid transitions unrepresentable in the type system.
+"#,
+    )
+}
+
+/// 27. Data-Intensive Architecture Skill
+pub fn data_intensive_architecture() -> EccSkill {
+    EccSkill::new(
+        "data-intensive-architecture",
+        "Data-Intensive Applications Architecture (Martin Kleppmann): transactional isolation, ACID guarantees, idempotency keys, write-ahead logs, CQRS, eventual consistency, and distributed consensus",
+        r#"# Designing Data-Intensive Architecture (Martin Kleppmann)
+
+## 1. The Core Trinity
+- Reliability: Fault tolerance; absorb individual component faults without system failures.
+- Scalability: Characterize load (throughput, fan-out, p99 latencies) and scale bottlenecks.
+- Maintainability: Operability, simplicity, and schema evolvability.
+
+## 2. Transactions & Concurrency
+- Isolation levels: Understand dirty reads, non-repeatable reads, phantom reads, and write skew.
+- Use Serializable or explicit pessimistic locking (SELECT FOR UPDATE) for financial and judicial allocations.
+
+## 3. Distributed Patterns
+- Idempotency Keys: Enforce on every mutating endpoint and tool call.
+- Write-Ahead Log (WAL): Canonical append-only log as source of truth; derived views updated asynchronously.
+- CQRS: Separate write command validation from high-performance read query projections.
 "#,
     )
 }
