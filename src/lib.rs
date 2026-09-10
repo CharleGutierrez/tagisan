@@ -76,7 +76,7 @@ pub use swarm::{
     PipelineStageOutput, ReplCommand, ReviewCriterion, SessionMetadata, SessionRecord, SessionStore,
     SwarmCoordinator, SwarmMember, TeamConsensusEngine, VotingRule,
 };
-pub use tui::run_debate_tui;
+pub use tui::{run_debate_tui, Spinner};
 pub use types::{
     ChatSession, CompletionRequest, CompletionResponse, ContentBlock, FinishReason, Message,
     ProviderCapabilities, Role, StreamChunk, StreamChunkDelta, TokenUsage, ToolDefinition,

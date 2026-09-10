@@ -12,7 +12,7 @@ use crate::{
     EngineContext, GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider,
     OpenAiCompatibleProvider, ProviderCapabilities, ReadFileTool, RunCommandTool, StrategyInput,
     StreamChunkDelta, TagisanError, ToolHandler, ToolRegistry, ViewImageTool, WorkflowEvent, WorkflowPlanner, WriteFileTool,
-    McpManager, WorktreeSandbox,
+    McpManager, WorktreeSandbox, Spinner,
     InteractiveRepl, SessionStore,
     SwarmCoordinator, SwarmMember, TeamConsensusEngine, VotingRule,
 };
@@ -967,7 +967,18 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let req = session
                 .build_request(model_name.clone())
                 .with_cancellation(ctx.cancellation_token.clone());
-            let resp = prov.complete(req).await?;
+
+            let spinner = Spinner::start(format!(
+                "Thinking with {} [{}]...",
+                provider_id.cyan().bold(),
+                model_name.yellow().bold()
+            ));
+            let resp = prov.complete(req).await;
+            match &resp {
+                Ok(r) => spinner.success(format!("Response received in {:.2}s", r.latency.as_secs_f32())),
+                Err(e) => spinner.failure(format!("Request failed: {}", e)),
+            }
+            let resp = resp?;
 
             ctx.budget_tracker.record_usage(&model_name, &resp.usage)?;
 
@@ -1027,7 +1038,13 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 system_instruction: None,
             };
 
-            let output = moa.execute(input, &ctx).await?;
+            let spinner = Spinner::start("Gathering proposals and synthesizing with Mixture-of-Agents...");
+            let output = moa.execute(input, &ctx).await;
+            match &output {
+                Ok(out) => spinner.success(format!("MoA finished successfully in {:.2}s", out.total_latency.as_secs_f32())),
+                Err(e) => spinner.failure(format!("MoA failed: {}", e)),
+            }
+            let output = output?;
 
             for step in &output.intermediate_steps {
                 println!(
@@ -1098,7 +1115,13 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 system_instruction: None,
             };
 
-            let output = debate.execute(input, &ctx).await?;
+            let spinner = Spinner::start("Executing dialectical debate (Thesis -> Antithesis -> Synthesis)...");
+            let output = debate.execute(input, &ctx).await;
+            match &output {
+                Ok(out) => spinner.success(format!("Debate completed in {:.2}s", out.total_latency.as_secs_f32())),
+                Err(e) => spinner.failure(format!("Debate failed: {}", e)),
+            }
+            let output = output?;
 
             for step in &output.intermediate_steps {
                 println!("\n{}", format!("--- {} ---", step.step_name).bold().cyan());
@@ -1248,12 +1271,18 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 agent = agent.with_memory(mem_store, emb_prov);
             }
 
+            let spinner = Spinner::start("Autonomous Agent reasoning and executing tools...");
             let result = if let Some(ref img_path) = image {
                 let img_block = ContentBlock::from_image_file(img_path)?;
-                agent.run_with_content(vec![ContentBlock::text(&prompt), img_block], &ctx).await?
+                agent.run_with_content(vec![ContentBlock::text(&prompt), img_block], &ctx).await
             } else {
-                agent.run(&prompt, &ctx).await?
+                agent.run(&prompt, &ctx).await
             };
+            match &result {
+                Ok(r) => spinner.success(format!("Agent concluded in {} iteration(s) ({:.2}s)", r.iterations, r.total_latency.as_secs_f32())),
+                Err(e) => spinner.failure(format!("Agent failed: {}", e)),
+            }
+            let result = result?;
 
             let sanitized_result = if shield_active {
                 AutonomousAgent::sanitize_agent_result(result)
@@ -1359,7 +1388,13 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     println!("\n{}", "🧠 Decomposing Goal with Autonomous Planner...".bold().magenta());
                     println!("Objective: \"{}\"\n", goal.italic());
                     let planner = WorkflowPlanner::new(prov.clone(), model_name.clone()).with_tools(registry.clone());
-                    planner.plan(&goal, &ctx).await?
+                    let spinner = Spinner::start("Formulating DAG workflow plan with LLM...");
+                    let plan_res = planner.plan(&goal, &ctx).await;
+                    match &plan_res {
+                        Ok(graph) => spinner.success(format!("Formulated workflow DAG ({} tasks)", graph.len())),
+                        Err(e) => spinner.failure(format!("Workflow planning failed: {}", e)),
+                    }
+                    plan_res?
                 }
                 (Some(WorkflowAction::Run { pipeline }), _, _, _) => {
                     println!("\n{}", "⚙️ Building Workflow from Pipeline Specification...".bold().cyan());
@@ -1371,7 +1406,13 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     println!("\n{}", "🧠 Decomposing Goal with Autonomous Planner...".bold().magenta());
                     println!("Objective: \"{}\"\n", goal.italic());
                     let planner = WorkflowPlanner::new(prov.clone(), model_name.clone()).with_tools(registry.clone());
-                    planner.plan(&goal, &ctx).await?
+                    let spinner = Spinner::start("Formulating DAG workflow plan with LLM...");
+                    let plan_res = planner.plan(&goal, &ctx).await;
+                    match &plan_res {
+                        Ok(graph) => spinner.success(format!("Formulated workflow DAG ({} tasks)", graph.len())),
+                        Err(e) => spinner.failure(format!("Workflow planning failed: {}", e)),
+                    }
+                    plan_res?
                 }
                 (_, _, Some(pipeline), _) => {
                     println!("\n{}", "⚙️ Building Workflow from Pipeline Specification...".bold().cyan());
@@ -1389,7 +1430,13 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         println!("\n{}", "🧠 Decomposing Goal with Autonomous Planner...".bold().magenta());
                         println!("Objective: \"{}\"\n", obj.italic());
                         let planner = WorkflowPlanner::new(prov.clone(), model_name.clone()).with_tools(registry.clone());
-                        planner.plan(&obj, &ctx).await?
+                        let spinner = Spinner::start("Formulating DAG workflow plan with LLM...");
+                        let plan_res = planner.plan(&obj, &ctx).await;
+                        match &plan_res {
+                            Ok(graph) => spinner.success(format!("Formulated workflow DAG ({} tasks)", graph.len())),
+                            Err(e) => spinner.failure(format!("Workflow planning failed: {}", e)),
+                        }
+                        plan_res?
                     }
                 }
                 (None, None, None, None) => {
@@ -1430,6 +1477,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             let event_printer = tokio::spawn(async move {
+                let mut active_spinner: Option<Spinner> = None;
                 while let Some(evt) = event_rx.recv().await {
                     match evt {
                         WorkflowEvent::WorkflowStarted { workflow_id, total_tasks } => {
@@ -1441,18 +1489,25 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                             );
                         }
                         WorkflowEvent::TaskStarted { task_id, task_name, attempt } => {
-                            println!(
-                                "  {} {} ({}) [Attempt {}]",
-                                "⏳ Starting Task:".yellow().bold(),
-                                task_name.bold(),
-                                task_id.dimmed(),
-                                attempt
-                            );
+                            if let Some(s) = active_spinner.take() {
+                                s.stop();
+                            }
+                            active_spinner = Some(Spinner::start(format!(
+                                "Running task '{}' ({}) [Attempt {}]...",
+                                task_name, task_id, attempt
+                            )));
                         }
                         WorkflowEvent::TaskProgress { task_id, message } => {
-                            println!("    ↳ [{}] {}", task_id.dimmed(), message.italic());
+                            if let Some(ref s) = active_spinner {
+                                s.set_message(format!("[{}] {}", task_id, message));
+                            } else {
+                                println!("    ↳ [{}] {}", task_id.dimmed(), message.italic());
+                            }
                         }
                         WorkflowEvent::TaskRetry { task_id, attempt, max_retries, delay, error } => {
+                            if let Some(s) = active_spinner.take() {
+                                s.stop();
+                            }
                             println!(
                                 "  {} Task '{}' (attempt {}/{}) retrying in {:.1}s: {}",
                                 "🔄 Retry:".yellow().bold(),
@@ -1464,24 +1519,43 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                             );
                         }
                         WorkflowEvent::TaskCompleted { task_id, output } => {
-                            println!(
-                                "  {} Task '{}' completed in {:.2}s (Tokens: {})",
-                                "✅ Task Succeeded:".green().bold(),
-                                task_id.cyan(),
-                                output.latency.as_secs_f32(),
-                                output.usage.prompt_tokens + output.usage.completion_tokens
-                            );
+                            if let Some(s) = active_spinner.take() {
+                                s.success(format!(
+                                    "Task '{}' completed in {:.2}s (Tokens: {})",
+                                    task_id,
+                                    output.latency.as_secs_f32(),
+                                    output.usage.prompt_tokens + output.usage.completion_tokens
+                                ));
+                            } else {
+                                println!(
+                                    "  {} Task '{}' completed in {:.2}s (Tokens: {})",
+                                    "✅ Task Succeeded:".green().bold(),
+                                    task_id.cyan(),
+                                    output.latency.as_secs_f32(),
+                                    output.usage.prompt_tokens + output.usage.completion_tokens
+                                );
+                            }
                         }
                         WorkflowEvent::TaskFailed { task_id, error, attempts } => {
-                            println!(
-                                "  {} Task '{}' failed after {} attempt(s): {}",
-                                "❌ Task Failed:".red().bold(),
-                                task_id.cyan(),
-                                attempts,
-                                error.red()
-                            );
+                            if let Some(s) = active_spinner.take() {
+                                s.failure(format!(
+                                    "Task '{}' failed after {} attempt(s): {}",
+                                    task_id, attempts, error
+                                ));
+                            } else {
+                                println!(
+                                    "  {} Task '{}' failed after {} attempt(s): {}",
+                                    "❌ Task Failed:".red().bold(),
+                                    task_id.cyan(),
+                                    attempts,
+                                    error.red()
+                                );
+                            }
                         }
                         WorkflowEvent::TaskSkipped { task_id, reason } => {
+                            if let Some(s) = active_spinner.take() {
+                                s.stop();
+                            }
                             println!(
                                 "  {} Task '{}' skipped: {}",
                                 "⚠️  Task Skipped:".yellow(),
@@ -1490,6 +1564,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                             );
                         }
                         WorkflowEvent::WorkflowCompleted { workflow_id, total_tasks, completed_tasks, total_latency, total_cost_usd, .. } => {
+                            if let Some(s) = active_spinner.take() {
+                                s.stop();
+                            }
                             println!(
                                 "\n{} [{}] (Completed: {}/{}, Time: {:.2}s, Spent: ${:.4} USD)",
                                 "🎉 Workflow Finished Successfully!".green().bold(),
@@ -1502,6 +1579,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                             break;
                         }
                         WorkflowEvent::WorkflowFailed { workflow_id, error } => {
+                            if let Some(s) = active_spinner.take() {
+                                s.stop();
+                            }
                             println!(
                                 "\n{} [{}] Error: {}",
                                 "💥 Workflow Failed!".red().bold(),
@@ -1924,6 +2004,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     }
 
                     let event_printer = tokio::spawn(async move {
+                        let mut active_spinner: Option<Spinner> = None;
                         while let Some(evt) = event_rx.recv().await {
                             match evt {
                                 WorkflowEvent::WorkflowStarted { workflow_id, total_tasks } => {
@@ -1935,33 +2016,52 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                                     );
                                 }
                                 WorkflowEvent::TaskStarted { task_id, task_name, attempt } => {
-                                    println!(
-                                        "  {} {} ({}) [Attempt {}]",
-                                        "⏳ Starting Stage:".yellow().bold(),
-                                        task_name.bold(),
-                                        task_id.dimmed(),
-                                        attempt
-                                    );
+                                    if let Some(s) = active_spinner.take() {
+                                        s.stop();
+                                    }
+                                    active_spinner = Some(Spinner::start(format!(
+                                        "Executing Stage: {} ({}) [Attempt {}]...",
+                                        task_name, task_id, attempt
+                                    )));
                                 }
                                 WorkflowEvent::TaskCompleted { task_id, output } => {
-                                    println!(
-                                        "  {} [{}] Finished in {:.2}s ({} tokens)",
-                                        "✔ Completed:".green().bold(),
-                                        task_id.cyan(),
-                                        output.latency.as_secs_f32(),
-                                        output.usage.prompt_tokens + output.usage.completion_tokens
-                                    );
+                                    if let Some(s) = active_spinner.take() {
+                                        s.success(format!(
+                                            "Stage '{}' finished in {:.2}s ({} tokens)",
+                                            task_id,
+                                            output.latency.as_secs_f32(),
+                                            output.usage.prompt_tokens + output.usage.completion_tokens
+                                        ));
+                                    } else {
+                                        println!(
+                                            "  {} [{}] Finished in {:.2}s ({} tokens)",
+                                            "✔ Completed:".green().bold(),
+                                            task_id.cyan(),
+                                            output.latency.as_secs_f32(),
+                                            output.usage.prompt_tokens + output.usage.completion_tokens
+                                        );
+                                    }
                                 }
                                 WorkflowEvent::TaskFailed { task_id, error, attempts } => {
-                                    println!(
-                                        "  {} [{}] Failed after {} attempts: {}",
-                                        "❌ Failed:".red().bold(),
-                                        task_id.red(),
-                                        attempts,
-                                        error
-                                    );
+                                    if let Some(s) = active_spinner.take() {
+                                        s.failure(format!(
+                                            "Stage '{}' failed after {} attempts: {}",
+                                            task_id, attempts, error
+                                        ));
+                                    } else {
+                                        println!(
+                                            "  {} [{}] Failed after {} attempts: {}",
+                                            "❌ Failed:".red().bold(),
+                                            task_id.red(),
+                                            attempts,
+                                            error
+                                        );
+                                    }
                                 }
                                 WorkflowEvent::WorkflowCompleted { workflow_id, total_tasks, completed_tasks, total_latency, total_cost_usd, .. } => {
+                                    if let Some(s) = active_spinner.take() {
+                                        s.stop();
+                                    }
                                     println!(
                                         "\n{} [{}] (Completed: {}/{}, Time: {:.2}s, Spent: ${:.4} USD)",
                                         "🎉 Pipeline Finished Successfully!".green().bold(),
@@ -1974,6 +2074,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                                     break;
                                 }
                                 WorkflowEvent::WorkflowFailed { workflow_id, error } => {
+                                    if let Some(s) = active_spinner.take() {
+                                        s.stop();
+                                    }
                                     println!(
                                         "\n{} [{}] Error: {}",
                                         "💥 Pipeline Failed!".red().bold(),

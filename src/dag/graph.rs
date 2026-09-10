@@ -129,6 +129,11 @@ impl WorkflowGraph {
         self.graph.node_count()
     }
 
+    /// Number of tasks in the graph
+    pub fn len(&self) -> usize {
+        self.graph.node_count()
+    }
+
     /// Total number of dependency edges in the graph
     pub fn edge_count(&self) -> usize {
         self.graph.edge_count()

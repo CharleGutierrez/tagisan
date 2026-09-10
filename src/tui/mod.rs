@@ -1,3 +1,6 @@
+pub mod spinner;
+pub use spinner::Spinner;
+
 use crate::engine::EngineContext;
 use crate::error::Result;
 use crate::types::{StreamChunkDelta, TokenUsage};
