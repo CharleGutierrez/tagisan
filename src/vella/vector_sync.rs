@@ -138,7 +138,7 @@ impl VellaVectorSyncBridge {
         let mut pulled = 0;
         let mut updated = 0;
 
-        let mut local_docs = self.local_store.documents();
+        let local_docs = self.local_store.documents();
 
         for record in remote.values() {
             let doc = VectorDocument::new(

@@ -1,0 +1,18 @@
+{
+  "name": "modelscope-run-tracker",
+  "version": "1.0.0",
+  "description": "Track experiment runs with local manifests, metric logs, artifact catalogs, and summary exports for ModelScope workflows.",
+  "author": {
+    "name": "hyf020908"
+  },
+  "repository": "https://github.com/hyf020908/modelscope-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "modelscope",
+    "experiment-tracking",
+    "metrics",
+    "artifacts",
+    "runs",
+    "reports"
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alibaba Cloud ACS Agent Sandbox"
+  short_description: "Operate ACS sandboxes with OSS or NAS storage"
+  default_prompt: "Use $alicloud-acs-agent-sandbox to create, mount OSS or NAS, validate, inspect, or safely release an ACS Agent Sandbox."

@@ -24,11 +24,16 @@ impl OpenAiCompatibleProvider {
         base_url: impl Into<String>,
         api_key: impl Into<String>,
     ) -> Self {
+        let client = reqwest::Client::builder()
+            .connect_timeout(std::time::Duration::from_secs(10))
+            .timeout(std::time::Duration::from_secs(180))
+            .build()
+            .unwrap_or_else(|_| reqwest::Client::new());
         Self {
             provider_id,
             base_url: base_url.into(),
             api_key: api_key.into(),
-            client: reqwest::Client::new(),
+            client,
         }
     }
 

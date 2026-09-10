@@ -1,0 +1,4 @@
+interface:
+  display_name: "Salesforce Develop"
+  short_description: "Salesforce development workflow and guardrails / 开发规约与文档约束"
+  default_prompt: "Use $salesforce-develop to handle this Salesforce development task by first reading the matching *-开发文档.md, then follow the required comment, debug, backup, and documentation rules."

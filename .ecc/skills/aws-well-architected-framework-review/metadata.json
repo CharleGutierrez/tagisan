@@ -1,0 +1,83 @@
+{
+  "version": "3.0.0",
+  "organization": "AWS",
+  "date": "July 2026",
+  "abstract": "Perform a full or pillar-scoped AWS Well-Architected Framework review by analyzing code, IaC, and configurations to produce evidence-backed findings with risk assessment and prioritized remediation. Supports all 6 pillars as deep-dive assessments.",
+  "references": [
+    "https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html"
+  ],
+  "triggers": [
+    "full Well-Architected review",
+    "comprehensive architecture review",
+    "all pillars assessment",
+    "WA review",
+    "cross-pillar analysis",
+    "architecture health check",
+    "workload assessment",
+    "Well-Architected Framework evaluation",
+    "security assessment",
+    "security posture review",
+    "IAM review",
+    "deep-dive into IAM policies and encryption",
+    "assess my security",
+    "reliability improvement plan",
+    "identify single points of failure",
+    "fault tolerance review",
+    "assess disaster recovery",
+    "cost optimization review",
+    "reduce AWS spend",
+    "right-size instances",
+    "optimize our AWS costs",
+    "performance efficiency assessment",
+    "identify bottlenecks",
+    "latency analysis",
+    "sustainability optimization",
+    "reduce carbon footprint",
+    "resource efficiency audit",
+    "operational excellence assessment",
+    "CI/CD and observability review",
+    "assess operational readiness",
+    "score my app against Well-Architected",
+    "WA scorecard",
+    "grade this implementation",
+    "give me a score matrix",
+    "how does my architecture score"
+  ],
+  "not_for": [
+    "learning WA concepts or generating visual artifacts (use wa-builder instead)",
+    "creating architecture decision records (use wa-builder in ADR mode instead)",
+    "migration readiness assessment (use migration-readiness instead)",
+    "generating guardrails or enforcement controls (use wa-guardrails instead)",
+    "facilitating a conversational WAFR with a customer (use wafr-facilitator instead)"
+  ],
+  "metadata": {
+    "service": [
+      "well-architected",
+      "iam",
+      "kms",
+      "vpc",
+      "guardduty",
+      "security-hub",
+      "backup",
+      "auto-scaling",
+      "cloudwatch",
+      "cost-explorer"
+    ],
+    "task": [
+      "review",
+      "assess",
+      "audit",
+      "optimize"
+    ],
+    "persona": [
+      "solutions-architect",
+      "developer",
+      "platform-engineer",
+      "security-engineer",
+      "devops-engineer"
+    ],
+    "workload": [
+      "any"
+    ]
+  }
+}

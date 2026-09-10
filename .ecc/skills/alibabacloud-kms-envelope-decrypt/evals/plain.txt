@@ -1,0 +1,2 @@
+This is a test plaintext file used for envelope encryption evals.
+The content does not matter -- only that the tool correctly encrypts and decrypts it.

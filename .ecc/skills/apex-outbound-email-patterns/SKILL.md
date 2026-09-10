@@ -1,0 +1,100 @@
+---
+name: apex-outbound-email-patterns
+description: "Apex outbound email via Messaging.SingleEmailMessage \u2014 OrgWideEmailAddress,\
+  \ ReplyTo and Reply-To header semantics, EmailTemplate merging with whatId/targetObjectId,\
+  \ attachment patterns, daily governor limits, and transactional sends vs Email Alerts.\
+  \ NOT for processing email that arrives into Salesforce \u2014 use apex/apex-email-services.\
+  \ NOT for Marketing Cloud sends \u2014 use apex/marketing-cloud-api."
+---
+# Apex Outbound Email Patterns
+
+Outbound email from Apex looks simple — instantiate
+`Messaging.SingleEmailMessage`, populate fields, call
+`Messaging.sendEmail`. The patterns that turn it into a reliable
+production integration are not in the SOAP API guide: they live in
+the interaction between `OrgWideEmailAddress`, the
+`whatId`/`targetObjectId` merge contract, the daily governor cap
+of 5,000 external emails, and the differences between
+SingleEmailMessage and Email Alerts triggered from Flow.
+
+The recurring questions are: how do we send "from a shared
+support@" address rather than the running user; how do we make
+replies go to a routing address rather than the From; how do we
+merge an EmailTemplate against an Account when the template is
+keyed to a Contact; and why does `setHtmlBody` ignore merge
+fields. These have specific answers — most of them involve
+`setOrgWideEmailAddressId`, `setReplyTo`, or
+`renderStoredEmailTemplate`.
+
+Two governor facts shape every design decision. First, the org's
+daily external-email limit is 5,000 and counts every recipient on
+every send (a 4-recipient send burns 4 from the bucket). Second,
+sending email is treated as a non-transactional side effect — if
+your transaction rolls back, the email still goes out. That last
+part traps every team at least once.
+
+## Recommended Workflow
+
+1. **Decide the send mechanism first.** If the trigger is admin-
+   configurable (a record meeting criteria), use a Flow Email Alert
+   — admins can edit the template, the recipient logic, and the
+   from-address without a deployment. Reach for `Messaging.SingleEmailMessage`
+   only when you need conditional content, attachments computed at
+   runtime, or programmatic recipient selection.
+2. **Configure the OrgWideEmailAddress before writing Apex.**
+   Setup → Email → Organization-Wide Addresses, verify the address,
+   note its Id (or query
+   `SELECT Id FROM OrgWideEmailAddress WHERE Address='support@acme.com'`).
+   Without this, every send shows the running user as From.
+3. **Build the message with `setOrgWideEmailAddressId` first, then
+   `setReplyTo`.** The OWE controls the visible From; the
+   ReplyTo controls where replies land. They are distinct concerns
+   and are commonly confused.
+4. **For template-merged sends, use `renderStoredEmailTemplate`
+   when the merge target is not a Contact/Lead/User.** The
+   built-in `setTemplateId` + `setTargetObjectId` path requires a
+   Contact, Lead, or User. Anything else (Account, Case, custom
+   object) needs the explicit render call with a `whatId`.
+5. **Always set `setSaveAsActivity(true)` for record-related sends.**
+   This writes an EmailMessage record to the related-to object's
+   activity timeline — invaluable for support audits.
+6. **Handle the `Messaging.SendEmailResult[]` return value.** It is
+   a list parallel to the input — each element carries `isSuccess()`,
+   `getErrors()`, and a status code. Treating the call as fire-and-
+   forget hides per-recipient failures.
+7. **Cap and observe daily-limit errors.** How the daily-limit failure
+   reaches you depends on the `allOrNothing` argument, and getting this
+   wrong means the handler silently never runs:
+   - `sendEmail(msgs)` or `sendEmail(msgs, true)` — throws
+     `System.EmailException` (**not** `System.HandledException`, which is
+     the generic Visualforce/Aura surface exception and will never match
+     here). Catch `EmailException` and check for
+     `SINGLE_EMAIL_LIMIT_EXCEEDED`.
+   - `sendEmail(msgs, false)` — does **not** throw at all. Inspect each
+     `Messaging.SendEmailResult`: `isSuccess()` and `getErrors()`, whose
+     entries carry the status code.
+
+   Then degrade gracefully (queue for retry the next day, surface to
+   monitoring). 5,000/day is per-org, not per-user.
+
+## SingleEmailMessage vs Email Alert vs MassEmailMessage
+
+- **SingleEmailMessage**: programmatic; **up to 150 recipients per
+  message**, counted as the *combined total* of `toAddresses` +
+  `ccAddresses` + `bccAddresses` — not 150 in each. Each of those three
+  fields is separately capped at 4,000 bytes, so long address lists can
+  hit the byte cap before the recipient count. Supports attachments,
+  OWE, ReplyTo, custom merge.
+- **Email Alert (Flow)**: declarative; admin-editable template and
+  recipient set; respects OWE; cannot conditionally branch attachments.
+- **MassEmailMessage**: deprecated for new work; keep only legacy
+  references; use SingleEmailMessage in a loop with proper bulkification.
+
+## What This Skill Does Not Cover
+
+| Topic | See instead |
+|---|---|
+| Inbound email handling | `apex/inbound-email-handler` |
+| Marketing Cloud sends from Salesforce | `integration/marketing-cloud-rest-api` |
+| Email-to-Case routing rules | `admin/email-to-case-config` |
+| Email Deliverability settings (Setup → Email) | `admin/email-deliverability` |

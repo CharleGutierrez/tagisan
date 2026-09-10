@@ -1,0 +1,57 @@
+---
+name: lwc-internationalization
+description: "Build LWCs with translation, locale-aware formatting, and RTL layouts. Triggers:\
+  \ LWC i18n, custom labels LWC, RTL layout. NOT for Translation Workbench admin setup\
+  \ \u2014 use admin/custom-label-management. NOT for org-wide multi-language config\
+  \ \u2014 use admin/multi-language-and-translation."
+---
+# LWC Internationalization
+
+LWC internationalization uses `@salesforce/label/c.MyLabel` to import translated strings from Custom Labels and `@salesforce/i18n/locale` + `lightning-formatted-*` for locale-aware formatting. RTL is supported via the platform's dir attribute; most SLDS styles already mirror correctly. This skill walks through label extraction, locale-aware number/date/currency formatting, pluralization patterns, and RTL audit checklist that together ensure a component works the same for users in every active language and locale without string concatenation pitfalls.
+
+## Adoption Signals
+
+Any LWC used in an org with multiple active locales.
+
+- Required when string concatenation, plural forms, or relative-time formatting hard-codes English in the template.
+- Required when the layout must support RTL languages (Arabic, Hebrew) — bidirectional CSS is non-trivial.
+
+## Recommended Workflow
+
+1. Extract every user-visible string into Custom Labels; translate via Translation Workbench.
+2. Import with `import MY_LABEL from '@salesforce/label/c.MyLabel'`.
+3. Format numbers/dates with `<lightning-formatted-number>`, `<lightning-formatted-date-time>` — they honor user locale.
+4. Audit for hard-coded punctuation / date formats (e.g., `MM/DD/YYYY` string-concat).
+5. Test in at least one LTR + RTL locale (e.g., en-US + he-IL).
+
+## Key Considerations
+
+- Custom Labels hold up to 1,000 characters, 5,000 per org (managed-package labels don't count). The often-quoted 255 is a text-field limit, not this one — don't reach for Custom Metadata for a paragraph that fits, because only labels get Translation Workbench.
+- Pluralization is not built-in; template a simple singular/plural Custom Label pair.
+- Date formatting differences (US vs EU) silently cause misread reports.
+- RTL testing reveals icon/chevron directionality bugs.
+
+## Worked Examples (see `references/examples.md`)
+
+- *Hardcoded strings audit* — New component 'Save' label
+- *Locale-aware number* — Currency display
+
+## Common Gotchas (see `references/gotchas.md`)
+
+- **String concat dates** — 'MM/DD/YYYY' reads as DD/MM in EU.
+- **Label over 1,000 chars** — Deploy fails.
+- **RTL icon mirroring** — Chevron points wrong way.
+
+## Top LLM Anti-Patterns (full list in `references/llm-anti-patterns.md`)
+
+- Hard-coded English strings
+- Concatenating dates/numbers
+- Skipping RTL test
+
+## Official Sources Used
+
+- Lightning Web Components Developer Guide — https://developer.salesforce.com/docs/platform/lwc/guide/
+- Custom Labels (up to 5,000 per org, 1,000 characters each) — https://help.salesforce.com/s/articleView?id=platform.cl_about.htm&type=5
+- Lightning Data Service — https://developer.salesforce.com/docs/platform/lwc/guide/data-wire-service-about.html
+- LWC Recipes — https://github.com/trailheadapps/lwc-recipes
+- SLDS 2 — https://www.lightningdesignsystem.com/2e/

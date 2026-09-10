@@ -1,0 +1,211 @@
+# LLM Anti-Patterns — Guest User Security Audit
+
+Mistakes AI assistants commonly make when generating Apex / Aura /
+LWC for guest-user-reachable surfaces.
+
+---
+
+## Anti-Pattern 1: `without sharing` on a public-site Apex class
+
+**What the LLM generates.**
+
+```apex
+public without sharing class PublicAccountService {
+    @AuraEnabled(cacheable=true)
+    public static List<Account> findAccounts(String name) {
+        return [SELECT Id, Name FROM Account WHERE Name LIKE :('%' + name + '%')];
+    }
+}
+```
+
+**Why it happens.** `without sharing` is a common copy-paste; the
+LLM doesn't surface the guest exposure.
+
+**Correct pattern.** `with sharing` for guest-reachable classes.
+Restrict the SOQL by an explicit "public" flag. Use bind variables
+to avoid SOQL injection. Apply `WITH USER_MODE` — not
+`WITH SECURITY_ENFORCED`, which was removed at API 67.0 and no
+longer compiles in a class pinned there.
+
+**Detection hint.** Any `@AuraEnabled` or `@RestResource` Apex
+class declared `without sharing`.
+
+---
+
+## Anti-Pattern 2: `@RestResource(urlMapping=...)` without auth verification
+
+**What the LLM generates.**
+
+```apex
+@RestResource(urlMapping='/PublicData/*')
+global without sharing class PublicDataApi {
+    @HttpGet
+    global static List<Account> doGet() { return [SELECT Id, Name FROM Account]; }
+}
+```
+
+**Why it happens.** Quick public-API pattern.
+
+**Correct pattern.** REST endpoints exposed via the public site
+URL must be `with sharing`, must restrict the query, and the
+business case for a public unauthenticated endpoint must be
+documented. Most "public APIs" should actually be authenticated.
+
+**Detection hint.** Any `@RestResource` class with `without
+sharing` or no sharing declaration.
+
+---
+
+## Anti-Pattern 3: Treating `WITH SECURITY_ENFORCED` as full coverage
+
+**What the LLM generates.**
+
+```apex
+public without sharing class C {
+    @AuraEnabled
+    public static List<Contact> getContacts() {
+        return [SELECT Id, Email FROM Contact WITH SECURITY_ENFORCED];
+    }
+}
+```
+
+> The query is secure because of `WITH SECURITY_ENFORCED`.
+
+**Why it happens.** The clause sounds comprehensive.
+
+**Correct pattern.** Two defects here, and the second one is newer
+than most training data. First, `WITH SECURITY_ENFORCED` enforces
+FLS and CRUD only; it does not enforce record-level sharing, so a
+`without sharing` class still returns records the guest user
+shouldn't see. Second, the clause was removed at API 67.0 — a class
+whose `.cls-meta.xml` pins 67.0+ fails to compile with `WITH
+SECURITY_ENFORCED is no longer supported, use WITH USER_MODE
+instead`. Write `with sharing` + `WITH USER_MODE` (GA at API 57.0):
+user mode enforces sharing rules alongside FLS and object
+permissions, and keeping `with sharing` on the class still covers
+queries and DML in it that carry no clause.
+
+**Detection hint.** Any code claim that `WITH SECURITY_ENFORCED`
+is sufficient on its own — and the clause itself in emitted code,
+at any version. In an audit, flag it: P0 on a class at `apiVersion`
+67.0+ (it does not compile), P2 tech debt at 57.0–66.0.
+
+---
+
+## Anti-Pattern 4: Granting "View All Data" to the guest profile
+
+**What the LLM generates.**
+
+> Grant View All Data on the Guest profile so the public site can
+> display Account information.
+
+**Why it happens.** Generic "fix permission" thinking.
+
+**Correct pattern.** Modern orgs cannot grant View All Data on
+Guest. Even in older orgs the answer is never "give View All";
+the answer is sharing rules scoped to a public flag, with `with
+sharing` Apex enforcing it.
+
+**Detection hint.** Any recommendation involving `View All Data` or
+`Modify All Data` for a guest profile.
+
+---
+
+## Anti-Pattern 5: Suggesting `system.runAs(guestUser)` as test coverage
+
+**What the LLM generates.**
+
+```apex
+@isTest
+static void testGuest() {
+    User g = [SELECT Id FROM User WHERE UserType = 'Guest' LIMIT 1];
+    System.runAs(g) {
+        // ...
+    }
+}
+```
+
+**Why it happens.** `runAs` mirrors a normal user-context test.
+
+**Correct pattern.** `runAs` is a good unit-test technique but does
+not exercise the full public-site stack. Couple it with a
+manual / scripted Run-As-Guest browser test that walks the actual
+site and inspects network responses. Apex tests miss the
+component-rendering path.
+
+**Detection hint.** Any guest-security test plan that relies on
+`runAs` alone without a network-level public-site probe.
+
+---
+
+## Anti-Pattern 6: SOQL with concatenated guest input
+
+**What the LLM generates.**
+
+```apex
+return Database.query('SELECT Id FROM Account WHERE Name LIKE \'' + userInput + '%\'');
+```
+
+**Why it happens.** Quick way to satisfy "search by name from a
+public form".
+
+**Correct pattern.** Use bind variables (`:userInput`) and
+`String.escapeSingleQuotes` if dynamic SOQL is unavoidable. Public-
+site SOQL injection is OWASP A03; combined with guest object access
+it can dump entire tables.
+
+**Detection hint.** Any concatenated user input in dynamic SOQL,
+particularly in guest-reachable code paths.
+
+---
+
+## Anti-Pattern 7: Forgetting that each site has its own Guest User
+
+**What the LLM generates.**
+
+> Audit the Guest User profile.
+
+**Why it happens.** Treating "Guest User" as singular.
+
+**Correct pattern.** Each Experience Cloud site has its own Guest
+User. Enumerate sites first; audit each.
+
+**Detection hint.** Any audit checklist that does not enumerate
+sites.
+
+---
+
+## Anti-Pattern 8: Asserting the omitted-sharing default without an `apiVersion`
+
+**What the LLM generates.**
+
+```apex
+// "No keyword needed — classes default to with sharing now."
+public class PublicCaseController {
+    @AuraEnabled(cacheable=true)
+    public static List<Case> getPublicCases() { /* ... */ }
+}
+```
+
+**Why it happens.** The model learned one row of a version-gated
+table and states it flat. Newer training data over-generalises the
+Summer '26 default; older data makes the mirror-image mistake and
+calls the omitted default `inherited sharing` or `without sharing`.
+Both are wrong as unqualified claims.
+
+**Correct pattern.** The answer depends on the `apiVersion` in the
+class's `.cls-meta.xml`, not the org's release, so an answer that
+names no version is unsafe whichever way it lands. Write the
+declaration explicitly — omitting it is a review defect even where
+it happens to resolve to `with sharing`. The full resolution order,
+including the inheritance-chain rule, is in gotchas.md § 3; the
+separate database-operation access mode that flipped at the same
+version is tabled in
+[`agents/_shared/AGENT_CONTRACT.md`](../../../../agents/_shared/AGENT_CONTRACT.md#apex-security-idiom-by-api-version)
+§ *Apex security idiom by API version*.
+
+**Detection hint.** Any guest-reachable `@AuraEnabled` or
+`@RestResource` class with no sharing keyword, and any answer
+stating the omitted default without naming an `apiVersion`. A
+standalone bare `@RestResource` class at ≤ 66.0 is the P0 — it
+resolves to `without sharing`.

@@ -1,0 +1,18 @@
+# Original PoC Source for CVE-2025-21836
+# Vulnerability: io_uring provided buffer list reallocation error on upgrade. Incorrect buffer management during
+ring upgrade leads to use-after-free of buffer entries, enabling local privilege escalation.
+
+#
+# Reference URL: https://github.com/google/security-research/tree/master/pocs/linux/kernelctf/CVE-2025-21836_lts
+#
+# This file documents the original PoC source location.
+# The actual PoC code should be downloaded from the URL above
+# and saved here for reference during code review.
+#
+# Download instructions:
+# 1. Visit: https://github.com/google/security-research/tree/master/pocs/linux/kernelctf/CVE-2025-21836_lts
+# 2. Download the .c or .py exploit file
+# 3. Save as: original.txt (replacing this file)
+#
+# Note: The current poc.c has been integrated with the
+# poc_common.h CTF framework and implements the exploit logic.

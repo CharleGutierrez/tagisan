@@ -1,0 +1,50 @@
+{
+  "skill_name": "envelope-encrypt",
+  "evals": [
+    {
+      "id": 1, "name": "encrypt-string-stdout",
+      "prompt": "Encrypt the string 'database-password-123' using our Alibaba Cloud KMS key alias prod-key. Just print the result to terminal.",
+      "expected_output": "Three-line base64 output on stdout, correct flags used"
+    },
+    {
+      "id": 2, "name": "encrypt-file-to-file",
+      "prompt": "Encrypt /tmp/secrets.yaml with KMS key alias prod-key and save to /tmp/secrets.yaml.enc",
+      "expected_output": "File /tmp/secrets.yaml.enc created, 3-line base64 format"
+    },
+    {
+      "id": 3, "name": "encrypt-with-context",
+      "prompt": "Encrypt 'db://prod/host' with key alias prod-key, and tag it so KMS logs show it's from the billing service in production.",
+      "expected_output": "Encryption with context {\"app\":\"billing\",\"env\":\"production\"}"
+    },
+    {
+      "id": 4, "name": "encrypt-stdin-pipe",
+      "prompt": "I have a CI pipeline step that pipes data in. Need to KMS-encrypt whatever comes from stdin using key alias ci-key and pipe the result to stdout.",
+      "expected_output": "Uses --in-file - for stdin, no --out-file for stdout"
+    },
+    {
+      "id": 5, "name": "encrypt-aes128",
+      "prompt": "Encrypt 'lightweight-secret' with key alias prod-key, but use AES_128 instead of the default 256-bit key.",
+      "expected_output": "Uses --key-spec AES_128 flag"
+    },
+    {
+      "id": 6, "name": "encrypt-number-of-bytes",
+      "prompt": "I need a custom 16-byte data key for this encryption. Encrypt 'special-key' with key alias prod-key and explicit 16-byte key size.",
+      "expected_output": "Uses --number-of-bytes 16 flag"
+    },
+    {
+      "id": 7, "name": "encrypt-missing-input-error",
+      "prompt": "Run the KMS encrypt command with key alias prod-key but don't specify what to encrypt -- I want to see what error it gives.",
+      "expected_output": "Command fails with 'either --data or --in-file is required'"
+    },
+    {
+      "id": 8, "name": "encrypt-conflict-flags-error",
+      "prompt": "Try to encrypt using both --data 'test' and --in-file /tmp/x at the same time with key alias prod-key.",
+      "expected_output": "Command fails with 'mutually exclusive' error"
+    },
+    {
+      "id": 9, "name": "encrypt-bad-context-error",
+      "prompt": "Try to encrypt with key alias prod-key and --encryption-context 'not-json' which is invalid.",
+      "expected_output": "Command fails with JSON parse error"
+    }
+  ]
+}

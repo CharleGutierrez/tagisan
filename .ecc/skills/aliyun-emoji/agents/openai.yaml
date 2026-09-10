@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alibaba Cloud AI Video Emoji"
+  short_description: "Template-driven emoji video generation"
+  default_prompt: "Use $aliyun-emoji to complete this ai/video Emoji task on Alibaba Cloud."

@@ -1,0 +1,4 @@
+# Smith's runtime dependencies are declared in pyproject.toml ([project.dependencies]).
+# This file installs the package (and its dependencies) in editable mode so that
+# `pip install -r requirements.txt` keeps working. Prefer `make install` (uses uv).
+-e .

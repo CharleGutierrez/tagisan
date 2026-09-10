@@ -1,0 +1,75 @@
+# Gotchas — Common Apex Runtime Errors
+
+Non-obvious Salesforce platform behaviors that cause real production problems in this domain.
+
+## Gotcha 1: LimitException is uncatchable — try/catch is silently useless
+
+**What happens:** A `catch (System.LimitException e)` block compiles without error but never executes. When a governor limit is breached, the platform terminates the transaction immediately, bypassing all catch and finally blocks. The exception propagates to the caller as if no try/catch existed.
+
+**When it occurs:** Any trigger, class, or test that wraps SOQL, DML, or CPU-intensive code in a try/catch hoping to gracefully handle limit overruns. Particularly common after migrating code from other languages where resource limits throw catchable exceptions.
+
+**How to avoid:** Never rely on catching LimitException. Use `Limits.getQueries()`, `Limits.getLimitQueries()`, `Limits.getDmlStatements()`, `Limits.getCpuTime()`, etc. to measure proximity before executing the operation. If limits are consistently close, the architecture needs to change (bulkification, Queueable, Batch Apex).
+
+---
+
+## Gotcha 2: Scalar SOQL returns null on zero rows — the NPE hits the next line, not the query
+
+**What happens:** When a SOQL query assigned to a scalar SObject variable matches zero rows, the variable is set to `null` — the platform does not throw `QueryException` at the query site. The `QueryException: List has no rows` error is thrown only when the zero-row scalar assignment is the direct result of a single-row query that Apex evaluates as requiring one row. The more common outcome is a `NullPointerException` on the first field access after the assignment.
+
+**When it occurs:** Code like `Account a = [SELECT Id FROM Account WHERE Id = :someId];` followed by `a.Name`. The stack trace shows line N+1 (the field access), not line N (the query). Developers spend time looking at the wrong line.
+
+**How to avoid:** Always use `List<SObject>` for SOQL queries where the result count is not guaranteed. The `QueryException: List has no rows` form only fires when the query is written in a context where the platform strictly requires exactly one row. In most cases you get a null reference instead — so default to Lists.
+
+---
+
+## Gotcha 3: DmlException.getDmlIndex(i) vs. SaveResult array index are different things
+
+**What happens:** When using `Database.insert(records, true)` (allOrNone=true, the default), a `DmlException` is thrown and `e.getDmlIndex(i)` returns the index of the failed record in the original input list. When using `Database.insert(records, false)` (allOrNone=false), no exception is thrown and the `SaveResult` array has the same length as `records` — index i in `SaveResult` directly maps to index i in `records`. Confusing these two access patterns causes developers to log the wrong source record when debugging DML failures.
+
+**When it occurs:** Mixed use of allOrNone=true and allOrNone=false in the same codebase, or when copy-pasting error-logging code between the two patterns.
+
+**How to avoid:** For `allOrNone=true` / exception mode: use `e.getDmlIndex(i)` inside a for loop over `e.getNumDml()` to find the source record. For `allOrNone=false` / SaveResult mode: iterate `results` with `for (Integer i = 0; i < results.size(); i++)` and use `records[i]` directly — no `getDmlIndex` needed.
+
+---
+
+## Gotcha 4: TypeException from JSON.deserialize when the JSON shape drifts from the Apex type
+
+**What happens:** `JSON.deserialize(jsonString, MyClass.class)` throws `TypeException` if the JSON contains a field with a value that cannot be coerced to the target Apex type — for example, a string `"true"` in JSON where the Apex field is `Boolean`, or an integer where the Apex field is `Date`. The error message is often generic and does not indicate which field caused the mismatch.
+
+**When it occurs:** Integrations that receive JSON from external systems where the schema is not strictly controlled. Also common when Apex types use `Decimal` but the JSON sends an integer, or vice versa.
+
+**How to avoid:** Use `JSON.deserializeUntyped()` to get a `Map<String, Object>` first, validate the types of critical fields manually, then map to Apex types. Alternatively, catch `JSONException` (not `TypeException`) and log the raw JSON for forensics — `JSON.deserialize` wraps type coercion failures in `JSONException` in some versions, so test which exception class is thrown in your org's API version.
+
+---
+
+## Gotcha 5: ListException on Trigger.new[0] when the trigger fires on delete
+
+**What happens:** A trigger accesses `Trigger.new[0]` or `Trigger.new` directly, assuming the list is non-empty. On `before delete` and `after delete` events, `Trigger.new` is null — only `Trigger.old` is populated. Accessing `Trigger.new[0]` on a delete event throws `NullPointerException`, not `ListException`.
+
+**When it occurs:** Trigger handlers that are designed for insert/update but are accidentally deployed with `before delete` or `after delete` events included in the trigger definition.
+
+**How to avoid:** In the trigger handler, check `Trigger.isDelete` before accessing `Trigger.new`. Use a trigger framework that routes context-specific logic to separate handler methods keyed by `TriggerOperation` enum values (`BEFORE_INSERT`, `BEFORE_DELETE`, etc.) rather than checking `Trigger.new` defensively everywhere.
+
+---
+
+## Gotcha 6: Mixed DML is a `DmlException` / `MIXED_DML_OPERATION` — there is no `MixedDmlException` type, and it fires on setup + non-setup DML, not on mixing two ordinary objects
+
+**What happens:** Two distinct misconceptions travel together here.
+
+First, the identifier. Apex has **no `MixedDmlException` class**. It is absent from the built-in exception list, `catch (MixedDmlException e)` fails to compile, and searching a debug log for `System.MixedDMLException` matches nothing — which sends practitioners hunting for a log line that will never appear. The real failure is a plain `System.DmlException` whose first error carries the status code `MIXED_DML_OPERATION`: `System.DmlException: Insert failed. First exception on row 0; first error: MIXED_DML_OPERATION, DML operation on setup object is not permitted after you have updated a non-setup object (or vice versa): []`.
+
+Second, the trigger condition. It fires when a DML operation on a *setup* object (`User`, `UserRole`, `Group`, `GroupMember`, `PermissionSet`, `PermissionSetAssignment`, `Territory2`, `ObjectPermissions`, `FieldPermissions`, `QueueSObject`, `AuthSession`, `SetupEntityAccess`, …) is mixed with a DML operation on a *non-setup* object (`Account`, `Contact`, custom objects) in the same transaction. Developers frequently misdiagnose this as "you can't DML two object types at once" and waste time splitting unrelated `Account`/`Contact` writes, which are perfectly legal.
+
+**When it occurs:** A trigger, controller action, or test setup that, for example, inserts an `Account` and then assigns a `PermissionSet` (or creates a `User`) in the same execution context. Common in provisioning flows that create a business record and grant access in one go.
+
+**How to avoid:** Run the setup-object DML in a separate transaction. Move it into a `@future` method or a Queueable so it commits independently of the non-setup DML. In tests, wrap the setup-object DML in `System.runAs()` — mixed DML is permitted there. This is a hard platform restriction because setup objects can change the running user's record access mid-transaction, so it cannot be worked around by ordering the statements differently within one transaction.
+
+---
+
+## Gotcha 7: "Unable to lock row" is a timeout, not a permanent failure — retrying often succeeds
+
+**What happens:** `Unable to lock row - Record currently unavailable` surfaces as a `DmlException` after a transaction waits up to 10 seconds for another transaction to release a lock on the same record(s). Because it is a timeout on contention rather than a data-validity error, the same DML can succeed on retry once the competing lock clears — which makes it intermittent and hard to reproduce in a developer org with no concurrent load.
+
+**When it occurs:** Concurrent DML on shared records; Bulk API loads running in parallel mode where batches touch the same parent; long-running triggers or flows that hold locks while doing other work; many Master-Detail children updating and all locking the same parent row.
+
+**How to avoid:** Shorten the work done while a lock is held (defer non-critical processing to async). For Bulk API, switch parallel to serial mode or sort each batch by parent record ID so batches don't fight over the same parent. Distribute Master-Detail children across parents. When contention is unavoidable, implement a bounded retry with backoff around the DML rather than treating the first failure as terminal.

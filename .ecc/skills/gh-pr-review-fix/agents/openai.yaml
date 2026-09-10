@@ -1,0 +1,14 @@
+interface:
+  display_name: "GH PR Review Fix"
+  short_description: "Resolve GitHub PR review threads end-to-end"
+  default_prompt: "Use $gh-pr-review-fix with codex-dev pr review to fetch fresh unresolved threads, verify and fix still-valid findings, validate, create scoped semantic Conventional Commits, push, batch-resolve fixed hosted threads, and re-check until clean or blocked."
+policy:
+  allow_implicit_invocation: false
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "context7"
+      description: "Current docs when review fixes touch changing APIs"
+    - type: "mcp"
+      value: "exa"
+      description: "Supplemental latest research for non-trivial migrations"

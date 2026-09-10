@@ -1,0 +1,143 @@
+# Gotchas: Reports and Dashboards
+
+---
+
+## Reports Respect Record-Level Sharing — "Missing" Records Are Usually a Sharing Issue
+
+**What happens:** A VP asks the admin to build a pipeline report. The report shows 50 opportunities. The VP says "that's not right — we have hundreds of opportunities." The admin checks the report, the filters look correct. The issue: the VP's role in the hierarchy only covers their direct reports' records. The hundreds of other opportunities are owned by teams outside their hierarchy. The report is correct — the sharing model is showing them exactly what they're supposed to see.
+
+**When it bites you:** Every time a stakeholder says "my report is missing data." Before investigating the report configuration, always check: "Does the running user have access to the records they expect to see?"
+
+**How to diagnose:**
+1. Log in as or simulate the running user
+2. Go to the relevant object's list view
+3. Select "All [Objects]" (requires View All) — if the count differs from the running user's view, it's a sharing issue
+4. Run the same report as a System Administrator — if you see more records, it's a sharing issue, not a report issue
+
+**How to address:**
+- Sharing issue confirmed → review sharing model, don't patch the report
+- Report was expected to show all records → review whether the user needs elevated access, or if the dashboard should "Run as specified user" with appropriate access
+
+---
+
+## Historical Trending: Only Works on Specific Objects and Fields, and Only Forward
+
+**What happens:** An admin asks: "Can you build a report showing how many open cases we had each day for the last 6 months?" Historical Trending would answer this. But Historical Trending wasn't enabled on Cases 6 months ago. Enabling it now starts capturing data from today. There's no retroactive data. The admin tells the VP there's 6 months of historical trend data — there isn't.
+
+**When it bites you:** Requests for historical trend reports on objects where Historical Trending wasn't set up in advance.
+
+**What Historical Trending supports:**
+- Objects: Opportunities, Cases, Forecasting Items, up to 3 custom objects. **Leads are not supported** — there is no Lead entry in the Historical Trending setup list.
+- Field types: Number, Currency, Date, Picklist, Lookup. Date/Time, Percent and Checkbox are **not** trackable.
+- Lookback: the previous 3 months plus the current month (rolling window). Opportunity history extends to 12 months when Historical Trending is enabled in Pipeline Inspection.
+- Up to **5 historical snapshot dates** per historical trend report, and up to 4 historical filters per report. Each report can contain up to 100 fields, and up to 5 million rows of trending data are stored per object.
+
+**How to avoid it:**
+- Enable Historical Trending proactively on any object where trend data may be needed
+- Set it up before business requests trend reports — not after
+- Communicate clearly to stakeholders: "We can show trend data from [date enabled] forward"
+
+---
+
+## Historical Trend Reports Are Matrix-Only, and Can't Be Exported or Subscribed To
+
+**What happens:** An admin builds the trend request as a Summary report grouped by owner, schedules it as a weekly subscription, and promises the VP a spreadsheet. All three steps are unsupported. Pulled through the Analytics REST API the format failure comes back as error 501: `Historical trend data is unavailable in the report format requested. Change the report format to matrix and try again.`
+
+**When it bites you:** Any historical trend requirement phrased like an ordinary report request — "trend it by rep, email it every Monday, export it to Excel."
+
+**What the feature refuses (verbatim from the limits doc):**
+- "The summary report format isn't supported." — build it as **Matrix**.
+- "Historical trending reports can't be exported."
+- "You can't subscribe to historical trend reports."
+- "Row limit filters aren't supported." and "Formula fields aren't supported."
+- "Dynamic exchange rates aren't supported. When you run a historical trend report, it uses a static exchange rate, which could be outdated."
+- "Historical trend reporting with charts is supported in Lightning Experience, but tabular views of historical trend reports aren't available."
+- In Lightning Experience "you must set the snapshot date as the primary row grouping" — any other primary grouping is rejected.
+
+**How to avoid it:** If the requirement includes an export, an email subscription, a formula column, or a row limit, historical trending is the wrong feature. Use a Reporting Snapshot into a custom object and report on that custom object normally — it has none of these restrictions.
+
+---
+
+## Report Subscriptions Don't Respect Row-Level Security for Recipients
+
+**What happens:** An admin creates a report of all Opportunities over $1M. They set up a subscription to send this report every Monday to 15 sales reps. Each rep only has access to their own opportunities via the sharing model. But the subscription sends the full report — all 1M+ opportunities — because it runs as the report owner (a Manager with "View All"). Each rep receives everyone else's pipeline data in their inbox.
+
+**When it bites you:** Any time a report subscription is configured to send to users who have narrower access than the report owner.
+
+**How to avoid it:**
+- Before scheduling a subscription, explicitly check: does the report contain records the recipients shouldn't see?
+- If recipients should see different data: DON'T use subscriptions — have each user run the report themselves ("Run as logged-in user" applies when users run manually)
+- Secure alternative: build a dashboard with "Run as logged-in user" that each rep visits individually
+- If a subscription is necessary: ensure the report's report type and filters produce only data appropriate for ALL recipients
+
+---
+
+## Dashboard Filters Don't Always Filter All Component Types
+
+**What happens:** An admin adds a date range filter to a dashboard. The filter appears at the top and looks like it applies to all components. But one component (a matrix report) doesn't update when the filter changes. The underlying report uses a different date field than what the dashboard filter is targeting.
+
+**When it bites you:** Complex dashboards with multiple report types where different components use different date fields.
+
+**How to avoid it:**
+- After adding any dashboard filter, test EVERY component by changing the filter value and verifying the component updates
+- Dashboard filters only work when the underlying report field matches what the filter targets
+- Document which components a filter applies to in the dashboard description
+
+---
+
+## Custom Report Types: Missing Data Due to Join Type
+
+**What happens:** An admin creates a Custom Report Type: Account → Contacts → Opportunities. The report returns only Accounts that have at least one Contact AND at least one Opportunity. An Account with no Contacts but with Opportunities is invisible. The admin built an "inner join" report thinking they had "all accounts with opportunities."
+
+**When it bites you:** Any Custom Report Type that chains multiple relationships. The default join type may exclude records the user expects to see.
+
+**The join types:**
+- "A record must have related B records" → inner join (default) — only records WITH the relationship appear
+- "A records may or may not have related B records" → outer join — records appear even without the relationship
+
+**How to avoid it:**
+- When creating a Custom Report Type, explicitly choose the join type for each related object
+- Ask: "Should records without [related object] still appear in the report?" If yes → outer join
+- Test with a record you know has no related records — does it appear?
+
+---
+
+## SpecifiedUser Dashboards Die With the Running User
+
+**What happens:** Dashboard `dashboardType` is `SpecifiedUser`. Every component runs in that user's security context. Deactivate the user and refresh/subscriptions fail silently or with "the running user is inactive." Viewers see stale stored results. This is the highest-ratio operational failure on reporting-heavy orgs.
+
+**When it bites you:** Small firms where one admin is the SpecifiedUser on every dashboard; PE/search-fund shops after a departure.
+
+**How to avoid it:**
+- Prefer `LoggedInUser` (dynamic) when the audience should see *their* data.
+- If SpecifiedUser is required (one shared "ops" view), the running user must be a **named integration/service user that never leaves**, not a human.
+- Inventory `runningUser` on every dashboard before offboarding. Re-point or convert to LoggedInUser in the same change as deactivation.
+- Do not treat LastRunDate as adoption — dashboard refresh and auditors inflate it. `LastViewedDate` is per-user and is the honest signal.
+
+---
+
+## Mixed Report `filterScope` on One Dashboard Silently Undercounts
+
+**What happens:** Neighbouring tiles mix `organization` and `team` (or `mine`) with no UI cue. Readers compare 2,400 vs 13,000 as if they were the same population.
+
+**When it bites you:** Pipeline health / KPI dashboards cloned from a personal report.
+
+**How to avoid it:** QA every component's scope against the dashboard's intended audience. Org-wide tiles cannot sit next to team-scoped tiles unless the title says so. Record sharing, report `filterScope`, and dashboard running user are **three independent layers**.
+
+---
+
+## Licence-Gated Columns Look Like a Broken Report
+
+**What happens:** Same report type, same API version, same FLS. Analytics REST returns ~40 columns with a Marketing Cloud / ListEmail PSL and ~20 without. Unlicensed runs look empty. Teams write "the org cannot report on unique opens."
+
+**When it bites you:** Marketing / email engagement reports; B2BMA / CRMA seats; Data Cloud reports on an unconfigured tenant.
+
+**How to avoid it:** Check **entitlement** before "field missing." Never conclude capability from one login. Production vs sandbox can differ on which PSLs are assigned.
+
+---
+
+## Zero Dashboard Filters Produce Clone Farms
+
+**What happens:** Twelve identical 6-component dashboards instead of one dashboard with `dashboardFilters`. Year-stamped and person-named copies follow.
+
+**How to avoid it:** Filter-first. A clone per company / year / person is a smell. Salesforce-shipped dashboards often already demonstrate filters — copy that, not the 12 folders.

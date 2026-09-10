@@ -1,0 +1,23 @@
+[
+  {"query": "帮我把这个配置文件加密一下，用阿里云的KMS", "should_trigger": true},
+  {"query": "our database password is 'mypass123' and I need to protect it with envelope encryption before storing it in the config repo", "should_trigger": true},
+  {"query": "用信封加密保护这个文件，密钥用别名 prod-key", "should_trigger": true},
+  {"query": "KMSでこのデータを暗号化したい", "should_trigger": true},
+  {"query": "i need to encrypt a file with KMS, the key alias is project-alpha/data-key", "should_trigger": true},
+  {"query": "这个敏感数据要加密存储到git仓库，密钥管理用KMS", "should_trigger": true},
+  {"query": "encrypt this secret and also tag it so we know it's from the billing service in production", "should_trigger": true},
+  {"query": "用KMS信封加密把这段api key加密后再放到配置文件里", "should_trigger": true},
+  {"query": "before uploading to OSS i want to KMS-envelop-encrypt this json file", "should_trigger": true},
+  {"query": "envelope encrypt stdin from the ci pipeline with key alias ci-key", "should_trigger": true},
+
+  {"query": "解密这个KMS信封加密的文件", "should_trigger": false},
+  {"query": "use AWS KMS to encrypt this S3 bucket", "should_trigger": false},
+  {"query": "create a new customer master key in KMS console, 256-bit, for envelope encryption", "should_trigger": false},
+  {"query": "这个密码用bcrypt加密存储", "should_trigger": false},
+  {"query": "set up automatic rotation for my KMS key every 90 days", "should_trigger": false},
+  {"query": "encrypt this file with openssl enc -aes-256-cbc", "should_trigger": false},
+  {"query": "帮我生成一组RSA密钥对用于数据加密", "should_trigger": false},
+  {"query": "查看这个KMS密钥的轮转历史和版本信息", "should_trigger": false},
+  {"query": "i'm trying to gpg-encrypt a file for my coworker", "should_trigger": false},
+  {"query": "grab me the plaintext value of the kms secret named 'bailian-api-key'", "should_trigger": false}
+]

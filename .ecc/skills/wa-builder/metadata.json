@@ -1,0 +1,54 @@
+{
+  "version": "2.0.0",
+  "organization": "AWS",
+  "date": "July 2026",
+  "abstract": "Learn then Build — help developers understand Well-Architected for their workload and produce visual artifacts (annotated architecture diagrams, decision trees, improvement roadmaps). Also creates Architecture Decision Records grounded in codebase analysis.",
+  "references": [
+    "https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html"
+  ],
+  "triggers": [
+    "learn Well-Architected",
+    "teach me WA",
+    "architecture diagram with WA annotations",
+    "decision tree for architectural choices",
+    "improvement roadmap visualization",
+    "WA pillar health overlay",
+    "understand Well-Architected for my project",
+    "visual architecture artifacts",
+    "WA learning path",
+    "generate architecture diagram",
+    "create an ADR",
+    "architecture decision record",
+    "document a design decision",
+    "evaluate architectural options",
+    "trade-off analysis between options",
+    "record our architecture choice"
+  ],
+  "not_for": [
+    "assessments or reviews that produce findings (use aws-well-architected-framework-review instead)",
+    "migration planning (use migration-readiness instead)",
+    "generating guardrails or enforcement controls (use wa-guardrails instead)",
+    "facilitating a conversational WAFR (use wafr-facilitator instead)"
+  ],
+  "metadata": {
+    "service": [
+      "well-architected"
+    ],
+    "task": [
+      "learn",
+      "visualize",
+      "diagram",
+      "document",
+      "decide"
+    ],
+    "persona": [
+      "developer",
+      "solutions-architect",
+      "student",
+      "tech-lead"
+    ],
+    "workload": [
+      "any"
+    ]
+  }
+}

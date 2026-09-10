@@ -1,0 +1,194 @@
+---
+name: apex-queueable-patterns
+description: "Use when designing, implementing, reviewing, or debugging Queueable Apex jobs that\
+  \ chain, use the Finalizer interface, pass state across transactions, or need controlled\
+  \ async depth. Trigger keywords: 'Queueable', 'System.enqueueJob', 'Finalizer',\
+  \ 'QueueableContext', 'AsyncOptions', 'stack depth', 'chained queueable'. NOT for\
+  \ choosing Queueable vs Batch \u2014 use apex/async-apex. NOT for large-volume chunked\
+  \ record processing \u2014 use apex/batch-apex-patterns."
+---
+# Apex Queueable Patterns
+
+Use this skill when designing or reviewing Apex jobs that use the Queueable interface for controlled async execution, multi-step chaining, outbound callouts, or error recovery through the Finalizer interface. The skill covers implementation patterns, stack depth management, state passing, and production-safe failure handling.
+
+---
+
+## Before Starting
+
+- Is the use case a single deferred operation, a multi-step chain, or a fan-out? Each has a different pattern.
+- Does the job require callouts? If so, `Database.AllowsCallouts` must also be implemented.
+- How deep can the chain realistically grow? Only Developer Edition and Trial orgs cap it for you — "the maximum stack depth for chained jobs is 5, which means that you can chain jobs four times." Production editions enforce no depth limit, so the cap must come from `AsyncOptions.MaximumQueueableStackDepth`.
+- Does the job need to recover from failure or enqueue a follow-up regardless of success or failure? That is what the Finalizer interface is for.
+- How is state passed between chained jobs? Serialized fields or record IDs are the safe options.
+
+---
+
+## Core Concepts
+
+### The Queueable Interface
+
+A Queueable class implements `Queueable` and defines a single `execute(QueueableContext ctx)` method. The job is enqueued with `System.enqueueJob(new MyJob())` and runs asynchronously in a separate transaction with full governor limits — 100 SOQL queries, 150 DML statements, 12 MB heap, and 60 000 ms CPU time (per the Apex Developer Guide). The job ID returned by `enqueueJob` maps to an `AsyncApexJob` record that can be monitored.
+
+Adding `Database.AllowsCallouts` to the `implements` clause is required for any Queueable that makes HTTP or web service callouts. Without it, a runtime exception is thrown even though the code compiles cleanly.
+
+### Chaining And Stack Depth
+
+A Queueable can enqueue exactly one child job from within its `execute()` method. Attempting to enqueue a second child in the same execution throws a `System.LimitException`. This is the single-child chaining rule and it applies in production — in sandbox and scratch orgs the same rule holds, but tests run synchronously and skip the queue, so the limit is not exercised in unit tests.
+
+"Because no limit is enforced on the depth of chained jobs, you can chain one job to another" — in every edition except Developer and Trial, where the ceiling is a stack depth of 5. That asymmetry is the trap: a runaway chain is *caught* in a scratch org or Developer Edition sandbox and *not caught* in production. The `AsyncOptions` class supplies the cap the production org will not:
+
+```apex
+AsyncOptions opts = new AsyncOptions();
+opts.MaximumQueueableStackDepth = 5;
+System.enqueueJob(new MyJob(nextPayload), opts);
+```
+
+`System.AsyncInfo.getCurrentQueueableStackDepth()` returns the current depth so the job can stop or branch safely. Together these two APIs are the canonical pattern for bounded chaining in production code (Apex Developer Guide — Queueable Apex).
+
+### Delayed Enqueue And Cross-Transaction Deduplication
+
+`AsyncOptions` carries two properties beyond `MaximumQueueableStackDepth`, and both are hard rules.
+
+**`MinimumQueueableDelayInMinutes`** is the supported back-off primitive: "Use the System.enqueueJob(queueable, delay) method to add queueable jobs to the asynchronous execution queue with a specified minimum delay (0–10 minutes)." An org-wide floor is set at **Setup → Apex Settings → "Default minimum enqueue delay (in seconds) for queueable jobs that do not have a delay parameter"** (1–600 seconds). An explicit delay **"ignores any org-wide enqueue delay setting"** — the two never compose, so passing `0` runs as fast as the platform allows even under a 600-second org floor. Read the effective value with `System.AsyncInfo.getMinimumQueueableDelayInMinutes()`.
+
+**`DuplicateSignature`** suppresses duplicate enqueues *across transactions*, which a static guard cannot. Build it with `QueueableDuplicateSignature.Builder()` plus `addId()` / `addString()` / `addInteger()`, then `build()`. A second enqueue with the same signature throws `DuplicateMessageException`: `Attempt to enqueue job with duplicate queueable signature`. See `references/gotchas.md` for the release-at-dequeue semantics.
+
+Two ceilings bound any retry loop built on these: the delay caps at 10 minutes, and a job failing on an unhandled exception "can be successively re-enqueued five times by a transaction finalizer." Anything longer or deeper needs Scheduled Apex or a staging record.
+
+### The Finalizer Interface
+
+The Finalizer interface (`System.Finalizer`) runs after the parent Queueable completes — regardless of whether that Queueable succeeded or threw an uncaught exception. The Finalizer runs in its own separate Apex transaction with its own full governor limits. It is attached with `System.attachFinalizer(new MyFinalizer())` inside the Queueable's `execute()` method, before any code that might fail.
+
+The `FinalizerContext` passed to `execute(FinalizerContext ctx)` provides:
+- `ctx.getJobId()` — the parent job's `AsyncApexJob` ID
+- `ctx.getResult()` — `ParentJobResult.SUCCESS` or `ParentJobResult.UNHANDLED_EXCEPTION`
+- `ctx.getException()` — the exception that terminated the parent, if any
+
+A Finalizer can enqueue one additional Queueable. This is the safe mechanism for retry, dead-letter notification, or compensating transactions after Queueable failure. Only one Finalizer may be attached per Queueable (Apex Developer Guide — Transaction Finalizers).
+
+### State Passing Between Chained Jobs
+
+Each Queueable runs in a separate transaction, so state must be serialized through job constructor fields. Collections of IDs, simple primitives, and serializable wrapper classes are all safe. Large SObject collections should be avoided in favor of passing a Set of IDs and re-querying in the next job. Do not rely on static variables to bridge jobs — static state does not survive across async transactions.
+
+### Mode Selection
+
+This skill operates in three modes based on the practitioner's need:
+
+- **Mode 1 — Implement:** Design a new Queueable or chain from scratch.
+- **Mode 2 — Review/Audit:** Evaluate existing Queueable classes for anti-patterns, depth risk, missing callout declaration, or lack of Finalizer-based error handling.
+- **Mode 3 — Troubleshoot:** Diagnose a failing, stuck, or looping Queueable job in production.
+
+---
+
+## Common Patterns
+
+### Bounded Chained Processing With Stack Guard
+
+**When to use:** A multi-step async workflow requires sequential jobs, each processing a slice of work, and the depth must be capped to prevent runaway chains.
+
+**How it works:**
+1. Each Queueable receives a payload (list of IDs to process, a cursor, or a batch number).
+2. Before chaining, the job checks `System.AsyncInfo.getCurrentQueueableStackDepth()` against the configured max.
+3. If depth is within limit, it enqueues the next job with `AsyncOptions.MaximumQueueableStackDepth` set.
+4. If the depth cap is reached, the job logs the state and exits cleanly or triggers a Platform Event for external pickup.
+
+**Why not the alternative:** Without the stack guard, an off-by-one error in termination logic or an unexpected data condition can produce an infinite chain that floods the async queue and degrades the org.
+
+### Finalizer-Based Error Recovery
+
+**When to use:** The Queueable performs irreversible side effects (callouts, record updates) and the team needs guaranteed error notification or compensating action even when the job throws an uncaught exception.
+
+**How it works:**
+1. Call `System.attachFinalizer(new MyFinalizer())` as the first line of `execute()` before any code that could throw.
+2. In `MyFinalizer.execute(FinalizerContext ctx)`, check `ctx.getResult()`.
+3. On `ParentJobResult.UNHANDLED_EXCEPTION`, log or create a failure record, send a Platform Event, or enqueue a compensating job.
+4. On `ParentJobResult.SUCCESS`, optionally enqueue the next stage or record completion.
+
+**Why not the alternative:** Without a Finalizer, an uncaught exception in a Queueable leaves no guaranteed cleanup path. `try/catch` alone cannot handle out-of-memory or system limit exceptions that terminate the transaction externally.
+
+### Callout Queueable With Retry
+
+**When to use:** The job makes an outbound HTTP or web service call that can fail transiently, and the team wants automatic retry up to a bounded count.
+
+**How it works:**
+1. The class implements `Queueable, Database.AllowsCallouts`.
+2. The constructor carries a `retryCount` integer and a payload.
+3. The Finalizer checks for `UNHANDLED_EXCEPTION`. If `retryCount < maxRetries`, it enqueues the same job class with `retryCount + 1`.
+4. After `maxRetries`, the Finalizer writes a failure record or fires an alert.
+
+**Why not the alternative:** Re-enqueueing from inside `catch` inside `execute()` works only for caught exceptions. The Finalizer handles all failure modes including platform-level termination.
+
+---
+
+## Decision Guidance
+
+| Situation | Recommended Approach | Reason |
+|---|---|---|
+| Single deferred async operation, no chaining needed | Plain Queueable, no Finalizer | Simplest correct tool |
+| Multi-step chain with bounded depth | Queueable + `AsyncOptions.MaximumQueueableStackDepth` + stack depth check | Prevents runaway chain |
+| Job makes outbound callouts | `implements Queueable, Database.AllowsCallouts` | Required by platform; omitting causes runtime exception |
+| Error recovery or compensating action after failure | Queueable + `System.attachFinalizer()` | Finalizer runs regardless of parent success or failure |
+| Need retry after transient callout failure | Finalizer re-enqueues with an incremented counter and `MinimumQueueableDelayInMinutes` | Handles all failure modes; delay is the supported back-off |
+| Back-off > 10 min, or > 5 attempts | Scheduled Apex or a staging record | Past both ceilings of the delay + Finalizer pattern |
+| Same job enqueued from several transactions (Data Loader batches, retried API calls) | `AsyncOptions.DuplicateSignature` + catch `DuplicateMessageException` | Static guards reset per transaction |
+| Need fan-out to multiple parallel jobs | Reconsider: use Batch or Platform Events | Queueable allows only one child per execution |
+| Very large record volume (tens of thousands+) | Batch Apex, not Queueable | Batch provides fresh limits per scope and query locator support |
+
+---
+
+
+## Recommended Workflow
+
+Step-by-step instructions for an AI agent or practitioner activating this skill:
+
+1. Gather context — confirm the org edition, relevant objects, and current configuration state
+2. Review official sources — check the references in this skill's well-architected.md before making changes
+3. Implement or advise — apply the patterns from Core Concepts and Common Patterns sections above
+4. Validate — run the skill's checker script and verify against the Review Checklist below
+5. Document — record any deviations from standard patterns and update the template if needed
+
+---
+
+## Review Checklist
+
+- [ ] Class implements `Queueable` (and `Database.AllowsCallouts` if callouts are made).
+- [ ] `System.attachFinalizer()` is called for any job where failure handling matters.
+- [ ] `execute()` enqueues at most one child Queueable.
+- [ ] Chained jobs use `AsyncOptions.MaximumQueueableStackDepth` to cap depth.
+- [ ] Stack depth is checked with `System.AsyncInfo.getCurrentQueueableStackDepth()` before re-enqueueing.
+- [ ] State is passed through serializable constructor fields, not static variables.
+- [ ] Tests use `Test.startTest()` / `Test.stopTest()` boundaries.
+- [ ] `AsyncApexJob` is used for operational visibility (job status, failure count).
+- [ ] Callout errors and limit exceptions are handled in the Finalizer, not only in `catch` blocks.
+- [ ] Retry back-off uses `AsyncOptions.MinimumQueueableDelayInMinutes` (0–10), not a Schedulable dispatcher or a CRON string.
+- [ ] Any dedup requirement that spans transactions uses `AsyncOptions.DuplicateSignature`, not a static Boolean or Set.
+
+---
+
+## Salesforce-Specific Gotchas
+
+1. **Single-child chaining is enforced at runtime, not compile time** — a second `enqueueJob` inside `execute()` compiles, then throws `System.LimitException: Too many queueable jobs added to the queue: 2`. Tests run async jobs synchronously and do not enforce it.
+2. **The Finalizer has fresh limits but is still subject to them** — expensive SOQL or DML inside a Finalizer can itself blow governor limits and lose the failure record it was written to create.
+3. **`MaximumQueueableStackDepth` does not propagate** — re-set the `AsyncOptions` on every enqueue in the chain, or the guard silently stops applying downstream.
+
+See `references/gotchas.md` for the full diagnosis of each, plus the duplicate-signature release semantics.
+
+---
+
+## Output Artifacts
+
+| Artifact | Description |
+|---|---|
+| Queueable design review | Findings on chaining, callout declaration, Finalizer coverage, and state safety |
+| Bounded chain scaffold | Pattern for multi-step Queueable chain with stack depth guard and Finalizer |
+| Callout retry pattern | Queueable + `AllowsCallouts` + Finalizer-based retry up to a configurable max |
+
+---
+
+## Related Skills
+
+- `apex/async-apex` — use when the question is whether Queueable is the right async mechanism at all.
+- `apex/batch-apex-patterns` — use when the volume or chunking need exceeds what Queueable chaining should handle.
+- `apex/exception-handling` — use when the broader error handling and logging strategy is the focus.
+- `apex/governor-limits` — use when the job is hitting CPU, heap, or DML limits inside `execute()`.
+- `apex/debug-and-logging` — use when diagnosing async job failures through log analysis and correlation IDs.

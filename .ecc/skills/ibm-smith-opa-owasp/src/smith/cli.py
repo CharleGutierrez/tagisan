@@ -1,0 +1,781 @@
+# Copyright 2026 Smith authors
+# SPDX-License-Identifier: Apache-2.0
+
+import argparse
+import asyncio
+import json
+import os
+import re
+import sys
+
+from dotenv import load_dotenv
+
+from smith.policy_agent.scripts.parse_ast_to_graph import init_graph
+from smith.policy_agent.red_feedback.red_feedback import cluster_commands
+from smith.policy_agent.policy_analysis.update_policy_analysis import (
+    update_policy_analysis_feedback,
+)
+from smith.policy_agent.policy_evaluation.run_policy_evaluation import (
+    run_policy_evaluation,
+)
+from smith.policy_agent.reduce_improve.detect_redundancy import write_graph_suggestion
+from smith.policy_agent.policy_analysis.regal.regal_finder import (
+    create_regal_suggestion,
+)
+from smith.test_generation.decompose import decompose_guidance
+from smith.test_generation.variable_extraction import variable_extraction
+from smith.test_generation.attack import attack
+from smith.test_generation.case_generation import case_generation
+from smith.test_generation.convert_test_case import (
+    translate_case,
+    convert_bypass_case,
+)
+from smith.policy_agent.policy_analysis.bypass.analyze_bypass import (
+    detect_bypass_vectors,
+)
+from smith.policy_agent.policy_analysis.bypass.synthesize_cases import (
+    synthesize_bypass_cases,
+)
+from smith.test_generation.grey_condition import grey_extraction
+from smith.test_generation.attack_promptfoo import create_promptfoo_cases
+from smith.test_generation.classify_promptfoo_tool import classify_promptfoo_tool
+from smith.test_generation.generate_promptfoo_config import generate_promptfoo_config
+from smith.test_case_evaluation.classify_guidance import classify_promptfoo_cases
+from smith.test_case_evaluation.validate_labels import run_validation
+from smith.test_case_evaluation.visualization.build_report import build_visualization
+from smith.policy_generation.extract_tools import extract_tools
+from smith.policy_generation.validate_policy import (
+    validate_policy,
+    fix_and_validate_policy,
+)
+from smith.policy_generation.translate_cpex import translate_policy_to_cpex
+from smith.test_case_evaluation.cross_validate import cross_validate_failed_cases
+from smith.test_case_evaluation.apply_cross_validate import apply_cross_validate_results
+from smith.test_generation.extract_tool_args import run_extract_tool_args
+
+load_dotenv()
+
+
+class BlueAgent:
+    def __init__(self):
+        self.base_url = os.getenv("BASE_URL")
+        self.data_dir = self.base_url + os.getenv("DATA_DIR")
+        self.user_input_dir = self.base_url + os.getenv("DATA_DIR") + "inputs/"
+        self.user_output_dir = self.base_url + os.getenv("DATA_DIR") + "outputs/"
+
+        self.graph_path = self.user_output_dir + os.getenv("GRAPH_PATH")
+        self.opa_ast_path = self.user_output_dir + os.getenv("OPA_AST_PATH")
+        self.cluster_results = self.user_output_dir + os.getenv("CLUSTER_RESULTS")
+        self.cluster_eps = float(os.getenv("CLUSTER_EPS", "0.3"))
+        self.cluster_min_samples = int(os.getenv("CLUSTER_MIN_SAMPLES", "2"))
+
+        self.policy_dir = self.base_url + os.getenv("POLICY_DIR")
+        self.policy_path = self.policy_dir + os.getenv("POLICY_PATH")
+
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        self.MODEL = os.getenv("MODEL_SONNET")
+        self.openai_base_url = os.getenv("OPENAI_BASE_URL")
+        self.temp = float(os.getenv("TEMP", "0.2"))
+        self.top_p = float(os.getenv("TOP_P", "0.9"))
+
+        self.regal_suggestion_path = self.user_output_dir + os.getenv(
+            "REGAL_SUGGESTION_PATH"
+        )
+        self.regal_result_output = self.user_output_dir + os.getenv(
+            "REGAL_RESULT_OUTPUT"
+        )
+        # Scorecard outputs live under the skill root, written by the packaged
+        # policy_testing harness (see src/smith/policy_testing/score_card.sh).
+        self.test_output_dir = self.base_url + os.getenv(
+            "TEST_OUTPUT_DIR", "references/scorecard/"
+        )
+        self.test_path = self.test_output_dir
+        self.test_results_path = self.test_output_dir + os.getenv(
+            "TEST_RESULT_PATH", "scorecard_summary.txt"
+        )
+        self.graph_suggestion_path = self.user_output_dir + os.getenv(
+            "GRAPH_SUGGESTION_PATH"
+        )
+
+    def get_regal_feedback(self):
+        print("collecting regal feedbacks")
+        return create_regal_suggestion(self.policy_path, self.regal_suggestion_path)
+
+    def get_duplication_feedback(self):
+        init_graph(self.opa_ast_path, self.policy_dir, self.graph_path)
+        results = "Below is LLM generated redundancy suggestions: \n"
+        results = results + update_policy_analysis_feedback(
+            self.api_key,
+            self.user_output_dir,
+            self.openai_base_url,
+            self.policy_path,
+            self.MODEL,
+            self.temp,
+            self.top_p,
+        )
+        results = (
+            results
+            + "Below is graph generated redundancy suggestions, the nodes are rule names, each subgraph indicates the rules and relations in this subgraph is non reachable thus redundant. \n"
+        )
+        results = results + write_graph_suggestion(
+            self.graph_path, self.graph_suggestion_path
+        )
+        return results
+
+    def get_red_feedback(self):
+        return "\n".join(
+            cluster_commands(
+                self.cluster_results,
+                self.test_path,
+                self.cluster_eps,
+                self.cluster_min_samples,
+            )
+        )
+
+    def policy_checking_results(self):
+        return run_policy_evaluation(self.base_url, self.test_results_path)
+
+
+VALID_ATTACK_TOOLS = {"ares", "promptfoo", "none"}
+
+
+def _load_session_config(base_url):
+    """Load session config from the path specified by SESSION_CONFIG_FILE."""
+    config_path = base_url + os.getenv(
+        "SESSION_CONFIG_FILE", "references/session_config.json"
+    )
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            return json.load(f)
+    return {}
+
+
+def _selected_tools(base_url):
+    """Return the session's selected-tool set, or None if IR mode is off/empty.
+
+    When the Policy Explorer / Guidance Classifier restricts a run to a subset
+    of tools (``use_ir``), every stage that emits or filters test cases keys off
+    this set. Returning None means "no restriction".
+    """
+    session_config = _load_session_config(base_url)
+    if not session_config.get("use_ir", False):
+        return None
+    tools_list = session_config.get("selected_tools", [])
+    return set(tools_list) if tools_list else None
+
+
+def get_tool_definitions(transport, mcp_url, mcp_command, mcp_args, mcp_cwd):
+    """Extract tool definitions from the MCP server."""
+    tool_definitions = asyncio.run(
+        extract_tools(
+            transport=transport,
+            url=mcp_url,
+            command=mcp_command,
+            cmd_args=mcp_args,
+            cwd=mcp_cwd,
+        )
+    )
+    print(f"Extracted {len(tool_definitions['tools'])} tools from MCP server")
+    return tool_definitions
+
+
+def resolve_attack_tools():
+    """Parse and validate the ATTACK_TOOLS env var."""
+    raw = os.getenv("ATTACK_TOOLS", "ares,promptfoo")
+    tools = {t.strip().lower() for t in raw.split(",") if t.strip()}
+    unknown = tools - VALID_ATTACK_TOOLS
+    if unknown:
+        print(
+            f"ERROR: unknown ATTACK_TOOLS value(s): {', '.join(sorted(unknown))}. "
+            "Valid values: ares, promptfoo, none (comma-separated).",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    tools.discard("none")
+    for tool in ("ares", "promptfoo"):
+        print(f"  ATTACK_TOOLS: {tool} {'enabled' if tool in tools else 'skipped'}")
+    return tools
+
+
+def generate_test(
+    base_url,
+    system_variables,
+    api_key,
+    openai_base_url,
+    model,
+    temp,
+    top_p,
+    guidance_file,
+    output_file_decompose,
+    output_file_attack,
+    output_file_variables,
+    output_file_attack_csv,
+    test_case_template_file,
+    output_file_ready_cases,
+    output_file_grey_guidances,
+    output_file_attack_promptfoo,
+    test_generation_path,
+    output_file_flatten,
+    output_file_cases,
+    output_promptfoo,
+    case_generation_batch_size,
+    tool_definitions=None,
+    batch_processing=False,
+    batch_size=10,
+    flatten_flag=False,
+):
+    flatten_flag = True
+    decompose_guidance(
+        api_key,
+        system_variables,
+        guidance_file,
+        openai_base_url,
+        model,
+        temp,
+        top_p,
+        output_file_decompose,
+        output_file_flatten,
+        flatten_flag,
+        batch_processing,
+        batch_size,
+    )
+    grey_extraction(
+        api_key,
+        system_variables,
+        openai_base_url,
+        model,
+        temp,
+        top_p,
+        output_file_decompose,
+        output_file_grey_guidances,
+        batch_processing,
+        batch_size,
+    )
+    variable_extraction(
+        api_key,
+        system_variables,
+        openai_base_url,
+        model,
+        temp,
+        top_p,
+        output_file_decompose,
+        output_file_variables,
+        batch_processing,
+        batch_size,
+    )
+    case_generation(
+        api_key,
+        system_variables,
+        openai_base_url,
+        model,
+        temp,
+        top_p,
+        output_file_variables,
+        output_file_cases,
+        tool_definitions,
+        batch_processing,
+        batch_size=case_generation_batch_size,
+    )
+    attack_tools = resolve_attack_tools()
+
+    if "ares" in attack_tools:
+        attack(
+            output_file_cases,
+            output_file_attack,
+            output_file_attack_csv,
+            test_generation_path,
+        )
+
+    if "promptfoo" in attack_tools:
+        create_promptfoo_cases(
+            base_url,
+            output_promptfoo,
+            output_file_attack_promptfoo,
+            test_generation_path,
+        )
+        classify_promptfoo_tool(
+            api_key,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            tool_definitions,
+            output_file_attack_promptfoo,
+        )
+
+    selected_tools = _selected_tools(base_url)
+
+    translate_case(
+        output_file_cases,
+        test_case_template_file,
+        output_file_ready_cases,
+        output_file_attack if "ares" in attack_tools else None,
+        output_file_attack_promptfoo if "promptfoo" in attack_tools else None,
+        system_variables,
+        selected_tools,
+    )
+    return ""
+
+
+def generate_bypass_cases(
+    api_key,
+    openai_base_url,
+    model,
+    temp,
+    top_p,
+    policy_path,
+    guidance_file,
+    tool_definitions,
+    system_variables,
+    test_case_template_file,
+    output_file_ready_cases,
+    bypass_report_dir,
+    bypass_cases_file,
+    base_url,
+):
+    """Find guidance-vs-policy divergences and generate adversarial cases."""
+    if not os.path.exists(policy_path):
+        print(
+            f"Bypass case generation skipped: policy not found at {policy_path}. "
+            "Create a policy first, then re-run."
+        )
+        return ""
+    if os.path.getsize(policy_path) == 0:
+        print(f"Bypass case generation skipped: policy at {policy_path} is empty.")
+        return ""
+
+    bypass_report = detect_bypass_vectors(
+        api_key,
+        bypass_report_dir,
+        openai_base_url,
+        policy_path,
+        model,
+        temp,
+        top_p,
+        guidance_file,
+        tool_definitions=tool_definitions,
+        system_vars=system_variables,
+    )
+    synthesize_bypass_cases(
+        api_key,
+        openai_base_url,
+        model,
+        temp,
+        top_p,
+        bypass_report,
+        bypass_cases_file,
+        tool_definitions=tool_definitions,
+        system_vars=system_variables,
+    )
+    convert_bypass_case(
+        bypass_cases_file,
+        test_case_template_file,
+        output_file_ready_cases,
+        system_variables,
+        _selected_tools(base_url),
+    )
+    print(
+        f"Bypass case generation complete: {len(bypass_report.vectors)} "
+        f"divergence(s) found. New bypass_test_case*.json written under "
+        f"{output_file_ready_cases}{{allow,disallow}}/. Run test_case_translation, "
+        "then policy_testing and red_suggestion."
+    )
+    return ""
+
+
+def main():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--flag", help="what advices you want to generate?")
+    parser.add_argument(
+        "--policy_path",
+        help="path to the .rego policy file (for policy_validation/policy_validation_fix)",
+    )
+    parser.add_argument(
+        "--dest",
+        help="destination directory for the snapshot (for save_snapshot)",
+    )
+    args = parser.parse_args()
+
+    if not args.flag:
+        parser.print_help()
+        sys.exit(0)
+
+    if args.flag == "open_explorer":
+        from smith.tools.explorer_server import serve
+
+        serve(port=8100)
+        sys.exit(0)
+
+    if args.flag == "get_current_agent":
+        # Read-only: print the current target-agent path and guidance path,
+        agent_base = os.getenv("BASE_URL", "")
+        guidance = os.getenv("GUIDANCE_FILE")
+        print(f"target_agent: {os.getenv('TARGET_AGENT_PATH') or '(unset)'}")
+        print(f"guidance_file: {agent_base + guidance if guidance else '(unset)'}")
+        sys.exit(0)
+
+    if args.flag == "save_snapshot":
+        from smith.tools.save_snapshot import save_snapshot
+
+        if not args.dest:
+            print("ERROR: save_snapshot requires --dest <directory>.")
+            sys.exit(1)
+        snapshot_base = os.getenv("BASE_URL")
+        if not snapshot_base:
+            print("ERROR: BASE_URL must be set in .env for save_snapshot.")
+            sys.exit(1)
+
+        def _joined(*env_names):
+            # Join BASE_URL with the concatenation of the given env values; return
+            # None if any piece is unset so the copy step can skip-and-warn.
+            parts = [os.getenv(n) for n in env_names]
+            if any(p is None for p in parts):
+                return None
+            return snapshot_base + "".join(parts)
+
+        target_agent = os.getenv("TARGET_AGENT_PATH")
+        snapshot_policy = _joined("POLICY_DIR", "POLICY_PATH")
+        # CPEX-translated sibling, named like cpex_translate: policy.rego -> policy_cpex.rego.
+        snapshot_policy_cpex = (
+            re.sub(r"\.rego$", "_cpex.rego", snapshot_policy)
+            if snapshot_policy
+            else None
+        )
+        save_snapshot(
+            args.dest,
+            {
+                "policy": snapshot_policy,
+                "policy_cpex": snapshot_policy_cpex,
+                "guidance": _joined("GUIDANCE_FILE"),
+                "tool_definitions": (
+                    os.path.join(
+                        snapshot_base, target_agent, "smith", "tool_definitions.json"
+                    )
+                    if target_agent
+                    else None
+                ),
+                "promptfoo_config": _joined("PROMPTFOO_CONFIG_FILE"),
+                "test_case_path": snapshot_base
+                + os.getenv("TEST_CASE_PATH", "references/test_cases/"),
+            },
+        )
+        sys.exit(0)
+
+    # model settings
+    api_key = os.getenv("OPENAI_API_KEY")
+    openai_base_url = os.getenv("OPENAI_BASE_URL")
+    model = os.getenv("MODEL_SONNET")
+    temp = float(os.getenv("TEMP", "0.2"))
+    top_p = float(os.getenv("TOP_P", "0.9"))
+
+    # project settings
+    base_url = os.getenv("BASE_URL")
+    policy_path = base_url + os.getenv("POLICY_DIR") + os.getenv("POLICY_PATH")
+
+    # test case generation settings
+    guidance_file = base_url + os.getenv("GUIDANCE_FILE")
+    output_file_decompose = base_url + os.getenv("DECOMP_FILE")
+    output_file_attack_csv = (
+        base_url + os.getenv("TEST_GENERATION_PATH") + os.getenv("ATTACK_FILE_CSV")
+    )
+    output_file_attack = base_url + os.getenv("ATTACK_FILE")
+    output_file_variables = base_url + os.getenv("VARS_FILE")
+    output_file_cases = base_url + os.getenv("CASE_FILE")
+    system_var_file = base_url + os.getenv("SYSTEM_VAR_FILE")
+    test_case_template_file = base_url + os.getenv("TEST_CASE_TEMPLATE")
+    output_file_ready_cases = base_url + os.getenv("FINAL_TEST_CASES")
+    output_file_grey_guidances = base_url + os.getenv("GREY_GUIDANCE_FILE")
+    output_promptfoo = base_url + os.getenv("PROMPTFOO_OUTPUT_FILE")
+    output_file_attack_promptfoo = base_url + os.getenv("ATTACK_FILE_PROMPT")
+    test_generation_path = base_url + os.getenv("TEST_GENERATION_PATH")
+    test_case_path = base_url + os.getenv("TEST_CASE_PATH", "references/test_cases/")
+    bypass_cases_file = base_url + os.getenv(
+        "BYPASS_CASE_FILE", "references/bypass_cases.json"
+    )
+    bypass_report_dir = base_url + os.getenv("BYPASS_REPORT_DIR", "references/bypass/")
+    system_variables = {}
+    with open(system_var_file, encoding="utf-8") as f:
+        system_variables = json.load(f)
+    output_file_flatten = base_url + os.getenv("FLATTEN_FILE")
+    batch_processing = os.getenv("BATCH_PROCESSING", "false").lower() == "true"
+    batch_size = int(os.getenv("BATCH_SIZE", "10"))
+    case_generation_batch_size = int(os.getenv("CASE_GENERATION_BATCH_SIZE", "5"))
+
+    # test case eveluation settings
+    tier2_high = float(os.getenv("TIER2_HIGH_THRESHOLD", "0.70"))
+    tier2_low = float(os.getenv("TIER2_LOW_THRESHOLD", "0.35"))
+    max_llm = os.getenv("MAX_LLM_CALLS", None)
+    output_file_classified = base_url + os.getenv(
+        "CLASSIFIED_PROMPTFOO_FILE",
+        "references/decomp_attack_file_promptfoo_classified.json",
+    )
+    top_n = int(os.getenv("CLASSIFY_TOP_N", "3"))
+
+    # target agent settings
+    transport = os.getenv("MCP_TRANSPORT", "sse")
+    mcp_url = os.getenv("MCP_URL", "http://localhost:8000/sse")
+    mcp_command = os.getenv("MCP_COMMAND", "python")
+    mcp_args = os.getenv("MCP_ARGS", "").split() if os.getenv("MCP_ARGS") else []
+    mcp_cwd = base_url + os.getenv("MCP_CWD") if os.getenv("MCP_CWD") else None
+    target_agent_path = os.getenv("TARGET_AGENT_PATH")
+    agent_url = os.getenv("AGENT_URL", "http://localhost:9000")
+
+    if args.flag == "classify_guidance":
+        from smith.tools.guidance_classifier_server import serve
+
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+        )
+        serve(tool_definitions, port=8110)
+        sys.exit(0)
+
+    agent = BlueAgent()
+
+    if args.flag == "policy_testing":
+        agent.policy_checking_results()
+    if args.flag == "regal_suggestion":
+        results = agent.get_regal_feedback()
+        print(results)
+    if args.flag == "duplication_suggestion":
+        results = agent.get_duplication_feedback()
+        print(results)
+    if args.flag == "red_suggestion":
+        results = agent.get_red_feedback()
+    if args.flag == "test_generation":
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+        )
+        generate_test(
+            base_url,
+            system_variables,
+            api_key,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            guidance_file,
+            output_file_decompose,
+            output_file_attack,
+            output_file_variables,
+            output_file_attack_csv,
+            test_case_template_file,
+            output_file_ready_cases,
+            output_file_grey_guidances,
+            output_file_attack_promptfoo,
+            test_generation_path,
+            output_file_flatten,
+            output_file_cases,
+            output_promptfoo,
+            case_generation_batch_size,
+            tool_definitions,
+            batch_processing,
+            batch_size,
+        )
+
+    if args.flag == "bypass_case_generation":
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+        )
+        generate_bypass_cases(
+            api_key,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            policy_path,
+            guidance_file,
+            tool_definitions,
+            system_variables,
+            test_case_template_file,
+            output_file_ready_cases,
+            bypass_report_dir,
+            bypass_cases_file,
+            base_url,
+        )
+
+    if args.flag == "get_mcp_parameter":
+        target_agent_path = base_url + target_agent_path
+        output_file = os.path.join(target_agent_path, "smith", "tool_definitions.json")
+        result = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+        )
+        # If a session config selected a subset of tools, keep only those.
+        selected = _selected_tools(base_url)
+        if selected:
+            kept = [t for t in result["tools"] if t.get("name") in selected]
+            dropped = len(result["tools"]) - len(kept)
+            result["tools"] = kept
+            print(
+                f"Session config: keeping {len(kept)} selected tool(s), "
+                f"dropped {dropped} not in config"
+            )
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        with open(output_file, "w") as f:
+            json.dump(result, f, indent=2)
+        for tool in result["tools"]:
+            param_names = [p["name"] for p in tool["parameters"]]
+            print(f"  - {tool['name']} ({', '.join(param_names)})")
+
+    if args.flag == "generate_promptfoo_config":
+        promptfoo_config_path = base_url + os.getenv("PROMPTFOO_CONFIG_FILE")
+        promptfoo_template_path = base_url + os.getenv(
+            "PROMPTFOO_CONFIG_TEMPLATE", "references/promptfoo_config_template.yaml"
+        )
+        tool_definitions = get_tool_definitions(
+            transport, mcp_url, mcp_command, mcp_args, mcp_cwd
+        )
+        generate_promptfoo_config(
+            api_key,
+            openai_base_url,
+            model,
+            temp,
+            top_p,
+            guidance_file,
+            system_var_file,
+            agent_url,
+            promptfoo_config_path,
+            promptfoo_template_path,
+            tool_definitions,
+        )
+
+    if args.flag == "test_case_translation":
+        target_agent_path = base_url + target_agent_path
+        run_extract_tool_args(test_case_path, agent_url)
+
+    if args.flag == "test_case_evaluation":
+        attack_tools = resolve_attack_tools()
+
+        # Step 1: Classify promptfoo cases to match them to guidance
+        if "promptfoo" in attack_tools:
+            classify_promptfoo_cases(
+                api_key,
+                openai_base_url,
+                model,
+                temp,
+                top_p,
+                output_file_decompose,
+                output_file_attack_promptfoo,
+                output_file_classified,
+                top_n=top_n,
+            )
+
+        # Step 2: Validate labels (Tier 1 rules + Tier 2 NLI + Tier 3 LLM)
+        validation_output = base_url + "references/label_validation_results.json"
+        max_llm_calls = int(max_llm) if max_llm else None
+
+        run_validation(
+            test_cases_file=output_file_cases,
+            classified_promptfoo_file=(
+                output_file_classified if "promptfoo" in attack_tools else None
+            ),
+            output_file=validation_output,
+            tier2_high_threshold=tier2_high,
+            tier2_low_threshold=tier2_low,
+            max_llm_calls=max_llm_calls,
+            api_key=api_key,
+            openai_base_url=openai_base_url,
+            model=model,
+            temp=temp,
+            top_p=top_p,
+        )
+
+        # Step 3: Generate HTML report
+        report_output = base_url + "references/test_case_report.html"
+        build_visualization(
+            output_file_cases,
+            output_file_attack if "ares" in attack_tools else None,
+            output_file_classified if "promptfoo" in attack_tools else None,
+            validation_output,
+            report_output,
+        )
+        print(f"\nFinal report: {report_output}")
+
+    if args.flag == "policy_validation":
+        if not args.policy_path:
+            print("ERROR: --policy_path is required for policy_validation")
+            sys.exit(1)
+        if not validate_policy(args.policy_path):
+            sys.exit(1)
+
+    if args.flag == "policy_validation_fix":
+        if not args.policy_path:
+            print("ERROR: --policy_path is required for policy_validation_fix")
+            sys.exit(1)
+        if not fix_and_validate_policy(args.policy_path):
+            sys.exit(1)
+
+    if args.flag == "cpex_translate":
+        src = args.policy_path or policy_path
+        if args.dest:
+            dest = args.dest
+        else:
+            dest = re.sub(r"\.rego$", "_cpex.rego", src) or (src + "_cpex")
+            if dest == src:
+                dest = src + "_cpex"
+        if not translate_policy_to_cpex(src, dest):
+            sys.exit(1)
+
+    if args.flag == "cross_validate":
+        print("Running policy testing first to identify failed cases...")
+        agent.policy_checking_results()
+        test_output_dir = base_url + os.getenv(
+            "TEST_OUTPUT_DIR", "references/scorecard/"
+        )
+        failures_file = test_output_dir + os.getenv(
+            "TEST_FAILURES_PATH", "score_test_failures.txt"
+        )
+        cross_validate_output = base_url + os.getenv(
+            "CROSS_VALIDATE_OUTPUT", "references/cross_validate_report.json"
+        )
+        cross_validate_failed_cases(
+            failures_file=failures_file,
+            guidance_file=guidance_file,
+            system_var_file=system_var_file,
+            output_file=cross_validate_output,
+            api_key=api_key,
+            openai_base_url=openai_base_url,
+            model=model,
+            temp=temp,
+            top_p=top_p,
+        )
+
+    if args.flag == "apply_cross_validate":
+        cross_validate_output = base_url + os.getenv(
+            "CROSS_VALIDATE_OUTPUT", "references/cross_validate_report.json"
+        )
+        apply_cross_validate_results(
+            report_file=cross_validate_output,
+            test_case_base_path=base_url
+            + os.getenv("TEST_CASE_PATH", "references/test_cases/"),
+        )
+
+    allowed_flags = [
+        "policy_testing",
+        "regal_suggestion",
+        "duplication_suggestion",
+        "red_suggestion",
+        "test_generation",
+        "bypass_case_generation",
+        "get_mcp_parameter",
+        "test_case_translation",
+        "test_case_evaluation",
+        "policy_validation",
+        "policy_validation_fix",
+        "cpex_translate",
+        "cross_validate",
+        "apply_cross_validate",
+        "open_explorer",
+        "classify_guidance",
+        "save_snapshot",
+        "generate_promptfoo_config",
+        "get_current_agent",
+    ]
+    if args.flag and args.flag not in allowed_flags:
+        print(f"ERROR: '{args.flag}' is not a valid flag.")
+        print(f"Allowed flags: {', '.join(allowed_flags)}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

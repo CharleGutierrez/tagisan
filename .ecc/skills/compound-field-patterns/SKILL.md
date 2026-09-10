@@ -1,0 +1,120 @@
+---
+name: compound-field-patterns
+description: "Compound fields (Name, Address, Geolocation): SOQL access rules, DML semantics, component\
+  \ access in Apex/LWC, reporting column behavior, formula field restrictions. NOT\
+  \ for creating a new custom field \u2014 use admin/custom-field-creation. NOT for\
+  \ formula syntax and functions \u2014 use admin/formula-fields."
+---
+# Compound Field Patterns
+
+Activate when working with Salesforce compound fields — `Name`, `Address`, and `Geolocation` — in SOQL, Apex DML, LWC, or reports. Compound fields expose a single logical field (the compound) and N component fields (the parts). SOQL rules, DML behavior, and reporting differ in ways that trip up both humans and LLMs.
+
+## Before Starting
+
+- **Know the three compound field types.** Name (FirstName/LastName/Salutation), Address (Street/City/State/PostalCode/Country/Latitude/Longitude), Geolocation (Latitude/Longitude).
+- **Compound in SELECT works; compound in WHERE does not.** You can `SELECT MailingAddress FROM Contact` but not `WHERE MailingAddress = ...`.
+- **DML uses component fields.** `update new Contact(Id=x, MailingCity='SF')` — never assign the compound.
+
+## Core Concepts
+
+### Name compound
+
+Standard objects: `Name` is read-only compound; update `FirstName`, `LastName`, `Salutation`. Custom objects: `Name` is plain text unless defined as Person Name type.
+
+### Address compound
+
+On Account (`BillingAddress`, `ShippingAddress`), Contact (`MailingAddress`, `OtherAddress`), Lead, User. Components: `Street`, `City`, `State`, `PostalCode`, `Country`, `Latitude`, `Longitude`, plus StateCode/CountryCode when State & Country Picklists enabled.
+
+### Geolocation compound
+
+Custom field type combining `__latitude__s` and `__longitude__s`. SOQL `SELECT Location__c` returns a Location object; filter by components.
+
+### SOQL rules
+
+```
+-- Works
+SELECT BillingAddress FROM Account
+
+-- Fails
+SELECT Account WHERE BillingAddress = :addr
+-- Use components:
+SELECT Account WHERE BillingCity = 'SF' AND BillingState = 'CA'
+```
+
+### Apex DML
+
+```
+-- Works
+update new Contact(Id = cid, MailingCity = 'SF');
+
+-- Fails (compound is read-only for DML)
+update new Contact(Id = cid, MailingAddress = new Address(...));
+```
+
+### LWC UI API
+
+`@wire(getRecord)` returns compound and components; display via `{v.fields.MailingAddress.displayValue}` or each component individually.
+
+## Common Patterns
+
+### Pattern: Address update from form
+
+Collect form fields, assign to component fields on new SObject, DML.
+
+### Pattern: Geolocation proximity search
+
+`DISTANCE(location1, location2, 'unit')` calculates the distance between two location values; `GEOLOCATION(latitude, longitude)` builds a location from coordinates and must be paired with `DISTANCE`. `DISTANCE()` is supported in `SELECT`, `WHERE`, and `ORDER BY` clauses; `GEOLOCATION()` is supported in `WHERE` and `ORDER BY` only. Neither is supported in `GROUP BY`. Use for store locators — see gotchas.md (Gotcha 6) for the four non-obvious query constraints and examples.md Example 2 for the working Apex pattern.
+
+### Pattern: Serialize compound to JSON
+
+`JSON.serialize(contact.MailingAddress)` returns the compound object. Consuming code should use components, not the serialized blob as a key.
+
+## Decision Guidance
+
+| Task | Approach |
+|---|---|
+| Display full address | Select compound, render via UI API or concatenate components |
+| Filter by city | Use component field (BillingCity) |
+| Update name | Update FirstName/LastName, not Name |
+| Proximity search | DISTANCE on Geolocation compound |
+| Report with address columns | Compound column works in Reports UI |
+
+## Recommended Workflow
+
+1. Identify whether the context is SELECT, WHERE, DML, LWC, or Report.
+2. For SELECT and Reports: compound or components both work.
+3. For WHERE and ORDER BY (except DISTANCE): use components.
+4. For DML: always components, never the compound assignment.
+5. For LWC: use UI API `displayValue` for rendering and component paths for editing.
+6. For geolocation: use DISTANCE in SOQL for proximity; never compute haversine in Apex unless offline.
+7. Document per-field compound behavior (Person Account names are especially quirky).
+
+## Review Checklist
+
+- [ ] No WHERE-clause filters on compound fields
+- [ ] DML uses component fields only
+- [ ] LWC rendering via UI API displayValue or explicit components
+- [ ] Reports using compound columns where appropriate
+- [ ] State & Country Picklists considered (adds -Code components)
+- [ ] Person Account name semantics documented if Person Accounts enabled
+- [ ] Proximity queries use DISTANCE, not manual math
+- [ ] DISTANCE uses only `>` / `<` operators and a literal `'mi'`/`'km'` unit (location field before GEOLOCATION)
+
+## Salesforce-Specific Gotchas
+
+1. **State & Country Picklists change components.** Adds `BillingStateCode` / `BillingCountryCode` alongside text versions; DML requires the code if picklist is enabled.
+2. **`Name` on standard objects cannot be DML-assigned.** Only on custom objects (where it's a plain text field anyway).
+3. **Serialized compound in JSON integrations is not round-trippable.** Always map to components explicitly.
+
+## Output Artifacts
+
+| Artifact | Description |
+|---|---|
+| Compound-access cheat sheet | Context × field-type matrix |
+| DML update template | Component-assignment patterns |
+| Geolocation query library | DISTANCE patterns |
+
+## Related Skills
+
+- `admin/custom-field-creation` — general field design
+- `apex/soql-fundamentals` — SOQL query patterns

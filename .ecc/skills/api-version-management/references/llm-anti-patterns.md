@@ -1,0 +1,190 @@
+# LLM Anti-Patterns — API Version Management
+
+Common mistakes AI coding assistants make when generating or advising on Salesforce API version management.
+These patterns help the consuming agent self-check its own output.
+
+## Anti-Pattern 1: Claiming sourceApiVersion Controls Runtime Behavior
+
+**What the LLM generates:** "Set `sourceApiVersion` to `63.0` in `sfdx-project.json` and all your Apex classes will run at API version 63.0."
+
+**Why it happens:** LLMs conflate the project-level configuration with per-component runtime versioning. The name `sourceApiVersion` sounds like it should control the source code's API version. Training data often shows `sfdx-project.json` changes without the corresponding per-component updates.
+
+**Correct pattern:**
+
+```text
+sourceApiVersion in sfdx-project.json controls the API version used by
+the Salesforce CLI during deploy/retrieve operations. Each component's
+runtime API version is determined by the <apiVersion> element in its
+own -meta.xml file. Both must be updated for a true version upgrade.
+```
+
+**Detection hint:** Look for advice that mentions only `sfdx-project.json` without also mentioning per-component `-meta.xml` updates.
+
+---
+
+## Anti-Pattern 2: Using a Hardcoded Retired API Version in Code Examples
+
+**What the LLM generates:** Apex class examples with `<apiVersion>28.0</apiVersion>` or REST endpoint examples targeting `/services/data/v28.0/`. Version 28.0 was deprecated in Summer '22 and retired in Summer '25 (it was not retired in Summer '22 — that wave covered 7.0–20.0).
+
+**Why it happens:** LLMs are trained on older documentation, blog posts, and Stack Exchange answers that used API versions current at the time of writing. Versions 7.0–30.0 are well-represented in training data and are now all retired — 7.0–20.0 since Summer '22, 21.0–30.0 since Summer '25.
+
+**Correct pattern:**
+
+```xml
+<!-- Use a current, supported version -->
+<apiVersion>63.0</apiVersion>
+```
+
+```text
+REST endpoint: /services/data/v63.0/sobjects/Account
+Minimum safe version as of 2025: 31.0
+```
+
+**Detection hint:** Flag any `apiVersion` value below 31.0 or any REST/SOAP URL containing `/v[0-9]{1,2}\.0/` where the version number is 30 or below.
+
+---
+
+## Anti-Pattern 3: Omitting apiVersion from LWC .js-meta.xml Files
+
+**What the LLM generates:** A `.js-meta.xml` file without an `<apiVersion>` element, relying on implicit org-level versioning.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__RecordPage</target>
+    </targets>
+</LightningComponentBundle>
+```
+
+**Why it happens:** Much of the LWC training data predates Spring '25, when explicit version declaration became required. Older examples and tutorials do not include `<apiVersion>`.
+
+**Correct pattern:**
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>63.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__RecordPage</target>
+    </targets>
+</LightningComponentBundle>
+```
+
+**Detection hint:** Any `.js-meta.xml` output that does not contain `<apiVersion>`.
+
+---
+
+## Anti-Pattern 4: Recommending a Big-Bang Upgrade Without Risk Assessment
+
+**What the LLM generates:** "Update all your Apex classes to API version 63.0 by running a find-and-replace on all -meta.xml files." No mention of behavior changes between versions, no incremental approach, no test strategy.
+
+**Why it happens:** LLMs optimize for concise answers. A one-line find-and-replace is technically correct for changing the version number but ignores the runtime behavior changes that occur across API versions (null handling, SOQL semantics, trigger context changes).
+
+**Correct pattern:**
+
+```text
+1. Audit current versions and group components into tiers by version range.
+2. Review Salesforce release notes for behavior changes in each version jump.
+3. Upgrade Tier 1 (oldest) first and run the full test suite.
+4. Proceed to next tier only after all tests pass.
+5. Update sourceApiVersion last, after all components are at the target.
+```
+
+**Detection hint:** Advice that suggests updating all components at once without mentioning test isolation, behavior changes, or release notes review.
+
+---
+
+## Anti-Pattern 5: Confusing package.xml Version with Component API Version
+
+**What the LLM generates:** "Set the version in `package.xml` to 63.0 to upgrade all your components to the latest API version."
+
+**Why it happens:** Both `package.xml` and component `-meta.xml` files contain version numbers, and LLMs frequently conflate them. The `package.xml` version controls which metadata types are visible to the Metadata API during retrieve/deploy. It does not change the runtime API version of any component.
+
+**Correct pattern:**
+
+```text
+package.xml <version>63.0</version> — controls Metadata API visibility
+  (which types/fields can be retrieved or deployed).
+
+Component -meta.xml <apiVersion>63.0</apiVersion> — controls runtime
+  behavior (which platform features and method signatures the component uses).
+
+These are independent settings. Updating package.xml does NOT upgrade
+component versions.
+```
+
+**Detection hint:** Advice that mentions only `package.xml` version as a solution for upgrading component API versions, without also addressing per-component `-meta.xml` files.
+
+---
+
+## Anti-Pattern 6: Ignoring Transport API Versions in Integration Advice
+
+**What the LLM generates:** Integration guidance that uses a vague or outdated version in endpoint URLs (e.g., `/services/data/v50.0/`) without explaining that this is a distinct version layer from metadata component versions, and without checking whether the chosen version is approaching retirement.
+
+**Why it happens:** LLMs copy endpoint URLs from training data without evaluating whether the version is current. The distinction between transport API version and component API version is rarely explained in tutorials.
+
+**Correct pattern:**
+
+```text
+Use the current or recent API version in endpoint URLs:
+  /services/data/v63.0/sobjects/Account
+
+Monitor transport API versions separately from metadata versions.
+Query ApiTotalUsage event logs to detect deprecated version usage:
+  SELECT ApiVersion, Client, Count FROM ApiTotalUsage WHERE ApiVersion < 45
+```
+
+**Detection hint:** REST or SOAP endpoint URLs in generated code where the version is more than 3 major releases behind the current release.
+
+
+---
+
+## Anti-Pattern: Merging the two API-retirement waves into one, and freezing the timeline at Summer '22
+
+**What the LLM generates:**
+
+> "Versions 7.0–30.0 were retired in Summer '22. The next retirement wave will follow the same 3-year notice pattern."
+
+**Why it happens:** Summer '22 was a single loud event in which *both* things happened — 7.0–20.0 were retired **and** 21.0–30.0 were deprecated. Because deprecation and retirement announcements arrive together in the same notice, the model collapses them into one verb and one date. The forward-looking sentence then makes the staleness invisible: it *sounds* like current-state planning advice while actually describing a wave that already completed. Note that the derived floor (31.0) happens to be correct, which is why this survives review and why a checker built on it still behaves sanely — the number is right, the mechanism and timeline are not.
+
+**Correct version:**
+
+| Versions | Deprecated | Retired |
+|---|---|---|
+| 7.0 – 20.0 | pre Summer '22 | Summer '22 |
+| 21.0 – 30.0 | Summer '22 | Summer '25 |
+
+The 3-year notice is the gap in the second row. Deprecated ≠ retired: a deprecated version still serves traffic. On retirement, REST returns `410:GONE`, SOAP returns `500:UNSUPPORTED_API_VERSION`, Bulk returns `400:InvalidVersion` — note these differ by protocol, so a client that only string-matches `UNSUPPORTED_API_VERSION` will silently mishandle the REST case. The supported band is 31.0 through 67.0, with nothing deprecated-but-serving beneath it.
+
+**Detection hint:** grep for a version *range* spanning both waves (`7.0-30.0`, `7.0–30.0`) attached to a single date — the range itself is the tell, because Salesforce never retired 7.0 through 30.0 in one action. Second, structural and more generalisable: **any sentence of the form "the next X will follow the same pattern" in a dated reference document is a staleness trap** — it converts a snapshot into a forecast, and the forecast keeps reading as current long after the event it predicted has happened. Check such sentences against today's date before trusting them.
+
+---
+
+## Anti-Pattern: Asserting That Apex Runs `without sharing` by Default
+
+**What the LLM generates:**
+
+> "Apex classes run without sharing by default — if you omit the keyword, sharing rules are not enforced, so always add `with sharing` explicitly."
+
+**Why it happens:** That was true at every API version through 66.0, so it is overwhelmingly the majority statement in training data and reads as a settled platform fact rather than a versioned one. The Apex Developer Guide now says the reverse: "In API version 67.0 and later, classes without an explicit sharing declaration run in with sharing mode." The model also inverts the risk. Its advice treats the missing keyword as a security hole; on a 67.0 class the omission is now the *safe* default, and the live hazard is the opposite one — code that quietly depended on implicit `without sharing` losing record visibility the moment its `apiVersion` is bumped.
+
+**Correct pattern:**
+
+```text
+The class's own apiVersion in .cls-meta.xml decides, not the org release:
+  <= 66.0   no keyword -> without sharing
+  >= 67.0   no keyword -> with sharing
+
+Any class in an inheritance chain saved at 67.0+ pulls the whole chain
+to with sharing. Triggers are exempt: they carry no sharing declaration
+at any version and always run in a without-sharing context.
+
+Full version-gated idiom matrix (do not restate it locally):
+  agents/_shared/AGENT_CONTRACT.md
+    § "Apex security idiom by API version"
+```
+
+**Detection hint:** Any unqualified sentence of the form "Apex is `without sharing` by default" — or its mirror, "Apex now runs `with sharing`" — that names no `apiVersion`. Both are wrong for roughly half of any real codebase mid-upgrade. The tell is the missing version qualifier, not the direction of the claim.

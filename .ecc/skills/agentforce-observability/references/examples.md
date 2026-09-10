@@ -1,0 +1,77 @@
+# Examples — Agentforce Observability
+
+## Example 1: Building a Weekly Deflection Rate Report
+
+**Context:** A customer service team deployed an Agentforce agent to handle tier-1 service requests. The VP of Service wants a weekly report showing how often the agent resolves cases without human escalation.
+
+**Problem:** There is no out-of-the-box weekly deflection report that emails to stakeholders. The legacy dashboard shows a current snapshot but no trend.
+
+**Solution:**
+
+1. Create a **Tableau Next** dataset sourced from the `AIAgentSession` DMO in Data Cloud (Agent Analytics also provides deflection/escalation/abandonment out of the box).
+2. Build a dashboard with a bar chart of daily session counts colored by status (Completed vs Escalated vs Abandoned).
+3. Add a KPI tile showing rolling 7-day deflection rate computed from the dataset.
+4. Schedule the dashboard for email delivery to stakeholders every Monday at 8 AM.
+
+> Object names below are the canonical Session Tracing DMOs; field/attribute names are illustrative — confirm them against the official "Data Model for Agentforce Session Tracing" reference before running.
+
+Key query for the deflection rate KPI:
+```sql
+SELECT
+    DATE_TRUNC('week', SessionStartDateTime) AS week,
+    ROUND(
+        SUM(CASE WHEN SessionStatus = 'Completed' THEN 1.0 ELSE 0.0 END)
+        / COUNT(*) * 100, 1
+    ) AS deflection_pct
+FROM AIAgentSession
+WHERE AgentName = 'Service_Agent'
+GROUP BY 1
+ORDER BY 1 DESC
+```
+
+**Why it works:** The session status field directly indicates the resolution outcome. Grouping by week and computing the ratio gives a trended deflection rate that stakeholders can act on.
+
+---
+
+## Example 2: Diagnosing Why an Agent Keeps Escalating on Billing Questions
+
+**Context:** The service team notices that sessions containing billing-related questions escalate to a human agent at a much higher rate than other subagents (called topics before April 2026; the DMO attribute is still `TopicName`). They want to understand why.
+
+**Problem:** The legacy dashboard does not show subagent-level breakdowns, and they cannot see the actual conversation content.
+
+**Solution:**
+
+Step 1 — Find sessions that escalated while discussing billing:
+```sql
+SELECT s.Id, s.SessionStartDateTime, s.SessionStatus, t.TopicName
+FROM AIAgentSession s
+JOIN AIAgentInteractionStep t ON s.Id = t.SessionId
+WHERE s.AgentName = 'Service_Agent'
+  AND s.SessionStatus = 'Escalated'
+  AND t.TopicName = 'Billing_Inquiry'
+  AND s.SessionStartDateTime >= DATEADD(day, -14, GETDATE())
+ORDER BY s.SessionStartDateTime DESC
+LIMIT 20
+```
+
+Step 2 — Pull the utterance trace for the most recent escalated billing session:
+```sql
+SELECT SequenceNumber, UtteranceText, ResponseText, ResponseLatencyMs
+FROM AIAgentInteractionMessage
+WHERE SessionId = '5MRxx...'
+ORDER BY SequenceNumber ASC
+```
+
+Step 3 — Review the utterance trace. In this case, the agent is not handling refund-related questions because the Billing_Inquiry subagent scope does not include refund processing.
+
+**Why it works:** The utterance trace reveals the exact conversation turn where the agent failed to provide a useful response, leading to escalation. The team can then update the subagent scope or add an action to handle refund queries.
+
+---
+
+## Anti-Pattern: Using Standard SOQL to Query Session Data
+
+**What practitioners do:** Try to run SOQL queries from Developer Console or Apex to find `AIAgentSession` records.
+
+**What goes wrong:** The session trace objects live in Data Cloud (Data 360), not in the standard Salesforce org database. Standard SOQL returns "Object type AIAgentSession is not supported in queries" or simply finds no records.
+
+**Correct approach:** Use Data Cloud SQL via the Data Cloud Query Builder, or consume through Tableau Next (Agent Analytics). Never attempt to query session trace DMOs via standard SOQL.

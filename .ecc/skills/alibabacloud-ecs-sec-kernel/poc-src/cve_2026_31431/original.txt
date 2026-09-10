@@ -1,0 +1,19 @@
+# Original PoC Source for CVE-2026-31431
+# Vulnerability: AF_ALG AEAD authencesn splice path triggers page cache pollution.
+crypto_aead_encrypt fails to isolate page references when processing associated data.
+Allows unprivileged users to overwrite root-owned file page cache via sendmsg+splice combination.
+
+#
+# Reference URL: https://github.com/theori-io/copy-fail-CVE-2026-31431
+#
+# This file documents the original PoC source location.
+# The actual PoC code should be downloaded from the URL above
+# and saved here for reference during code review.
+#
+# Download instructions:
+# 1. Visit: https://github.com/theori-io/copy-fail-CVE-2026-31431
+# 2. Download the .c or .py exploit file
+# 3. Save as: original.txt (replacing this file)
+#
+# Note: The current poc.c has been integrated with the
+# poc_common.h CTF framework and implements the exploit logic.

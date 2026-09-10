@@ -1,0 +1,45 @@
+{
+  "skill_name": "design-fidelity-verify",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Verify my pricing page matches the Figma spec — is it pixel-perfect?",
+      "expected_output": "The skill runs the bounded vision + numeric loop on web, reading computed styles and walking every spec row to a classified verdict with deltas.",
+      "assertions": [
+        "The skill loads the web reference and reads rendered values via getComputedStyle and getBoundingClientRect",
+        "It captures the screen at full resolution (devicePixelRatio >= 2) before measuring",
+        "It walks every design-spec row producing a verdict (PASS, DRIFT, HARDCODED, VARIANT, or MISSING) with a numeric delta",
+        "Computed rgb()/rgba() colors are normalized to hex before comparing to the spec",
+        "A failing row names the token the measured value resolves to, rather than reporting a bare hex or px delta",
+        "Box and position values are compared with a tolerance rather than exact equality, because getBoundingClientRect returns fractional pixels",
+        "The fix-and-re-verify loop is bounded to about 3 iterations",
+        "It does not claim the design matches based on the vision pass alone"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I built this screen in our React Native app from the Figma spec. Does the running app actually match the design?",
+      "expected_output": "The skill runs the loop on mobile, capturing at scale 1.0 and reading the resolved style off the rendered fiber over CDP, degrading gracefully with honest residuals if the eval channel is unavailable.",
+      "assertions": [
+        "The skill loads the mobile reference and captures at scale 1.0 rather than the blurry default",
+        "It reads the resolved style off the host fiber over the Metro/CDP eval channel as the primary numeric pass, not native view props",
+        "It wraps the reader call in JSON.stringify, because the eval channel returns only primitives",
+        "It treats iOS native-find-views as a bonus cross-check, and does not rely on it for cornerRadius or font",
+        "It records the navigation to the screen as a replayable flow",
+        "When the eval channel is unavailable, it still measures placement/sizing from the accessibility tree and records hex/radius/font as an explicit residual",
+        "It walks every spec row to a classified verdict and does not overclaim a full numeric pass when a channel was blocked"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Same screen, but on the Android emulator this time — does it match?",
+      "expected_output": "The skill recognizes that Android has no native paint channel, sets up the adb reverse tunnel before connecting, and runs the same CDP fiber read.",
+      "assertions": [
+        "It runs `adb reverse tcp:8081 tcp:8081` before attempting to connect to Metro/CDP",
+        "It uses the CDP fiber read as the only style source and does not attempt native-find-views on Android",
+        "It drives taps from the accessibility tree rather than from RN-tree coordinates",
+        "It records native paint readback as a stated residual rather than a silent omission"
+      ]
+    }
+  ]
+}

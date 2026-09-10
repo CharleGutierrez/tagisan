@@ -1,0 +1,25 @@
+{
+  "skill_name": "wa-builder",
+  "prompts": [
+    {"text": "teach me about the Well-Architected Framework for my project", "should_trigger": true},
+    {"text": "generate an architecture diagram with WA pillar annotations", "should_trigger": true},
+    {"text": "create a decision tree for our architectural choices", "should_trigger": true},
+    {"text": "help me understand Well-Architected best practices", "should_trigger": true},
+    {"text": "generate a visual improvement roadmap based on WA", "should_trigger": true},
+    {"text": "create a WA pillar health overlay for my architecture", "should_trigger": true},
+    {"text": "I'm new to Well-Architected, explain it for my workload", "should_trigger": true},
+    {"text": "produce a visual artifact showing our WA compliance gaps", "should_trigger": true},
+    {"text": "learn WA and create diagrams I can share with my team", "should_trigger": true},
+    {"text": "build a visual decision flow for our infrastructure choices", "should_trigger": true},
+    {"text": "do a security assessment of our IAM policies", "should_trigger": false},
+    {"text": "optimize our AWS costs", "should_trigger": false},
+    {"text": "improve our application performance", "should_trigger": false},
+    {"text": "identify reliability gaps and SPOFs", "should_trigger": false},
+    {"text": "plan our migration to AWS", "should_trigger": false},
+    {"text": "reduce our cloud carbon footprint", "should_trigger": false},
+    {"text": "review our CI/CD and deployment practices", "should_trigger": false},
+    {"text": "do a full WA review producing findings and risk scores", "should_trigger": false},
+    {"text": "create an ADR for our technology choice", "should_trigger": false},
+    {"text": "assess our workload against all 57 WA questions", "should_trigger": false}
+  ]
+}

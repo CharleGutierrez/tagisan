@@ -1,0 +1,50 @@
+{
+  "skill_name": "envelope-decrypt",
+  "evals": [
+    {
+      "id": 1, "name": "decrypt-file-stdout",
+      "prompt": "I have /tmp/config.yaml.enc that was KMS envelope-encrypted. Decrypt it and show me the contents.",
+      "expected_output": "Plaintext to stdout using --in-file"
+    },
+    {
+      "id": 2, "name": "decrypt-with-context",
+      "prompt": "Decrypt /tmp/prod-secret.enc -- it was encrypted with context {\"env\":\"production\"} for production tracking.",
+      "expected_output": "Uses --encryption-context matching production"
+    },
+    {
+      "id": 3, "name": "decrypt-inline-string",
+      "prompt": "I have an encrypted string from CI -- it's 3 lines of base64. Decrypt it back inline: the ciphertext is stored in a variable $CIPHER.",
+      "expected_output": "Uses --data flag with shell variable"
+    },
+    {
+      "id": 4, "name": "decrypt-stdin-stdout",
+      "prompt": "Cat the encrypted file and pipe it through KMS decrypt, output the plaintext to stdout.",
+      "expected_output": "Uses --in-file - for stdin pipe"
+    },
+    {
+      "id": 5, "name": "decrypt-write-to-file",
+      "prompt": "Decrypt /tmp/secrets.yaml.enc and save the plaintext to /tmp/secrets.yaml",
+      "expected_output": "Uses --out-file for file output"
+    },
+    {
+      "id": 6, "name": "decrypt-wrong-context-fails",
+      "prompt": "Try to decrypt /tmp/prod-secret.enc with encryption context {\"env\":\"staging\"} but it was encrypted with {\"env\":\"production\"}.",
+      "expected_output": "KMS returns error, decryption fails"
+    },
+    {
+      "id": 7, "name": "decrypt-missing-input-error",
+      "prompt": "Run the KMS decrypt command without specifying any input file or data -- I want to see the error.",
+      "expected_output": "Command fails with 'either --data or --in-file is required'"
+    },
+    {
+      "id": 8, "name": "decrypt-bad-format-error",
+      "prompt": "Try to decrypt a file that only has one line of text, not the required 3-line envelope format.",
+      "expected_output": "Command fails with 'invalid envelope format' error"
+    },
+    {
+      "id": 9, "name": "decrypt-conflict-flags-error",
+      "prompt": "Try to decrypt using both --data 'xxx' and --in-file /tmp/x at the same time.",
+      "expected_output": "Command fails with 'mutually exclusive' error"
+    }
+  ]
+}

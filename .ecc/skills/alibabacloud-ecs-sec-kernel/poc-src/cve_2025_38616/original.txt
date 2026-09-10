@@ -1,0 +1,18 @@
+# Original PoC Source for CVE-2025-38616
+# Vulnerability: TLS data disappearing under ULP context. Race condition in Upper Layer Protocol handling
+causes TLS data loss and potential memory corruption, enabling local privilege escalation.
+
+#
+# Reference URL: https://github.com/google/security-research/tree/master/pocs/linux/kernelctf/CVE-2025-38616_lts_cos_mitigation
+#
+# This file documents the original PoC source location.
+# The actual PoC code should be downloaded from the URL above
+# and saved here for reference during code review.
+#
+# Download instructions:
+# 1. Visit: https://github.com/google/security-research/tree/master/pocs/linux/kernelctf/CVE-2025-38616_lts_cos_mitigation
+# 2. Download the .c or .py exploit file
+# 3. Save as: original.txt (replacing this file)
+#
+# Note: The current poc.c has been integrated with the
+# poc_common.h CTF framework and implements the exploit logic.

@@ -1,0 +1,42 @@
+# Well-Architected Notes — SOQL Fundamentals
+
+## Relevant Pillars
+
+- **Security** — Whether a SOQL query enforces the running user's access is decided by the `apiVersion` in the class's `.cls-meta.xml`, not by the org's release. In a class saved at **API 66.0 or earlier**, every SOQL query runs in system mode by default, bypassing FLS and object-level security, so enforcement must be stated explicitly with `WITH USER_MODE` (preferred, fewer limitations) or, at ≤56.0, `WITH SECURITY_ENFORCED`. In a class saved at **API 67.0+** (Summer '26) that default inverted: SOQL, SOSL, DML, and `Database` methods run in user mode with no keyword at all, and `WITH SECURITY_ENFORCED` no longer compiles. The canonical version table is [Apex security idiom by API version](../../../../agents/_shared/AGENT_CONTRACT.md#apex-security-idiom-by-api-version) — read it rather than assuming from the org's release. Apex **triggers** split this across two things that are easy to conflate: the trigger's *sharing declaration* and the *access mode* of each database operation inside it. The declaration is fixed — a trigger can't carry an explicit sharing declaration and always runs implicitly `without sharing`, bypassing the current user's sharing rules. The access mode is per-operation: database operations inside the trigger body (SOQL, SOSL, DML, and `Database` methods) follow the same version rule as above, read from the trigger's own `.trigger-meta.xml`, so in a trigger saved at **API 67.0+** they run in user mode unless system mode is explicitly specified. A user-mode operation enforces object- and field-level permissions and, per the Apex Developer Guide, *overrides* the trigger's `without sharing` context — it "effectively enforces a with sharing context in the trigger body" for that operation. `WITH SYSTEM_MODE` opts a single query back out: object- and field-level security are bypassed, and record sharing reverts to the trigger's own `without sharing` context. So the trigger's declaration is fixed, but enforcement inside the body is not — a trigger body is not unenforceable by construction, and code that needs enforcement does not have to be moved to a handler class to get it. Salesforce recommends setting an explicit access mode on every database operation in triggers and their handler classes rather than relying on the default. Failing to enforce access in user-facing code is a common vulnerability.
+
+- **Reliability** — Queries without ORDER BY produce non-deterministic results that are consistent in sandbox but fail silently in production. OFFSET limitations (max 2,000 rows) and the 100 SOQL queries-per-transaction limit are reliability boundaries that must be designed for, not discovered in production.
+
+- **Scalability** — SOQL has hard governor limits: 100 queries per synchronous transaction, 50,000 rows per transaction, and a 100,000-character query length limit. Queries that work at 10,000 records fail at 1,000,000. Aggregate functions, selective WHERE clauses, and relationship queries built correctly scale without code changes; ad-hoc loops-in-loops do not.
+
+- **Operational Excellence** — SOQL written in triggers must be bulkified: a single SOQL inside a for-loop is one of the most commonly cited performance anti-patterns in Salesforce Apex. Storing SOQL queries outside of for-loops, using collections, and leveraging Maps for lookups are fundamental operational practices.
+
+## Architectural Tradeoffs
+
+**Child-to-parent vs. two queries:** A child-to-parent traversal (dot notation) retrieves parent data in one query but flattens the result. If you need the parent object along with multiple related children, a parent-to-child subquery keeps results structured but has a 20-subquery limit per SELECT statement. Choose based on whether you need the data flat (child-to-parent) or hierarchical (parent-to-child).
+
+**OFFSET pagination vs. queryMore():** OFFSET is simple to implement but caps at 2,000 rows and has no server-side cursor — the underlying data can change between page requests. `queryMore()` / `nextRecordsUrl` uses a server-side cursor that is stable for up to 15 minutes. For production UIs with large data sets, cursor-based approaches are more reliable.
+
+**Aggregate in SOQL vs. aggregate in Apex:** Aggregating on the server (GROUP BY + aggregate function) uses zero Apex heap and CPU for the aggregation step. Aggregating in Apex code consumes heap proportional to the number of records loaded. At scale, server-side aggregation is always preferred for reporting use cases.
+
+## Anti-Patterns
+
+1. **SOQL inside a for-loop** — Placing a SOQL query inside an iteration loop multiplies the query count by the number of iterations, quickly exhausting the 100-query limit in synchronous Apex. Replace with a single query before the loop, loading results into a Map keyed by ID for efficient lookup inside the loop.
+
+2. **SELECT * simulation via dynamic field enumeration** — Dynamically building a field list from `Schema.getGlobalDescribe()` to retrieve all fields bypasses FLS in a class saved at API 66.0 or earlier (at 67.0+ the query runs in user mode and throws `QueryException` on the first inaccessible field instead — a different failure, not a fixed one), risks `QUERY_TOO_COMPLICATED` on large objects, and introduces SOQL injection risk if any user data is concatenated. Use `FIELDS(STANDARD)` / `FIELDS(CUSTOM)` with LIMIT, or enumerate specific needed fields.
+
+3. **Unbounded queries in triggers** — Trigger code that queries related records without a selective WHERE clause or LIMIT can return 50,000 rows per transaction, blocking other DML and consuming the entire row budget. Always add WHERE conditions and LIMIT to trigger-context queries; use Batch Apex for bulk data operations.
+
+## Official Sources Used
+
+- SOQL and SOSL Reference (Version 66.0, Spring '26) — https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/sforce_api_calls_soql.htm
+  - Used for: SELECT syntax, all clause definitions, relationship query rules, aggregate function behavior, LIMIT/OFFSET limits, FIELDS() keyword behavior, date literal reference
+- Apex Developer Guide — https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_dev_guide.htm
+  - Used for: inline SOQL syntax in Apex, Database.query() dynamic SOQL, FOR UPDATE locking, governor limits, WITH USER_MODE vs WITH SECURITY_ENFORCED guidance
+- Apex Developer Guide — Using the with sharing, without sharing, and inherited sharing Keywords — https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_keywords_sharing.htm
+  - Used for: the trigger sharing/access-mode split. "Apex triggers can't have an explicit sharing declaration. Triggers always run implicitly in a without sharing context." "However, database operations within trigger bodies, including SOQL queries, SOSL queries, DML statements, and Database methods, run in user mode unless system mode is explicitly specified. User mode overrides the trigger's without sharing context and effectively enforces a with sharing context in the trigger body." The `AccountUpdateTrigger` example (labelled "API version 67.0 and later") shows `WITH SYSTEM_MODE` inside a trigger, noting object- and field-level security are bypassed while "Record sharing remains governed by the trigger's own without sharing context".
+- SOQL and SOSL Reference — FIELDS() — https://developer.salesforce.com/docs/atlas.en-us.soql_sosl.meta/soql_sosl/sforce_api_calls_soql_select_fields.htm
+  - Used for: the bounded/unbounded split and the support matrix. `FIELDS(ALL)` and `FIELDS(CUSTOM)` are "Not supported" in Apex (inline and dynamic) and in Bulk API 2.0; in REST/SOAP/CLI they are "Supported only if the result rows are limited" — `LIMIT n where n <= 200` or `WHERE Id IN` a list of up to 200 IDs. `FIELDS(STANDARD)` is bounded and supported everywhere. "FIELDS() respects field-level security so it only shows the fields that you have permission to access."
+- SOAP API Developer Guide — StatusCode enumeration — https://developer.salesforce.com/docs/atlas.en-us.api.meta/api/sforce_api_calls_concepts_core_data_objects.htm
+  - Used for: confirming `MALFORMED_QUERY` and `QUERY_TOO_COMPLICATED` exist and that there is no `QUERY_TOO_LARGE` status code
+- Salesforce Well-Architected Overview — https://architect.salesforce.com/docs/architect/well-architected/guide/overview.html
+  - Used for: framing scalability and security pillars

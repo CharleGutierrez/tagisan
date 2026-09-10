@@ -1,0 +1,46 @@
+# Well-Architected Notes — Apex Security Patterns
+
+## Relevant Pillars
+
+### Security
+
+This skill is directly about the Security pillar. It defines who can see records, who can read fields, who can update fields, and when system context is allowed to override those defaults.
+
+Tag findings as Security when:
+- a class omits or misuses its sharing declaration
+- CRUD/FLS enforcement is missing on reads or writes
+- user-facing Apex runs with broader access than intended
+
+### Reliability
+
+Security bugs also become reliability bugs when users see inconsistent behavior or when elevated access causes data changes that violate business expectations.
+
+Tag findings as Reliability when:
+- access checks are applied inconsistently across read and write paths
+- the same service behaves differently depending on ambiguous sharing intent
+- security sanitization removes fields silently without operational visibility where that visibility matters
+
+## Architectural Tradeoffs
+
+- **Inherited sharing vs explicit `with sharing`:** inherited sharing is often best for reusable services, but top-level entry points still need deliberate declarations.
+- **Fail-fast vs graceful degradation:** `WITH USER_MODE` fails the whole operation; `stripInaccessible` degrades gracefully by removing inaccessible fields. The API 67.0 user-mode default does not settle this — it only makes fail-fast the behaviour you get by saying nothing. (`WITH SECURITY_ENFORCED` is no longer a third option: it is removed from SOQL `SELECT` in Apex at 67.0.)
+- **Elevated-access helpers vs broad elevated layers:** narrow privilege escalation is safer than `without sharing` at the controller boundary.
+- **Version uplift as a security event:** raising a class to `apiVersion` 67.0 flips its database operations from system mode to user mode. Uplifting the whole codebase in one sweep is cheap to schedule and expensive to debug, because elevated-access classes fail quietly by returning fewer rows. Uplift by class, with the system-mode opt-ins written before the version bump lands.
+
+## Anti-Patterns
+
+1. **Top-level `without sharing` as a shortcut** — easy to write, hard to defend in review.
+2. **Query secured, write unsecured** — the most common partial-security design flaw.
+3. **Implicit sharing intent** — missing declarations force reviewers to infer behavior instead of verifying it.
+
+## Official Sources Used
+
+- Apex Developer Guide — security and sharing keyword guidance
+- Secure Apex Classes — explicit CRUD/FLS and user-context recommendations
+- Salesforce Well-Architected Overview — security and reliability framing
+- [Using the with sharing, without sharing, and inherited sharing Keywords](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_keywords_sharing.htm) — API 67.0+ default mode, class/inner-class inheritance, method-definition enforcement rule, trigger context, and inherited-sharing entry-point resolution
+- [Enforcing Sharing Rules](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_security_sharing_rules.htm) — sharing vs CRUD/FLS independence and the without-sharing / Modify All Data equivalence
+- [Enforce Security With the stripInaccessible Method / Apex Security and Sharing](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_security_sharing_chapter.htm) — chapter framing for sharing and access enforcement
+- [Set an Access Mode for Database Operations](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/apex_classes_enforce_usermode.htm) — confirms "In API version 67.0 and later, Apex runs in user context by default", "In API version 66.0 and earlier, system mode is the default", and the three syntaxes (SOQL/SOSL `WITH USER_MODE` / `WITH SYSTEM_MODE`, DML `as user` / `as system`, `accessLevel` on `Database` and `Search` methods) (verified 2026-08-13)
+- [Apex Versioned Behavior Changes](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/versioned_behavior_changes.htm) — confirms all three API 67.0 entries: user-mode default, `with sharing` default for undeclared classes, and "you cannot use the WITH SECURITY_ENFORCED clause in SOQL SELECT queries in Apex code" (verified 2026-08-13)
+- Trigger behaviour is sourced from the *with sharing / without sharing / inherited sharing* reference page above, which states that trigger bodies bypass sharing rules but that their "database operations ... run in user mode unless system mode is explicitly specified", and carries a worked `WITH SYSTEM_MODE`-inside-a-trigger example. The Summer '26 developer blog summarises this as "triggers always run in system mode"; that compression conflicts with the reference guide, so the reference guide is what this skill follows (checked 2026-08-14).

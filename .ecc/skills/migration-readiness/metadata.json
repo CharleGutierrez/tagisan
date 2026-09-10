@@ -1,0 +1,49 @@
+{
+  "version": "2.0.0",
+  "organization": "AWS",
+  "date": "June 2026",
+  "abstract": "Assess a workload's readiness to migrate to AWS using Well-Architected principles, covering the 7 Rs, dependencies, risks, and a migration plan.",
+  "references": [
+    "https://docs.aws.amazon.com/wellarchitected/latest/migration-lens/migration-lens.html"
+  ],
+  "triggers": [
+    "migration readiness assessment",
+    "7 Rs analysis",
+    "cloud migration planning",
+    "workload migration strategy",
+    "on-premises to AWS migration",
+    "rehost replatform refactor decision",
+    "migration risk assessment",
+    "dependency mapping for migration",
+    "migration wave planning",
+    "lift and shift evaluation"
+  ],
+  "not_for": [
+    "architecture decision records (use architecture-decision-record instead)",
+    "single-pillar assessments like security or reliability (use the specific pillar skill instead)",
+    "cost optimization of existing AWS workloads (use cost-optimization-review instead)",
+    "full cross-pillar WA review of existing AWS workloads (use aws-well-architected-framework-review instead)",
+    "learning WA concepts (use wa-builder instead)"
+  ],
+  "metadata": {
+    "service": [
+      "migration-hub",
+      "dms",
+      "application-discovery"
+    ],
+    "task": [
+      "assess",
+      "plan",
+      "migrate"
+    ],
+    "persona": [
+      "solutions-architect",
+      "migration-specialist",
+      "developer"
+    ],
+    "workload": [
+      "on-premises",
+      "hybrid"
+    ]
+  }
+}

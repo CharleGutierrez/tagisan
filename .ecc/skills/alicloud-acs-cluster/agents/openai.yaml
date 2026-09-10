@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alibaba Cloud ACS Cluster"
+  short_description: "Create, inspect, connect, and delete ACS clusters"
+  default_prompt: "Use $alicloud-acs-cluster to create an ACS cluster safely and produce validation evidence."

@@ -1,0 +1,393 @@
+# EKS Networking — Ingress, Load Balancing & DNS
+
+> **Part of:** [eks-best-practices](../SKILL.md)
+> **Purpose:** Ingress patterns (ALB, NLB, Gateway API), AWS Load Balancer Controller, service mesh, DNS/CoreDNS tuning, private cluster connectivity
+
+**For VPC CNI, subnet planning, IPv6, and IP management, see:** [Networking](networking.md)
+**For network policies and traffic control, see:** [Security — Runtime & Network](security-runtime-network.md)
+
+---
+
+## Table of Contents
+
+1. [Ingress Patterns](#ingress-patterns)
+2. [AWS Load Balancer Controller — ALB](#aws-load-balancer-controller-alb)
+3. [AWS Load Balancer Controller — NLB](#aws-load-balancer-controller-nlb)
+4. [Gateway API](#gateway-api)
+5. [Service Mesh Options](#service-mesh-options)
+6. [DNS and CoreDNS](#dns-and-coredns)
+7. [Private Cluster Patterns](#private-cluster-patterns)
+8. [Network Policies](#network-policies)
+
+---
+
+## Ingress Patterns
+
+### Ingress Controller Decision Matrix
+
+| Controller | Protocol | Use When | Key Feature |
+|-----------|----------|----------|-------------|
+| **AWS ALB (via LBC)** | HTTP/HTTPS, gRPC | Web apps, REST APIs | Native WAF, Cognito auth |
+| **AWS NLB (via LBC)** | TCP/UDP, TLS | Non-HTTP, ultra-low latency | Static IPs, preserve source IP |
+| **Gateway API + LBC** | HTTP/HTTPS | New standard, future-proof | Multi-team route management |
+| **VPC Lattice** | HTTP/HTTPS | Cross-VPC, service-to-service | No ALB/NLB ingress controller (still runs the in-cluster Gateway API controller) |
+| **NGINX Ingress** | HTTP/HTTPS | Complex routing, rate limiting | Most configurable |
+| **Istio Gateway** | HTTP/HTTPS, TCP | Service mesh users | Integrated with Istio |
+
+### ALB vs NLB Quick Decision
+
+| Factor | NLB | ALB |
+|--------|-----|-----|
+| **Protocol** | TCP, UDP, TLS | HTTP, HTTPS, gRPC (L7) |
+| **Latency** | Lower (L4) | Higher (L7 processing) |
+| **Static IPs** | Yes (Elastic IPs) | No |
+| **Source IP preservation** | Native | Via X-Forwarded-For header |
+| **WAF integration** | No | Yes |
+| **Auth integration** | No | Yes (Cognito, OIDC) |
+| **Best for** | TCP/UDP, gRPC, low latency | HTTP web apps, WAF, auth |
+
+---
+
+## AWS Load Balancer Controller (ALB)
+
+The AWS Load Balancer Controller provisions Application Load Balancers for Kubernetes Ingress resources. ALB is the default ingress pattern for HTTP/HTTPS workloads, with native AWS WAF, Cognito, and ACM integration.
+
+### ALB Ingress Example
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip  # Required for Fargate
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:...
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
+    alb.ingress.kubernetes.io/wafv2-acl-arn: arn:aws:wafv2:...
+spec:
+  rules:
+  - host: app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-service
+            port:
+              number: 80
+```
+
+### Key ALB Annotations
+
+| Annotation | Purpose | Common Values |
+|---|---|---|
+| `alb.ingress.kubernetes.io/scheme` | Internet-facing or internal | `internet-facing`, `internal` |
+| `alb.ingress.kubernetes.io/target-type` | How pods are registered | `ip` (recommended), `instance` |
+| `alb.ingress.kubernetes.io/group.name` | Share ALB across Ingresses | Any string (e.g., `shared-alb`) |
+| `alb.ingress.kubernetes.io/listen-ports` | Listener ports | `[{"HTTPS":443}]` |
+| `alb.ingress.kubernetes.io/certificate-arn` | ACM certificate | ACM ARN |
+| `alb.ingress.kubernetes.io/ssl-redirect` | HTTP to HTTPS redirect | `443` |
+| `alb.ingress.kubernetes.io/wafv2-acl-arn` | WAF integration | WAF ACL ARN |
+| `alb.ingress.kubernetes.io/auth-type` | Authentication | `cognito`, `oidc` |
+| `alb.ingress.kubernetes.io/ip-address-type` | IPv4 or dual-stack | `ipv4`, `dualstack` |
+
+### IP Mode vs Instance Mode
+
+| Factor | IP Mode | Instance Mode |
+|---|---|---|
+| **Target registration** | Pod IP directly | Node IP + NodePort |
+| **Network hops** | Fewer (ALB → pod) | More (ALB → node → pod) |
+| **Pod density** | Better (no NodePort exhaustion) | Limited by NodePort range |
+| **Fargate support** | Yes | No |
+| **Recommendation** | Default choice | Legacy or specific requirements |
+
+✅ DO:
+- Use IP target type for new deployments — fewer hops, better performance
+- Use `group.name` to share a single ALB across multiple Ingress resources — reduces cost and avoids ALB limits
+- Enable SSL redirect (HTTP → HTTPS) for all internet-facing ALBs
+- Attach WAF ACL for internet-facing ALBs
+- Configure appropriate health check paths — ALB defaults may not match your app
+
+❌ DON'T:
+- Create one ALB per Ingress without grouping — expensive and hits ALB quotas
+- Use instance target type with Fargate (not supported)
+- Mix Ingress annotations from different controllers
+
+---
+
+## AWS Load Balancer Controller (NLB)
+
+The LBC provisions Network Load Balancers for Kubernetes Services of type LoadBalancer. NLB handles TCP/UDP workloads, gRPC, and scenarios requiring static IPs or source IP preservation.
+
+### NLB Service Example
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-nlb
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: my-app
+  ports:
+  - port: 443
+    targetPort: 8443
+    protocol: TCP
+```
+
+### Key NLB Annotations
+
+| Annotation | Purpose | Common Values |
+|---|---|---|
+| `service.beta.kubernetes.io/aws-load-balancer-type` | Use LBC (not in-tree) | `external` |
+| `service.beta.kubernetes.io/aws-load-balancer-nlb-target-type` | Target registration | `ip` (recommended), `instance` |
+| `service.beta.kubernetes.io/aws-load-balancer-scheme` | Internet-facing or internal | `internet-facing`, `internal` |
+| `service.beta.kubernetes.io/aws-load-balancer-proxy-protocol-v2-enabled` | Proxy protocol | `true`, `false` |
+| `service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled` | Cross-AZ balancing | `true` |
+| `service.beta.kubernetes.io/aws-load-balancer-ssl-cert` | TLS termination at NLB | ACM ARN |
+
+✅ DO:
+- Use `aws-load-balancer-type: external` to ensure LBC manages the NLB (not the legacy in-tree controller)
+- Use IP target type for consistency with ALB and fewer network hops
+- Enable cross-zone load balancing for even traffic distribution
+
+❌ DON'T:
+- Use NLB for HTTP workloads that need WAF or Cognito — use ALB instead
+- Forget to set `externalTrafficPolicy: Local` if you need source IP preservation with instance targets
+
+---
+
+## Gateway API
+
+Gateway API is the successor to the Ingress resource, offering role-oriented resource model and multi-team route management. **Recommended for new deployments.**
+
+**Two different AWS implementations back Gateway API — do not blend them.** The `controllerName` on the GatewayClass decides which one you get:
+
+| Implementation | GatewayClass `controllerName` | Provisions | Use for |
+|---|---|---|---|
+| **AWS Load Balancer Controller (LBC) Gateway API** | `gateway.k8s.aws/alb` (L7) or `gateway.k8s.aws/nlb` (L4) | An ALB (L7) or NLB (L4) | In-cluster ingress that would otherwise use an ALB/NLB Ingress or Service |
+| **VPC Lattice (Gateway API controller)** | `application-networking.k8s.aws/gateway-api-controller` | A VPC Lattice service network | Cross-VPC / cross-account service-to-service networking |
+
+Copy-pasting the Lattice `controllerName` when you actually want an ALB yields a Lattice service network, not a load balancer — a common mistake. The LBC Gateway API support is GA (v3.0.0, released 2026-01-23; current v3.5.0 as of 2026-08-04) and requires installing its CRDs (`TargetGroupBinding`, the LBC Gateway CRDs, and the upstream Gateway API CRDs) via a manual `kubectl apply` step, per the [v3.0.0 release notes'](https://github.com/kubernetes-sigs/aws-load-balancer-controller/releases/tag/v3.0.0) Action-Required block; both L7 (ALB) and L4 (NLB) Gateways are supported.
+
+**Example A — ALB via the LBC Gateway API** (in-cluster HTTP ingress):
+
+```yaml
+# GatewayClass (one per cluster — defines which controller)
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: alb
+spec:
+  controllerName: gateway.k8s.aws/alb   # LBC ALB Gateway (use gateway.k8s.aws/nlb for an L4/NLB Gateway)
+
+---
+# Gateway (per team/environment — defines listeners)
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: app-gateway
+spec:
+  gatewayClassName: alb
+  listeners:
+  - name: https
+    port: 443
+    protocol: HTTPS
+    tls:
+      certificateRefs:
+      - name: app-cert
+
+---
+# HTTPRoute (per service — defines routing rules)
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: app-route
+spec:
+  parentRefs:
+  - name: app-gateway
+  hostnames:
+  - "app.example.com"
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /api
+    backendRefs:
+    - name: api-service
+      port: 80
+```
+
+**Example B — VPC Lattice via the Gateway API controller** (cross-VPC service networking, *not* an ALB):
+
+```yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: amazon-vpc-lattice
+spec:
+  controllerName: application-networking.k8s.aws/gateway-api-controller
+```
+
+**Why Gateway API over Ingress:**
+- **Role separation** — infrastructure teams manage GatewayClass/Gateway, application teams manage HTTPRoutes
+- **Multi-team** — multiple HTTPRoutes can attach to one Gateway without annotation conflicts
+- **Richer routing** — header matching, traffic splitting, URL rewriting built-in
+- **Portable** — same resources work across ALB, NLB, NGINX, Istio, and other implementations
+
+✅ DO:
+- Use `target-type: ip` for pod-direct traffic (required for Fargate)
+- Use Gateway API for new multi-team setups — cleaner separation of concerns than Ingress
+
+❌ DON'T:
+- Mix Gateway API and Ingress for the same service — pick one approach
+- Forget to set health check paths on ALB target groups
+
+---
+
+## Service Mesh Options
+
+| Option | Managed | Complexity | Best For |
+|--------|---------|-----------|----------|
+| **VPC Lattice** | Fully managed | Low | Cross-VPC, AWS-native |
+| **Istio (on EKS)** | Self-managed | High | Full service mesh features |
+| **App Mesh** | AWS managed | Medium | **End of support 2026-09-30 — do not adopt; console/resources become inaccessible after that date. Use Istio or Cilium mTLS instead.** |
+
+**VPC Lattice** is recommended for new AWS-native service-to-service networking:
+- No sidecar proxies needed
+- Cross-VPC and cross-account routing
+- IAM-based auth policies
+- Integrates with Gateway API
+
+---
+
+## DNS and CoreDNS
+
+### CoreDNS Tuning for Large Clusters
+
+**Scale CoreDNS with cluster size:**
+
+```yaml
+# Enable CoreDNS autoscaling via proportional autoscaler
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dns-autoscaler
+  namespace: kube-system
+spec:
+  # Scales CoreDNS replicas based on node/core count
+  # linear: {"coresPerReplica": 256, "nodesPerReplica": 16, "min": 2, "max": 10}
+```
+
+**Optimize DNS resolution:**
+
+```yaml
+# Pod DNS config — reduce search domain lookups
+apiVersion: v1
+kind: Pod
+spec:
+  dnsConfig:
+    options:
+    - name: ndots
+      value: "2"  # Default is 5, causing unnecessary search domain queries
+  dnsPolicy: ClusterFirst
+```
+
+**Deploy NodeLocal DNSCache** for clusters >100 nodes — reduces CoreDNS load by 80%+. Note: NodeLocal DNSCache is **not supported** with Security Groups for Pods in strict mode, because strict mode routes all traffic through the VPC (including traffic to the node).
+
+✅ DO:
+- Deploy NodeLocal DNSCache for clusters >100 nodes
+- Set `ndots: 2` for pods making many external DNS calls
+- Monitor CoreDNS metrics (cache hit rate, latency, errors)
+- Use proportional autoscaler — don't manually set replica counts
+
+❌ DON'T:
+- Run CoreDNS with only 2 replicas on large clusters
+- Ignore DNS latency as source of application slowness
+- Enable DNS64 on subnets with IPv6 pods unless you intend NAT64 routing (causes unexpected NAT GW costs)
+
+### External DNS
+
+```bash
+# Auto-manage Route 53 records for Services/Ingresses
+helm install external-dns external-dns/external-dns \
+  --set provider=aws \
+  --set policy=sync \
+  --set registry=txt \
+  --set txtOwnerId=my-cluster
+```
+
+---
+
+## Private Cluster Patterns
+
+### Fully Private Cluster
+
+**No public endpoint, all traffic stays within VPC:**
+
+```hcl
+# Terraform configuration
+resource "aws_eks_cluster" "private" {
+  vpc_config {
+    endpoint_private_access = true
+    endpoint_public_access  = false
+    subnet_ids              = var.private_subnet_ids
+  }
+}
+```
+
+**Required VPC endpoints:**
+- `com.amazonaws.<region>.eks` — EKS API
+- `com.amazonaws.<region>.eks-auth` — EKS auth
+- `com.amazonaws.<region>.ecr.api` — ECR API
+- `com.amazonaws.<region>.ecr.dkr` — ECR Docker
+- `com.amazonaws.<region>.s3` (Gateway) — ECR image layers
+- `com.amazonaws.<region>.sts` — STS for IRSA/Pod Identity
+- `com.amazonaws.<region>.logs` — CloudWatch Logs
+- `com.amazonaws.<region>.ec2` — EC2 API (for nodes)
+- `com.amazonaws.<region>.elasticloadbalancing` — ELB (if using LBC)
+
+### Access Patterns for Private Clusters
+
+| Access Method | Complexity | Use When |
+|--------------|-----------|----------|
+| **VPN/Direct Connect** | Medium | Existing corporate network |
+| **SSM Session Manager** | Low | Ad-hoc access via a bastion in the VPC (no inbound SSH, no public IP) |
+| **PrivateLink** | Medium | Cross-VPC or cross-account |
+| **VS Code Remote / IDE over SSM** | Low | Development/testing from a workstation into a VPC bastion |
+
+> AWS Cloud9 is **closed to new customers** (as of 2026-08-04) and is no longer a recommended in-VPC access path. Reach a private cluster through **SSM Session Manager** to a bastion (or VS Code Remote tunneling over that SSM session) instead.
+
+---
+
+## Network Policies
+
+For detailed network policy guidance including default-deny patterns, DNS allow rules, and policy engine comparison (VPC CNI native, Calico, Cilium), see **[Security — Runtime & Network](security-runtime-network.md#network-policies)**.
+
+**Quick summary:**
+
+| Option | Standard | EKS Support | Features |
+|--------|----------|-------------|----------|
+| **VPC CNI Network Policy** | K8s NetworkPolicy | Native (v1.14+) | L3/L4 policies, eBPF-based |
+| **Calico** | K8s + Calico extended | Add-on | L3/L4 + DNS-based policies |
+| **Cilium** | K8s + Cilium extended | Self-managed | L3/L4/L7 + DNS + identity |
+
+**Recommendation:** Use VPC CNI native network policies for most workloads. Use Cilium or Calico only if you need L7 policies or advanced features like DNS hostname rules.
+
+> Beyond the namespaced `NetworkPolicy` above, EKS adds two AWS-native CRDs (`networking.k8s.aws/v1alpha1`, VPC CNI v1.21.1+): cluster-scoped **`ClusterNetworkPolicy`** with a `tier: Admin | Baseline` field (the Admin tier is evaluated first and can't be overridden by namespace policies; Baseline is an overridable default), and namespaced **`ApplicationNetworkPolicy`**, an EKS Auto Mode CRD adding an FQDN-based egress filter that applies only on Auto Mode nodes. (Kubernetes 1.29+ is the Auto Mode / new-cluster rollout floor, not a ClusterNetworkPolicy gate.) See `security-runtime-network.md` for detail; verify your installed VPC CNI version before relying on either.
+
+---
+
+**Sources:**
+- [AWS EKS Best Practices Guide — Networking](https://docs.aws.amazon.com/eks/latest/best-practices/networking.html)
+- [AWS Load Balancer Controller Documentation](https://kubernetes-sigs.github.io/aws-load-balancer-controller)
+- [Kubernetes Gateway API](https://gateway-api.sigs.k8s.io/)

@@ -1,0 +1,16 @@
+# Original PoC Source for CVE-2017-16995
+# Vulnerability: eBPF verifier check_alu_op() 32-bit ALU operation range tracking bypass leading to OOB access and arbitrary kernel memory read/write
+#
+# Reference URL: https://github.com/bcoles/kernel-exploits/blob/master/CVE-2017-16995/
+#
+# This file documents the original PoC source location.
+# The actual PoC code should be downloaded from the URL above
+# and saved here for reference during code review.
+#
+# Download instructions:
+# 1. Visit: https://github.com/bcoles/kernel-exploits/blob/master/CVE-2017-16995/
+# 2. Download the .c or .py exploit file
+# 3. Save as: original.txt (replacing this file)
+#
+# Note: The current poc.c has been integrated with the
+# poc_common.h CTF framework and implements the exploit logic.

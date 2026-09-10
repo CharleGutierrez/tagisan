@@ -1,0 +1,4 @@
+interface:
+  display_name: "Alibaba Cloud Security Id Verification Cloudauth"
+  short_description: "Identity verification service workflows"
+  default_prompt: "Use $aliyun-cloudauth-verify to complete this security/identity task on Alibaba Cloud."
