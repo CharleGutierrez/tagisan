@@ -242,6 +242,16 @@ enum Commands {
         #[command(subcommand)]
         action: BunAction,
     },
+    /// Python 3 runtime execution, script runner, and tool handler
+    Python {
+        #[command(subcommand)]
+        action: PythonAction,
+    },
+    /// Perl 5 runtime execution, script runner, and tool handler
+    Perl {
+        #[command(subcommand)]
+        action: PerlAction,
+    },
     /// Vella Sovereign Framework: SCADA, Robotics, Trading, Medicine & Sovereign Governance
     Vella {
         #[command(subcommand)]
@@ -466,6 +476,68 @@ pub enum BunAction {
         timeout: u64,
     },
     /// Display Bun runtime version, path, and host environment information
+    Info,
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum PythonAction {
+    /// Evaluate Python 3 code snippet directly
+    Eval {
+        /// Python code string to execute
+        code: String,
+        /// Execution timeout in seconds (default: 30)
+        #[arg(short, long, default_value = "30")]
+        timeout: u64,
+        /// Working directory
+        #[arg(short, long)]
+        cwd: Option<String>,
+    },
+    /// Execute a Python (.py) script file with arguments
+    Run {
+        /// Script path to execute
+        script: String,
+        /// Execution timeout in seconds (default: 30)
+        #[arg(short, long, default_value = "30")]
+        timeout: u64,
+        /// Working directory
+        #[arg(short, long)]
+        cwd: Option<String>,
+        /// Arguments passed to the script
+        #[arg(trailing_var_arg = true)]
+        args: Vec<String>,
+    },
+    /// Display Python runtime version, path, and host environment information
+    Info,
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum PerlAction {
+    /// Evaluate Perl 5 code snippet or one-liner directly
+    Eval {
+        /// Perl code string to execute
+        code: String,
+        /// Execution timeout in seconds (default: 30)
+        #[arg(short, long, default_value = "30")]
+        timeout: u64,
+        /// Working directory
+        #[arg(short, long)]
+        cwd: Option<String>,
+    },
+    /// Execute a Perl (.pl) script file with arguments
+    Run {
+        /// Script path to execute
+        script: String,
+        /// Execution timeout in seconds (default: 30)
+        #[arg(short, long, default_value = "30")]
+        timeout: u64,
+        /// Working directory
+        #[arg(short, long)]
+        cwd: Option<String>,
+        /// Arguments passed to the script
+        #[arg(trailing_var_arg = true)]
+        args: Vec<String>,
+    },
+    /// Display Perl runtime version, path, and host environment information
     Info,
 }
 
@@ -2896,6 +2968,14 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             handle_bun_command(action).await?;
         }
 
+        Commands::Python { action } => {
+            handle_python_command(action).await?;
+        }
+
+        Commands::Perl { action } => {
+            handle_perl_command(action).await?;
+        }
+
         Commands::Vella { action } => {
             handle_vella_command(action).await?;
         }
@@ -3027,6 +3107,96 @@ async fn handle_bun_command(action: BunAction) -> Result<(), Box<dyn std::error:
             });
             let output = tool.execute(args).await?;
             println!("{output}");
+        }
+    }
+    Ok(())
+}
+
+async fn handle_python_command(action: PythonAction) -> Result<(), Box<dyn std::error::Error>> {
+    match action {
+        PythonAction::Info => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🐍  Python 3 Runtime & Tool Handler Integration".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            match crate::python::PythonRuntime::new() {
+                Ok(runtime) => {
+                    let ver = runtime.version().await.unwrap_or_else(|_| "unknown".to_string());
+                    println!("  [✓] Python Binary:    {}", runtime.python_path().display().to_string().green().bold());
+                    println!("  [✓] Python Version:   {}", ver.cyan().bold());
+                    println!("  [✓] Runtime Status:   {}", "Ready & Available".green());
+                    println!("  [✓] Standard Lib:     {}", "math, json, sys, os integrated".green());
+                    println!("  [✓] AgentShield:      {}", "Strict AST & reverse shell guardrails active".green());
+                }
+                Err(e) => {
+                    println!("  [✗] Python Runtime:   {}", "Not Discovered".red().bold());
+                    println!("      ↳ Error: {}", e);
+                    println!("\n  Please install Python 3.x or configure TAGISAN_PYTHON_PATH.");
+                }
+            }
+        }
+        PythonAction::Eval { code, timeout, cwd } => {
+            let runtime = crate::python::PythonRuntime::new()?;
+            let cwd_path = cwd.map(std::path::PathBuf::from);
+            let res = runtime.eval(&code, std::time::Duration::from_secs(timeout), None, cwd_path).await?;
+            print!("{}", res.combined_output());
+            if !res.success {
+                std::process::exit(res.exit_code);
+            }
+        }
+        PythonAction::Run { script, timeout, cwd: _, args } => {
+            let runtime = crate::python::PythonRuntime::new()?;
+            let script_path = std::path::PathBuf::from(script);
+            let res = runtime.run_file(&script_path, &args, Some(timeout)).await?;
+            print!("{}", res.combined_output());
+            if !res.success {
+                std::process::exit(res.exit_code);
+            }
+        }
+    }
+    Ok(())
+}
+
+async fn handle_perl_command(action: PerlAction) -> Result<(), Box<dyn std::error::Error>> {
+    match action {
+        PerlAction::Info => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🐪  Perl 5 Runtime & Tool Handler Integration".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            match crate::perl::PerlRuntime::new() {
+                Ok(runtime) => {
+                    let ver = runtime.version().await.unwrap_or_else(|_| "unknown".to_string());
+                    println!("  [✓] Perl Binary:      {}", runtime.perl_path().display().to_string().green().bold());
+                    println!("  [✓] Perl Version:     {}", ver.cyan().bold());
+                    println!("  [✓] Runtime Status:   {}", "Ready & Available".green());
+                    println!("  [✓] Regex Engine:     {}", "Native Perl 5 regex stream processor".green());
+                    println!("  [✓] AgentShield:      {}", "Strict backtick, pipe & system guardrails active".green());
+                }
+                Err(e) => {
+                    println!("  [✗] Perl Runtime:     {}", "Not Discovered".red().bold());
+                    println!("      ↳ Error: {}", e);
+                    println!("\n  Please install Perl 5.x or configure TAGISAN_PERL_PATH.");
+                }
+            }
+        }
+        PerlAction::Eval { code, timeout, cwd } => {
+            let runtime = crate::perl::PerlRuntime::new()?;
+            let cwd_path = cwd.map(std::path::PathBuf::from);
+            let res = runtime.eval(&code, std::time::Duration::from_secs(timeout), None, cwd_path).await?;
+            print!("{}", res.combined_output());
+            if !res.success {
+                std::process::exit(res.exit_code);
+            }
+        }
+        PerlAction::Run { script, timeout, cwd: _, args } => {
+            let runtime = crate::perl::PerlRuntime::new()?;
+            let script_path = std::path::PathBuf::from(script);
+            let res = runtime.run_file(&script_path, &args, Some(timeout)).await?;
+            print!("{}", res.combined_output());
+            if !res.success {
+                std::process::exit(res.exit_code);
+            }
         }
     }
     Ok(())

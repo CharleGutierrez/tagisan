@@ -2,7 +2,17 @@ pub mod builtin;
 pub mod bun;
 pub mod bun_compile;
 pub mod bun_serve;
+pub mod perl;
+pub mod python;
 pub mod wasm;
+
+#[path = "../python/mod.rs"]
+pub mod python_runtime;
+#[path = "../perl/mod.rs"]
+pub mod perl_runtime;
+
+pub use python_runtime::{PythonExecutionResult, PythonRuntime};
+pub use perl_runtime::{PerlExecutionResult, PerlRuntime};
 
 use crate::error::Result;
 use crate::types::{ContentBlock, ToolDefinition};
@@ -21,6 +31,8 @@ pub use bun::{
 };
 pub use bun_compile::BunCompileTool;
 pub use bun_serve::{BunServeTool, BunStreamBusTool};
+pub use perl::{PerlEvalTool, PerlRunTool};
+pub use python::{PythonEvalTool, PythonRunTool};
 pub use wasm::{load_wasm_tools, WasmTool};
 pub use crate::vella::{
     VellaDefenseDrillTool, VellaDigitalTwinTool, VellaEventBridgeTool, VellaFheShieldTool,
@@ -76,6 +88,12 @@ impl ToolRegistry {
         registry.register_tool(bun_serve::BunServeTool::new());
         registry.register_tool(bun_serve::BunStreamBusTool::new());
         registry.register_tool(bun_compile::BunCompileTool::new());
+        // Python 3 Runtime Tools
+        registry.register_tool(python::PythonEvalTool::new());
+        registry.register_tool(python::PythonRunTool::new());
+        // Perl 5 Runtime Tools
+        registry.register_tool(perl::PerlEvalTool::new());
+        registry.register_tool(perl::PerlRunTool::new());
         registry.register_tool(builtin::SearchSkillsTool::with_default());
         // Vella Phase 1 Domain Tools
         registry.register_tool(crate::vella::VellaTradingTool::default());
@@ -113,7 +131,13 @@ impl ToolRegistry {
         registry.register_tool(bun::BunHmrTool::new().with_working_dir(dir.clone()));
         registry.register_tool(bun_serve::BunServeTool::new().with_working_dir(dir.clone()));
         registry.register_tool(bun_serve::BunStreamBusTool::new().with_working_dir(dir.clone()));
-        registry.register_tool(bun_compile::BunCompileTool::new().with_working_dir(dir));
+        registry.register_tool(bun_compile::BunCompileTool::new().with_working_dir(dir.clone()));
+        // Python 3 Runtime Tools
+        registry.register_tool(python::PythonEvalTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(python::PythonRunTool::new().with_working_dir(dir.clone()));
+        // Perl 5 Runtime Tools
+        registry.register_tool(perl::PerlEvalTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(perl::PerlRunTool::new().with_working_dir(dir.clone()));
         // Vella Phase 1 Domain Tools
         registry.register_tool(crate::vella::VellaTradingTool::default());
         registry.register_tool(crate::vella::VellaScadaTool::default());

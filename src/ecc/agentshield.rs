@@ -82,6 +82,64 @@ impl AgentShieldScanner {
 
                 AgentShieldVerdict::Allow
             }
+            "python_eval" | "python_run" | "python" => {
+                let path = arguments
+                    .get("file_path")
+                    .or_else(|| arguments.get("path"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+
+                if !path.is_empty() {
+                    let path_verdict = Self::scan_file_path(path);
+                    if let AgentShieldVerdict::Block { .. } = path_verdict {
+                        return path_verdict;
+                    }
+                }
+
+                let code = arguments
+                    .get("code")
+                    .or_else(|| arguments.get("script"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+
+                if !code.is_empty() {
+                    let code_verdict = Self::scan_python_code(code);
+                    if let AgentShieldVerdict::Block { .. } = code_verdict {
+                        return code_verdict;
+                    }
+                }
+
+                AgentShieldVerdict::Allow
+            }
+            "perl_eval" | "perl_run" | "perl" => {
+                let path = arguments
+                    .get("file_path")
+                    .or_else(|| arguments.get("path"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+
+                if !path.is_empty() {
+                    let path_verdict = Self::scan_file_path(path);
+                    if let AgentShieldVerdict::Block { .. } = path_verdict {
+                        return path_verdict;
+                    }
+                }
+
+                let code = arguments
+                    .get("code")
+                    .or_else(|| arguments.get("script"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+
+                if !code.is_empty() {
+                    let code_verdict = Self::scan_perl_code(code);
+                    if let AgentShieldVerdict::Block { .. } = code_verdict {
+                        return code_verdict;
+                    }
+                }
+
+                AgentShieldVerdict::Allow
+            }
             _ => AgentShieldVerdict::Allow,
         }
     }
@@ -408,6 +466,153 @@ impl AgentShieldScanner {
                     threat_level: level,
                 };
             }
+        }
+
+        AgentShieldVerdict::Allow
+    }
+
+    /// Scan Python code for dangerous execution patterns, reverse shells, deserialization attacks, and destructive calls
+    pub fn scan_python_code(code: &str) -> AgentShieldVerdict {
+        let normalized = code.to_lowercase();
+
+        // 1. Prohibited process execution & shell spawning (Critical priority)
+        let dangerous_python_invocations = [
+            ("os.system", "Direct operating system command execution via os.system", ThreatLevel::Critical),
+            ("subprocess", "Process execution via subprocess module", ThreatLevel::Critical),
+            ("pty.spawn", "Interactive pseudoterminal spawning via pty.spawn", ThreatLevel::Critical),
+            ("pty.fork", "Pseudoterminal process forking via pty.fork", ThreatLevel::Critical),
+            ("shutil.rmtree", "Recursive directory tree deletion via shutil.rmtree", ThreatLevel::Critical),
+            ("pickle.loads", "Insecure Python object deserialization via pickle.loads", ThreatLevel::Critical),
+            ("pickle.load", "Insecure Python object deserialization via pickle.load", ThreatLevel::Critical),
+            ("_pickle.loads", "Insecure Python object deserialization via _pickle.loads", ThreatLevel::Critical),
+            ("_pickle.load", "Insecure Python object deserialization via _pickle.load", ThreatLevel::Critical),
+            ("__import__('os').system", "Obfuscated os.system call via __import__", ThreatLevel::Critical),
+            ("__import__(\"os\").system", "Obfuscated os.system call via __import__", ThreatLevel::Critical),
+            ("__import__('subprocess')", "Obfuscated subprocess import via __import__", ThreatLevel::Critical),
+            ("__import__(\"subprocess\")", "Obfuscated subprocess import via __import__", ThreatLevel::Critical),
+            ("exec(base64.", "Base64 obfuscated payload execution via exec", ThreatLevel::Critical),
+            ("eval(base64.", "Base64 obfuscated payload execution via eval", ThreatLevel::Critical),
+        ];
+
+        for (pattern, reason, level) in dangerous_python_invocations {
+            if normalized.contains(pattern) {
+                return AgentShieldVerdict::Block {
+                    reason: reason.to_string(),
+                    threat_level: level,
+                };
+            }
+        }
+
+        // 2. Reverse shell heuristics (socket connection coupled with dup2 / fileno)
+        if normalized.contains("socket.socket")
+            && (normalized.contains("connect(") || normalized.contains(".connect (") || normalized.contains("dup2"))
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Reverse shell socket connection pattern detected in Python script".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        // 3. Filesystem root / drive root destruction
+        if normalized.contains("os.remove(\"/\"")
+            || normalized.contains("os.rmdir(\"/\"")
+            || normalized.contains("os.unlink(\"/\"")
+            || normalized.contains("os.remove(\"c:\\\\\"")
+            || normalized.contains("os.rmdir(\"c:\\\\\"")
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Attempted deletion of filesystem root in Python script".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        // 4. General code & command scan (credentials, sensitive paths, fork bombs, destructive rm)
+        let general_verdict = Self::scan_code(code);
+        if let AgentShieldVerdict::Block { .. } = general_verdict {
+            return general_verdict;
+        }
+
+        AgentShieldVerdict::Allow
+    }
+
+    /// Scan Perl code for dangerous system invocations, backticks, piped opens, and destructive operations
+    pub fn scan_perl_code(code: &str) -> AgentShieldVerdict {
+        let normalized = code.to_lowercase();
+
+        // 1. Dangerous system and exec calls (Critical priority)
+        if normalized.contains("system(")
+            || normalized.contains("system (")
+            || normalized.contains("exec(")
+            || normalized.contains("exec (")
+            || normalized.contains("system \"")
+            || normalized.contains("system '")
+            || normalized.contains("system $")
+            || normalized.contains("exec \"")
+            || normalized.contains("exec '")
+            || normalized.contains("exec $")
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Arbitrary system/exec command execution detected in Perl script".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        // 2. Backtick execution: `cmd` and qx operator
+        if code.contains('`') {
+            return AgentShieldVerdict::Block {
+                reason: "Shell command execution via backticks (`) detected in Perl script".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        if normalized.contains("qx/")
+            || normalized.contains("qx(")
+            || normalized.contains("qx{")
+            || normalized.contains("qx[")
+            || normalized.contains("qx<")
+            || normalized.contains("qx\"")
+            || normalized.contains("qx'")
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Shell command execution via qx operator detected in Perl script".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        // 3. Piped open: open(..., "|...") or open(..., "...|") or open my $fh, "|..."
+        if (normalized.contains("open(") || normalized.contains("open ") || normalized.contains("open("))
+            && normalized.contains('|')
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Piped command execution via open() detected in Perl script".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        // 4. Destructive unlink / root filesystem manipulation
+        if normalized.contains("unlink(\"/\"")
+            || normalized.contains("unlink \"/\"")
+            || normalized.contains("unlink('/')")
+            || normalized.contains("unlink '/'")
+            || normalized.contains("unlink '/*'")
+            || normalized.contains("unlink \"/*\"")
+            || normalized.contains("unlink(\"c:\\\\\"")
+            || normalized.contains("unlink('c:\\\\')")
+            || normalized.contains("rmdir(\"/\"")
+            || normalized.contains("rmdir \"/\"")
+            || normalized.contains("rmdir('/')")
+            || normalized.contains("rmdir '/'")
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Attempted deletion of filesystem root in Perl script".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        // 5. General code & command scan (credentials, sensitive paths, fork bombs, disk destruction)
+        let general_verdict = Self::scan_code(code);
+        if let AgentShieldVerdict::Block { .. } = general_verdict {
+            return general_verdict;
         }
 
         AgentShieldVerdict::Allow

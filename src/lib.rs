@@ -8,7 +8,9 @@ pub mod error;
 pub mod eval;
 pub mod mcp;
 pub mod memory;
+pub mod perl;
 pub mod providers;
+pub mod python;
 pub mod strategies;
 pub mod swarm;
 pub mod telemetry;
@@ -23,6 +25,8 @@ pub use bun::{
     BunWorkerPool, DiagnosticSeverity, TagisanSqliteStore, TsDiagnostic, TsDiagnosticParser,
     WorkerPoolStats,
 };
+pub use perl::{PerlExecutionResult, PerlRuntime};
+pub use python::{PythonExecutionResult, PythonRuntime};
 pub use ecc::{
     all_built_in_skills as all_ecc_skills, all_presets as all_ecc_presets, build_ecc_pipeline,
     find_built_in_skill as find_ecc_skill, find_preset as find_ecc_preset,
@@ -72,6 +76,8 @@ pub use tools::bun::{
 };
 pub use tools::bun_compile::BunCompileTool;
 pub use tools::bun_serve::{BunServeTool, BunStreamBusTool};
+pub use tools::perl::{PerlEvalTool, PerlRunTool};
+pub use tools::python::{PythonEvalTool, PythonRunTool};
 pub use tools::wasm::{load_wasm_tools, WasmTool};
 pub use tools::{ToolHandler, ToolRegistry};
 pub use swarm::{
