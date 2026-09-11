@@ -218,6 +218,11 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         evolutionary_fitness_functions(),
         temporal_invariants_tla(),
         conceptual_integrity_systems(),
+        grokking_algorithms(),
+        ostep_mechanical_sympathy(),
+        system_design_building_blocks(),
+        pragmatic_programmer_craft(),
+        site_reliability_engineering(),
         // Advanced UX & UI Vibe Engineering Skills
         refactoring_ui(),
         microinteractions_design(),
@@ -1882,6 +1887,116 @@ impl SkillDispatcher {
     }
 }
 
+/// 31. Grokking Algorithms Skill (Aditya Bhargava)
+pub fn grokking_algorithms() -> EccSkill {
+    EccSkill::new(
+        "grokking-algorithms",
+        "Grokking Algorithms (Aditya Bhargava): Big-O complexity radar, spatial vs temporal trade-offs, graph search, greedy heuristics, dynamic programming memoization, hash table collision avoidance, eliminating O(N^2) loops. Triggers: grokking algorithms, big-o, complexity radar, spatial vs temporal, dynamic programming, memoization, hash table, nested loops, bfs, dfs, algorithmic optimization.",
+        r#"# Grokking Algorithms & Complexity Control (Aditya Bhargava)
+
+## 1. Big-O Complexity Radar
+- Eliminate O(N^2) Anti-patterns: Never use nested loops over unindexed arrays if a hash map/set can reduce lookup to O(1).
+- Spatial vs Temporal Trade-offs: Trade memory (caching, hash tables) for speed (CPU cycles) where appropriate.
+
+## 2. Graph Search & Heuristics
+- BFS vs DFS: Use BFS for shortest path/minimum edges. Use DFS for exhaustive search and backtracking.
+- Greedy Heuristics: Use for optimization problems where a local optimum leads to a global optimum (e.g., fractional knapsack, set cover).
+
+## 3. Dynamic Programming & Hashing
+- DP Memoization: Cache subproblem results to avoid exponential recursion trees.
+- Hash Table Collision Avoidance: Understand load factors and choose prime modulus sizes or good hash functions (e.g. SipHash) to prevent clustering.
+"#,
+    )
+}
+
+/// 32. OSTEP Mechanical Sympathy Skill (Arpaci-Dusseau & Petzold)
+pub fn ostep_mechanical_sympathy() -> EccSkill {
+    EccSkill::new(
+        "ostep-mechanical-sympathy",
+        "Operating Systems & Mechanical Sympathy (Remzi Arpaci-Dusseau & Charles Petzold): Virtualization, Concurrency, Persistence, epoll/kqueue async loops, cache locality. Triggers: ostep, mechanical sympathy, operating systems, cache locality, stack vs heap, concurrency, atomic operations, write-ahead logging, fsync, persistence, epoll, kqueue.",
+        r#"# Mechanical Sympathy & Operating Systems (Arpaci-Dusseau & Petzold)
+
+## 1. CPU & Memory Virtualization
+- Cache Locality: Prefer contiguous memory structures (e.g. `Vec`, flat arrays) over pointer-chasing data structures (Linked Lists) to maximize L1/L2 cache hits.
+- Stack vs Heap: Keep allocations on the stack where possible. Minimize heap fragmentation.
+
+## 2. Concurrency Primitives
+- Data Races & Deadlocks: Acquire multiple locks in a strict global order. Prefer message passing over shared memory if possible.
+- Atomic Operations: Use lock-free atomics (Compare-and-Swap) for shared counters instead of heavy Mutexes.
+- Async Event Loops: Understand epoll/kqueue fundamentals underlying Tokio/Node.js; never block the reactor thread.
+
+## 3. Persistence & Storage
+- fsync & Write-Ahead Logging: Use explicit fsync for durability guarantees. Keep append-only logs to minimize SSD page amplification and random writes.
+"#,
+    )
+}
+
+/// 33. System Design Building Blocks Skill (Alex Xu & Sahn Lam)
+pub fn system_design_building_blocks() -> EccSkill {
+    EccSkill::new(
+        "system-design-building-blocks",
+        "System Design Interview (Alex Xu): Caching topologies, Rate limiting, Distributed message queues, Sharding, Idempotency keys. Triggers: system design, caching topologies, cache aside, write through, thundering herd, rate limiting, token bucket, sliding window, backpressure, sharding, idempotency keys, message queues.",
+        r#"# System Design Building Blocks (Alex Xu & Sahn Lam)
+
+## 1. Caching Topologies
+- Cache-Aside vs Write-Through: Choose appropriately. Use Cache-Aside for read-heavy workloads.
+- Thundering Herd Prevention: Use probabilistic early expiration or single-flight request coalescing to prevent database stampedes on cache misses.
+
+## 2. Rate Limiting & Flow Control
+- Token Bucket & Sliding Window: Implement rate limiters at the API gateway to prevent resource exhaustion and abuse.
+- Backpressure: Message queues must exert backpressure on publishers when consumer groups fall behind.
+
+## 3. Distributed Data
+- Sharding & Read Replicas: Distribute read pressure via replicas and partition data horizontally via consistent hashing.
+- Idempotency Keys: Required for all mutating requests (e.g. POST, PUT) to survive network retries and duplicate deliveries safely.
+"#,
+    )
+}
+
+/// 34. The Pragmatic Programmer Skill (David Thomas & Andrew Hunt)
+pub fn pragmatic_programmer_craft() -> EccSkill {
+    EccSkill::new(
+        "pragmatic-programmer-craft",
+        "The Pragmatic Programmer (Thomas & Hunt): Tracer bullets vs prototypes, Orthogonality, Broken windows theory, DRY, Design by Contract, Crash early. Triggers: pragmatic programmer, tracer bullets, prototypes, orthogonality, broken windows, dry, design by contract, crash early, dead programs tell no lies.",
+        r#"# Pragmatic Programmer Craft (David Thomas & Andrew Hunt)
+
+## 1. Prototyping & Orthogonality
+- Tracer Bullets vs Prototypes: Tracer bullets are structural skeletons intended for production. Prototypes are disposable learning exercises.
+- Orthogonality: Changes in one module should not ripple into others. Design independent, decoupled components.
+
+## 2. Code Quality & Broken Windows
+- Broken Windows Theory: Fix small issues, warnings, and code smells immediately before they normalize entropy in the codebase.
+- DRY across Models: Don't Repeat Yourself applies to data models, documentation, and configuration, not just code.
+
+## 3. Resilience & Defense
+- Crash Early / Dead Programs Tell No Lies: Panic/Abort immediately on impossible states or contract violations instead of limping along with corrupted state.
+"#,
+    )
+}
+
+/// 35. Site Reliability Engineering Skill (Betsy Beyer / Google SRE)
+pub fn site_reliability_engineering() -> EccSkill {
+    EccSkill::new(
+        "site-reliability-engineering",
+        "Google SRE (Betsy Beyer et al.): SLIs/SLOs/SLAs, Error budgets, Circuit breakers, Exponential backoff with full jitter, Graceful degradation, Distributed tracing. Triggers: site reliability engineering, sre, sli, slo, error budgets, circuit breakers, exponential backoff, jitter, graceful degradation, distributed tracing, structured logging.",
+        r#"# Site Reliability Engineering (Google SRE)
+
+## 1. Service Level Indicators & Error Budgets
+- SLIs/SLOs: Define strict, measurable service level objectives (e.g., 99.9% of requests < 200ms).
+- Error Budgets: Freeze feature deployments when the error budget is exhausted; redirect engineering to reliability.
+
+## 2. Resilience Mechanisms
+- Circuit Breakers: Fast-fail downstream calls when a dependency degrades to prevent cascading thread pool exhaustion.
+- Exponential Backoff with Jitter: Always add randomization (jitter) to retry loops to avoid thundering herd synchronized retries.
+- Graceful Degradation: Serve cached, stale, or partial data when non-critical backends fail.
+
+## 3. Observability
+- Distributed Tracing & Correlation IDs: Inject and propagate trace IDs (e.g. W3C Trace Context) across all network boundaries and asynchronous queues.
+- Structured Logging: Log payloads as JSON (not flat text) with strict schemas for automated indexing and alerting.
+"#,
+    )
+}
+
 // -------------------------------------------------------------------------
 // Helper Parsing & Lexical Functions
 // -------------------------------------------------------------------------
@@ -2234,6 +2349,34 @@ mod tests {
         assert_eq!(skills[0].skill.name, "tokio-async-tuning");
         assert!(text.contains("tokio-async-tuning"));
         assert!(text.contains("[LOCAL LLM CHEAT SHEET: ACTIONABLE CONSTRAINTS & INVARIANTS]"));
+    }
+
+    #[test]
+    fn test_vibe_cs_books_skills_registered_and_dispatchable() {
+        let skills = [
+            "grokking-algorithms",
+            "ostep-mechanical-sympathy",
+            "system-design-building-blocks",
+            "pragmatic-programmer-craft",
+            "site-reliability-engineering",
+        ];
+
+        for skill_name in skills {
+            let found = find_built_in_skill(skill_name);
+            assert!(found.is_some(), "Skill '{}' should be registered in built-in skills", skill_name);
+            let skill = found.unwrap();
+            assert!(!skill.description.is_empty());
+            assert!(!skill.instructions.is_empty());
+        }
+
+        let dispatcher = global_dispatcher();
+        let dispatched = dispatcher.dispatch("eliminate O(N^2) nested loop with hash map and memoization", 3, None);
+        assert!(!dispatched.is_empty());
+        assert!(dispatched.iter().any(|d| d.skill.name == "grokking-algorithms"));
+
+        let dispatched_sys = dispatcher.dispatch("caching topologies thundering herd rate limiting token bucket", 3, None);
+        assert!(!dispatched_sys.is_empty());
+        assert!(dispatched_sys.iter().any(|d| d.skill.name == "system-design-building-blocks"));
     }
 }
 
