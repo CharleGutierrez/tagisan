@@ -1,13 +1,22 @@
-# 🇵🇭 Tagisan (`tgs` / `tagisan-rs`)
-> **Tagisan ng Talino (`tgs`):** High-Performance Multi-LLM Swarm, Adversarial Debate, Autonomous Polyglot Agents, Local Ollama Engine, & ECC Engineering Swarm in Rust.
+<div align="center">
+  <a href="https://github.com/CharleGutierrez/tagisan">
+    <img src="assets/tagisan_logo.png" alt="Tagisan Logo Emblem" width="360" />
+  </a>
 
-[![Rust](https://img.shields.io/badge/rust-2021%20edition-orange.svg)](https://www.rust-lang.org/)
-[![Binary](https://img.shields.io/badge/CLI-tgs-brightgreen.svg)](https://github.com/CharleGutierrez/tagisan)
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
-[![Tokio](https://img.shields.io/badge/async-tokio-blue)](https://tokio.rs/)
-[![Ollama](https://img.shields.io/badge/local%20LLM-Ollama%20Optimized-black)](https://ollama.com/)
-[![Polyglot](https://img.shields.io/badge/runtimes-Python%20%7C%20Perl%20%7C%20Bun-yellow)](https://github.com/CharleGutierrez/tagisan)
-[![MCP](https://img.shields.io/badge/protocol-MCP%20Client%20%26%20Server-purple)](https://modelcontextprotocol.io/)
+  # 🇵🇭 Tagisan (`tgs` / `tagisan-rs`)
+
+  **Tagisan ng Talino:** High-Performance Multi-LLM Swarm, Dialectical Debate, Autonomous Polyglot Agents, Local Ollama Engine, & ECC Engineering Swarm in Rust.
+
+  <br />
+
+  [![Rust](https://img.shields.io/badge/rust-2021%20edition-orange.svg)](https://www.rust-lang.org/)
+  [![Binary](https://img.shields.io/badge/CLI-tgs-brightgreen.svg)](https://github.com/CharleGutierrez/tagisan)
+  [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
+  [![Tokio](https://img.shields.io/badge/async-tokio-blue)](https://tokio.rs/)
+  [![Ollama](https://img.shields.io/badge/local%20LLM-Ollama%20Optimized-black)](https://ollama.com/)
+  [![Polyglot](https://img.shields.io/badge/runtimes-Python%20%7C%20Perl%20%7C%20Bun-yellow)](https://github.com/CharleGutierrez/tagisan)
+  [![MCP](https://img.shields.io/badge/protocol-MCP%20Client%20%26%20Server-purple)](https://modelcontextprotocol.io/)
+</div>
 
 ---
 
