@@ -1463,6 +1463,42 @@ impl SkillDispatcher {
         Some(skill)
     }
 
+    /// Dynamically register an external or plugin skill into the in-memory index
+    pub fn register_skill(&mut self, skill: EccSkill) {
+        let id = self.skills.len();
+        let domain = infer_domain(&skill.name);
+        let trigs = extract_triggers_from_text(&skill.name, &skill.description, &[]);
+        let name_tokens = tokenize(&skill.name);
+
+        let lower_name = skill.name.to_lowercase();
+        self.name_index.insert(lower_name.clone(), id);
+        let spaced = lower_name.replace('-', " ");
+        if spaced != lower_name {
+            self.name_index.insert(spaced, id);
+        }
+
+        for tr in &trigs {
+            self.trigger_index.entry(tr.to_lowercase()).or_default().push(id);
+        }
+
+        if let Ok(mut cache) = self.skill_cache.write() {
+            cache.insert(id, skill.clone());
+        }
+
+        self.skills.push(SkillMetadata {
+            id,
+            name: skill.name,
+            domain,
+            description: skill.description,
+            triggers: trigs,
+            file_path: None,
+            is_builtin: false,
+            tfidf_vector: Vec::new(),
+            norm: 0.0,
+            name_tokens,
+        });
+    }
+
     /// Rank and dispatch top-K skills matching query in < 0.5ms
     pub fn dispatch(
         &self,

@@ -406,6 +406,11 @@ enum Commands {
         #[command(subcommand)]
         action: HarnessAction,
     },
+    /// Manage, install, and execute capability-sandboxed plugins & extensions (RFC-002)
+    Plugin {
+        #[command(subcommand)]
+        action: crate::plugins::PluginAction,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -1522,6 +1527,11 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             let _mcp_manager = load_and_register_mcp_tools(mcp, mcp_config.as_deref(), &mut registry).await?;
+
+            // Load and register plugins from .tagisan/plugins and ~/.tagisan/plugins (RFC-002)
+            let mut plugin_mgr = crate::plugins::PluginManager::new(true);
+            let _ = plugin_mgr.load_all().await;
+            let _plugin_tool_count = plugin_mgr.populate_tool_registry(&mut registry);
 
             let shield_active = !no_shield;
             println!("\n{}", "🤖 Starting Tagisan Autonomous Agent...".bold().magenta());
@@ -3202,6 +3212,10 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Harness { action } => {
             crate::harness::cli_handler::handle_harness_command(action, cli.max_budget).await?;
+        }
+
+        Commands::Plugin { action } => {
+            crate::plugins::handle_plugin_command(action.clone()).await?;
         }
     }
 

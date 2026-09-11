@@ -19,8 +19,18 @@ pub mod tui;
 pub mod types;
 pub mod vella;
 pub mod harness;
+pub mod plugins;
 
 pub use harness::*;
+pub use plugins::{
+    handle_plugin_command, CuratedCatalogItem, InstallScope, LoadedPlugin, PluginAction,
+    PluginCapabilities, PluginDebateJudge, PluginEngine, PluginExecutionContext,
+    PluginHookRegistry, PluginHooksConfig, PluginManager, PluginManifest, PluginMcpConfig,
+    PluginMetadata, PluginNativeConfig, PluginPermissions, PluginPipelineStage,
+    PluginRuntimeType, PluginSecurityGovernor, PluginShieldInterceptor, PluginSkillPack,
+    PluginTelemetryExporter, PluginToolDefinition, PluginToolDescriptor, PluginToolProvider,
+    PluginToolWrapper, PluginToolsConfig,
+};
 pub use bun::{
     tagisan_ffi_blake3_digest, tagisan_ffi_cosine_similarity, tagisan_ffi_shield_scan,
     tagisan_ffi_version, BunExecutionResult, BunRuntime, BunSandbox, BunSandboxConfig, BunWorker,
