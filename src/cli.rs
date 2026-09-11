@@ -48,6 +48,18 @@ enum Commands {
         #[arg(short, long)]
         image: Option<String>,
 
+        /// Explicit engineering skill to inject by name (e.g. "rust-tokio-concurrency")
+        #[arg(long)]
+        skill: Option<String>,
+
+        /// Automatically detect and inject relevant engineering skills based on prompt semantics
+        #[arg(long)]
+        auto_skills: bool,
+
+        /// Explicitly disable skill injection
+        #[arg(long)]
+        no_skills: bool,
+
         /// User query or prompt
         prompt: String,
     },
@@ -64,6 +76,18 @@ enum Commands {
         /// Optional path to an image file for multimodal vision analysis (.png, .jpg, .jpeg, .webp, .gif)
         #[arg(short, long)]
         image: Option<String>,
+
+        /// Explicit engineering skill to inject by name (e.g. "rust-tokio-concurrency")
+        #[arg(long)]
+        skill: Option<String>,
+
+        /// Automatically detect and inject relevant engineering skills based on prompt semantics
+        #[arg(long)]
+        auto_skills: bool,
+
+        /// Explicitly disable skill injection
+        #[arg(long)]
+        no_skills: bool,
 
         /// User prompt
         prompt: String,
@@ -364,6 +388,18 @@ enum Commands {
         /// Emit OS desktop notification when failover occurs
         #[arg(long)]
         notify: bool,
+
+        /// Explicit skill to inject by name into the pipeline
+        #[arg(long)]
+        skill: Option<String>,
+
+        /// Automatically detect and inject domain skills for each role (default: true)
+        #[arg(long)]
+        auto_skills: bool,
+
+        /// Explicitly disable automatic skill injection across all stages
+        #[arg(long)]
+        no_skills: bool,
     },
 }
 
@@ -421,6 +457,18 @@ pub enum HarmonySubcommand {
         /// Emit OS desktop notification when failover occurs
         #[arg(long)]
         notify: bool,
+
+        /// Explicit skill to inject by name into the pipeline
+        #[arg(long)]
+        skill: Option<String>,
+
+        /// Automatically detect and inject domain skills for each role (default: true)
+        #[arg(long)]
+        auto_skills: bool,
+
+        /// Explicitly disable automatic skill injection across all stages
+        #[arg(long)]
+        no_skills: bool,
     },
 }
 
@@ -1128,155 +1176,48 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             println!("\nTip: Configure API keys in your .env file to enable cloud providers.\n");
         }
 
-        Commands::Stream { provider, model, image, prompt } => {
-            let ctx = build_engine_context(cli.max_budget);
-            let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
-
-            println!(
-                "\n{} [{}: {}]...",
-                "Streaming from".bold().magenta(),
-                provider_id.cyan().bold(),
-                model_name.yellow()
-            );
-            println!("Prompt: \"{}\"", prompt.italic());
-
-            let mut user_blocks = vec![ContentBlock::text(prompt)];
-            if let Some(ref img_path) = image {
-                let img_block = ContentBlock::from_image_file(img_path)?;
-                println!("Attached Multimodal Image: {}", img_path.cyan().bold());
-                user_blocks.push(img_block);
-            }
-            println!();
-
-            let req = CompletionRequest::new(model_name.clone(), "")
-                .with_messages(vec![crate::types::Message::user_with_content(user_blocks)])
-                .with_stream(true)
-                .with_cancellation(ctx.cancellation_token.clone());
-            let mut stream = prov.stream(req).await?;
-
-            let start = std::time::Instant::now();
-            let mut is_thinking = false;
-            let mut last_usage = None;
-
-            while let Some(chunk_res) = stream.next().await {
-                match chunk_res {
-                    Ok(chunk) => {
-                        if let Some(u) = chunk.usage {
-                            last_usage = Some(u);
-                        }
-                        match chunk.delta {
-                            StreamChunkDelta::Thinking(thought) => {
-                                if !is_thinking {
-                                    print!("\n{}\n", "--- Model Thinking Block ---".italic().dimmed());
-                                    is_thinking = true;
-                                }
-                                print!("{}", thought.dimmed());
-                                std::io::stdout().flush().ok();
-                            }
-                            StreamChunkDelta::Text(text) => {
-                                if is_thinking {
-                                    print!("\n{}\n", "--- Response Output ---".italic().green());
-                                    is_thinking = false;
-                                }
-                                print!("{}", text);
-                                std::io::stdout().flush().ok();
-                            }
-                            StreamChunkDelta::ToolCallDelta { index, id, name, arguments_delta } => {
-                                if let Some(n) = name {
-                                    print!("\n[Tool Call #{}: {}", index, n);
-                                    if let Some(id_str) = id {
-                                        print!(" (ID: {})", id_str);
-                                    }
-                                    print!("] ");
-                                }
-                                if let Some(args) = arguments_delta {
-                                    print!("{}", args);
-                                }
-                                std::io::stdout().flush().ok();
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("\n{}: {:?}", "Stream Error".red().bold(), e);
-                        break;
-                    }
-                }
-            }
-
-            println!("\n\n{} (Stream finished in {:.2}s)", "✔ Done".green().bold(), start.elapsed().as_secs_f32());
-
-            if let Some(u) = last_usage {
-                let cost_res = ctx.budget_tracker.record_usage(&model_name, &u);
-                let total_spent = ctx.budget_tracker.current_spent_usd();
-                println!(
-                    "Tokens: {} (Prompt: {}, Output: {}, Cached: {}) | Session Spent: ${:.4} USD",
-                    u.prompt_tokens + u.completion_tokens,
-                    u.prompt_tokens,
-                    u.completion_tokens,
-                    u.cached_prompt_tokens.unwrap_or(0),
-                    total_spent
-                );
-                if let Err(e) = cost_res {
-                    eprintln!("{}: {:?}", "Budget Alert".yellow().bold(), e);
-                }
-            }
+        Commands::Stream {
+            provider,
+            model,
+            image,
+            prompt,
+            skill,
+            auto_skills,
+            no_skills,
+        } => {
+            handle_stream_command(
+                provider,
+                model,
+                image,
+                prompt,
+                skill,
+                auto_skills,
+                no_skills,
+                cli.max_budget,
+            )
+            .await?;
         }
 
-        Commands::Ask { provider, model, image, prompt } => {
-            let ctx = build_engine_context(cli.max_budget);
-            let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
-
-            println!(
-                "\n{} [{}: {}]...",
-                "Querying".bold().magenta(),
-                provider_id.cyan().bold(),
-                model_name.yellow()
-            );
-
-            let mut user_blocks = vec![ContentBlock::text(prompt)];
-            if let Some(ref img_path) = image {
-                let img_block = ContentBlock::from_image_file(img_path)?;
-                println!("Attached Multimodal Image: {}\n", img_path.cyan().bold());
-                user_blocks.push(img_block);
-            }
-
-            let mut session = ChatSession::new();
-            session.add_user_message_with_blocks(user_blocks);
-
-            let req = session
-                .build_request(model_name.clone())
-                .with_cancellation(ctx.cancellation_token.clone());
-
-            let spinner = Spinner::start(format!(
-                "Thinking with {} [{}]...",
-                provider_id.cyan().bold(),
-                model_name.yellow().bold()
-            ));
-            let resp = prov.complete(req).await;
-            match &resp {
-                Ok(r) => spinner.success(format!("Response received in {:.2}s", r.latency.as_secs_f32())),
-                Err(e) => spinner.failure(format!("Request failed: {}", e)),
-            }
-            let resp = resp?;
-
-            ctx.budget_tracker.record_usage(&model_name, &resp.usage)?;
-
-            if let Some(thinking) = resp.message.extract_thinking() {
-                println!("\n{}", "--- Model Thinking / Reasoning ---".dimmed().italic());
-                println!("{}\n", thinking.dimmed());
-            }
-
-            println!("\n{}", "--- Response ---".bold().green());
-            println!("{}\n", resp.message.extract_text());
-            println!(
-                "Latency: {:.2}s | Tokens: {} (Prompt: {}, Output: {}, Cached: {}) | Total Spent: ${:.4} USD",
-                resp.latency.as_secs_f32(),
-                resp.usage.prompt_tokens + resp.usage.completion_tokens,
-                resp.usage.prompt_tokens,
-                resp.usage.completion_tokens,
-                resp.usage.cached_prompt_tokens.unwrap_or(0),
-                ctx.budget_tracker.current_spent_usd()
-            );
+        Commands::Ask {
+            provider,
+            model,
+            image,
+            prompt,
+            skill,
+            auto_skills,
+            no_skills,
+        } => {
+            handle_ask_command(
+                provider,
+                model,
+                image,
+                prompt,
+                skill,
+                auto_skills,
+                no_skills,
+                cli.max_budget,
+            )
+            .await?;
         }
 
         Commands::Moa { prompt } => {
@@ -3150,6 +3091,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             fallback_to_local,
             evacuate_on_budget,
             notify,
+            skill,
+            auto_skills,
+            no_skills,
         } => {
             let ctx = build_engine_context(cli.max_budget);
             handle_harmony_command(
@@ -3167,11 +3111,279 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 fallback_to_local,
                 evacuate_on_budget,
                 notify,
+                skill,
+                auto_skills,
+                no_skills,
                 &ctx,
             )
             .await?;
         }
     }
+
+    Ok(())
+}
+
+async fn handle_stream_command(
+    provider: String,
+    model: Option<String>,
+    image: Option<String>,
+    prompt: String,
+    skill: Option<String>,
+    auto_skills: bool,
+    no_skills: bool,
+    cli_max_budget: f64,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let ctx = build_engine_context(cli_max_budget);
+    let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
+
+    println!(
+        "\n{} [{}: {}]...",
+        "Streaming from".bold().magenta(),
+        provider_id.cyan().bold(),
+        model_name.yellow()
+    );
+    println!("Prompt: \"{}\"", prompt.italic());
+
+    let should_inject_skills = !no_skills && (skill.is_some() || auto_skills);
+    let mut final_system_prompt: Option<String> = None;
+    let mut effective_prompt = prompt.clone();
+
+    if should_inject_skills {
+        let dispatcher = crate::ecc::skills::global_dispatcher();
+        let (equipped_text, injected_skills) = dispatcher.equip_prompt_for_provider(
+            "",
+            &prompt,
+            &provider_id,
+            skill.as_deref(),
+        );
+
+        if !injected_skills.is_empty() {
+            let is_local = crate::ecc::skills::SkillDispatcher::is_local_provider(&provider_id);
+            let caps = prov.capabilities(&model_name);
+
+            if caps.contains(crate::types::ProviderCapabilities::SYSTEM_PROMPT) {
+                final_system_prompt = Some(equipped_text);
+            } else {
+                effective_prompt = format!("{}\n\n{}", equipped_text, prompt);
+            }
+
+            let mode_badge = if is_local {
+                "Local Cheat-Sheet (<1k tokens)".cyan().bold()
+            } else {
+                "Cloud Comprehensive Specification".magenta().bold()
+            };
+            let skill_names: Vec<String> = injected_skills
+                .iter()
+                .map(|s| format!("{} ({:.1})", s.skill.name, s.score))
+                .collect();
+            println!(
+                "{} [{}] Injected {} skill(s) -> [{}]\n",
+                "⚡ Dynamic Skills:".bold().yellow(),
+                mode_badge,
+                injected_skills.len(),
+                skill_names.join(", ").green()
+            );
+        }
+    }
+
+    let mut user_blocks = vec![ContentBlock::text(effective_prompt)];
+    if let Some(ref img_path) = image {
+        let img_block = ContentBlock::from_image_file(img_path)?;
+        println!("Attached Multimodal Image: {}", img_path.cyan().bold());
+        user_blocks.push(img_block);
+    }
+    println!();
+
+    let mut req = CompletionRequest::new(model_name.clone(), "")
+        .with_messages(vec![crate::types::Message::user_with_content(user_blocks)])
+        .with_stream(true)
+        .with_cancellation(ctx.cancellation_token.clone());
+
+    if let Some(sys) = final_system_prompt {
+        req = req.with_system(sys);
+    }
+
+    let mut stream = prov.stream(req).await?;
+
+    let start = std::time::Instant::now();
+    let mut is_thinking = false;
+    let mut last_usage = None;
+
+    while let Some(chunk_res) = stream.next().await {
+        match chunk_res {
+            Ok(chunk) => {
+                if let Some(u) = chunk.usage {
+                    last_usage = Some(u);
+                }
+                match chunk.delta {
+                    StreamChunkDelta::Thinking(thought) => {
+                        if !is_thinking {
+                            print!("\n{}\n", "--- Model Thinking Block ---".italic().dimmed());
+                            is_thinking = true;
+                        }
+                        print!("{}", thought.dimmed());
+                        std::io::stdout().flush().ok();
+                    }
+                    StreamChunkDelta::Text(text) => {
+                        if is_thinking {
+                            print!("\n{}\n", "--- Response Output ---".italic().green());
+                            is_thinking = false;
+                        }
+                        print!("{}", text);
+                        std::io::stdout().flush().ok();
+                    }
+                    StreamChunkDelta::ToolCallDelta { index, id, name, arguments_delta } => {
+                        if let Some(n) = name {
+                            print!("\n[Tool Call #{}: {}", index, n);
+                            if let Some(id_str) = id {
+                                print!(" (ID: {})", id_str);
+                            }
+                            print!("] ");
+                        }
+                        if let Some(args) = arguments_delta {
+                            print!("{}", args);
+                        }
+                        std::io::stdout().flush().ok();
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("\n{}: {:?}", "Stream Error".red().bold(), e);
+                break;
+            }
+        }
+    }
+
+    println!("\n\n{} (Stream finished in {:.2}s)", "✔ Done".green().bold(), start.elapsed().as_secs_f32());
+
+    if let Some(u) = last_usage {
+        let cost_res = ctx.budget_tracker.record_usage(&model_name, &u);
+        let total_spent = ctx.budget_tracker.current_spent_usd();
+        println!(
+            "Tokens: {} (Prompt: {}, Output: {}, Cached: {}) | Session Spent: ${:.4} USD",
+            u.prompt_tokens + u.completion_tokens,
+            u.prompt_tokens,
+            u.completion_tokens,
+            u.cached_prompt_tokens.unwrap_or(0),
+            total_spent
+        );
+        if let Err(e) = cost_res {
+            eprintln!("{}: {:?}", "Budget Alert".yellow().bold(), e);
+        }
+    }
+
+    Ok(())
+}
+
+async fn handle_ask_command(
+    provider: String,
+    model: Option<String>,
+    image: Option<String>,
+    prompt: String,
+    skill: Option<String>,
+    auto_skills: bool,
+    no_skills: bool,
+    cli_max_budget: f64,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let ctx = build_engine_context(cli_max_budget);
+    let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
+
+    println!(
+        "\n{} [{}: {}]...",
+        "Querying".bold().magenta(),
+        provider_id.cyan().bold(),
+        model_name.yellow()
+    );
+
+    let should_inject_skills = !no_skills && (skill.is_some() || auto_skills);
+    let mut final_system_prompt: Option<String> = None;
+    let mut effective_prompt = prompt.clone();
+
+    if should_inject_skills {
+        let dispatcher = crate::ecc::skills::global_dispatcher();
+        let (equipped_text, injected_skills) = dispatcher.equip_prompt_for_provider(
+            "",
+            &prompt,
+            &provider_id,
+            skill.as_deref(),
+        );
+
+        if !injected_skills.is_empty() {
+            let is_local = crate::ecc::skills::SkillDispatcher::is_local_provider(&provider_id);
+            let caps = prov.capabilities(&model_name);
+
+            if caps.contains(crate::types::ProviderCapabilities::SYSTEM_PROMPT) {
+                final_system_prompt = Some(equipped_text);
+            } else {
+                effective_prompt = format!("{}\n\n{}", equipped_text, prompt);
+            }
+
+            let mode_badge = if is_local {
+                "Local Cheat-Sheet (<1k tokens)".cyan().bold()
+            } else {
+                "Cloud Comprehensive Specification".magenta().bold()
+            };
+            let skill_names: Vec<String> = injected_skills
+                .iter()
+                .map(|s| format!("{} ({:.1})", s.skill.name, s.score))
+                .collect();
+            println!(
+                "{} [{}] Injected {} skill(s) -> [{}]\n",
+                "⚡ Dynamic Skills:".bold().yellow(),
+                mode_badge,
+                injected_skills.len(),
+                skill_names.join(", ").green()
+            );
+        }
+    }
+
+    let mut user_blocks = vec![ContentBlock::text(effective_prompt)];
+    if let Some(ref img_path) = image {
+        let img_block = ContentBlock::from_image_file(img_path)?;
+        println!("Attached Multimodal Image: {}\n", img_path.cyan().bold());
+        user_blocks.push(img_block);
+    }
+
+    let mut session = ChatSession::new();
+    if let Some(sys) = final_system_prompt {
+        session.system_prompt = Some(sys);
+    }
+    session.add_user_message_with_blocks(user_blocks);
+
+    let req = session
+        .build_request(model_name.clone())
+        .with_cancellation(ctx.cancellation_token.clone());
+
+    let spinner = Spinner::start(format!(
+        "Thinking with {} [{}]...",
+        provider_id.cyan().bold(),
+        model_name.yellow().bold()
+    ));
+    let resp = prov.complete(req).await;
+    match &resp {
+        Ok(r) => spinner.success(format!("Response received in {:.2}s", r.latency.as_secs_f32())),
+        Err(e) => spinner.failure(format!("Request failed: {}", e)),
+    }
+    let resp = resp?;
+
+    ctx.budget_tracker.record_usage(&model_name, &resp.usage)?;
+
+    if let Some(thinking) = resp.message.extract_thinking() {
+        println!("\n{}", "--- Model Thinking / Reasoning ---".dimmed().italic());
+        println!("{}\n", thinking.dimmed());
+    }
+
+    println!("\n{}", "--- Response ---".bold().green());
+    println!("{}\n", resp.message.extract_text());
+    println!(
+        "Latency: {:.2}s | Tokens: {} (Prompt: {}, Output: {}, Cached: {}) | Total Spent: ${:.4} USD",
+        resp.latency.as_secs_f32(),
+        resp.usage.prompt_tokens + resp.usage.completion_tokens,
+        resp.usage.prompt_tokens,
+        resp.usage.completion_tokens,
+        resp.usage.cached_prompt_tokens.unwrap_or(0),
+        ctx.budget_tracker.current_spent_usd()
+    );
 
     Ok(())
 }
@@ -3191,6 +3403,9 @@ async fn handle_harmony_command(
     fallback_to_local: bool,
     evacuate_on_budget: bool,
     notify: bool,
+    skill: Option<String>,
+    auto_skills: bool,
+    no_skills: bool,
     ctx: &EngineContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let (
@@ -3207,6 +3422,9 @@ async fn handle_harmony_command(
         eff_fallback_to_local,
         eff_evacuate_on_budget,
         eff_notify,
+        eff_skill,
+        _eff_auto_skills,
+        eff_no_skills,
     ) = match action {
         Some(HarmonySubcommand::Build {
             objective: sub_obj,
@@ -3222,6 +3440,9 @@ async fn handle_harmony_command(
             fallback_to_local: sub_fallback_to_local,
             evacuate_on_budget: sub_evacuate_on_budget,
             notify: sub_notify,
+            skill: sub_skill,
+            auto_skills: sub_auto_skills,
+            no_skills: sub_no_skills,
         }) => (
             sub_obj,
             sub_arch.or(architect),
@@ -3236,6 +3457,9 @@ async fn handle_harmony_command(
             sub_fallback_to_local || fallback_to_local,
             sub_evacuate_on_budget || evacuate_on_budget,
             sub_notify || notify,
+            sub_skill.or(skill),
+            sub_auto_skills || auto_skills,
+            sub_no_skills || no_skills,
         ),
         None => {
             let obj = objective.unwrap_or_else(|| {
@@ -3256,6 +3480,9 @@ async fn handle_harmony_command(
                 fallback_to_local,
                 evacuate_on_budget,
                 notify,
+                skill,
+                auto_skills,
+                no_skills,
             )
         }
     };
@@ -3276,6 +3503,7 @@ async fn handle_harmony_command(
 
     let (arch_m, imp_m, qa_m, doc_m) = crate::swarm::harmony::resolve_harmony_models(ctx, &overrides);
 
+    let effective_auto_skills = !eff_no_skills;
     let mut pipeline = crate::swarm::harmony::build_standard_harmony_pipeline(
         &eff_objective,
         ctx,
@@ -3284,7 +3512,8 @@ async fn handle_harmony_command(
     )
     .with_fallback_to_local(eff_fallback_to_local)
     .with_evacuate_on_budget(eff_evacuate_on_budget)
-    .with_notify_on_failover(eff_notify);
+    .with_notify_on_failover(eff_notify)
+    .with_auto_skills(effective_auto_skills);
 
     if eff_parallel {
         pipeline = pipeline.with_parallel(true);
@@ -3297,6 +3526,10 @@ async fn handle_harmony_command(
         println!("Objective: \"{}\"\n", eff_objective.bold().yellow());
         println!("  • Cloud Tier:         {:?}", profile.unwrap_or_default());
         println!("  • Downstream Exec:    {}", if pipeline.parallel_qa_doc { "Concurrent (QA + Doc in Parallel)".green().bold() } else { "Sequential".dimmed() });
+        println!("  • Semantic Skills:    {}", if effective_auto_skills { "Enabled (Provider-aware Dynamic Injection)".green().bold() } else { "Disabled (--no-skills)".dimmed() });
+        if let Some(ref s) = eff_skill {
+            println!("  • Explicit Skill:     {}", s.cyan().bold());
+        }
         if eff_fallback_to_local {
             println!("  • Local Failover:     {}", "Enabled (Dynamic Hot-swap to Ollama on Rate Limit / Error)".green().bold());
         }

@@ -115,7 +115,7 @@ pub fn send_failover_desktop_notification(
 /// The orchestrator executing the multi-stage assembly line across local and cloud LLMs.
 pub struct StructuredHarmonyPipeline {
     pub blackboard: Arc<SwarmBlackboard>,
-    stages: Vec<HarmonyStage>,
+    pub stages: Vec<HarmonyStage>,
     audit_adversary: Option<(String, String)>,
     max_stage_retries: usize,
     /// When true, Stage 3 (QA) and Stage 4 (Doc) are executed concurrently in parallel.
@@ -126,6 +126,8 @@ pub struct StructuredHarmonyPipeline {
     pub evacuate_on_budget: bool,
     /// When true, emits a native OS desktop notification when dynamic failover occurs.
     pub notify_on_failover: bool,
+    /// When true, provider-aware semantic skills are automatically injected into role prompts and contracts.
+    pub auto_skills: bool,
 }
 
 impl StructuredHarmonyPipeline {
@@ -141,6 +143,7 @@ impl StructuredHarmonyPipeline {
             fallback_to_local: false,
             evacuate_on_budget: false,
             notify_on_failover: false,
+            auto_skills: true,
         }
     }
 
@@ -183,6 +186,15 @@ impl StructuredHarmonyPipeline {
     /// Enable or disable OS desktop notifications on stage failover events.
     pub fn with_notify_on_failover(mut self, notify: bool) -> Self {
         self.notify_on_failover = notify;
+        self
+    }
+
+    /// Enable or disable provider-aware semantic skill auto-equipping across pipeline stages.
+    pub fn with_auto_skills(mut self, enabled: bool) -> Self {
+        self.auto_skills = enabled;
+        for stage in &mut self.stages {
+            stage.role.set_auto_skills(enabled);
+        }
         self
     }
 

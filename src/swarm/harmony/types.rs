@@ -112,6 +112,8 @@ impl RoleArtifact {
 pub trait HarmonyRole: Send + Sync {
     fn config(&self) -> &HarmonyRoleConfig;
 
+    fn set_auto_skills(&mut self, _enabled: bool) {}
+
     async fn execute_stage(
         &self,
         blackboard: &SwarmBlackboard,

@@ -50,12 +50,16 @@ pub fn extract_markdown_code_blocks(text: &str) -> Vec<ExtractedCodeBlock> {
 pub struct StandardHarmonyRole {
     pub config: HarmonyRoleConfig,
     pub prompt_builder: Arc<dyn Fn(&SwarmBlackboard, &str) -> String + Send + Sync>,
+    pub auto_skills: bool,
+    pub base_system_contract: String,
+    pub domain_query: String,
 }
 
 impl std::fmt::Debug for StandardHarmonyRole {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("StandardHarmonyRole")
             .field("config", &self.config)
+            .field("auto_skills", &self.auto_skills)
             .finish()
     }
 }
@@ -65,9 +69,29 @@ impl StandardHarmonyRole {
         config: HarmonyRoleConfig,
         prompt_builder: impl Fn(&SwarmBlackboard, &str) -> String + Send + Sync + 'static,
     ) -> Self {
+        let base_contract = config.system_contract.clone();
         Self {
             config,
             prompt_builder: Arc::new(prompt_builder),
+            auto_skills: false,
+            base_system_contract: base_contract,
+            domain_query: String::new(),
+        }
+    }
+
+    pub fn new_with_skills(
+        config: HarmonyRoleConfig,
+        prompt_builder: impl Fn(&SwarmBlackboard, &str) -> String + Send + Sync + 'static,
+        auto_skills: bool,
+        base_system_contract: String,
+        domain_query: String,
+    ) -> Self {
+        Self {
+            config,
+            prompt_builder: Arc::new(prompt_builder),
+            auto_skills,
+            base_system_contract,
+            domain_query,
         }
     }
 
@@ -137,9 +161,24 @@ impl StandardHarmonyRole {
         let mut new_config = self.config.clone();
         new_config.provider = provider.to_string();
         new_config.model = model.to_string();
+
+        if self.auto_skills && !self.domain_query.is_empty() {
+            let dispatcher = crate::ecc::skills::global_dispatcher();
+            let (equipped, _) = dispatcher.equip_prompt_for_provider(
+                &self.base_system_contract,
+                &self.domain_query,
+                provider,
+                None,
+            );
+            new_config.system_contract = equipped;
+        }
+
         Self {
             config: new_config,
             prompt_builder: self.prompt_builder.clone(),
+            auto_skills: self.auto_skills,
+            base_system_contract: self.base_system_contract.clone(),
+            domain_query: self.domain_query.clone(),
         }
     }
 
@@ -168,6 +207,22 @@ impl StandardHarmonyRole {
 impl HarmonyRole for StandardHarmonyRole {
     fn config(&self) -> &HarmonyRoleConfig {
         &self.config
+    }
+
+    fn set_auto_skills(&mut self, enabled: bool) {
+        self.auto_skills = enabled;
+        if enabled && !self.domain_query.is_empty() {
+            let dispatcher = crate::ecc::skills::global_dispatcher();
+            let (equipped, _) = dispatcher.equip_prompt_for_provider(
+                &self.base_system_contract,
+                &self.domain_query,
+                &self.config.provider,
+                None,
+            );
+            self.config.system_contract = equipped;
+        } else {
+            self.config.system_contract = self.base_system_contract.clone();
+        }
     }
 
     async fn execute_stage(
@@ -206,7 +261,12 @@ pub struct AssemblyRoles;
 impl AssemblyRoles {
     /// 1. Systems Architect: Produces types, structs, interfaces, and signatures.
     pub fn architect(provider: &str, model: &str) -> Box<dyn HarmonyRole> {
-        let contract = 
+        Self::architect_with_auto_skills(provider, model, true)
+    }
+
+    /// 1b. Systems Architect with explicit auto-skills flag
+    pub fn architect_with_auto_skills(provider: &str, model: &str, auto_skills: bool) -> Box<dyn HarmonyRole> {
+        let base_contract = 
             "You are the Lead Systems Architect in an automated software assembly line.\n\
             STRICT CONTRACT:\n\
             1. Output ONLY data structures, types, enums, error definitions, and method signatures.\n\
@@ -214,24 +274,49 @@ impl AssemblyRoles {
             3. Enclose all code strictly in markdown code fences (e.g. ```rust ... ```).\n\
             4. Focus on modular boundary design, safety invariants, and strict type safety.";
 
-        let config = HarmonyRoleConfig::new("architect", "Lead Systems Architect", provider, model, contract)
+        let domain_query = "structured analysis yourdon modular coupling cohesion domain driven design page jones";
+        let system_contract = if auto_skills {
+            let dispatcher = crate::ecc::skills::global_dispatcher();
+            let (equipped, _) = dispatcher.equip_prompt_for_provider(
+                base_contract,
+                domain_query,
+                provider,
+                None,
+            );
+            equipped
+        } else {
+            base_contract.to_string()
+        };
+
+        let config = HarmonyRoleConfig::new("architect", "Lead Systems Architect", provider, model, system_contract)
             .with_temperature(0.2);
 
-        let role = StandardHarmonyRole::new(config, |_, objective| {
-            format!(
-                "OBJECTIVE:\n\"{}\"\n\n\
-                TASK: Design the complete data structures, type signatures, interfaces, and error types. \
-                Output only the types and function declarations in markdown code blocks.",
-                objective
-            )
-        });
+        let role = StandardHarmonyRole::new_with_skills(
+            config,
+            |_, objective| {
+                format!(
+                    "OBJECTIVE:\n\"{}\"\n\n\
+                    TASK: Design the complete data structures, type signatures, interfaces, and error types. \
+                    Output only the types and function declarations in markdown code blocks.",
+                    objective
+                )
+            },
+            auto_skills,
+            base_contract.to_string(),
+            domain_query.to_string(),
+        );
 
         Box::new(role)
     }
 
     /// 2. Senior Implementer: Implements function bodies based on Architect's types.
     pub fn implementer(provider: &str, model: &str) -> Box<dyn HarmonyRole> {
-        let contract =
+        Self::implementer_with_auto_skills(provider, model, true)
+    }
+
+    /// 2b. Senior Implementer with explicit auto-skills flag
+    pub fn implementer_with_auto_skills(provider: &str, model: &str, auto_skills: bool) -> Box<dyn HarmonyRole> {
+        let base_contract =
             "You are the Senior Systems Implementer in an automated software assembly line.\n\
             STRICT CONTRACT:\n\
             1. Given the types from the Systems Architect, implement the complete algorithm and method bodies.\n\
@@ -239,79 +324,149 @@ impl AssemblyRoles {
             3. Do NOT write conversational greetings or filler text. Output ONLY compilable implementation code.\n\
             4. Enclose all code strictly in markdown code fences.";
 
-        let config = HarmonyRoleConfig::new("implementer", "Senior Systems Implementer", provider, model, contract)
+        let domain_query = "rust tokio concurrency design by contract tokio async tuning";
+        let system_contract = if auto_skills {
+            let dispatcher = crate::ecc::skills::global_dispatcher();
+            let (equipped, _) = dispatcher.equip_prompt_for_provider(
+                base_contract,
+                domain_query,
+                provider,
+                None,
+            );
+            equipped
+        } else {
+            base_contract.to_string()
+        };
+
+        let config = HarmonyRoleConfig::new("implementer", "Senior Systems Implementer", provider, model, system_contract)
             .with_temperature(0.3);
 
-        let role = StandardHarmonyRole::new(config, |blackboard, objective| {
-            let architect_spec = blackboard
-                .get_artifact("architect")
-                .map(|a| a.raw_output)
-                .unwrap_or_default();
+        let role = StandardHarmonyRole::new_with_skills(
+            config,
+            |blackboard, objective| {
+                let architect_spec = blackboard
+                    .get_artifact("architect")
+                    .map(|a| a.raw_output)
+                    .unwrap_or_default();
 
-            format!(
-                "OBJECTIVE:\n\"{}\"\n\n\
-                ARCHITECT SPECIFICATION:\n\"\"\"\n{}\n\"\"\"\n\n\
-                TASK: Implement the complete execution logic and method bodies for the specification above. \
-                Output only the implementation code inside markdown code blocks.",
-                objective, architect_spec
-            )
-        });
+                format!(
+                    "OBJECTIVE:\n\"{}\"\n\n\
+                    ARCHITECT SPECIFICATION:\n\"\"\"\n{}\n\"\"\"\n\n\
+                    TASK: Implement the complete execution logic and method bodies for the specification above. \
+                    Output only the implementation code inside markdown code blocks.",
+                    objective, architect_spec
+                )
+            },
+            auto_skills,
+            base_contract.to_string(),
+            domain_query.to_string(),
+        );
 
         Box::new(role)
     }
 
     /// 3. QA & Test Specialist: Generates comprehensive unit tests with assertions.
     pub fn qa(provider: &str, model: &str) -> Box<dyn HarmonyRole> {
-        let contract =
+        Self::qa_with_auto_skills(provider, model, true)
+    }
+
+    /// 3b. QA & Test Specialist with explicit auto-skills flag
+    pub fn qa_with_auto_skills(provider: &str, model: &str, auto_skills: bool) -> Box<dyn HarmonyRole> {
+        let base_contract =
             "You are the Quality & Test Verification Specialist in an automated software assembly line.\n\
             STRICT CONTRACT:\n\
             1. Given the types and implementation, generate comprehensive unit tests covering edge cases, null boundaries, scale limits, and happy paths.\n\
             2. Do NOT write greetings or chat. Output ONLY test code in markdown code fences.\n\
             3. Write deterministic assertions that verify correctness under stress.";
 
-        let config = HarmonyRoleConfig::new("qa", "QA & Verification Specialist", provider, model, contract)
+        let domain_query = "tdd workflow data intensive architecture unit test assertions edge cases";
+        let system_contract = if auto_skills {
+            let dispatcher = crate::ecc::skills::global_dispatcher();
+            let (equipped, _) = dispatcher.equip_prompt_for_provider(
+                base_contract,
+                domain_query,
+                provider,
+                None,
+            );
+            equipped
+        } else {
+            base_contract.to_string()
+        };
+
+        let config = HarmonyRoleConfig::new("qa", "QA & Verification Specialist", provider, model, system_contract)
             .with_temperature(0.2);
 
-        let role = StandardHarmonyRole::new(config, |blackboard, objective| {
-            let arch_spec = blackboard.get_artifact("architect").map(|a| a.raw_output).unwrap_or_default();
-            let impl_code = blackboard.get_artifact("implementer").map(|a| a.raw_output).unwrap_or_default();
+        let role = StandardHarmonyRole::new_with_skills(
+            config,
+            |blackboard, objective| {
+                let arch_spec = blackboard.get_artifact("architect").map(|a| a.raw_output).unwrap_or_default();
+                let impl_code = blackboard.get_artifact("implementer").map(|a| a.raw_output).unwrap_or_default();
 
-            format!(
-                "OBJECTIVE:\n\"{}\"\n\n\
-                TYPES SPECIFICATION:\n\"\"\"\n{}\n\"\"\"\n\n\
-                IMPLEMENTATION CODE:\n\"\"\"\n{}\n\"\"\"\n\n\
-                TASK: Write complete unit tests covering edge cases, concurrent access, and boundary checks. \
-                Enclose tests in markdown code blocks.",
-                objective, arch_spec, impl_code
-            )
-        });
+                format!(
+                    "OBJECTIVE:\n\"{}\"\n\n\
+                    TYPES SPECIFICATION:\n\"\"\"\n{}\n\"\"\"\n\n\
+                    IMPLEMENTATION CODE:\n\"\"\"\n{}\n\"\"\"\n\n\
+                    TASK: Write complete unit tests covering edge cases, concurrent access, and boundary checks. \
+                    Enclose tests in markdown code blocks.",
+                    objective, arch_spec, impl_code
+                )
+            },
+            auto_skills,
+            base_contract.to_string(),
+            domain_query.to_string(),
+        );
 
         Box::new(role)
     }
 
     /// 4. Documentation & Packaging: Produces usage documentation and examples.
     pub fn documentation(provider: &str, model: &str) -> Box<dyn HarmonyRole> {
-        let contract =
+        Self::documentation_with_auto_skills(provider, model, true)
+    }
+
+    /// 4b. Documentation & Packaging with explicit auto-skills flag
+    pub fn documentation_with_auto_skills(provider: &str, model: &str, auto_skills: bool) -> Box<dyn HarmonyRole> {
+        let base_contract =
             "You are the Documentation & Packaging Specialist in an automated software assembly line.\n\
             STRICT CONTRACT:\n\
             1. Synthesize concise technical documentation, quickstart usage examples, and complexity notes.\n\
             2. Output cleanly formatted markdown.";
 
-        let config = HarmonyRoleConfig::new("doc", "Documentation & Packaging Specialist", provider, model, contract)
+        let domain_query = "documentation quickstart api usage clean standards";
+        let system_contract = if auto_skills {
+            let dispatcher = crate::ecc::skills::global_dispatcher();
+            let (equipped, _) = dispatcher.equip_prompt_for_provider(
+                base_contract,
+                domain_query,
+                provider,
+                None,
+            );
+            equipped
+        } else {
+            base_contract.to_string()
+        };
+
+        let config = HarmonyRoleConfig::new("doc", "Documentation & Packaging Specialist", provider, model, system_contract)
             .with_temperature(0.4);
 
-        let role = StandardHarmonyRole::new(config, |blackboard, objective| {
-            let arch_spec = blackboard.get_artifact("architect").map(|a| a.raw_output).unwrap_or_default();
-            let impl_code = blackboard.get_artifact("implementer").map(|a| a.raw_output).unwrap_or_default();
+        let role = StandardHarmonyRole::new_with_skills(
+            config,
+            |blackboard, objective| {
+                let arch_spec = blackboard.get_artifact("architect").map(|a| a.raw_output).unwrap_or_default();
+                let impl_code = blackboard.get_artifact("implementer").map(|a| a.raw_output).unwrap_or_default();
 
-            format!(
-                "OBJECTIVE:\n\"{}\"\n\n\
-                TYPES:\n\"\"\"\n{}\n\"\"\"\n\n\
-                IMPLEMENTATION:\n\"\"\"\n{}\n\"\"\"\n\n\
-                TASK: Write clean markdown documentation, quickstart API usage examples, and time/space complexity notes.",
-                objective, arch_spec, impl_code
-            )
-        });
+                format!(
+                    "OBJECTIVE:\n\"{}\"\n\n\
+                    TYPES:\n\"\"\"\n{}\n\"\"\"\n\n\
+                    IMPLEMENTATION:\n\"\"\"\n{}\n\"\"\"\n\n\
+                    TASK: Write clean markdown documentation, quickstart API usage examples, and time/space complexity notes.",
+                    objective, arch_spec, impl_code
+                )
+            },
+            auto_skills,
+            base_contract.to_string(),
+            domain_query.to_string(),
+        );
 
         Box::new(role)
     }

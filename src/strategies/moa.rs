@@ -48,9 +48,16 @@ impl CollaborationStrategy for MixtureOfAgentsStrategy {
             let cancel_token = ctx.cancellation_token.clone();
 
             proposer_futures.push(async move {
+                let dispatcher = crate::ecc::skills::global_dispatcher();
+                let (equipped_prompt, _) = dispatcher.equip_prompt_for_provider(
+                    &prompt,
+                    &prompt,
+                    &provider_id,
+                    None,
+                );
                 let req = CompletionRequest {
                     model: model_name.clone(),
-                    messages: vec![Message::user(prompt)],
+                    messages: vec![Message::user(equipped_prompt)],
                     temperature: Some(0.7),
                     max_tokens: Some(3000),
                     stream: false,
@@ -136,9 +143,17 @@ impl CollaborationStrategy for MixtureOfAgentsStrategy {
             candidate_drafts.join("\n\n")
         );
 
+        let dispatcher = crate::ecc::skills::global_dispatcher();
+        let (equipped_aggregator_prompt, _) = dispatcher.equip_prompt_for_provider(
+            &aggregator_prompt,
+            &input.prompt,
+            agg_provider_id,
+            None,
+        );
+
         let agg_req = CompletionRequest {
             model: agg_model_name.clone(),
-            messages: vec![Message::user(aggregator_prompt)],
+            messages: vec![Message::user(equipped_aggregator_prompt)],
             temperature: Some(0.3),
             max_tokens: Some(4096),
             stream: false,

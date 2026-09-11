@@ -54,6 +54,14 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
             input.prompt
         );
 
+        let dispatcher = crate::ecc::skills::global_dispatcher();
+        let (thesis_prompt, _) = dispatcher.equip_prompt_for_provider(
+            &thesis_prompt,
+            &input.prompt,
+            p_provider_id,
+            None,
+        );
+
         let mut thesis_req = CompletionRequest::new(p_model.clone(), thesis_prompt)
             .with_temperature(0.7)
             .with_cancellation(ctx.cancellation_token.clone());
@@ -94,6 +102,14 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
             1. Ruthlessly scrutinize the proposed solution for subtle bugs, logical flaws, security vulnerabilities, edge cases, and performance bottlenecks.\n\
             2. Point out unsupported assumptions and propose concrete corrections.",
             input.prompt, thesis_text
+        );
+
+        let adversary_query = format!("{} critique verification testing edge cases security", input.prompt);
+        let (antithesis_prompt, _) = dispatcher.equip_prompt_for_provider(
+            &antithesis_prompt,
+            &adversary_query,
+            a_provider_id,
+            None,
         );
 
         let mut antithesis_req = CompletionRequest::new(a_model.clone(), antithesis_prompt)
@@ -139,6 +155,14 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
             input.prompt,
             p_provider_id, p_model, thesis_text,
             a_provider_id, a_model, antithesis_text
+        );
+
+        let synthesis_query = format!("{} software architecture design synthesis reconciliation", input.prompt);
+        let (synthesis_prompt, _) = dispatcher.equip_prompt_for_provider(
+            &synthesis_prompt,
+            &synthesis_query,
+            adj_provider_id,
+            None,
         );
 
         let mut synthesis_req = CompletionRequest::new(adj_model.clone(), synthesis_prompt)

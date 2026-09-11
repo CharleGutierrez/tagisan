@@ -30,7 +30,8 @@ pub use python::{PythonExecutionResult, PythonRuntime};
 pub use ecc::{
     all_built_in_skills as all_ecc_skills, all_presets as all_ecc_presets, build_ecc_pipeline,
     extract_triggers_from_text, find_built_in_skill as find_ecc_skill,
-    find_preset as find_ecc_preset, global_dispatcher as global_ecc_dispatcher,
+    find_preset as find_ecc_preset, format_cheat_sheet, format_cloud_guidelines,
+    global_dispatcher as global_ecc_dispatcher, is_local_provider,
     load_agents_from_dir as load_ecc_agents_from_dir,
     load_skills_from_dir as load_ecc_skills_from_dir, resolve_agent as resolve_ecc_agent,
     resolve_skill as resolve_ecc_skill, AgentShieldScanner, AgentShieldVerdict, DispatchedSkill,

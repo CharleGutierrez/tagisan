@@ -231,6 +231,12 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
 /// Retrieve a built-in skill by name
 pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     let lower = name.to_lowercase().replace('_', "-");
+    if lower == "rust-tokio-concurrency" || lower == "rust-concurrency" || lower == "tokio-concurrency" {
+        if let Some(mut s) = find_built_in_skill("tokio-async-tuning") {
+            s.name = "rust-tokio-concurrency".to_string();
+            return Some(s);
+        }
+    }
     all_built_in_skills().into_iter().find(|s| s.name == lower)
 }
 
@@ -311,7 +317,7 @@ pub fn verification_loop() -> EccSkill {
 pub fn tokio_async_tuning() -> EccSkill {
     EccSkill::new(
         "tokio-async-tuning",
-        "Tokio async concurrency, lock contention avoidance, bounded channels, and JoinSet task scheduling",
+        "Tokio async concurrency, lock contention avoidance, bounded channels, cancellation tokens, and JoinSet task scheduling. Triggers: tokio, concurrency, async, rust-tokio-concurrency, joinset, mpsc, mutex, await, blocking, cancellation.",
         r#"# Tokio Async & Concurrency Optimization
 
 ## Core Concurrency Protocols
@@ -319,6 +325,7 @@ pub fn tokio_async_tuning() -> EccSkill {
 2. Lock Contention Minimization: Never hold a `MutexGuard` across an `.await` boundary. Use message passing or atomic primitives (`AtomicBool`, `AtomicUsize`) for scalars.
 3. Task Orchestration: Prefer `tokio::task::JoinSet` over loose `tokio::spawn` calls to ensure structured concurrency, cancellation propagation, and clean resource cleanup.
 4. Blocking Operations: Offload heavy synchronous computations, CPU-bound parsing, or blocking filesystem I/O to `tokio::task::spawn_blocking`.
+5. Clean Cancellation: Use tokio_util::sync::CancellationToken for cooperative shutdown and timeout propagation.
 "#,
     )
 }
@@ -1402,6 +1409,14 @@ impl SkillDispatcher {
             return self.load_skill_by_id(doc_id);
         }
 
+        if lower == "rust-tokio-concurrency" || lower == "rust-concurrency" || lower == "tokio-concurrency" {
+            if let Some(&doc_id) = self.name_index.get("tokio-async-tuning") {
+                if let Some(s) = self.load_skill_by_id(doc_id) {
+                    return Some(s);
+                }
+            }
+        }
+
         // Try prefixes
         for prefix in ["oracle-", "oci-", "azure-", "aws-", "ibm-", "sap-", "alibaba-", "sf-"] {
             let stripped = lower.trim_start_matches(prefix);
@@ -1662,6 +1677,172 @@ impl SkillDispatcher {
         }
 
         output.trim_end().to_string()
+    }
+
+    /// Check if a provider identifier corresponds to a local LLM runtime (e.g. Ollama, local)
+    pub fn is_local_provider(provider: &str) -> bool {
+        let p = provider.trim().to_lowercase();
+        p == "ollama"
+            || p == "local"
+            || p.starts_with("ollama")
+            || p.starts_with("local")
+            || p.contains("ollama")
+            || p.contains("local")
+            || p.contains("llama")
+            || p.contains("vllm")
+    }
+
+    /// Format dispatched skills as a condensed Cheat Sheet for local LLMs (<1,000 tokens footprint for 8k context)
+    pub fn format_cheat_sheet(skills: &[DispatchedSkill]) -> String {
+        if skills.is_empty() {
+            return String::new();
+        }
+        let mut out = String::from("### [LOCAL LLM CHEAT SHEET: ACTIONABLE CONSTRAINTS & INVARIANTS]\n");
+        for (idx, ds) in skills.iter().enumerate() {
+            out.push_str(&format!("\n#### Skill {}: {} ({})\n", idx + 1, ds.skill.name, ds.domain));
+
+            let mut rules: Vec<String> = Vec::new();
+            for line in ds.skill.instructions.lines() {
+                let trimmed = line.trim();
+                if trimmed.is_empty() {
+                    continue;
+                }
+                if trimmed.starts_with('#') {
+                    let h_clean = trimmed.trim_start_matches('#').trim();
+                    let h_lower = h_clean.to_lowercase();
+                    if !h_clean.is_empty() && !h_lower.contains("overview") && !h_lower.contains("ecc") {
+                        rules.push(format!("* [Context: {}]", h_clean));
+                    }
+                    continue;
+                }
+                if trimmed.starts_with('-') || trimmed.starts_with('*') {
+                    let rule_text = trimmed.trim_start_matches(|c: char| c == '-' || c == '*' || c.is_whitespace());
+                    if !rule_text.is_empty() {
+                        rules.push(format!("- {}", rule_text));
+                    }
+                } else if trimmed.as_bytes().first().map_or(false, |b| b.is_ascii_digit()) && trimmed.contains('.') {
+                    if let Some((_, rest)) = trimmed.split_once('.') {
+                        let rule_text = rest.trim();
+                        if !rule_text.is_empty() {
+                            rules.push(format!("- {}", rule_text));
+                        }
+                    }
+                } else {
+                    let lower = trimmed.to_lowercase();
+                    if lower.starts_with("rule:")
+                        || lower.starts_with("invariant:")
+                        || lower.starts_with("constraint:")
+                        || lower.starts_with("always")
+                        || lower.starts_with("never")
+                        || lower.starts_with("must")
+                    {
+                        rules.push(format!("- {}", trimmed));
+                    }
+                }
+            }
+
+            if rules.is_empty() {
+                for line in ds.skill.instructions.lines() {
+                    let trimmed = line.trim();
+                    if !trimmed.is_empty() && !trimmed.starts_with('#') {
+                        rules.push(format!("- {}", trimmed));
+                    }
+                }
+            }
+
+            let capped_rules = rules.into_iter().take(12);
+            for r in capped_rules {
+                out.push_str(&r);
+                out.push('\n');
+            }
+        }
+        out.trim().to_string()
+    }
+
+    /// Format dispatched skills as a Comprehensive Architectural Specification mode with full instructions, checklists, invariants
+    pub fn format_cloud_guidelines(skills: &[DispatchedSkill]) -> String {
+        if skills.is_empty() {
+            return String::new();
+        }
+        let mut out = String::from("### [COMPREHENSIVE ARCHITECTURAL SPECIFICATIONS & ENGINEERING SKILLS]\n");
+        for (idx, ds) in skills.iter().enumerate() {
+            out.push_str(&format!(
+                "\n---\n#### Skill {}: {} [Domain: {} | Match Score: {:.1}]\n",
+                idx + 1, ds.skill.name, ds.domain, ds.score
+            ));
+            out.push_str(&format!("**Description:** {}\n\n", ds.skill.description.trim()));
+            if !ds.matched_triggers.is_empty() {
+                out.push_str(&format!("**Triggers:** {}\n\n", ds.matched_triggers.join(", ")));
+            }
+            out.push_str("#### Full Specification & Directives:\n");
+            out.push_str(ds.skill.instructions.trim());
+            out.push_str("\n");
+        }
+        out.trim().to_string()
+    }
+
+    /// Synthesizes provider-aware prompts injecting either condensed Cheat Sheet (for Local) or Comprehensive Guidelines (for Cloud)
+    pub fn equip_prompt_for_provider(
+        &self,
+        base_prompt: &str,
+        query: &str,
+        provider: &str,
+        explicit_skill: Option<&str>,
+    ) -> (String, Vec<DispatchedSkill>) {
+        let is_local = Self::is_local_provider(provider);
+        let max_skills = if is_local { 2 } else { 4 };
+
+        let skills: Vec<DispatchedSkill> = if let Some(skill_name) = explicit_skill {
+            let clean = skill_name.trim();
+            if !clean.is_empty() {
+                if let Some(skill) = self.get_skill(clean) {
+                    vec![DispatchedSkill {
+                        domain: infer_domain(&skill.name),
+                        skill,
+                        score: 100.0,
+                        matched_triggers: vec![clean.to_string()],
+                    }]
+                } else {
+                    self.dispatch(clean, max_skills, None)
+                }
+            } else {
+                self.dispatch(query, max_skills, None)
+            }
+        } else {
+            self.dispatch(query, max_skills, None)
+        };
+
+        if skills.is_empty() {
+            return (base_prompt.to_string(), Vec::new());
+        }
+
+        let section = if is_local {
+            Self::format_cheat_sheet(&skills)
+        } else {
+            Self::format_cloud_guidelines(&skills)
+        };
+
+        let equipped_prompt = if base_prompt.trim().is_empty() {
+            section
+        } else {
+            format!("{}\n\n{}", base_prompt.trim_end(), section)
+        };
+
+        (equipped_prompt, skills)
+    }
+
+    /// Auto-equips skills into a system prompt string
+    pub fn equip_prompt(&self, base_prompt: &str, query: &str, limit: usize) -> String {
+        let dispatched = self.dispatch(query, limit, None);
+        if dispatched.is_empty() {
+            return base_prompt.to_string();
+        }
+        let section = Self::format_cheat_sheet(&dispatched);
+        if base_prompt.trim().is_empty() {
+            section
+        } else {
+            format!("{}\n\n{}", base_prompt.trim_end(), section)
+        }
     }
 }
 
@@ -1936,4 +2117,88 @@ fn is_stop_word(word: &str) -> bool {
             | "do" | "does" | "did" | "doing"
     )
 }
+
+/// Standalone check if a provider identifier corresponds to a local LLM runtime (e.g. Ollama, local)
+pub fn is_local_provider(provider: &str) -> bool {
+    SkillDispatcher::is_local_provider(provider)
+}
+
+/// Standalone formatter for condensed Cheat Sheet format for local LLMs
+pub fn format_cheat_sheet(skills: &[DispatchedSkill]) -> String {
+    SkillDispatcher::format_cheat_sheet(skills)
+}
+
+/// Standalone formatter for Comprehensive Architectural Specification format for cloud LLMs
+pub fn format_cloud_guidelines(skills: &[DispatchedSkill]) -> String {
+    SkillDispatcher::format_cloud_guidelines(skills)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_local_provider() {
+        assert!(is_local_provider("ollama"));
+        assert!(is_local_provider("local"));
+        assert!(is_local_provider("localhost"));
+        assert!(is_local_provider("ollama-remote"));
+        assert!(is_local_provider("llama.cpp"));
+
+        assert!(!is_local_provider("anthropic"));
+        assert!(!is_local_provider("openai"));
+        assert!(!is_local_provider("gemini"));
+        assert!(!is_local_provider("deepseek"));
+        assert!(!is_local_provider("grok"));
+        assert!(!is_local_provider("xai"));
+    }
+
+    #[test]
+    fn test_equip_prompt_for_provider_formats() {
+        let dispatcher = global_dispatcher();
+        let query = "tokio async concurrency channel deadlock";
+
+        // Local Ollama
+        let (local_text, local_skills) = dispatcher.equip_prompt_for_provider(
+            "Base prompt",
+            query,
+            "ollama",
+            None,
+        );
+        assert!(!local_skills.is_empty());
+        assert!(local_skills.len() <= 2);
+        assert!(local_text.contains("[LOCAL LLM CHEAT SHEET: ACTIONABLE CONSTRAINTS & INVARIANTS]"));
+        assert!(!local_text.contains("[COMPREHENSIVE ARCHITECTURAL SPECIFICATIONS"));
+
+        // Cloud Anthropic
+        let (cloud_text, cloud_skills) = dispatcher.equip_prompt_for_provider(
+            "Base prompt",
+            query,
+            "anthropic",
+            None,
+        );
+        assert!(!cloud_skills.is_empty());
+        assert!(cloud_skills.len() <= 4);
+        assert!(cloud_text.contains("[COMPREHENSIVE ARCHITECTURAL SPECIFICATIONS & ENGINEERING SKILLS]"));
+        assert!(cloud_text.contains("Full Specification & Directives:"));
+        assert!(!cloud_text.contains("[LOCAL LLM CHEAT SHEET"));
+    }
+
+    #[test]
+    fn test_explicit_skill_alias_override() {
+        let dispatcher = global_dispatcher();
+
+        let (text, skills) = dispatcher.equip_prompt_for_provider(
+            "Base",
+            "irrelevant",
+            "ollama",
+            Some("rust-tokio-concurrency"),
+        );
+        assert_eq!(skills.len(), 1);
+        assert_eq!(skills[0].skill.name, "tokio-async-tuning");
+        assert!(text.contains("tokio-async-tuning"));
+        assert!(text.contains("[LOCAL LLM CHEAT SHEET: ACTIONABLE CONSTRAINTS & INVARIANTS]"));
+    }
+}
+
 
