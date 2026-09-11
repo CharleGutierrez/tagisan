@@ -368,6 +368,15 @@ cargo test --test milestone6_memory_tests
 
 ---
 
+## 🗺️ Architectural Specifications & Roadmaps
+
+- 📑 **[RFC-001: Universal Protocol & Ecosystem Integrations](ROADMAP_EXTENSIONS.md)** — Pluggable external vector backends, OTel, and automated evaluation.
+- 🔌 **[RFC-002: WASM & Native Dynamic Plugins Architecture](ROADMAP_PLUGINS.md)** — Extism WASM sandboxing and dynamic shared library plugins.
+- 🏛️ **[RFC-003: Structured Role-Based Harmony Swarms for Local LLMs](docs/SPEC_STRUCTURED_ROLE_HARMONY_SWARM.md)** — Multi-model assembly line, anti-sycophancy gates, and shared blackboard memory for local Ollama swarms.
+
+---
+
 ## 📄 License
 
 This project is dual-licensed under the **MIT License** and the **Apache 2.0 License**. See [LICENSE](LICENSE) for details.
+
