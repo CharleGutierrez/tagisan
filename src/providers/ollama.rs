@@ -89,6 +89,66 @@ impl OllamaProvider {
 
         messages
     }
+
+    fn build_options(&self, req: &CompletionRequest) -> OllamaOptions {
+        let num_gpu = std::env::var("TAGISAN_OLLAMA_NUM_GPU")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .or(Some(99)); // Default to 99: offload all transformer layers into GPU VRAM
+
+        let num_batch = std::env::var("TAGISAN_OLLAMA_NUM_BATCH")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .or(Some(512)); // High-throughput prompt ingestion batch size
+
+        let num_ctx = std::env::var("TAGISAN_OLLAMA_NUM_CTX")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .or_else(|| req.max_tokens.map(|m| m.max(4096)));
+
+        let num_thread = std::env::var("TAGISAN_OLLAMA_NUM_THREAD")
+            .ok()
+            .and_then(|s| s.parse().ok());
+
+        OllamaOptions {
+            temperature: req.temperature,
+            num_predict: req.max_tokens,
+            num_ctx,
+            num_gpu,
+            num_thread,
+            num_batch,
+            f16_kv: Some(true),
+            use_mmap: Some(true),
+            use_mlock: None,
+        }
+    }
+
+    fn get_keep_alive(&self) -> String {
+        std::env::var("TAGISAN_OLLAMA_KEEP_ALIVE").unwrap_or_else(|_| "24h".to_string())
+    }
+}
+
+/// Advanced inference options passed directly to the llama.cpp engine inside Ollama
+#[derive(Serialize, Debug, Clone, Default)]
+pub struct OllamaOptions {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub num_predict: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub num_ctx: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub num_gpu: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub num_thread: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub num_batch: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub f16_kv: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub use_mmap: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub use_mlock: Option<bool>,
 }
 
 #[derive(Serialize)]
@@ -98,6 +158,10 @@ struct OllamaChatPayload<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     tools: Option<Vec<OllamaTool<'a>>>,
     stream: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    keep_alive: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    options: Option<OllamaOptions>,
 }
 
 #[derive(Serialize)]
@@ -185,11 +249,16 @@ impl LlmProvider for OllamaProvider {
             None
         };
 
+        let keep_alive = self.get_keep_alive();
+        let options = self.build_options(&req);
+
         let payload = OllamaChatPayload {
             model: &req.model,
             messages,
             tools,
             stream: false,
+            keep_alive: Some(&keep_alive),
+            options: Some(options),
         };
 
         let send_future = self.client.post(&url).json(&payload).send();
@@ -309,11 +378,16 @@ impl LlmProvider for OllamaProvider {
             None
         };
 
+        let keep_alive = self.get_keep_alive();
+        let options = self.build_options(&req);
+
         let payload = OllamaChatPayload {
             model: &req.model,
             messages,
             tools,
             stream: true,
+            keep_alive: Some(&keep_alive),
+            options: Some(options),
         };
 
         let send_future = self.client.post(&url).json(&payload).send();
