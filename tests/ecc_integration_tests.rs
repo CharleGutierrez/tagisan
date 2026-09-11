@@ -261,6 +261,13 @@ Profile bottlenecks before optimizing.
     assert!(find_ecc_skill("security-review").is_some());
     assert!(find_ecc_skill("api-design").is_some());
     assert!(find_ecc_skill("verification-loop").is_some());
+    assert!(find_ecc_skill("deep-modules-complexity").is_some());
+    assert!(find_ecc_skill("legacy-seams-characterization").is_some());
+    assert!(find_ecc_skill("catalog-refactoring-smells").is_some());
+    assert!(find_ecc_skill("production-resilience-release-it").is_some());
+    assert!(find_ecc_skill("evolutionary-fitness-functions").is_some());
+    assert!(find_ecc_skill("temporal-invariants-tla").is_some());
+    assert!(find_ecc_skill("conceptual-integrity-systems").is_some());
 
     // Directory discovery including integrated Microsoft, Google, and AWS skills
     let skills_dir = Path::new(".ecc/skills");
@@ -392,6 +399,13 @@ Profile bottlenecks before optimizing.
         assert!(resolve_ecc_skill("sre-sev1-first-15-minutes", Some(skills_dir)).is_some());
         assert!(resolve_ecc_skill("sre-triage-error-budget-burn", Some(skills_dir)).is_some());
         assert!(resolve_ecc_skill("devsecops-threat-modeling", Some(skills_dir)).is_some());
+        assert!(resolve_ecc_skill("deep-modules-complexity", Some(skills_dir)).is_some());
+        assert!(resolve_ecc_skill("legacy-seams-characterization", Some(skills_dir)).is_some());
+        assert!(resolve_ecc_skill("catalog-refactoring-smells", Some(skills_dir)).is_some());
+        assert!(resolve_ecc_skill("production-resilience-release-it", Some(skills_dir)).is_some());
+        assert!(resolve_ecc_skill("evolutionary-fitness-functions", Some(skills_dir)).is_some());
+        assert!(resolve_ecc_skill("temporal-invariants-tla", Some(skills_dir)).is_some());
+        assert!(resolve_ecc_skill("conceptual-integrity-systems", Some(skills_dir)).is_some());
     }
 }
 
@@ -547,6 +561,19 @@ fn test_skill_dispatcher_exact_and_hybrid_ranking() {
         "Top results should contain domain skills, got: {:?}",
         names
     );
+
+    // 4. Advanced software engineering literature skill queries
+    let ousterhout_results = dispatcher.dispatch("deep modules ousterhout information hiding", 3, None);
+    assert!(!ousterhout_results.is_empty());
+    assert_eq!(ousterhout_results[0].skill.name, "deep-modules-complexity");
+
+    let feathers_results = dispatcher.dispatch("legacy code characterization tests seams", 3, None);
+    assert!(!feathers_results.is_empty());
+    assert_eq!(feathers_results[0].skill.name, "legacy-seams-characterization");
+
+    let nygard_results = dispatcher.dispatch("circuit breaker bulkhead retry storm cascading failure", 3, None);
+    assert!(!nygard_results.is_empty());
+    assert_eq!(nygard_results[0].skill.name, "production-resilience-release-it");
 }
 
 #[test]

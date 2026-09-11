@@ -176,6 +176,13 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         design_by_contract(),
         statechart_fsm_modeling(),
         data_intensive_architecture(),
+        deep_modules_complexity(),
+        legacy_seams_characterization(),
+        catalog_refactoring_smells(),
+        production_resilience_release_it(),
+        evolutionary_fitness_functions(),
+        temporal_invariants_tla(),
+        conceptual_integrity_systems(),
     ]
 }
 
@@ -678,6 +685,160 @@ pub fn data_intensive_architecture() -> EccSkill {
 - Idempotency Keys: Enforce on every mutating endpoint and tool call.
 - Write-Ahead Log (WAL): Canonical append-only log as source of truth; derived views updated asynchronously.
 - CQRS: Separate write command validation from high-performance read query projections.
+"#,
+    )
+}
+
+/// 28. Deep Modules & Complexity Skill (John Ousterhout)
+pub fn deep_modules_complexity() -> EccSkill {
+    EccSkill::new(
+        "deep-modules-complexity",
+        "A Philosophy of Software Design (John Ousterhout): deep vs shallow modules, narrow interfaces hiding complex implementations, information hiding, defining errors out of existence, and eliminating pass-through abstractions",
+        r#"# Deep Modules & Complexity Control (John Ousterhout)
+
+## 1. Deep vs. Shallow Modules
+- Deep Module: Simple, narrow interface concealing deep, sophisticated internal logic.
+- Shallow Module: Wide or complex interface with trivial implementation; eliminate shallow wrappers.
+- Information Hiding: Internal data formats, synchronization, and caching must never leak into API signatures.
+- Information Leakage: Callers should never have to coordinate multi-step lifecycle sequences when a single call suffices.
+
+## 2. Defining Errors Out of Existence
+- Subsumption: Redefine semantics so edge cases are valid normal behavior (e.g. deleting non-existent item is a no-op).
+- Masking: Recover or retry internally rather than bubbling transient errors.
+- Aggregation: Handle errors at overarching subsystem boundaries.
+
+## 3. Eliminating Pass-Through Anti-Patterns
+- Flatten pass-through methods that merely forward parameters without transformation.
+- Avoid pass-through arguments across layers using context or constructor bindings.
+"#,
+    )
+}
+
+/// 29. Legacy Code Seams & Characterization Skill (Michael Feathers)
+pub fn legacy_seams_characterization() -> EccSkill {
+    EccSkill::new(
+        "legacy-seams-characterization",
+        "Working Effectively with Legacy Code (Michael Feathers): test-harness establishment, identifying seams, sensing and separation, characterization testing, and non-destructive sprout/wrap methods",
+        r#"# Working Effectively with Legacy Code & Seams (Michael Feathers)
+
+## 1. The Legacy Dilemma
+- Legacy code is code without automated tests (including newly AI-generated unverified code).
+- Establish seams without altering production behavior to bring code under test.
+
+## 2. Seams: Object, Link, and Compile Seams
+- Object Seams: Inject traits, interfaces, or subclass overrides.
+- Sensing: Use seams to observe side-effects and values computed inside opaque functions.
+- Separation: Use seams to decouple external dependencies (databases, network) during tests.
+
+## 3. Characterization Testing & Safe Interventions
+- Characterization Tests: Pin existing black-box behavior before refactoring.
+- Sprout Method/Class: Write new features as pure, independently tested sprouts.
+- Wrap Method/Class: Decorate legacy calls without mutating internal mechanics.
+"#,
+    )
+}
+
+/// 30. Code Smells & Atomic Refactoring Catalog Skill (Martin Fowler)
+pub fn catalog_refactoring_smells() -> EccSkill {
+    EccSkill::new(
+        "catalog-refactoring-smells",
+        "Refactoring & Code Smells Catalog (Martin Fowler): deterministic detection of architectural code smells, behavioral preservation, and atomic AST transformations",
+        r#"# Code Smells & Atomic Refactoring Catalog (Martin Fowler)
+
+## 1. Diagnostic Code Smells
+- Primitive Obsession: Replace raw strings/numbers with validated Value Objects.
+- Feature Envy: Move methods to the data structures they envy.
+- Data Clumps: Bundle recurring parameter groups into Parameter Objects/Structs.
+- Divergent Change vs. Shotgun Surgery: Separate divergent responsibilities; consolidate shotgun edits.
+
+## 2. Atomic Behavior-Preserving Transformations
+- Extract Function: Decompose high cognitive load blocks into expressive helpers.
+- Replace Temp with Query: Eliminate mutable temp variables with pure deterministic queries.
+- Replace Conditional with Polymorphism/Match: Replace sprawling if-else ladders with exhaustive pattern matching or traits.
+- The Refactoring Rhythm: Make one atomic transformation, run test suite, ensure green, commit.
+"#,
+    )
+}
+
+/// 31. Production Resiliency & Stability Patterns Skill (Michael Nygard)
+pub fn production_resilience_release_it() -> EccSkill {
+    EccSkill::new(
+        "production-resilience-release-it",
+        "Production Resiliency Engineering (Michael Nygard - Release It!): circuit breakers, bulkheads, timeouts, steady-state stability, anti-fragility, and defense against cascading failures and retry storms",
+        r#"# Production Resiliency & Stability Patterns (Michael Nygard - Release It!)
+
+## 1. Stability Anti-Patterns
+- Cascading Failures: Unbounded thread or pool blocking bringing down upstream services.
+- Retry Storms: Blind retries without exponential backoff and randomized jitter.
+- Unbounded Queues: OOM crashes under backpressure; enforce hard bounds.
+- Missing Timeouts: Network calls must always define explicit connect and read timeouts.
+
+## 2. Core Stability Patterns
+- Circuit Breaker: Closed, Open, and Half-Open states guarding fragile downstreams.
+- Bulkheads: Partition thread pools, connections, and compute into isolated failure domains.
+- Fail Fast: Validate preconditions early before locking or allocating resources.
+- Steady State: Prevent memory/disk leaks with automatic purging and resource recycling.
+- Load Shedding: Drop excess load with backpressure rather than entering latency death spirals.
+"#,
+    )
+}
+
+/// 32. Evolutionary Architecture & Fitness Functions Skill (Ford, Parsons, Kua)
+pub fn evolutionary_fitness_functions() -> EccSkill {
+    EccSkill::new(
+        "evolutionary-fitness-functions",
+        "Building Evolutionary Architectures (Neal Ford, Rebecca Parsons, Patrick Kua): architectural fitness functions, automated structural verification, boundary integrity, and preventing architectural drift across AI iterations",
+        r#"# Evolutionary Architecture & Fitness Functions (Ford, Parsons, Kua)
+
+## 1. Architectural Fitness Functions
+- Automated, objective verification tests asserting architectural characteristics.
+- Prevent architectural drift and erosion across multi-prompt AI development sessions.
+
+## 2. Categories of Fitness Functions
+- Layering & Direction: Strict inward dependency rules (Hexagonal/Clean); Domain never imports CLI/Web.
+- Acyclic Dependencies: Enforce DAG structure across modules with zero circular references.
+- Complexity Budgets: Automated gates on cyclomatic complexity and max file/function lengths.
+- Performance & Compliance: Automated benchmark regression gates and vulnerability scanners.
+"#,
+    )
+}
+
+/// 33. Temporal Invariants & Formal Specification Skill (Lamport & Wayne)
+pub fn temporal_invariants_tla() -> EccSkill {
+    EccSkill::new(
+        "temporal-invariants-tla",
+        "Temporal Invariants & Formal Specification (Leslie Lamport & Hillel Wayne): safety invariants, liveness guarantees, state space exhaustion, and race-free concurrent and distributed state modeling",
+        r#"# Temporal Invariants & State Space Verification (Lamport / Wayne)
+
+## 1. Safety vs. Liveness
+- Safety Properties ('Nothing bad happens'): Invariants that must hold across every reachable state.
+- Liveness Properties ('Something good eventually happens'): Guarantees of forward progress without deadlock or livelock.
+
+## 2. State Space Modeling Before Coding
+- Minimal State Tuple: Define discrete state variables explicitly before writing async logic.
+- Guarded Transitions: Explicitly define enabled conditions for every state mutation.
+- Concurrency Interleaving: Model concurrent interleavings to eliminate race conditions.
+- Type-Level Guarantees: Make invalid states unrepresentable in the type system.
+"#,
+    )
+}
+
+/// 34. Conceptual Integrity & Engineering Over Time Skill (Brooks & Winters)
+pub fn conceptual_integrity_systems() -> EccSkill {
+    EccSkill::new(
+        "conceptual-integrity-systems",
+        "Conceptual Integrity & Software Engineering at Scale (Fred Brooks & Titus Winters): unified architectural vision, second-system syndrome avoidance, Hyrum's law, and sustainability over time",
+        r#"# Conceptual Integrity & Engineering Over Time (Brooks & Winters)
+
+## 1. Conceptual Integrity (Fred Brooks)
+- The Central Virtue: A unified architectural vision outweighs an accumulation of uncoordinated features.
+- Singular Design Dialect: Enforce consistent naming, error handling, and concurrency patterns across all modules.
+- Second-System Syndrome: Resist over-complicating extensions with speculative features.
+
+## 2. Software Engineering Over Time (Titus Winters)
+- Programming Integrated Over Time: Design code to be maintainable, upgradeable, and decay-resistant for years.
+- Hyrum's Law: All observable behaviors become contractual dependencies; explicitly encapsulate internals.
+- Shift-Left Verification: Catch regressions as early as possible in the development lifecycle.
 "#,
     )
 }
