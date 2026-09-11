@@ -436,6 +436,85 @@ except SyntaxError:
             .await?;
         Ok(res.success)
     }
+
+    /// Discovers uv on the host system or in PATH
+    pub fn find_uv() -> Option<PathBuf> {
+        if let Ok(p) = std::env::var("TAGISAN_UV_PATH") {
+            let path = PathBuf::from(p);
+            if path.is_file() {
+                return Some(path);
+            }
+        }
+
+        if let Some(paths) = std::env::var_os("PATH") {
+            for dir in std::env::split_paths(&paths) {
+                #[cfg(target_os = "windows")]
+                {
+                    let candidate = dir.join("uv.exe");
+                    if candidate.is_file() {
+                        return Some(candidate);
+                    }
+                }
+                let candidate = dir.join("uv");
+                if candidate.is_file() {
+                    return Some(candidate);
+                }
+            }
+        }
+
+        for standard in ["/usr/bin/uv", "/usr/local/bin/uv", "/home/dyna/.cargo/bin/uv"] {
+            let p = PathBuf::from(standard);
+            if p.is_file() {
+                return Some(p);
+            }
+        }
+
+        None
+    }
+
+    /// Installs Python packages using uv or pip
+    ///
+    /// When `allow_native` is `false`, `--only-binary=:all:` is enforced, preventing arbitrary C/C++ compilation.
+    /// When `allow_native` is `true`, source distributions and C extensions are allowed to compile.
+    pub async fn install(
+        &self,
+        packages: &[String],
+        allow_native: bool,
+        timeout_duration: Duration,
+        cwd: Option<PathBuf>,
+    ) -> Result<PythonExecutionResult> {
+        if packages.is_empty() {
+            return Err(TagisanError::Execution(
+                "No Python packages specified for installation.".to_string(),
+            ));
+        }
+
+        let uv_opt = Self::find_uv();
+        let mut cmd = if let Some(uv_bin) = uv_opt {
+            let mut c = Command::new(uv_bin);
+            c.arg("pip").arg("install");
+            c.arg("--python").arg(&self.python_path);
+            if !allow_native {
+                c.arg("--only-binary").arg(":all:");
+            }
+            c.args(packages);
+            c
+        } else {
+            let mut c = Command::new(&self.python_path);
+            c.arg("-m").arg("pip").arg("install");
+            if !allow_native {
+                c.arg("--only-binary=:all:");
+            }
+            c.args(packages);
+            c
+        };
+
+        if let Some(dir) = cwd {
+            cmd.current_dir(dir);
+        }
+
+        self.execute_command(cmd, timeout_duration, None).await
+    }
 }
 
 impl Default for PythonRuntime {

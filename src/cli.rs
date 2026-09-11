@@ -644,6 +644,9 @@ pub enum BunAction {
         /// Save as development dependency (--dev / -d)
         #[arg(short = 'd', long)]
         dev: bool,
+        /// Explicitly permit native C/C++ compilation (e.g. node-gyp lifecycle scripts). By default, scripts are ignored.
+        #[arg(long)]
+        allow_native: bool,
         /// Execution timeout in seconds (default: 120)
         #[arg(short, long, default_value = "120")]
         timeout: u64,
@@ -718,6 +721,20 @@ pub enum PythonAction {
         #[arg(trailing_var_arg = true)]
         args: Vec<String>,
     },
+    /// Install Python packages into the environment using uv or pip
+    Install {
+        /// Packages to install (e.g. requests, pydantic)
+        packages: Vec<String>,
+        /// Explicitly permit native C extension compilation from source distributions. By default, pre-built binary wheels only are allowed.
+        #[arg(long)]
+        allow_native: bool,
+        /// Execution timeout in seconds (default: 300)
+        #[arg(short, long, default_value = "300")]
+        timeout: u64,
+        /// Working directory
+        #[arg(short, long)]
+        cwd: Option<String>,
+    },
     /// Display Python runtime version, path, and host environment information
     Info,
 }
@@ -748,6 +765,20 @@ pub enum PerlAction {
         /// Arguments passed to the script
         #[arg(trailing_var_arg = true)]
         args: Vec<String>,
+    },
+    /// Install CPAN modules into local sandbox (.tagisan/perl5/) using cpanm
+    Install {
+        /// CPAN modules to install (e.g. Path::Tiny, JSON::MaybeXS)
+        modules: Vec<String>,
+        /// Explicitly permit native C/XS compilation via make/gcc. By default, pure-Perl mode is enforced.
+        #[arg(long)]
+        allow_native: bool,
+        /// Execution timeout in seconds (default: 300)
+        #[arg(short, long, default_value = "300")]
+        timeout: u64,
+        /// Working directory
+        #[arg(short, long)]
+        cwd: Option<String>,
     },
     /// Display Perl runtime version, path, and host environment information
     Info,
@@ -3783,10 +3814,10 @@ async fn handle_bun_command(action: BunAction) -> Result<(), Box<dyn std::error:
                 std::process::exit(res.exit_code);
             }
         }
-        BunAction::Install { packages, dev, timeout, cwd } => {
+        BunAction::Install { packages, dev, allow_native, timeout, cwd } => {
             let runtime = crate::bun::BunRuntime::new()?;
             let cwd_path = cwd.map(std::path::PathBuf::from);
-            let res = runtime.install(&packages, dev, std::time::Duration::from_secs(timeout), cwd_path).await?;
+            let res = runtime.install(&packages, dev, allow_native, std::time::Duration::from_secs(timeout), cwd_path).await?;
             print!("{}", res.combined_output());
             if !res.success {
                 std::process::exit(res.exit_code);
@@ -3858,6 +3889,15 @@ async fn handle_python_command(action: PythonAction) -> Result<(), Box<dyn std::
                 std::process::exit(res.exit_code);
             }
         }
+        PythonAction::Install { packages, allow_native, timeout, cwd } => {
+            let runtime = crate::python::PythonRuntime::new()?;
+            let cwd_path = cwd.map(std::path::PathBuf::from);
+            let res = runtime.install(&packages, allow_native, std::time::Duration::from_secs(timeout), cwd_path).await?;
+            print!("{}", res.combined_output());
+            if !res.success {
+                std::process::exit(res.exit_code);
+            }
+        }
     }
     Ok(())
 }
@@ -3898,6 +3938,15 @@ async fn handle_perl_command(action: PerlAction) -> Result<(), Box<dyn std::erro
             let runtime = crate::perl::PerlRuntime::new()?;
             let script_path = std::path::PathBuf::from(script);
             let res = runtime.run_file(&script_path, &args, Some(timeout)).await?;
+            print!("{}", res.combined_output());
+            if !res.success {
+                std::process::exit(res.exit_code);
+            }
+        }
+        PerlAction::Install { modules, allow_native, timeout, cwd } => {
+            let runtime = crate::perl::PerlRuntime::new()?;
+            let cwd_path = cwd.map(std::path::PathBuf::from);
+            let res = runtime.install(&modules, allow_native, std::time::Duration::from_secs(timeout), cwd_path).await?;
             print!("{}", res.combined_output());
             if !res.success {
                 std::process::exit(res.exit_code);

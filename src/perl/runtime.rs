@@ -197,6 +197,21 @@ impl PerlRuntime {
         cmd.stderr(Stdio::piped());
         cmd.kill_on_drop(true);
 
+        // Auto-inject .tagisan/perl5/lib/perl5 into PERL5LIB if it exists
+        let tagisan_p5_lib = PathBuf::from(".tagisan").join("perl5").join("lib").join("perl5");
+        if tagisan_p5_lib.is_dir() {
+            let existing_lib = std::env::var("PERL5LIB").unwrap_or_default();
+            let p5_str = tagisan_p5_lib.to_string_lossy();
+            let new_lib = if existing_lib.is_empty() {
+                p5_str.to_string()
+            } else if !existing_lib.contains(&*p5_str) {
+                format!("{p5_str}:{existing_lib}")
+            } else {
+                existing_lib
+            };
+            cmd.env("PERL5LIB", new_lib);
+        }
+
         let start_time = Instant::now();
         let mut child = cmd.spawn().map_err(|e| {
             TagisanError::Execution(format!(
@@ -428,6 +443,154 @@ impl PerlRuntime {
                 res.exit_code, res.stderr
             )))
         }
+    }
+
+    /// Discovers cpanm on the system, in PATH, or in .tagisan/bin/cpanm
+    pub fn find_cpanm() -> Option<PathBuf> {
+        // 1. Check TAGISAN_CPANM_PATH
+        if let Ok(p) = std::env::var("TAGISAN_CPANM_PATH") {
+            let path = PathBuf::from(p);
+            if path.is_file() {
+                return Some(path);
+            }
+        }
+
+        // 2. Check .tagisan/bin/cpanm
+        let local_bin = PathBuf::from(".tagisan").join("bin").join("cpanm");
+        if local_bin.is_file() {
+            return Some(local_bin);
+        }
+
+        // 3. Search in PATH
+        if let Some(paths) = std::env::var_os("PATH") {
+            for dir in std::env::split_paths(&paths) {
+                #[cfg(target_os = "windows")]
+                {
+                    let candidate = dir.join("cpanm.bat");
+                    if candidate.is_file() {
+                        return Some(candidate);
+                    }
+                }
+                let candidate = dir.join("cpanm");
+                if candidate.is_file() {
+                    return Some(candidate);
+                }
+            }
+        }
+
+        // 4. Standard locations
+        for standard in ["/usr/bin/cpanm", "/usr/local/bin/cpanm", "/opt/homebrew/bin/cpanm"] {
+            let p = PathBuf::from(standard);
+            if p.is_file() {
+                return Some(p);
+            }
+        }
+
+        None
+    }
+
+    /// Verifies whether a CPAN module is installed and loadable (`perl -M$module -e 1`)
+    pub async fn check_module(&self, module_name: &str) -> Result<bool> {
+        let mut cmd = Command::new(&self.perl_path);
+        cmd.arg(format!("-M{module_name}")).arg("-e").arg("1");
+        let res = self
+            .execute_command(cmd, Duration::from_secs(5), None)
+            .await?;
+        Ok(res.success)
+    }
+
+    /// Installs CPAN modules into a local directory (`.tagisan/perl5/`) using cpanm or cpan
+    ///
+    /// When `allow_native` is `false`, pure-Perl mode is enforced and C compiler execution is blocked.
+    /// When `allow_native` is `true`, C/XS compilation via make/gcc is permitted.
+    pub async fn install(
+        &self,
+        modules: &[String],
+        allow_native: bool,
+        timeout_duration: Duration,
+        cwd: Option<PathBuf>,
+    ) -> Result<PerlExecutionResult> {
+        if modules.is_empty() {
+            return Err(TagisanError::Execution(
+                "No Perl modules specified for installation.".to_string(),
+            ));
+        }
+
+        let base_dir = cwd.clone().unwrap_or_else(|| PathBuf::from("."));
+        let local_lib_dir = base_dir.join(".tagisan").join("perl5");
+        let _ = std::fs::create_dir_all(&local_lib_dir);
+
+        let cpanm_opt = Self::find_cpanm();
+        let mut cmd = if let Some(cpanm_bin) = cpanm_opt {
+            let mut c = Command::new(cpanm_bin);
+            c.arg("-l").arg(&local_lib_dir);
+            c.arg("--notest");
+            if !allow_native {
+                c.arg("--pureperl-only");
+            }
+            c.args(modules);
+            c
+        } else {
+            // Check if local standalone cpanm exists or bootstrap it
+            let bin_dir = PathBuf::from(".tagisan").join("bin");
+            let _ = std::fs::create_dir_all(&bin_dir);
+            let local_cpanm = bin_dir.join("cpanm");
+
+            if !local_cpanm.is_file() {
+                // Fetch standalone cpanmin.us bootstrap script via curl or lwp
+                let curl_cmd = std::process::Command::new("curl")
+                    .args(["-sL", "https://cpanmin.us", "-o", local_cpanm.to_str().unwrap_or("")])
+                    .output();
+                if let Ok(out) = curl_cmd {
+                    if out.status.success() {
+                        #[cfg(unix)]
+                        {
+                            use std::os::unix::fs::PermissionsExt;
+                            let _ = std::fs::set_permissions(&local_cpanm, std::fs::Permissions::from_mode(0o755));
+                        }
+                    }
+                }
+            }
+
+            if local_cpanm.is_file() {
+                let mut c = Command::new(&self.perl_path);
+                c.arg(&local_cpanm);
+                c.arg("-l").arg(&local_lib_dir);
+                c.arg("--notest");
+                if !allow_native {
+                    c.arg("--pureperl-only");
+                }
+                c.args(modules);
+                c
+            } else {
+                // Fallback to core CPAN shell
+                let mut c = Command::new(&self.perl_path);
+                c.arg("-MCPAN").arg("-e");
+                let cpan_cmd = format!(
+                    "CPAN::Shell->install('{}')",
+                    modules.join("', '")
+                );
+                c.arg(cpan_cmd);
+                c
+            }
+        };
+
+        if let Some(ref dir) = cwd {
+            cmd.current_dir(dir);
+        }
+
+        // Set local::lib environment
+        let lib_path = local_lib_dir.join("lib").join("perl5");
+        let existing_lib = std::env::var("PERL5LIB").unwrap_or_default();
+        let new_lib = if existing_lib.is_empty() {
+            lib_path.to_string_lossy().to_string()
+        } else {
+            format!("{}:{}", lib_path.to_string_lossy(), existing_lib)
+        };
+        cmd.env("PERL5LIB", new_lib);
+        cmd.env("PERL_LOCAL_LIB_ROOT", &local_lib_dir);
+
+        self.execute_command(cmd, timeout_duration, None).await
     }
 }
 

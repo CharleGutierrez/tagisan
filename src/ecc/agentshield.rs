@@ -49,7 +49,7 @@ impl AgentShieldScanner {
 
                 Self::scan_file_path(path)
             }
-            "bun_eval" | "bun_run" | "bun_test" | "bun_install" | "bun_build" | "bun" | "bun_compile" | "bun_serve" => {
+            "bun_eval" | "bun_run" | "bun_test" | "bun_build" | "bun" | "bun_compile" | "bun_serve" => {
                 let path = arguments
                     .get("file_path")
                     .or_else(|| arguments.get("path"))
@@ -81,6 +81,10 @@ impl AgentShieldScanner {
                 }
 
                 AgentShieldVerdict::Allow
+            }
+            "bun_install" | "python_install" | "perl_install" | "bun_auto_resolve"
+            | "python_auto_resolve" | "perl_auto_resolve" => {
+                Self::scan_package_manager(base_name, arguments)
             }
             "python_eval" | "python_run" | "python" => {
                 let path = arguments
@@ -879,5 +883,196 @@ impl AgentShieldScanner {
         }
 
         sanitized
+    }
+
+    /// Audits package manager tool invocations (bun_install, python_install, perl_install, and auto-resolvers).
+    /// Enforces strict security invariants:
+    /// 1. Prevents catastrophic deletions (rm -rf, mkfs, dd) and shell injection metacharacters.
+    /// 2. Prevents credential exfiltration (.env, id_rsa, /etc/shadow).
+    /// 3. Permissive native compilation: native C/C++/XS tools (gcc, clang, make, node-gyp) are blocked unless allow_native=true.
+    /// 4. Invariant guarantee: even when allow_native=true, credential theft and catastrophic deletion remain strictly blocked!
+    pub fn scan_package_manager(tool_name: &str, arguments: &serde_json::Value) -> AgentShieldVerdict {
+        let allow_native = arguments
+            .get("allow_native")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        // Extract packages / modules list
+        let mut items = Vec::new();
+        if let Some(arr) = arguments.get("packages").and_then(|v| v.as_array()) {
+            for v in arr {
+                if let Some(s) = v.as_str() {
+                    items.push(s.to_string());
+                }
+            }
+        }
+        if let Some(arr) = arguments.get("modules").and_then(|v| v.as_array()) {
+            for v in arr {
+                if let Some(s) = v.as_str() {
+                    items.push(s.to_string());
+                }
+            }
+        }
+
+        // Check working directory if specified
+        if let Some(cwd) = arguments.get("working_dir").or_else(|| arguments.get("cwd")).and_then(|v| v.as_str()) {
+            let path_verdict = Self::scan_file_path(cwd);
+            if let AgentShieldVerdict::Block { .. } = path_verdict {
+                return path_verdict;
+            }
+        }
+
+        // For auto-resolver tools:
+        if let Some(stderr) = arguments.get("stderr").and_then(|v| v.as_str()) {
+            let sensitive_tokens = ["/etc/shadow", "id_rsa", "id_ed25519", ".env", "/etc/sudoers"];
+            for token in sensitive_tokens {
+                if stderr.contains(token) {
+                    return AgentShieldVerdict::Block {
+                        reason: format!("Potential credential exfiltration via error stream containing '{token}'"),
+                        threat_level: ThreatLevel::Critical,
+                    };
+                }
+            }
+
+            if tool_name == "perl_auto_resolve" {
+                if let Some(pkg) = Self::extract_missing_perl_module_str(stderr) {
+                    items.push(pkg);
+                }
+            } else if tool_name == "python_auto_resolve" {
+                if let Some(pkg) = Self::extract_missing_python_package_str(stderr) {
+                    items.push(pkg);
+                }
+            }
+        }
+
+        if let Some(code) = arguments.get("code").and_then(|v| v.as_str()) {
+            let code_verdict = Self::scan_code(code);
+            if let AgentShieldVerdict::Block { .. } = code_verdict {
+                return code_verdict;
+            }
+        }
+
+        if let Some(script_path) = arguments.get("script_path").and_then(|v| v.as_str()) {
+            let path_verdict = Self::scan_file_path(script_path);
+            if let AgentShieldVerdict::Block { .. } = path_verdict {
+                return path_verdict;
+            }
+        }
+
+        for item in &items {
+            let item_trimmed = item.trim();
+            if item_trimmed.is_empty() {
+                continue;
+            }
+
+            // 1. Command / shell injection metacharacters
+            let dangerous_chars = [';', '&', '|', '`', '$', '\n', '\r', '>', '<', '\0'];
+            if dangerous_chars.iter().any(|&c| item_trimmed.contains(c)) {
+                return AgentShieldVerdict::Block {
+                    reason: format!("Command injection or shell metacharacter detected in package specifier '{item_trimmed}'"),
+                    threat_level: ThreatLevel::Critical,
+                };
+            }
+
+            // 2. Destructive filesystem commands
+            let destructive_patterns = [
+                "rm -rf", "rm -r", "rm -f", "mkfs", "dd if=", "/dev/sd", "/dev/nvme",
+                "> /dev/", "tee /dev/", "format", "shred"
+            ];
+            for pat in destructive_patterns {
+                if item_trimmed.contains(pat) {
+                    return AgentShieldVerdict::Block {
+                        reason: format!("Destructive command pattern detected in package specifier: '{pat}'"),
+                        threat_level: ThreatLevel::Critical,
+                    };
+                }
+            }
+
+            // 3. Credential theft & sensitive files (INVARIANT: Active REGARDLESS of allow_native)
+            let sensitive_targets = [
+                "/etc/shadow", "etc/shadow",
+                "/etc/passwd", "etc/passwd",
+                "/etc/sudoers", "etc/sudoers",
+                "id_rsa", "id_ed25519", "~/.ssh", ".ssh/",
+                ".env", "config/sam",
+            ];
+            for target in sensitive_targets {
+                if item_trimmed.contains(target) {
+                    return AgentShieldVerdict::Block {
+                        reason: format!("Access to sensitive credentials or system file '{target}' prohibited in package specifier"),
+                        threat_level: ThreatLevel::Critical,
+                    };
+                }
+            }
+
+            // Directory traversal check
+            if item_trimmed.contains("..") {
+                return AgentShieldVerdict::Block {
+                    reason: format!("Directory traversal detected in package specifier '{item_trimmed}'"),
+                    threat_level: ThreatLevel::High,
+                };
+            }
+
+            // 4. Native C/C++/XS compilation restriction:
+            // Permitted ONLY if allow_native is explicitly true.
+            if !allow_native {
+                let native_compilation_indicators = [
+                    "gcc", "g++", "clang", "make", "cc", "node-gyp",
+                    "--build-from-source", "--compile"
+                ];
+                let item_lower = item_trimmed.to_lowercase();
+                for ind in native_compilation_indicators {
+                    if item_lower == ind
+                        || item_lower.starts_with(&format!("{ind} "))
+                        || item_lower.contains(&format!(" {ind}"))
+                        || item_lower.contains(&format!("--{ind}"))
+                        || item_lower.contains(&format!("-{ind}"))
+                    {
+                        return AgentShieldVerdict::Block {
+                            reason: format!(
+                                "Native compilation tool or flag '{ind}' invoked without explicit allow_native=true permission"
+                            ),
+                            threat_level: ThreatLevel::High,
+                        };
+                    }
+                }
+            }
+        }
+
+        AgentShieldVerdict::Allow
+    }
+
+    fn extract_missing_perl_module_str(stderr: &str) -> Option<String> {
+        for line in stderr.lines() {
+            if line.contains("Can't locate ") && line.contains(".pm in @INC") {
+                if let Some(start) = line.find("Can't locate ") {
+                    let rest = &line[start + 13..];
+                    if let Some(end) = rest.find(".pm") {
+                        let path_part = &rest[..end];
+                        let module_name = path_part.replace('/', "::").replace('\\', "::");
+                        if !module_name.trim().is_empty() {
+                            return Some(module_name.trim().to_string());
+                        }
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    fn extract_missing_python_package_str(stderr: &str) -> Option<String> {
+        for line in stderr.lines() {
+            if line.contains("ModuleNotFoundError: No module named ") {
+                if let Some(start) = line.find("No module named ") {
+                    let rest = &line[start + 16..];
+                    let pkg = rest.trim().trim_matches('\'').trim_matches('"');
+                    let root_pkg = pkg.split('.').next().unwrap_or(pkg);
+                    if !root_pkg.trim().is_empty() {
+                        return Some(root_pkg.trim().to_string());
+                    }
+                }
+            }
+        }
+        None
     }
 }

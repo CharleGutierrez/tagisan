@@ -418,6 +418,7 @@ impl BunRuntime {
         &self,
         packages: &[String],
         is_dev: bool,
+        allow_native: bool,
         timeout_duration: Duration,
         cwd: Option<PathBuf>,
     ) -> Result<BunExecutionResult> {
@@ -430,6 +431,10 @@ impl BunRuntime {
                 cmd.arg("-d");
             }
             cmd.args(packages);
+        }
+
+        if !allow_native {
+            cmd.arg("--ignore-scripts");
         }
 
         if let Some(dir) = cwd {

@@ -89,6 +89,10 @@ impl ToolHandler for BunEvalTool {
                 "auto_resolve": {
                     "type": "boolean",
                     "description": "Whether to autonomously install missing modules/packages if import errors occur (default: false)."
+                },
+                "allow_native": {
+                    "type": "boolean",
+                    "description": "Explicitly allow native C compilation during auto-installation (default: false)."
                 }
             },
             "required": ["code"]
@@ -129,6 +133,11 @@ impl ToolHandler for BunEvalTool {
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
 
+        let allow_native = arguments
+            .get("allow_native")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
         let runtime = self.get_runtime()?;
         let mut res = runtime
             .eval(code, timeout_duration, None, self.working_dir.clone())
@@ -137,7 +146,7 @@ impl ToolHandler for BunEvalTool {
         if auto_resolve && !res.is_success() {
             if let Some(pkg) = extract_missing_package(&res.stderr) {
                 let _ = runtime
-                    .install(&[pkg], false, timeout_duration, self.working_dir.clone())
+                    .install(&[pkg], false, allow_native, timeout_duration, self.working_dir.clone())
                     .await;
                 res = runtime
                     .eval(code, timeout_duration, None, self.working_dir.clone())
@@ -514,6 +523,10 @@ impl ToolHandler for BunInstallTool {
                     "type": "boolean",
                     "description": "Install packages as development dependencies (--dev). Default is false."
                 },
+                "allow_native": {
+                    "type": "boolean",
+                    "description": "Explicitly allow native C/C++ compilation (e.g. node-gyp lifecycle scripts). Default is false (enforcing --ignore-scripts)."
+                },
                 "timeout_secs": {
                     "type": "integer",
                     "description": "Optional execution timeout in seconds (default: 120)."
@@ -552,6 +565,11 @@ impl ToolHandler for BunInstallTool {
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
 
+        let allow_native = arguments
+            .get("allow_native")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
         let timeout_duration = arguments
             .get("timeout_secs")
             .and_then(|v| v.as_u64())
@@ -563,6 +581,7 @@ impl ToolHandler for BunInstallTool {
             .install(
                 &packages,
                 is_dev,
+                allow_native,
                 timeout_duration,
                 self.working_dir.clone(),
             )
@@ -846,6 +865,10 @@ impl ToolHandler for BunAutoResolveTool {
                     "type": "string",
                     "description": "Optional script file path to execute with auto-resolution."
                 },
+                "allow_native": {
+                    "type": "boolean",
+                    "description": "Explicitly permit native C/C++ compilation during auto-installation (default: false)."
+                },
                 "max_retries": {
                     "type": "integer",
                     "description": "Maximum number of missing packages to auto-install and retry (default: 3)."
@@ -867,6 +890,7 @@ impl ToolHandler for BunAutoResolveTool {
 
         let code_opt = arguments.get("code").and_then(|v| v.as_str());
         let script_opt = arguments.get("script_path").and_then(|v| v.as_str());
+        let allow_native = arguments.get("allow_native").and_then(|v| v.as_bool()).unwrap_or(false);
         let max_retries = arguments.get("max_retries").and_then(|v| v.as_u64()).unwrap_or(3) as usize;
 
         if code_opt.is_none() && script_opt.is_none() {
@@ -922,6 +946,7 @@ impl ToolHandler for BunAutoResolveTool {
                     .install(
                         &[pkg.clone()],
                         false,
+                        allow_native,
                         self.default_timeout,
                         self.working_dir.clone(),
                     )

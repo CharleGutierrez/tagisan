@@ -81,8 +81,13 @@ pub use tools::bun::{
 };
 pub use tools::bun_compile::BunCompileTool;
 pub use tools::bun_serve::{BunServeTool, BunStreamBusTool};
-pub use tools::perl::{PerlEvalTool, PerlRunTool};
-pub use tools::python::{PythonEvalTool, PythonRunTool};
+pub use tools::perl::{
+    extract_missing_perl_module, PerlAutoResolveTool, PerlEvalTool, PerlInstallTool, PerlRunTool,
+};
+pub use tools::python::{
+    extract_missing_python_package, PythonAutoResolveTool, PythonEvalTool, PythonInstallTool,
+    PythonRunTool,
+};
 pub use tools::wasm::{load_wasm_tools, WasmTool};
 pub use tools::{ToolHandler, ToolRegistry};
 pub use swarm::{
