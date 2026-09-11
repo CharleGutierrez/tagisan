@@ -29,8 +29,9 @@ pub use perl::{PerlExecutionResult, PerlRuntime};
 pub use python::{PythonExecutionResult, PythonRuntime};
 pub use ecc::{
     all_built_in_skills as all_ecc_skills, all_presets as all_ecc_presets, build_ecc_pipeline,
-    find_built_in_skill as find_ecc_skill, find_preset as find_ecc_preset,
-    global_dispatcher as global_ecc_dispatcher, load_agents_from_dir as load_ecc_agents_from_dir,
+    extract_triggers_from_text, find_built_in_skill as find_ecc_skill,
+    find_preset as find_ecc_preset, global_dispatcher as global_ecc_dispatcher,
+    load_agents_from_dir as load_ecc_agents_from_dir,
     load_skills_from_dir as load_ecc_skills_from_dir, resolve_agent as resolve_ecc_agent,
     resolve_skill as resolve_ecc_skill, AgentShieldScanner, AgentShieldVerdict, DispatchedSkill,
     EccAgent, EccAuditDebate, EccSkill, SkillDispatcher, SkillMetadata,

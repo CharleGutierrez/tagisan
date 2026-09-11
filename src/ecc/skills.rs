@@ -34,19 +34,40 @@ impl EccSkill {
 
     /// Parse a SKILL.md file with YAML frontmatter and an optional fallback name
     pub fn parse_with_default_name(content: &str, default_name: Option<&str>) -> Result<Self> {
-        let trimmed = content.trim_start();
+        let trimmed = content.trim_start_matches('\u{feff}').trim_start();
         if !trimmed.starts_with("---") {
+            if let Some(def) = default_name {
+                let first_line = trimmed.lines().find(|l| !l.trim().is_empty()).unwrap_or(def);
+                let desc = first_line.trim().trim_start_matches('#').trim().to_string();
+                return Ok(Self {
+                    name: def.to_string(),
+                    description: if desc.is_empty() { def.to_string() } else { desc },
+                    instructions: trimmed.to_string(),
+                });
+            }
             return Err(TagisanError::Execution(
                 "Invalid ECC skill format: missing leading '---' frontmatter delimiter".to_string(),
             ));
         }
 
         let rest = &trimmed[3..];
-        let end_idx = rest.find("\n---").or_else(|| rest.find("\r\n---")).ok_or_else(|| {
-            TagisanError::Execution(
-                "Invalid ECC skill format: missing closing '---' frontmatter delimiter".to_string(),
-            )
-        })?;
+        let end_idx = match rest.find("\n---").or_else(|| rest.find("\r\n---")) {
+            Some(idx) => idx,
+            None => {
+                if let Some(def) = default_name {
+                    let first_line = rest.lines().find(|l| !l.trim().is_empty()).unwrap_or(def);
+                    let desc = first_line.trim().trim_start_matches('#').trim().to_string();
+                    return Ok(Self {
+                        name: def.to_string(),
+                        description: if desc.is_empty() { def.to_string() } else { desc },
+                        instructions: rest.to_string(),
+                    });
+                }
+                return Err(TagisanError::Execution(
+                    "Invalid ECC skill format: missing closing '---' frontmatter delimiter".to_string(),
+                ));
+            }
+        };
 
         let frontmatter_str = &rest[..end_idx];
         let after_close = &rest[end_idx..];
@@ -121,10 +142,24 @@ impl EccSkill {
             }
         }
 
+        if description.trim().is_empty() {
+            let first_line = body.lines().find(|l| !l.trim().is_empty()).unwrap_or(&name);
+            description = first_line.trim().trim_start_matches('#').trim().to_string();
+            if description.is_empty() {
+                description = name.clone();
+            }
+        }
+
+        let instructions = if body.trim().is_empty() {
+            description.clone()
+        } else {
+            body
+        };
+
         Ok(Self {
             name,
             description,
-            instructions: body,
+            instructions,
         })
     }
 
@@ -203,7 +238,7 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
 pub fn tdd_workflow() -> EccSkill {
     EccSkill::new(
         "tdd-workflow",
-        "Test-Driven Development discipline: write failing assertions and reproduction cases before code",
+        "Test-Driven Development discipline: write failing assertions and reproduction cases before code. Triggers: test driven development, unit test, assertions, regression, tdd workflow, failing tests.",
         r#"# ECC TDD Workflow
 
 ## Phase 1: Test Formulation
@@ -227,7 +262,7 @@ pub fn tdd_workflow() -> EccSkill {
 pub fn security_review() -> EccSkill {
     EccSkill::new(
         "security-review",
-        "Rigorous offensive and defensive threat modeling and vulnerability scanning",
+        "Rigorous offensive and defensive threat modeling and vulnerability scanning. Triggers: security threat model, injection, memory safety, vulnerability audit, security review.",
         r#"# ECC Security Review
 
 ## Threat Checklist
@@ -854,14 +889,14 @@ pub fn conceptual_integrity_systems() -> EccSkill {
 pub fn refactoring_ui() -> EccSkill {
     EccSkill::new(
         "refactoring-ui",
-        "Tactical visual design & layout refactoring (Wathan & Schoger): grayscale-first design, optical alignment, 8pt spatial grid, layered elevation shadows, and typography contrast scales",
+        "Tactical visual design & layout refactoring (Wathan & Schoger): grayscale-first design, optical alignment, 8pt spatial grid, layered elevation shadows, typography contrast scales. Triggers: grayscale first, 8pt grid, optical balance, typography scale, layered shadows, visual hierarchy.",
         r#"# Refactoring UI Engineering Skill
 
 ## 1. Core Principles
 - Grayscale First: Formulate hierarchy, whitespace, and visual balance in monochrome before introducing color.
 - Hierarchy Over Pure Sizing: Use font weight, contrast (text-slate-900 vs text-slate-500), and spatial isolation.
 - Systematic Spacing: Enforce an 8pt/4pt scale (4, 8, 12, 16, 24, 32, 48, 64px).
-- Optical Balancing: Shift asymmetric shapes manually by 1–2px for visual centering.
+- Optical Balancing: Shift asymmetric shapes manually by 1–2px for visual centering and optical balance.
 - Layered Elevation: Ambient soft drop shadows combined with directional key-light shadows.
 "#,
     )
@@ -871,7 +906,7 @@ pub fn refactoring_ui() -> EccSkill {
 pub fn microinteractions_design() -> EccSkill {
     EccSkill::new(
         "microinteractions-design",
-        "Microinteractions & Tactile Feedback (Dan Saffer): trigger-rule-feedback-loops, spring physics, optimistic UI, skeleton shimmers, and sub-50ms tactile states",
+        "Microinteractions & Tactile Feedback (Dan Saffer): trigger-rule-feedback-loops, spring physics, sub-50ms button press, optimistic UI, skeleton shimmers, tactile states. Triggers: spring physics, sub-50ms, button press, optimistic ui, tactile feedback, skeleton shimmer, microinteractions.",
         r#"# Microinteractions & Tactile Feedback Skill
 
 ## 1. 4-Part Interaction Anatomy
@@ -892,7 +927,7 @@ pub fn microinteractions_design() -> EccSkill {
 pub fn laws_of_ux() -> EccSkill {
     EccSkill::new(
         "laws-of-ux",
-        "Laws of UX & Cognitive Ergonomics (Jon Yablonski): Doherty threshold (<400ms), Hick's law, Fitts's law, Miller's law (7±2), Jakob's law, and Aesthetic-Usability effect",
+        "Laws of UX & Cognitive Ergonomics (Jon Yablonski): Doherty threshold (<400ms), Hick's law, progressive disclosure, Fitts's law, Miller's law (7±2), Jakob's law, Aesthetic-Usability effect. Triggers: doherty threshold, hicks law, progressive disclosure, fitts law, millers law, cognitive ergonomics, laws of ux.",
         r#"# Laws of UX Engineering Skill
 
 ## 1. Cognitive Ergonomics Standards
@@ -910,7 +945,7 @@ pub fn laws_of_ux() -> EccSkill {
 pub fn design_systems_tokens() -> EccSkill {
     EccSkill::new(
         "design-systems-tokens",
-        "Design Systems & Atomic Token Architecture (Kholmatova & Frost): 3-tier token hierarchy (global, semantic, component), atomic composition (atoms-to-pages), and slot patterns",
+        "Design Systems & Atomic Token Architecture (Kholmatova & Frost): 3-tier token hierarchy, semantic tokens, atomic design composition (atoms-to-pages), slot patterns. Triggers: 3-tier token hierarchy, semantic tokens, atomic design, design systems, design tokens, slot composition.",
         r#"# Design Systems & Token Architecture Skill
 
 ## 1. 3-Tier Token Hierarchy
@@ -929,7 +964,7 @@ pub fn design_systems_tokens() -> EccSkill {
 pub fn about_face_interaction_design() -> EccSkill {
     EccSkill::new(
         "about-face-interaction-design",
-        "About Face & Power-User Ergonomics (Alan Cooper): software posture theory (sovereign, transient, daemonic), excise elimination, reversible undo stacks, and command palettes",
+        "About Face & Power-User Ergonomics (Alan Cooper): software posture theory (sovereign posture, transient, daemonic), eliminate excise, reversible undo stacks, cmd+k command palette, undo banner. Triggers: sovereign posture, cmd+k, command palette, eliminate excise, undo banner, interaction design, about face.",
         r#"# About Face & Power-User Ergonomics Skill
 
 ## 1. Software Posture Theory
@@ -949,7 +984,7 @@ pub fn about_face_interaction_design() -> EccSkill {
 pub fn designing_for_emotion() -> EccSkill {
     EccSkill::new(
         "designing-for-emotion",
-        "Designing for Emotion & Delight (Aarron Walter): Maslow emotional hierarchy, creative empty states, empathetic error handling, brand personality, and celebratory milestones",
+        "Designing for Emotion & Delight (Aarron Walter): Maslow emotional hierarchy, delight hierarchy, creative empty state, empathetic error state handling, brand personality, celebratory confetti milestones. Triggers: delight hierarchy, empathetic error state, celebratory confetti, empty state, emotional design, designing for emotion.",
         r#"# Designing for Emotion Skill
 
 ## 1. Emotional Hierarchy
@@ -1355,6 +1390,11 @@ impl SkillDispatcher {
         self.skills.is_empty()
     }
 
+    /// Retrieve read-only slice of all indexed skills
+    pub fn skills(&self) -> &[SkillMetadata] {
+        &self.skills
+    }
+
     /// Retrieve single skill by exact or normalized name
     pub fn get_skill(&self, name: &str) -> Option<EccSkill> {
         let lower = name.to_lowercase().replace('_', "-");
@@ -1374,7 +1414,7 @@ impl SkillDispatcher {
     }
 
     /// Load full EccSkill body lazily from cache or disk
-    fn load_skill_by_id(&self, doc_id: usize) -> Option<EccSkill> {
+    pub fn load_skill_by_id(&self, doc_id: usize) -> Option<EccSkill> {
         if doc_id >= self.skills.len() {
             return None;
         }
@@ -1738,7 +1778,7 @@ fn parse_frontmatter_metadata(
 }
 
 /// Extract candidate triggers from skill name, description, and declared triggers
-fn extract_triggers_from_text(name: &str, description: &str, explicit_triggers: &[String]) -> Vec<String> {
+pub fn extract_triggers_from_text(name: &str, description: &str, explicit_triggers: &[String]) -> Vec<String> {
     let mut triggers = Vec::new();
     let lower_name = name.to_lowercase();
     triggers.push(lower_name.clone());
@@ -1824,6 +1864,9 @@ fn infer_domain(name: &str) -> String {
         ("sf", "salesforce"),
         ("agentforce", "salesforce"),
         ("rust", "rust"),
+        ("tokio", "rust"),
+        ("axum", "rust"),
+        ("ratatui", "rust"),
         ("bun", "bun"),
         ("flutter", "flutter"),
         ("swift", "swift"),
@@ -1847,6 +1890,12 @@ fn infer_domain(name: &str) -> String {
         ("threat", "security"),
         ("audit", "security"),
         ("sandbox", "security"),
+        ("refactoring-ui", "ux"),
+        ("microinteractions", "ux"),
+        ("laws-of-ux", "ux"),
+        ("design-systems", "ux"),
+        ("about-face", "ux"),
+        ("designing-for-emotion", "ux"),
         ("architect", "architecture"),
         ("architecture", "architecture"),
         ("design", "architecture"),
