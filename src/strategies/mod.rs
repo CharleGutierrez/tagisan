@@ -1,5 +1,8 @@
 pub mod debate;
+pub mod harmony;
 pub mod moa;
+
+pub use harmony::StructuredHarmonyStrategy;
 
 use crate::engine::EngineContext;
 use crate::error::Result;

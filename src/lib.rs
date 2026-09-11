@@ -60,6 +60,7 @@ pub use providers::ollama::{default_ollama_model, parse_thinking_blocks, OllamaP
 pub use providers::openai_compat::{OpenAiCompatibleProvider, StreamingThinkParser};
 pub use providers::{BoxEventStream, LlmProvider};
 pub use strategies::debate::DialecticalDebateStrategy;
+pub use strategies::harmony::StructuredHarmonyStrategy;
 pub use strategies::moa::MixtureOfAgentsStrategy;
 pub use strategies::{CollaborationStrategy, IntermediateStep, StrategyInput, StrategyOutput};
 pub use mcp::{
@@ -82,9 +83,13 @@ pub use tools::python::{PythonEvalTool, PythonRunTool};
 pub use tools::wasm::{load_wasm_tools, WasmTool};
 pub use tools::{ToolHandler, ToolRegistry};
 pub use swarm::{
-    AgentReview, ConsensusVerdict, DelegateTaskTool, InteractiveRepl, PipelineExecutionResult,
-    PipelineStageOutput, ReplCommand, ReviewCriterion, SessionMetadata, SessionRecord, SessionStore,
-    SwarmCoordinator, SwarmMember, TeamConsensusEngine, VotingRule,
+    build_standard_harmony_pipeline, extract_markdown_code_blocks, parse_provider_and_model,
+    resolve_harmony_models, AgentReview, AgentShieldSecurityGate, AssemblyRoles, ConsensusVerdict,
+    DelegateTaskTool, ExtractedCodeBlock, GateResult, HarmonyExecutionResult, HarmonyRole,
+    HarmonyRoleConfig, HarmonyStage, InteractiveRepl, PipelineExecutionResult, PipelineStageOutput,
+    ReplCommand, ReviewCriterion, RoleArtifact, RoleModelOverrides, SessionMetadata, SessionRecord,
+    SessionStore, StandardHarmonyRole, StructuredHarmonyPipeline, SwarmBlackboard, SwarmCoordinator,
+    SwarmMember, SyntaxValidationGate, TeamConsensusEngine, ValidationGate, VotingRule,
 };
 pub use tui::{run_debate_tui, Spinner};
 pub use types::{

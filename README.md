@@ -155,8 +155,12 @@ tagisan/
     │   └── perl.rs               # PerlEvalTool & PerlRunTool
     ├── strategies/               # Multi-LLM consensus & collaboration algorithms
     │   ├── moa.rs                # Mixture-of-Agents parallel runner
-    │   └── debate.rs             # Dialectical Debate (Tagisan ng Talino)
-    ├── agent/                    # Autonomous agent ReAct loop with AgentShield
+    │   ├── debate.rs             # Dialectical Debate (Tagisan ng Talino)
+    │   └── harmony.rs            # Structured Role-Based Harmony Swarm (RFC-003)
+    ├── swarm/                    # Multi-agent swarm & consensus coordination
+    │   ├── harmony/              # Sequential assembly line, validation gates, blackboard
+    │   ├── consensus/            # Multi-agent voting & peer review engine
+    │   └── coordinator.rs        # Dynamic task delegation & swarm orchestration
     ├── memory/                   # Persistent Vector Memory & Codebase RAG
     ├── dag/                      # Petgraph DAG workflow engine & scheduler
     ├── mcp/                      # Model Context Protocol (Client & Server)
@@ -315,6 +319,27 @@ tgs repl --sandbox
 
 # Resume a previous session checkpoint
 tgs repl --resume repl-1725890000
+```
+
+### 9. Structured Role-Based Harmony Swarm (`tgs harmony` / Bayanihan)
+Execute deterministic, role-based assembly line pipelines (RFC-003) powered by local Ollama models, cloud models, or mixed fleets:
+
+```bash
+# Execute standard 4-stage assembly line (Architect -> Implementer -> QA -> Doc)
+tgs harmony build "Implement an async rate limiter in Rust using token bucket"
+
+# Customize role models across local Ollama and cloud providers
+tgs harmony build "Build a thread-safe LRU cache" \
+  --architect ollama:qwen2.5:0.5b \
+  --implementer ollama:dolphin-phi:latest \
+  --qa ollama:qwen2.5:0.5b \
+  --doc ollama:dolphin-phi:latest
+
+# Run with adversarial security audit and dump artifacts to directory
+tgs harmony build "Build a JWT parser" --audit --output-dir ./jwt_build/
+
+# Output structured JSON project bundle for CI/CD pipelines
+tgs harmony build "Implement a binary search tree" --json
 ```
 
 ---

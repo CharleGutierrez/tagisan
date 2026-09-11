@@ -308,6 +308,80 @@ enum Commands {
         #[arg(long)]
         output: Option<std::path::PathBuf>,
     },
+    /// Execute Structured Role-Based Harmony Swarm (Assembly Line: Architect -> Implementer -> QA -> Doc)
+    Harmony {
+        #[command(subcommand)]
+        action: Option<HarmonySubcommand>,
+
+        /// Objective or coding task to build (if subcommand is omitted)
+        #[arg(value_name = "OBJECTIVE")]
+        objective: Option<String>,
+
+        /// Custom Architect role model in format 'provider:model'
+        #[arg(long)]
+        architect: Option<String>,
+
+        /// Custom Implementer role model in format 'provider:model'
+        #[arg(long)]
+        implementer: Option<String>,
+
+        /// Custom QA & Test Specialist role model in format 'provider:model'
+        #[arg(long)]
+        qa: Option<String>,
+
+        /// Custom Documentation & Packaging role model in format 'provider:model'
+        #[arg(long)]
+        doc: Option<String>,
+
+        /// Run adversarial audit step on the final assembly (Harmony + Debate)
+        #[arg(long)]
+        audit: bool,
+
+        /// Output full structured JSON artifact instead of formatted markdown
+        #[arg(long)]
+        json: bool,
+
+        /// Save generated code files to a target directory
+        #[arg(long)]
+        output_dir: Option<String>,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum HarmonySubcommand {
+    /// Build a complete software artifact via the 4-stage assembly line
+    Build {
+        /// The objective or task prompt
+        objective: String,
+
+        /// Custom Architect role model in format 'provider:model'
+        #[arg(long)]
+        architect: Option<String>,
+
+        /// Custom Implementer role model in format 'provider:model'
+        #[arg(long)]
+        implementer: Option<String>,
+
+        /// Custom QA role model in format 'provider:model'
+        #[arg(long)]
+        qa: Option<String>,
+
+        /// Custom Doc role model in format 'provider:model'
+        #[arg(long)]
+        doc: Option<String>,
+
+        /// Run adversarial audit step on the final assembly
+        #[arg(long)]
+        audit: bool,
+
+        /// Output JSON project bundle
+        #[arg(long)]
+        json: bool,
+
+        /// Save generated files to directory
+        #[arg(long)]
+        output_dir: Option<String>,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -3019,6 +3093,200 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 }
             };
             crate::eval::run_eval_command(&eval_args, &ctx).await?;
+        }
+
+        Commands::Harmony {
+            action,
+            objective,
+            architect,
+            implementer,
+            qa,
+            doc,
+            audit,
+            json,
+            output_dir,
+        } => {
+            let ctx = build_engine_context(cli.max_budget);
+            handle_harmony_command(
+                action,
+                objective,
+                architect,
+                implementer,
+                qa,
+                doc,
+                audit,
+                json,
+                output_dir,
+                &ctx,
+            )
+            .await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn handle_harmony_command(
+    action: Option<HarmonySubcommand>,
+    objective: Option<String>,
+    architect: Option<String>,
+    implementer: Option<String>,
+    qa: Option<String>,
+    doc: Option<String>,
+    audit: bool,
+    json: bool,
+    output_dir: Option<String>,
+    ctx: &EngineContext,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let (eff_objective, eff_arch, eff_imp, eff_qa, eff_doc, eff_audit, eff_json, eff_out_dir) = match action {
+        Some(HarmonySubcommand::Build {
+            objective: sub_obj,
+            architect: sub_arch,
+            implementer: sub_imp,
+            qa: sub_qa,
+            doc: sub_doc,
+            audit: sub_audit,
+            json: sub_json,
+            output_dir: sub_out_dir,
+        }) => (
+            sub_obj,
+            sub_arch.or(architect),
+            sub_imp.or(implementer),
+            sub_qa.or(qa),
+            sub_doc.or(doc),
+            sub_audit || audit,
+            sub_json || json,
+            sub_out_dir.or(output_dir),
+        ),
+        None => {
+            let obj = objective.unwrap_or_else(|| {
+                eprintln!("{}: missing objective. Usage: tgs harmony build \"<objective>\"", "Error".red().bold());
+                std::process::exit(1);
+            });
+            (obj, architect, implementer, qa, doc, audit, json, output_dir)
+        }
+    };
+
+    let overrides = crate::swarm::harmony::RoleModelOverrides {
+        architect: eff_arch,
+        implementer: eff_imp,
+        qa: eff_qa,
+        doc: eff_doc,
+    };
+
+    let (arch_m, imp_m, qa_m, doc_m) = crate::swarm::harmony::resolve_harmony_models(ctx, &overrides);
+
+    if !eff_json {
+        println!("{}", "=========================================================================".cyan());
+        println!("{}", "  🏛️  Tagisan Structured Role-Based Harmony Swarm (Bayanihan)".bold().magenta());
+        println!("{}", "=========================================================================".cyan());
+        println!("Objective: \"{}\"\n", eff_objective.bold().yellow());
+        println!("  • [Stage 1] Architect:    {} [{}]", arch_m.1.cyan().bold(), arch_m.0.dimmed());
+        println!("  • [Stage 2] Implementer:  {} [{}]", imp_m.1.cyan().bold(), imp_m.0.dimmed());
+        println!("  • [Stage 3] QA & Test:    {} [{}]", qa_m.1.cyan().bold(), qa_m.0.dimmed());
+        println!("  • [Stage 4] Docs:         {} [{}]", doc_m.1.cyan().bold(), doc_m.0.dimmed());
+        if eff_audit {
+            println!("  • [Stage 5] Audit:        Enabled (Adversarial Security & Architecture Review)");
+        }
+        println!();
+    }
+
+    let spinner = if !eff_json {
+        Some(Spinner::start("Executing 4-stage assembly line with syntax & AgentShield gates..."))
+    } else {
+        None
+    };
+
+    let pipeline = crate::swarm::harmony::build_standard_harmony_pipeline(
+        &eff_objective,
+        ctx,
+        &overrides,
+        eff_audit,
+    );
+
+    let result = pipeline.execute(ctx).await;
+
+    match &result {
+        Ok(res) => {
+            if let Some(sp) = spinner {
+                sp.success(format!(
+                    "Assembly line completed successfully in {:.2}s ({} artifacts generated)",
+                    res.total_latency.as_secs_f64(),
+                    res.artifacts.len()
+                ));
+            }
+        }
+        Err(e) => {
+            if let Some(sp) = spinner {
+                sp.failure(format!("Assembly line failed: {}", e));
+            }
+            return Err(e.to_string().into());
+        }
+    }
+
+    let res = result?;
+
+    if eff_json {
+        let json_val = serde_json::to_string_pretty(&res)?;
+        println!("{}", json_val);
+    } else {
+        for artifact in &res.artifacts {
+            println!(
+                "\n{} [{} / {}] (took {:.2}s, {} tokens)",
+                format!("─── STAGE: {} ({}) ───", artifact.role_id.to_uppercase(), artifact.role_title).green().bold(),
+                artifact.provider.bold(),
+                artifact.model.cyan(),
+                artifact.latency_secs,
+                artifact.tokens_used
+            );
+            println!("{}", artifact.raw_output.trim());
+        }
+
+        if let Some(ref audit_text) = res.audit_verdict {
+            println!("\n{}", "─── ADVERSARIAL AUDIT VERDICT ───".red().bold());
+            println!("{}", audit_text.trim());
+        }
+
+        println!("\n{}", "=========================================================================".cyan());
+        println!(
+            "Total Tokens: {} | Estimated Cost: ${:.4} USD | Latency: {:.2}s",
+            res.total_usage.prompt_tokens + res.total_usage.completion_tokens,
+            res.total_cost_usd,
+            res.total_latency.as_secs_f64()
+        );
+        println!("{}", "=========================================================================".cyan());
+    }
+
+    // If output_dir was specified, save files to disk
+    if let Some(ref dir) = eff_out_dir {
+        let target_dir = std::path::Path::new(dir);
+        std::fs::create_dir_all(target_dir)?;
+
+        let bundle_path = target_dir.join("assembled_project.txt");
+        std::fs::write(&bundle_path, &res.complete_project)?;
+
+        for artifact in &res.artifacts {
+            for (idx, block) in artifact.code_blocks.iter().enumerate() {
+                let ext = match block.language.to_lowercase().as_str() {
+                    "rust" | "rs" => "rs",
+                    "python" | "py" => "py",
+                    "perl" | "pl" => "pl",
+                    "typescript" | "ts" => "ts",
+                    "javascript" | "js" => "js",
+                    "json" => "json",
+                    _ => "txt",
+                };
+                let file_name = if idx == 0 {
+                    format!("{}.{}", artifact.role_id, ext)
+                } else {
+                    format!("{}_{}.{}", artifact.role_id, idx + 1, ext)
+                };
+                let file_path = target_dir.join(file_name);
+                std::fs::write(&file_path, &block.code)?;
+            }
+        }
+        if !eff_json {
+            println!("  [✓] Artifacts saved to directory: {}", target_dir.display().to_string().green().bold());
         }
     }
 
