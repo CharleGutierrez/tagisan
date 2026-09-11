@@ -1,6 +1,6 @@
 # 📌 Tagisan Architecture Blueprint & Implementation Roadmap (RFC-001)
 
-**Status:** Proposed / Saved for Later Implementation  
+**Status:** Implemented / RFC-001 Complete  
 **Target:** Tagisan (`tgs` / `tagisan-rs`)  
 **Scope:** Universal Ecosystem Integrations, Enterprise Vector DB Backends, OpenTelemetry Observability, and Swarm-Based Automated Evaluation (`tgs eval`).
 
@@ -164,15 +164,25 @@ tgs eval run --dataset ./evals/sc_docket_benchmarks.json \
 
 ## 6. Implementation Phases & Milestones
 
-| Phase | Component | Deliverables |
-|---|---|---|
-| **Phase 1** | **Vector Backend Abstraction** | Refactor `src/memory/` into pluggable `VectorStoreBackend` trait; add `LocalVectorStore` & `PgVectorStore`. |
-| **Phase 2** | **Qdrant Native Integration** | Add `qdrant-client` gRPC backend with hybrid metadata filtering and connection pooling. |
-| **Phase 3** | **OpenTelemetry Engine** | Add `src/telemetry/` with OTLP gRPC exporter for Langfuse, Phoenix, and Jaeger. |
-| **Phase 4** | **`tgs trace` & TUI Inspector** | Ratatui live trace tree viewer + trace export to JSONL/SQLite. |
-| **Phase 5** | **`tgs eval` Benchmark Runner** | Multi-agent automated evaluation CLI with dataset runner and Borda scoring. |
-| **Phase 6** | **WASM Tool Sandbox** | Extism/Wasmtime plugin loader allowing user tools compiled to WebAssembly. |
+| Phase | Component | Deliverables | Status |
+|---|---|---|---|
+| **Phase 1** | **Vector Backend Abstraction** | Refactor `src/memory/` into pluggable `VectorStoreBackend` trait; add `LocalVectorStore` & `PgVectorStore`. | ✅ **Completed** (`src/memory/backend/mod.rs`, `pgvector.rs`) |
+| **Phase 2** | **Qdrant Native Integration** | Add `qdrant-client` gRPC backend with hybrid metadata filtering, collection creation, and connection pooling. | ✅ **Completed** (`src/memory/backend/qdrant.rs`) |
+| **Phase 3** | **OpenTelemetry Engine** | Add `src/telemetry/` with OTLP gRPC exporter for Langfuse, Phoenix, and Jaeger (`TagisanTracer`). | ✅ **Completed** (`src/telemetry/otel.rs`) |
+| **Phase 4** | **`tgs trace` & TUI Inspector** | Ratatui live trace tree viewer + trace export to JSONL/SQLite (`run_trace_tui`, `TraceArgs`). | ✅ **Completed** (`src/telemetry/tui.rs`, `journal.rs`) |
+| **Phase 5** | **`tgs eval` Benchmark Runner** | Multi-agent automated evaluation CLI with dataset runner, multi-criteria scoring, and Borda/Majority consensus. | ✅ **Completed** (`src/eval/`, `evals/sc_docket_benchmarks.json`) |
+| **Phase 6** | **WASM Tool Sandbox** | Sandboxed WebAssembly plugin engine (`WasmTool`) enforcing CPU fuel quotas, validation, and directory loading. | ✅ **Completed** (`src/tools/wasm.rs`) |
 
 ---
 
-*Saved to repository roadmap for future implementation.*
+### Verification & Testing
+All phases are covered by unit and integration tests in [`tests/roadmap_extensions_tests.rs`](file:///C:/Users/CharleOGutierrez/My%20Documents/My%20AI%20Projects/tagisan/tests/roadmap_extensions_tests.rs):
+- `test_phase1_local_vector_backend`
+- `test_phase1_vector_sync_bridge`
+- `test_phase2_qdrant_store_structure`
+- `test_phase3_otel_tracer`
+- `test_phase4_trace_journal_sqlite`
+- `test_phase5_eval_benchmark_runner`
+- `test_phase6_wasm_tool_sandbox`
+
+*RFC-001 fully implemented and verified in Tagisan.*

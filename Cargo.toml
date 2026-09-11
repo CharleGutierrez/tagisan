@@ -58,7 +58,22 @@ libc = "0.2.189"
 vella = { path = "../Vella", optional = true }
 tfhe = { version = "1.7.0", features = ["boolean", "integer", "shortint"], optional = true }
 
+# Phase 1+2: Pluggable Vector Backends
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "json"], optional = true }
+
+# Phase 3+4: OpenTelemetry Engine
+opentelemetry = { version = "0.27", optional = true }
+opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"], optional = true }
+opentelemetry_sdk = { version = "0.27", optional = true }
+
+# Phase 6: WASM Tool Sandbox
+wasmtime = { version = "27", optional = true }
+
 [features]
 default = ["vella"]
 vella = ["dep:vella", "tfhe"]
 tfhe = ["dep:tfhe"]
+pgvector = ["dep:sqlx"]
+qdrant = []
+otel = ["dep:opentelemetry", "dep:opentelemetry-otlp", "dep:opentelemetry_sdk"]
+wasm-sandbox = ["dep:wasmtime"]

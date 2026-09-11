@@ -247,6 +247,83 @@ enum Commands {
         #[command(subcommand)]
         action: VellaAction,
     },
+    /// Enterprise Observability & OpenTelemetry Trace Inspector (RFC-001)
+    Trace {
+        /// Stream the last N trace events from the journal to stdout
+        #[arg(long, default_value = "false")]
+        live: bool,
+
+        /// Launch interactive Ratatui TUI live trace tree viewer
+        #[arg(long, default_value = "false")]
+        tui: bool,
+
+        /// Export the trace journal to the specified file path (JSONL or SQLite)
+        #[arg(long)]
+        export: Option<std::path::PathBuf>,
+
+        /// Export traces directly to a SQLite database file (.db)
+        #[arg(long)]
+        sqlite: Option<std::path::PathBuf>,
+
+        /// Number of recent events to display with --live
+        #[arg(long, default_value = "20")]
+        last: usize,
+
+        /// Clear all events from the trace journal
+        #[arg(long, default_value = "false")]
+        clear: bool,
+    },
+    /// Automated Swarm Evaluation Suite & Multi-Model Benchmarking (RFC-001)
+    Eval {
+        #[command(subcommand)]
+        action: Option<EvalAction>,
+
+        /// Path to the JSON evaluation dataset file
+        #[arg(long)]
+        dataset: Option<std::path::PathBuf>,
+
+        /// Comma-separated list of model identifiers to evaluate
+        #[arg(long, value_delimiter = ',')]
+        models: Option<Vec<String>>,
+
+        /// Voting/aggregation rule: "borda" (default) or "majority"
+        #[arg(long, default_value = "borda")]
+        rule: String,
+
+        /// Pass/fail threshold on the 1.0–5.0 scoring scale (or 0.0–1.0 ratio, default: 0.85)
+        #[arg(long, default_value = "0.85")]
+        threshold: f32,
+
+        /// Optional path to save the JSON evaluation report
+        #[arg(long)]
+        output: Option<std::path::PathBuf>,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum EvalAction {
+    /// Run automated benchmark evaluation against a test dataset
+    Run {
+        /// Path to the JSON evaluation dataset file
+        #[arg(long)]
+        dataset: std::path::PathBuf,
+
+        /// Comma-separated list of model identifiers to evaluate
+        #[arg(long, value_delimiter = ',')]
+        models: Vec<String>,
+
+        /// Voting/aggregation rule: "borda" (default) or "majority"
+        #[arg(long, default_value = "borda")]
+        rule: String,
+
+        /// Pass/fail threshold on the 1.0–5.0 scoring scale (or 0.0–1.0 ratio, default: 0.85)
+        #[arg(long, default_value = "0.85")]
+        threshold: f32,
+
+        /// Optional path to save the JSON evaluation report
+        #[arg(long)]
+        output: Option<std::path::PathBuf>,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -436,6 +513,10 @@ enum MemoryAction {
         /// Path to directory to index (defaults to current directory '.')
         #[arg(default_value = ".")]
         path: String,
+
+        /// Vector backend to target: local, pgvector, qdrant (default: local)
+        #[arg(long, default_value = "local")]
+        backend: String,
     },
     /// Search indexed memory and codebase semantically
     Search {
@@ -449,6 +530,20 @@ enum MemoryAction {
         /// Minimum similarity threshold between 0.0 and 1.0
         #[arg(long, default_value = "0.05")]
         threshold: f32,
+
+        /// Vector backend to search: local, pgvector, qdrant (default: local)
+        #[arg(long, default_value = "local")]
+        backend: String,
+    },
+    /// Synchronize local vector memory with enterprise database via HybridSyncBridge (RFC-001)
+    Sync {
+        /// Synchronization action: push, pull, sync (default: sync)
+        #[arg(long, default_value = "sync")]
+        action: String,
+
+        /// Target collection name
+        #[arg(long, default_value = "default_knowledge_base")]
+        collection: String,
     },
     /// Display statistics about indexed long-term memory
     Stats,
@@ -2386,9 +2481,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Memory { action } => {
             match action {
-                MemoryAction::Index { path } => {
+                MemoryAction::Index { path, backend } => {
                     println!("{}", "=========================================================".cyan());
-                    println!("{}", format!("  🧠  Indexing Codebase into Memory: {}", path).bold().magenta());
+                    println!("{}", format!("  🧠  Indexing Codebase into Memory: {} [Backend: {}]", path, backend).bold().magenta());
                     println!("{}", "=========================================================".cyan());
 
                     let store = crate::memory::VectorStore::load_or_default();
@@ -2405,9 +2500,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     println!("\n{} Indexed {} total chunks in {:.2}s!", "✔".green().bold(), count, start.elapsed().as_secs_f32());
                     println!("Persistent Memory File: {}", default_path.display().to_string().yellow());
                 }
-                MemoryAction::Search { query, top_k, threshold } => {
+                MemoryAction::Search { query, top_k, threshold, backend } => {
                     println!("{}", "=========================================================".cyan());
-                    println!("{}", format!("  🔍  Semantic Memory Search: \"{}\"", query).bold().yellow());
+                    println!("{}", format!("  🔍  Semantic Memory Search: \"{}\" [Backend: {}]", query, backend).bold().yellow());
                     println!("{}", "=========================================================".cyan());
 
                     let store = crate::memory::VectorStore::load_or_default();
@@ -2444,6 +2539,30 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         );
                         let preview: String = doc.text.lines().take(4).collect::<Vec<_>>().join("\n");
                         println!("     {}\n", preview.dimmed());
+                    }
+                }
+                MemoryAction::Sync { action, collection } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", format!("  🔄  Enterprise Vector Synchronization: {}", collection).bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let store = Arc::new(crate::memory::VectorStore::load_or_default());
+                    let bridge = crate::vella::vector_sync::VellaVectorSyncBridge::new(store, &collection);
+
+                    match action.to_lowercase().as_str() {
+                        "push" => {
+                            let stats = bridge.push_to_vella().await?;
+                            println!("{} Pushed {} documents to Vella collection '{}' ({}ms)", "✔".green().bold(), stats.pushed_count, collection, stats.duration_ms);
+                        }
+                        "pull" => {
+                            let stats = bridge.pull_from_vella().await?;
+                            println!("{} Pulled {} documents into local store ({}ms)", "✔".green().bold(), stats.pulled_count, stats.duration_ms);
+                        }
+                        _ => {
+                            let stats = bridge.bidirectional_sync().await?;
+                            println!("{} Bidirectional Sync complete (pushed {}, pulled {}, updated {} in {}ms)",
+                                "✔".green().bold(), stats.pushed_count, stats.pulled_count, stats.updated_count, stats.duration_ms);
+                        }
                     }
                 }
                 MemoryAction::Stats => {
@@ -2779,6 +2898,49 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Vella { action } => {
             handle_vella_command(action).await?;
+        }
+
+        Commands::Trace { live, tui, export, sqlite, last, clear } => {
+            let trace_args = crate::telemetry::TraceArgs {
+                live,
+                tui,
+                export,
+                sqlite,
+                last,
+                clear,
+            };
+            crate::telemetry::run_trace_command(&trace_args)?;
+        }
+
+        Commands::Eval { action, dataset, models, rule, threshold, output } => {
+            let ctx = build_engine_context(cli.max_budget);
+            let eval_args = match action {
+                Some(EvalAction::Run { dataset, models, rule, threshold, output }) => {
+                    crate::eval::EvalArgs {
+                        dataset,
+                        models,
+                        rule,
+                        threshold,
+                        output,
+                    }
+                }
+                None => {
+                    let ds = dataset.ok_or_else(|| {
+                        TagisanError::Execution("Missing required --dataset argument for tgs eval. Example: tgs eval run --dataset ./evals/sc_docket_benchmarks.json".to_string())
+                    })?;
+                    let ms = models.unwrap_or_else(|| {
+                        vec!["claude-3-5-sonnet-20241022".to_string(), "gemini-2.0-flash".to_string()]
+                    });
+                    crate::eval::EvalArgs {
+                        dataset: ds,
+                        models: ms,
+                        rule,
+                        threshold,
+                        output,
+                    }
+                }
+            };
+            crate::eval::run_eval_command(&eval_args, &ctx).await?;
         }
     }
 

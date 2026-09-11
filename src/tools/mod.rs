@@ -2,6 +2,7 @@ pub mod builtin;
 pub mod bun;
 pub mod bun_compile;
 pub mod bun_serve;
+pub mod wasm;
 
 use crate::error::Result;
 use crate::types::{ContentBlock, ToolDefinition};
@@ -20,6 +21,7 @@ pub use bun::{
 };
 pub use bun_compile::BunCompileTool;
 pub use bun_serve::{BunServeTool, BunStreamBusTool};
+pub use wasm::{load_wasm_tools, WasmTool};
 pub use crate::vella::{
     VellaDefenseDrillTool, VellaDigitalTwinTool, VellaEventBridgeTool, VellaFheShieldTool,
     VellaMedicineTool, VellaRoboticsTool, VellaScadaTool, VellaScaffolderTool,

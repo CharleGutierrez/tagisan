@@ -5,11 +5,13 @@ pub mod dag;
 pub mod ecc;
 pub mod engine;
 pub mod error;
+pub mod eval;
 pub mod mcp;
 pub mod memory;
 pub mod providers;
 pub mod strategies;
 pub mod swarm;
+pub mod telemetry;
 pub mod tools;
 pub mod tui;
 pub mod types;
@@ -70,6 +72,7 @@ pub use tools::bun::{
 };
 pub use tools::bun_compile::BunCompileTool;
 pub use tools::bun_serve::{BunServeTool, BunStreamBusTool};
+pub use tools::wasm::{load_wasm_tools, WasmTool};
 pub use tools::{ToolHandler, ToolRegistry};
 pub use swarm::{
     AgentReview, ConsensusVerdict, DelegateTaskTool, InteractiveRepl, PipelineExecutionResult,
@@ -85,4 +88,20 @@ pub use vella::{
     DomainActionProposal, VellaAppManager, VellaDebateGovernor, VellaDebateVerdict,
     VellaEventBridgeTool, VellaMedicineTool, VellaPolicyGovernor, VellaRoboticsTool,
     VellaScadaTool, VellaStreamBridge, VellaTradingTool,
+};
+pub use memory::backend::{
+    BackendSearchResult, BackendVectorDocument, HybridSyncBridge, LocalVectorBackend,
+    LocalVectorStore, VectorStoreBackend,
+};
+#[cfg(feature = "pgvector")]
+pub use memory::backend::PgVectorStore;
+#[cfg(feature = "qdrant")]
+pub use memory::backend::QdrantStore;
+
+pub use eval::{
+    cosine_score, evaluate_criteria, groundedness_score, run_eval_command, safety_score,
+    threshold_pass, EvalArgs, EvalCase, EvalDataset, EvalReport, EvalRunner, EvalScore,
+};
+pub use telemetry::{
+    run_trace_command, run_trace_tui, TagisanTracer, TraceArgs, TraceEvent, TraceJournal, TraceSpan,
 };
