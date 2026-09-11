@@ -656,3 +656,45 @@ fn test_ecc_pipeline_auto_equipping() {
         "Plan node prompt template must be configured"
     );
 }
+
+#[test]
+fn test_ux_ui_vibe_skills_registration_and_dispatch() {
+    let ux_skills = [
+        "refactoring-ui",
+        "microinteractions-design",
+        "laws-of-ux",
+        "design-systems-tokens",
+        "about-face-interaction-design",
+        "designing-for-emotion",
+    ];
+
+    // 1. Verify built-in skill discovery
+    for name in &ux_skills {
+        let skill = find_ecc_skill(name);
+        assert!(
+            skill.is_some(),
+            "Built-in skill '{}' must be registered and retrievable",
+            name
+        );
+        let s = skill.unwrap();
+        assert!(!s.description.is_empty());
+        assert!(!s.instructions.is_empty());
+    }
+
+    // 2. Verify disk discovery from .ecc/skills
+    for name in &ux_skills {
+        let skill_path = format!(".ecc/skills/{name}/SKILL.md");
+        let parsed = EccSkill::from_file(&skill_path);
+        assert!(
+            parsed.is_ok(),
+            "Skill file '{}' must parse successfully, error: {:?}",
+            skill_path,
+            parsed.err()
+        );
+        let s = parsed.unwrap();
+        assert_eq!(s.name, *name);
+        assert!(!s.description.is_empty());
+        assert!(!s.instructions.is_empty());
+    }
+}
+

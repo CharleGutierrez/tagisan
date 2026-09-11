@@ -1,7 +1,7 @@
 use serde_json::json;
 use tagisan::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict, ThreatLevel};
-use tagisan::perl::PerlRuntime;
-use tagisan::python::PythonRuntime;
+use tagisan::perl::{PerlExecutionResult, PerlRuntime};
+use tagisan::python::{PythonExecutionResult, PythonRuntime};
 use tagisan::tools::ToolRegistry;
 use tagisan::types::ContentBlock;
 

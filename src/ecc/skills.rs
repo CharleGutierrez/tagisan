@@ -183,6 +183,13 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         evolutionary_fitness_functions(),
         temporal_invariants_tla(),
         conceptual_integrity_systems(),
+        // Advanced UX & UI Vibe Engineering Skills
+        refactoring_ui(),
+        microinteractions_design(),
+        laws_of_ux(),
+        design_systems_tokens(),
+        about_face_interaction_design(),
+        designing_for_emotion(),
     ]
 }
 
@@ -839,6 +846,119 @@ pub fn conceptual_integrity_systems() -> EccSkill {
 - Programming Integrated Over Time: Design code to be maintainable, upgradeable, and decay-resistant for years.
 - Hyrum's Law: All observable behaviors become contractual dependencies; explicitly encapsulate internals.
 - Shift-Left Verification: Catch regressions as early as possible in the development lifecycle.
+"#,
+    )
+}
+
+/// 35. Refactoring UI Skill (Adam Wathan & Steve Schoger)
+pub fn refactoring_ui() -> EccSkill {
+    EccSkill::new(
+        "refactoring-ui",
+        "Tactical visual design & layout refactoring (Wathan & Schoger): grayscale-first design, optical alignment, 8pt spatial grid, layered elevation shadows, and typography contrast scales",
+        r#"# Refactoring UI Engineering Skill
+
+## 1. Core Principles
+- Grayscale First: Formulate hierarchy, whitespace, and visual balance in monochrome before introducing color.
+- Hierarchy Over Pure Sizing: Use font weight, contrast (text-slate-900 vs text-slate-500), and spatial isolation.
+- Systematic Spacing: Enforce an 8pt/4pt scale (4, 8, 12, 16, 24, 32, 48, 64px).
+- Optical Balancing: Shift asymmetric shapes manually by 1–2px for visual centering.
+- Layered Elevation: Ambient soft drop shadows combined with directional key-light shadows.
+"#,
+    )
+}
+
+/// 36. Microinteractions & Tactile Feedback Skill (Dan Saffer)
+pub fn microinteractions_design() -> EccSkill {
+    EccSkill::new(
+        "microinteractions-design",
+        "Microinteractions & Tactile Feedback (Dan Saffer): trigger-rule-feedback-loops, spring physics, optimistic UI, skeleton shimmers, and sub-50ms tactile states",
+        r#"# Microinteractions & Tactile Feedback Skill
+
+## 1. 4-Part Interaction Anatomy
+- Trigger: User-initiated or system-initiated event.
+- Rules: State machine and programmatic constraints.
+- Feedback: Real-time sensory response (<= 50ms).
+- Loops & Modes: Recurrence parameters and transient UI states.
+
+## 2. Spring Physics
+- Damped Harmonic Oscillator: Replace mechanical bezier curves with physical springs (k=260, damping=20).
+- Immediate Response: Instant feedback on pointerdown (scale-98, tint) rather than awaiting mouseup.
+- Skeleton Shimmers: Preserve layout stability and eliminate Cumulative Layout Shift (CLS).
+"#,
+    )
+}
+
+/// 37. Laws of UX Skill (Jon Yablonski)
+pub fn laws_of_ux() -> EccSkill {
+    EccSkill::new(
+        "laws-of-ux",
+        "Laws of UX & Cognitive Ergonomics (Jon Yablonski): Doherty threshold (<400ms), Hick's law, Fitts's law, Miller's law (7±2), Jakob's law, and Aesthetic-Usability effect",
+        r#"# Laws of UX Engineering Skill
+
+## 1. Cognitive Ergonomics Standards
+- Doherty Threshold: Provide visual acknowledgement in < 100ms; full render in < 400ms.
+- Hick's Law: Employ progressive disclosure; present no more than 3-5 primary actions per context.
+- Fitts's Law: Enlarge touch targets to >= 44x44px; anchor high-frequency actions to viewport edges/bottom.
+- Miller's Law: Chunk complex data into discrete visual modules (cards, grouped rows).
+- Jakob's Law: Adhere to familiar mental models for navigation and search.
+- Aesthetic-Usability Effect: Visual polish and harmony increase user tolerance and perceived performance.
+"#,
+    )
+}
+
+/// 38. Design Systems & Token Architecture Skill (Alla Kholmatova & Brad Frost)
+pub fn design_systems_tokens() -> EccSkill {
+    EccSkill::new(
+        "design-systems-tokens",
+        "Design Systems & Atomic Token Architecture (Kholmatova & Frost): 3-tier token hierarchy (global, semantic, component), atomic composition (atoms-to-pages), and slot patterns",
+        r#"# Design Systems & Token Architecture Skill
+
+## 1. 3-Tier Token Hierarchy
+- Tier 1 (Global Primitives): Raw palette and scales (--slate-900, --space-4).
+- Tier 2 (Semantic Intent): Contextual variables (--surface-canvas, --text-primary).
+- Tier 3 (Component Binding): Bound scoped properties (--button-primary-bg).
+
+## 2. Atomic Composition
+- Atoms -> Molecules -> Organisms -> Templates -> Pages.
+- Slot Composition: Favor compound slots over 30+ prop explosion anti-patterns.
+"#,
+    )
+}
+
+/// 39. About Face & Power-User Ergonomics Skill (Alan Cooper)
+pub fn about_face_interaction_design() -> EccSkill {
+    EccSkill::new(
+        "about-face-interaction-design",
+        "About Face & Power-User Ergonomics (Alan Cooper): software posture theory (sovereign, transient, daemonic), excise elimination, reversible undo stacks, and command palettes",
+        r#"# About Face & Power-User Ergonomics Skill
+
+## 1. Software Posture Theory
+- Sovereign Posture: High-density, dark/subdued palettes, deep keyboard shortcuts, multi-pane workspaces.
+- Transient Posture: Single-function utilities with immediate dismissibility.
+- Daemonic Posture: Background processes and status indicators.
+
+## 2. Elimination of Excise
+- Reversible Actions: Replace intrusive modal confirmation alerts with optimistic deletes and 1-click Undo.
+- Universal Command Palette: Index all actions and navigation under Cmd+K / Ctrl+K.
+- State Persistence: Never discard window bounds, scroll offsets, or drafts.
+"#,
+    )
+}
+
+/// 40. Designing for Emotion & Delight Skill (Aarron Walter)
+pub fn designing_for_emotion() -> EccSkill {
+    EccSkill::new(
+        "designing-for-emotion",
+        "Designing for Emotion & Delight (Aarron Walter): Maslow emotional hierarchy, creative empty states, empathetic error handling, brand personality, and celebratory milestones",
+        r#"# Designing for Emotion Skill
+
+## 1. Emotional Hierarchy
+- Functional -> Reliable -> Usable -> Pleasurable & Delightful.
+
+## 2. Humanized Interactions
+- Creative Empty States: Turn zero-data screens into narrative invitations with clear primary CTAs.
+- Empathetic Errors: Explain clearly without jargon, confirm data safety, and offer 1-click recovery.
+- Celebratory Milestones: Reward user completions with tasteful micro-delight (confetti, achievement badges).
 "#,
     )
 }
