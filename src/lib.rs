@@ -18,7 +18,9 @@ pub mod tools;
 pub mod tui;
 pub mod types;
 pub mod vella;
+pub mod harness;
 
+pub use harness::*;
 pub use bun::{
     tagisan_ffi_blake3_digest, tagisan_ffi_cosine_similarity, tagisan_ffi_shield_scan,
     tagisan_ffi_version, BunExecutionResult, BunRuntime, BunSandbox, BunSandboxConfig, BunWorker,

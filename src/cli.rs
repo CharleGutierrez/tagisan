@@ -401,6 +401,56 @@ enum Commands {
         #[arg(long)]
         no_skills: bool,
     },
+    /// Autonomously synthesize agent-native CLI tools and SKILL.md packages from codebases (CLI-Anything)
+    Harness {
+        #[command(subcommand)]
+        action: HarnessAction,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum HarnessAction {
+    /// Autonomously synthesize a CLI harness and SKILL.md package from a codebase or script
+    Generate {
+        /// Path to source code file or directory to synthesize
+        source: String,
+        /// Name of the synthesized harness and skill (default: auto-detected from filename/folder)
+        #[arg(short, long)]
+        name: Option<String>,
+        /// Source language ('python', 'rust', 'typescript', 'javascript', 'openapi', or 'auto')
+        #[arg(short, long, default_value = "auto")]
+        lang: String,
+        /// Custom output directory (default: .tagisan/harness/<name>)
+        #[arg(short, long)]
+        output_dir: Option<String>,
+        /// Automatically install generated SKILL.md and executable into .ecc/skills/<name>/
+        #[arg(short, long)]
+        install: bool,
+        /// Run the generated validation test harness immediately after synthesis
+        #[arg(short, long)]
+        test: bool,
+        /// Use multi-model Harmony swarm for design and test synthesis instead of deterministic AST
+        #[arg(long)]
+        swarm: bool,
+        /// Model tier for swarm synthesis ('haiku', 'sonnet', 'opus')
+        #[arg(long, default_value = "sonnet")]
+        tier: String,
+    },
+    /// List all synthesized CLI harnesses and installed skills
+    List,
+    /// Execute a synthesized CLI harness safely with AgentShield security auditing
+    Run {
+        /// Name of the harness or skill to run
+        name: String,
+        /// Arguments passed directly to the synthesized harness
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Run the automated validation test harness for a synthesized CLI
+    Test {
+        /// Name of the harness or skill to test
+        name: String,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -3117,6 +3167,10 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 &ctx,
             )
             .await?;
+        }
+
+        Commands::Harness { action } => {
+            crate::harness::cli_handler::handle_harness_command(action, cli.max_budget).await?;
         }
     }
 
