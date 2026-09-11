@@ -373,6 +373,7 @@ cargo test --test milestone6_memory_tests
 - 📑 **[RFC-001: Universal Protocol & Ecosystem Integrations](ROADMAP_EXTENSIONS.md)** — Pluggable external vector backends, OTel, and automated evaluation.
 - 🔌 **[RFC-002: WASM & Native Dynamic Plugins Architecture](ROADMAP_PLUGINS.md)** — Extism WASM sandboxing and dynamic shared library plugins.
 - 🏛️ **[RFC-003: Structured Role-Based Harmony Swarms for Local LLMs](docs/SPEC_STRUCTURED_ROLE_HARMONY_SWARM.md)** — Multi-model assembly line, anti-sycophancy gates, and shared blackboard memory for local Ollama swarms.
+- 🧠 **[RFC-004: Semantic Skill Dispatching & Local LLM Knowledge Injection](docs/SPEC_LOCAL_LLM_SKILL_DISPATCHING.md)** — Top-K semantic skill auto-equipping, sub-0.5ms dispatching, and cheat-sheet prompt injection for local models.
 
 ---
 
