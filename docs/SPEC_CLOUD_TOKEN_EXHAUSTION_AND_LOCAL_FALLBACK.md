@@ -144,9 +144,54 @@ In `StructuredRoleHarmonySwarm`, stages can independently hot-swap models mid-pi
 
 ---
 
-## 5. CLI & Configuration Flags
+## 5. Transparent Failover Notification & Telemetry Architecture
 
-Add CLI options to control fallback behavior:
+Silent failover is an anti-pattern that creates the "Silent Downgrade" illusion (where developers assume the AI degraded in quality or malfunctioned). Tagisan enforces **Explicit & Transparent Failover Notification** across three complementary channels:
+
+### 5.1 Interactive CLI Terminal Alert Banner
+Whenever a cloud LLM encounters token/quota exhaustion and redirects to a local model, an ANSI-formatted alert banner is rendered immediately to the terminal:
+
+```text
+┌───────────────────────────── ⚠️  FAILOVER NOTICE ─────────────────────────────┐
+│ Cloud Provider : anthropic (claude-3-5-sonnet-20241022)                       │
+│ Trigger Reason : Token budget reached ($0.50 max) / HTTP 429 Quota Exhausted  │
+│ Action Taken   : 🔄 Evacuating to Local LLM (Ollama: qwen2.5:0.5b)            │
+│ Cost Delta     : +$0.00 (Zero incremental cost on local hardware)             │
+│ Current Stage  : Stage 3 [QA & Verification Specialist]                       │
+│ Context Retained: 100% (Architecture & Types preserved on Blackboard)         │
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 5.2 Blackboard Telemetry & Artifact Provenance
+Every `RoleArtifact` recorded on the `SwarmBlackboard` will include a structured `failover_event` provenance block:
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FailoverEvent {
+    pub original_provider: String,
+    pub original_model: String,
+    pub trigger_reason: String,
+    pub evacuated_to_provider: String,
+    pub evacuated_to_model: String,
+    pub timestamp_epoch_ms: u64,
+    pub cost_at_failover_usd: f64,
+}
+```
+
+When inspecting the assembled project or running `tgs harmony`, the final summary report provides clear provenance per stage:
+- `Stage 1 (Architect)`: Cloud (`anthropic:claude-3-5-sonnet-20241022`)
+- `Stage 2 (Implementer)`: Cloud (`deepseek:deepseek-chat`)
+- `Stage 3 (QA)`: **Local Ollama (`qwen2.5:0.5b`) [Failover: HTTP 429 RateLimit]**
+- `Stage 4 (Doc)`: **Local Ollama (`dolphin-phi:latest`) [Failover: Budget Cap Reached]**
+
+### 5.3 Desktop / OS Toast Notifications (`--notify`)
+For long-running background swarms or unattended batch workflows, passing `--notify` emits a native OS desktop notification (e.g. Windows Toast / Notification Center) alerting the developer that cloud tokens were exhausted and execution evacuated to the local Ollama daemon.
+
+---
+
+## 6. CLI & Configuration Flags
+
+Add CLI options to control fallback behavior and notifications:
 
 ```bash
 # Enable automatic local fallback if cloud hits rate limits or token exhaustion
@@ -155,15 +200,21 @@ tgs harmony "Build a high-performance LRU cache" --fallback-to-local
 # Enable zero-cost evacuation if USD budget limit is reached
 tgs harmony "Build a microservice" --budget 0.50 --evacuate-on-budget
 
+# Enable desktop OS notifications on failover events
+tgs harmony "Build a database engine" --fallback-to-local --notify
+
 # Explicitly specify hybrid cloud-to-local cascade chain
 tgs harmony "Build a compiler" --architect anthropic:claude-3-5-sonnet --implementer deepseek:deepseek-chat --qa ollama:qwen2.5:0.5b --doc ollama:dolphin-phi:latest
 ```
 
 ---
 
-## 6. Implementation Roadmap
+## 7. Implementation Roadmap
 
 1. **Step 1**: Update `CascadeProvider` with zero-cost detection for `BudgetExceeded` failover.
-2. **Step 2**: Implement `--fallback-to-local` and `--evacuate-on-budget` flags in `src/cli.rs`.
-3. **Step 3**: Update `StructuredHarmonyPipeline::execute_stage_with_retries` with dynamic stage hot-swapping into Ollama.
-4. **Step 4**: Add comprehensive integration tests in `tests/cloud_local_failover_tests.rs`.
+2. **Step 2**: Implement failover notification banner formatting in `src/swarm/harmony/events.rs` or `src/cli.rs`.
+3. **Step 3**: Add `FailoverEvent` provenance tracking to `RoleArtifact` and `SwarmBlackboard`.
+4. **Step 4**: Implement `--fallback-to-local`, `--evacuate-on-budget`, and `--notify` CLI flags.
+5. **Step 5**: Update `StructuredHarmonyPipeline::execute_stage_with_retries` with dynamic stage hot-swapping into Ollama.
+6. **Step 6**: Add comprehensive integration tests in `tests/cloud_local_failover_tests.rs`.
+
