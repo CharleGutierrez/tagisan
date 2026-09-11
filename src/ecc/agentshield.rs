@@ -471,11 +471,112 @@ impl AgentShieldScanner {
         AgentShieldVerdict::Allow
     }
 
+    /// Decode \xNN and \XNN hex escape sequences in code strings to counter evasion
+    pub fn decode_hex_escapes(s: &str) -> String {
+        let mut result = String::with_capacity(s.len());
+        let chars: Vec<char> = s.chars().collect();
+        let mut i = 0;
+        while i < chars.len() {
+            if chars[i] == '\\' && i + 3 < chars.len() && (chars[i + 1] == 'x' || chars[i + 1] == 'X') {
+                let hex_pair: String = chars[i + 2..=i + 3].iter().collect();
+                if let Ok(byte_val) = u8::from_str_radix(&hex_pair, 16) {
+                    if byte_val.is_ascii() {
+                        result.push(byte_val as char);
+                        i += 4;
+                        continue;
+                    }
+                }
+            }
+            result.push(chars[i]);
+            i += 1;
+        }
+        result
+    }
+
     /// Scan Python code for dangerous execution patterns, reverse shells, deserialization attacks, and destructive calls
     pub fn scan_python_code(code: &str) -> AgentShieldVerdict {
-        let normalized = code.to_lowercase();
+        // First, scan the code directly
+        let verdict = Self::scan_python_code_direct(code);
+        if let AgentShieldVerdict::Block { .. } = verdict {
+            return verdict;
+        }
 
-        // 1. Prohibited process execution & shell spawning (Critical priority)
+        // Second, if code contains hex escape sequences (\x..), decode and scan to catch evasion
+        if code.contains("\\x") || code.contains("\\X") {
+            let decoded = Self::decode_hex_escapes(code);
+            if decoded != code {
+                let decoded_verdict = Self::scan_python_code_direct(&decoded);
+                if let AgentShieldVerdict::Block { reason, threat_level } = decoded_verdict {
+                    return AgentShieldVerdict::Block {
+                        reason: format!("Hex-escape obfuscated payload detected: {reason}"),
+                        threat_level,
+                    };
+                }
+            }
+        }
+
+        AgentShieldVerdict::Allow
+    }
+
+    /// Direct scanner for Python AST/token patterns
+    fn scan_python_code_direct(code: &str) -> AgentShieldVerdict {
+        let normalized = code.to_lowercase();
+        let stripped_no_spaces: String = normalized.chars().filter(|c| !c.is_whitespace()).collect();
+
+        // 1. Python sandbox escape primitives (__builtins__, __globals__, __subclasses__)
+        if normalized.contains("__builtins__")
+            || normalized.contains("__globals__")
+            || normalized.contains("__subclasses__")
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Python sandbox escape pattern detected (__builtins__ / __globals__ / __subclasses__)".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        // 2. Dynamic attribute resolution and obfuscated imports (e.g. getattr(__import__('os'), 'system'))
+        if stripped_no_spaces.contains("__import__('os')")
+            || stripped_no_spaces.contains("__import__(\"os\")")
+            || stripped_no_spaces.contains("__import__('subprocess')")
+            || stripped_no_spaces.contains("__import__(\"subprocess\")")
+            || stripped_no_spaces.contains("__import__('pty')")
+            || stripped_no_spaces.contains("__import__(\"pty\")")
+            || stripped_no_spaces.contains("__import__('shutil')")
+            || stripped_no_spaces.contains("__import__(\"shutil\")")
+            || stripped_no_spaces.contains("getattr(__import__")
+            || (stripped_no_spaces.contains("getattr(")
+                && (stripped_no_spaces.contains("'system'")
+                    || stripped_no_spaces.contains("\"system\"")
+                    || stripped_no_spaces.contains("'popen'")
+                    || stripped_no_spaces.contains("\"popen\"")
+                    || stripped_no_spaces.contains("'spawn'")
+                    || stripped_no_spaces.contains("\"spawn\"")
+                    || stripped_no_spaces.contains("'rmtree'")
+                    || stripped_no_spaces.contains("\"rmtree\"")
+                    || stripped_no_spaces.contains("'exec'")
+                    || stripped_no_spaces.contains("\"exec\"")
+                    || stripped_no_spaces.contains("'eval'")
+                    || stripped_no_spaces.contains("\"eval\"")))
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Obfuscated module import or dynamic attribute resolution detected".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        // 3. Base64 / encoded payload execution via eval or exec
+        if (stripped_no_spaces.contains("eval(") || stripped_no_spaces.contains("exec("))
+            && (stripped_no_spaces.contains("base64")
+                || stripped_no_spaces.contains("b64decode")
+                || stripped_no_spaces.contains("b64encode"))
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Base64 obfuscated payload execution via eval/exec detected".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        // 4. Prohibited process execution & shell spawning (Critical priority)
         let dangerous_python_invocations = [
             ("os.system", "Direct operating system command execution via os.system", ThreatLevel::Critical),
             ("subprocess", "Process execution via subprocess module", ThreatLevel::Critical),
@@ -486,10 +587,6 @@ impl AgentShieldScanner {
             ("pickle.load", "Insecure Python object deserialization via pickle.load", ThreatLevel::Critical),
             ("_pickle.loads", "Insecure Python object deserialization via _pickle.loads", ThreatLevel::Critical),
             ("_pickle.load", "Insecure Python object deserialization via _pickle.load", ThreatLevel::Critical),
-            ("__import__('os').system", "Obfuscated os.system call via __import__", ThreatLevel::Critical),
-            ("__import__(\"os\").system", "Obfuscated os.system call via __import__", ThreatLevel::Critical),
-            ("__import__('subprocess')", "Obfuscated subprocess import via __import__", ThreatLevel::Critical),
-            ("__import__(\"subprocess\")", "Obfuscated subprocess import via __import__", ThreatLevel::Critical),
             ("exec(base64.", "Base64 obfuscated payload execution via exec", ThreatLevel::Critical),
             ("eval(base64.", "Base64 obfuscated payload execution via eval", ThreatLevel::Critical),
         ];
@@ -503,7 +600,7 @@ impl AgentShieldScanner {
             }
         }
 
-        // 2. Reverse shell heuristics (socket connection coupled with dup2 / fileno)
+        // 5. Reverse shell heuristics (socket connection coupled with dup2 / fileno)
         if normalized.contains("socket.socket")
             && (normalized.contains("connect(") || normalized.contains(".connect (") || normalized.contains("dup2"))
         {
@@ -513,7 +610,7 @@ impl AgentShieldScanner {
             };
         }
 
-        // 3. Filesystem root / drive root destruction
+        // 6. Filesystem root / drive root destruction
         if normalized.contains("os.remove(\"/\"")
             || normalized.contains("os.rmdir(\"/\"")
             || normalized.contains("os.unlink(\"/\"")
@@ -526,7 +623,7 @@ impl AgentShieldScanner {
             };
         }
 
-        // 4. General code & command scan (credentials, sensitive paths, fork bombs, destructive rm)
+        // 7. General code & command scan (credentials, sensitive paths, fork bombs, destructive rm)
         let general_verdict = Self::scan_code(code);
         if let AgentShieldVerdict::Block { .. } = general_verdict {
             return general_verdict;
@@ -537,9 +634,46 @@ impl AgentShieldScanner {
 
     /// Scan Perl code for dangerous system invocations, backticks, piped opens, and destructive operations
     pub fn scan_perl_code(code: &str) -> AgentShieldVerdict {
-        let normalized = code.to_lowercase();
+        // First, scan the code directly
+        let verdict = Self::scan_perl_code_direct(code);
+        if let AgentShieldVerdict::Block { .. } = verdict {
+            return verdict;
+        }
 
-        // 1. Dangerous system and exec calls (Critical priority)
+        // Second, if code contains hex escape sequences (\x..), decode and scan to catch evasion
+        if code.contains("\\x") || code.contains("\\X") {
+            let decoded = Self::decode_hex_escapes(code);
+            if decoded != code {
+                let decoded_verdict = Self::scan_perl_code_direct(&decoded);
+                if let AgentShieldVerdict::Block { reason, threat_level } = decoded_verdict {
+                    return AgentShieldVerdict::Block {
+                        reason: format!("Hex-escape obfuscated payload detected: {reason}"),
+                        threat_level,
+                    };
+                }
+            }
+        }
+
+        AgentShieldVerdict::Allow
+    }
+
+    /// Direct scanner for Perl code patterns
+    fn scan_perl_code_direct(code: &str) -> AgentShieldVerdict {
+        let normalized = code.to_lowercase();
+        let stripped_pl: String = normalized.chars().filter(|c| !c.is_whitespace()).collect();
+
+        // 1. Obfuscated payload decoding and execution via pack/eval
+        if stripped_pl.contains("pack('h*")
+            || stripped_pl.contains("pack(\"h*")
+            || (stripped_pl.contains("eval") && stripped_pl.contains("pack"))
+        {
+            return AgentShieldVerdict::Block {
+                reason: "Obfuscated payload decoding and execution via pack/eval detected in Perl script".to_string(),
+                threat_level: ThreatLevel::Critical,
+            };
+        }
+
+        // 2. Dangerous system and exec calls (Critical priority)
         if normalized.contains("system(")
             || normalized.contains("system (")
             || normalized.contains("exec(")
@@ -557,7 +691,7 @@ impl AgentShieldScanner {
             };
         }
 
-        // 2. Backtick execution: `cmd` and qx operator
+        // 3. Backtick execution: `cmd` and qx operator
         if code.contains('`') {
             return AgentShieldVerdict::Block {
                 reason: "Shell command execution via backticks (`) detected in Perl script".to_string(),
@@ -579,17 +713,26 @@ impl AgentShieldScanner {
             };
         }
 
-        // 3. Piped open: open(..., "|...") or open(..., "...|") or open my $fh, "|..."
-        if (normalized.contains("open(") || normalized.contains("open ") || normalized.contains("open("))
-            && normalized.contains('|')
-        {
+        // 4. Piped open: open(..., "|...") or open(..., "...|") or open my $fh, "|..." or 3-arg open "-|" / "|-"
+        let has_piped_open = (normalized.contains("open(") || normalized.contains("open ") || normalized.contains("open\t"))
+            && (normalized.contains("\"|")
+                || normalized.contains("'|")
+                || normalized.contains("|\"")
+                || normalized.contains("|'")
+                || normalized.contains("\"|-\"")
+                || normalized.contains("'-|'")
+                || normalized.contains("\"-|\"")
+                || normalized.contains("'|-")
+                || normalized.contains("| -")
+                || normalized.contains("- |"));
+        if has_piped_open {
             return AgentShieldVerdict::Block {
                 reason: "Piped command execution via open() detected in Perl script".to_string(),
                 threat_level: ThreatLevel::Critical,
             };
         }
 
-        // 4. Destructive unlink / root filesystem manipulation
+        // 5. Destructive unlink / root filesystem manipulation
         if normalized.contains("unlink(\"/\"")
             || normalized.contains("unlink \"/\"")
             || normalized.contains("unlink('/')")
@@ -609,7 +752,7 @@ impl AgentShieldScanner {
             };
         }
 
-        // 5. General code & command scan (credentials, sensitive paths, fork bombs, disk destruction)
+        // 6. General code & command scan (credentials, sensitive paths, fork bombs, disk destruction)
         let general_verdict = Self::scan_code(code);
         if let AgentShieldVerdict::Block { .. } = general_verdict {
             return general_verdict;

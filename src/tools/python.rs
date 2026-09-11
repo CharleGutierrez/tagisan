@@ -112,6 +112,10 @@ impl ToolHandler for PythonEvalTool {
                 TagisanError::Execution("Missing required parameter: 'code'".to_string())
             })?;
 
+        if code.trim().is_empty() {
+            return Err(TagisanError::Execution("Parameter 'code' cannot be empty".to_string()));
+        }
+
         let timeout_duration = arguments
             .get("timeout_secs")
             .and_then(|v| v.as_u64())
@@ -236,6 +240,10 @@ impl ToolHandler for PythonRunTool {
                 TagisanError::Execution("Missing required parameter: 'file_path'".to_string())
             })?;
 
+        if file_path_str.trim().is_empty() {
+            return Err(TagisanError::Execution("Parameter 'file_path' cannot be empty".to_string()));
+        }
+
         let args_vec: Vec<String> = arguments
             .get("args")
             .and_then(|v| v.as_array())
@@ -264,6 +272,13 @@ impl ToolHandler for PythonRunTool {
             }
             None => PathBuf::from(file_path_str),
         };
+
+        if !resolved_path.is_file() {
+            return Err(TagisanError::Execution(format!(
+                "Python script file not found: '{}'",
+                resolved_path.display()
+            )));
+        }
 
         let runtime = self.get_runtime()?;
         let res = runtime
