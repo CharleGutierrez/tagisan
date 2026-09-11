@@ -9,7 +9,7 @@ use tagisan::{
     build_standard_harmony_pipeline, extract_markdown_code_blocks, parse_provider_and_model,
     resolve_harmony_models, AgentShieldSecurityGate, AssemblyRoles, BoxEventStream,
     CollaborationStrategy, CompletionRequest, CompletionResponse, EngineContext,
-    ExtractedCodeBlock, GateResult, HarmonyStage, LlmProvider, ProviderCapabilities,
+    ExtractedCodeBlock, GateResult, HarmonyStage, HarmonyTierProfile, LlmProvider, ProviderCapabilities,
     RoleArtifact, RoleModelOverrides, StrategyInput, StructuredHarmonyPipeline,
     StructuredHarmonyStrategy, SwarmBlackboard, SyntaxValidationGate, TagisanError, TokenUsage,
     ValidationGate,
@@ -255,6 +255,7 @@ fn test_04_model_parsing_and_resolution() {
         implementer: None,
         qa: Some("ollama:qwen2.5:0.5b".to_string()),
         doc: None,
+        profile: None,
     };
 
     let (arch, imp, qa, doc) = resolve_harmony_models(&ctx, &overrides);
@@ -375,6 +376,7 @@ async fn test_07_collaboration_strategy_trait() {
         implementer: Some("mock:m".to_string()),
         qa: Some("mock:m".to_string()),
         doc: Some("mock:m".to_string()),
+        profile: None,
     };
 
     let strategy = StructuredHarmonyStrategy::new(overrides, false);
@@ -421,6 +423,7 @@ async fn test_08_live_local_ollama_assembly_line() {
         implementer: Some("ollama:dolphin-phi:latest".to_string()),
         qa: Some("ollama:qwen2.5:0.5b".to_string()),
         doc: Some("ollama:dolphin-phi:latest".to_string()),
+        profile: None,
     };
 
     let pipeline = build_standard_harmony_pipeline(
@@ -443,4 +446,92 @@ async fn test_08_live_local_ollama_assembly_line() {
     let assembled = result.complete_project;
     println!("\n--- Assembled Code Preview ---\n{}", &assembled[..assembled.len().min(400)]);
     assert!(assembled.contains("Counter") || assembled.contains("counter") || assembled.contains("struct"));
+}
+
+// =========================================================================
+// TEST 9: Cloud Smart Tier & Profile Resolution
+// =========================================================================
+#[test]
+fn test_09_cloud_smart_tier_model_resolution() {
+    let mut ctx = EngineContext::new(10.0);
+    ctx.register_provider(Arc::new(MockLlmProvider::new("anthropic", vec![])));
+    ctx.register_provider(Arc::new(MockLlmProvider::new("gemini", vec![])));
+    ctx.register_provider(Arc::new(MockLlmProvider::new("deepseek", vec![])));
+
+    // 1. Smart Profile: Uses Claude for Architect & QA, DeepSeek for Impl, Gemini Flash for Doc
+    let smart_overrides = RoleModelOverrides {
+        profile: Some(HarmonyTierProfile::Smart),
+        ..Default::default()
+    };
+    let (arch, imp, qa, doc) = resolve_harmony_models(&ctx, &smart_overrides);
+    assert_eq!(arch.0, "anthropic");
+    assert_eq!(arch.1, "claude-3-5-sonnet-20241022");
+    assert_eq!(imp.0, "deepseek");
+    assert_eq!(imp.1, "deepseek-chat");
+    assert_eq!(qa.0, "anthropic");
+    assert_eq!(qa.1, "claude-3-5-sonnet-20241022");
+    assert_eq!(doc.0, "gemini");
+    assert_eq!(doc.1, "gemini-2.0-flash");
+
+    // 2. Economy Profile: Uses Gemini Flash for everything
+    let economy_overrides = RoleModelOverrides {
+        profile: Some(HarmonyTierProfile::Economy),
+        ..Default::default()
+    };
+    let (arch_e, imp_e, qa_e, doc_e) = resolve_harmony_models(&ctx, &economy_overrides);
+    assert_eq!(arch_e.0, "gemini");
+    assert_eq!(imp_e.0, "gemini");
+    assert_eq!(qa_e.0, "gemini");
+    assert_eq!(doc_e.0, "gemini");
+
+    // 3. Flagship Profile: Uses Claude 3.5 Sonnet for everything
+    let flagship_overrides = RoleModelOverrides {
+        profile: Some(HarmonyTierProfile::Flagship),
+        ..Default::default()
+    };
+    let (arch_f, imp_f, qa_f, doc_f) = resolve_harmony_models(&ctx, &flagship_overrides);
+    assert_eq!(arch_f.0, "anthropic");
+    assert_eq!(imp_f.0, "anthropic");
+    assert_eq!(qa_f.0, "anthropic");
+    assert_eq!(doc_f.0, "anthropic");
+}
+
+// =========================================================================
+// TEST 10: Concurrent QA and Documentation Downstream Execution
+// =========================================================================
+#[tokio::test]
+async fn test_10_concurrent_qa_and_doc_execution() {
+    let mut ctx = EngineContext::new(10.0);
+    ctx.register_provider(Arc::new(MockLlmProvider::new("mock_arch", vec![
+        "```rust\npub struct Service;\n```".to_string(),
+    ])));
+    ctx.register_provider(Arc::new(MockLlmProvider::new("mock_impl", vec![
+        "```rust\nimpl Service { pub fn call(&self) {} }\n```".to_string(),
+    ])));
+    ctx.register_provider(Arc::new(MockLlmProvider::new("mock_qa", vec![
+        "```rust\n#[test]\nfn test_call() {}\n```".to_string(),
+    ])));
+    ctx.register_provider(Arc::new(MockLlmProvider::new("mock_doc", vec![
+        "# Service Documentation\nQuickstart usage guide.".to_string(),
+    ])));
+
+    let pipeline = StructuredHarmonyPipeline::new("Build microservice")
+        .add_stage(HarmonyStage::new(AssemblyRoles::architect("mock_arch", "m")))
+        .add_stage(HarmonyStage::new(AssemblyRoles::implementer("mock_impl", "m")))
+        .add_stage(HarmonyStage::new(AssemblyRoles::qa("mock_qa", "m")))
+        .add_stage(HarmonyStage::new(AssemblyRoles::documentation("mock_doc", "m")))
+        .with_parallel(true);
+
+    assert!(pipeline.parallel_qa_doc);
+
+    let result = pipeline.execute(&ctx).await.expect("Parallel pipeline must succeed");
+    assert_eq!(result.artifacts.len(), 4);
+    assert_eq!(result.artifacts[0].role_id, "architect");
+    assert_eq!(result.artifacts[1].role_id, "implementer");
+    assert_eq!(result.artifacts[2].role_id, "qa");
+    assert_eq!(result.artifacts[3].role_id, "doc");
+
+    let complete = result.complete_project;
+    assert!(complete.contains("Service"));
+    assert!(complete.contains("Service Documentation"));
 }

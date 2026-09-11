@@ -333,6 +333,14 @@ enum Commands {
         #[arg(long)]
         doc: Option<String>,
 
+        /// Cloud tier optimization profile: 'smart' (default), 'flagship', or 'economy'
+        #[arg(long)]
+        tier: Option<String>,
+
+        /// Run QA and Documentation stages concurrently in parallel
+        #[arg(long)]
+        parallel: bool,
+
         /// Run adversarial audit step on the final assembly (Harmony + Debate)
         #[arg(long)]
         audit: bool,
@@ -369,6 +377,14 @@ pub enum HarmonySubcommand {
         /// Custom Doc role model in format 'provider:model'
         #[arg(long)]
         doc: Option<String>,
+
+        /// Cloud tier optimization profile: 'smart' (default), 'flagship', or 'economy'
+        #[arg(long)]
+        tier: Option<String>,
+
+        /// Run QA and Documentation stages concurrently in parallel
+        #[arg(long)]
+        parallel: bool,
 
         /// Run adversarial audit step on the final assembly
         #[arg(long)]
@@ -3102,6 +3118,8 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             implementer,
             qa,
             doc,
+            tier,
+            parallel,
             audit,
             json,
             output_dir,
@@ -3114,6 +3132,8 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 implementer,
                 qa,
                 doc,
+                tier,
+                parallel,
                 audit,
                 json,
                 output_dir,
@@ -3133,18 +3153,22 @@ async fn handle_harmony_command(
     implementer: Option<String>,
     qa: Option<String>,
     doc: Option<String>,
+    tier: Option<String>,
+    parallel: bool,
     audit: bool,
     json: bool,
     output_dir: Option<String>,
     ctx: &EngineContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let (eff_objective, eff_arch, eff_imp, eff_qa, eff_doc, eff_audit, eff_json, eff_out_dir) = match action {
+    let (eff_objective, eff_arch, eff_imp, eff_qa, eff_doc, eff_tier, eff_parallel, eff_audit, eff_json, eff_out_dir) = match action {
         Some(HarmonySubcommand::Build {
             objective: sub_obj,
             architect: sub_arch,
             implementer: sub_imp,
             qa: sub_qa,
             doc: sub_doc,
+            tier: sub_tier,
+            parallel: sub_parallel,
             audit: sub_audit,
             json: sub_json,
             output_dir: sub_out_dir,
@@ -3154,6 +3178,8 @@ async fn handle_harmony_command(
             sub_imp.or(implementer),
             sub_qa.or(qa),
             sub_doc.or(doc),
+            sub_tier.or(tier),
+            sub_parallel || parallel,
             sub_audit || audit,
             sub_json || json,
             sub_out_dir.or(output_dir),
@@ -3163,8 +3189,14 @@ async fn handle_harmony_command(
                 eprintln!("{}: missing objective. Usage: tgs harmony build \"<objective>\"", "Error".red().bold());
                 std::process::exit(1);
             });
-            (obj, architect, implementer, qa, doc, audit, json, output_dir)
+            (obj, architect, implementer, qa, doc, tier, parallel, audit, json, output_dir)
         }
+    };
+
+    let profile = match eff_tier.as_deref().map(|s| s.to_lowercase()).as_deref() {
+        Some("flagship") => Some(crate::swarm::harmony::HarmonyTierProfile::Flagship),
+        Some("economy") | Some("cheap") => Some(crate::swarm::harmony::HarmonyTierProfile::Economy),
+        _ => Some(crate::swarm::harmony::HarmonyTierProfile::Smart),
     };
 
     let overrides = crate::swarm::harmony::RoleModelOverrides {
@@ -3172,15 +3204,29 @@ async fn handle_harmony_command(
         implementer: eff_imp,
         qa: eff_qa,
         doc: eff_doc,
+        profile,
     };
 
     let (arch_m, imp_m, qa_m, doc_m) = crate::swarm::harmony::resolve_harmony_models(ctx, &overrides);
+
+    let mut pipeline = crate::swarm::harmony::build_standard_harmony_pipeline(
+        &eff_objective,
+        ctx,
+        &overrides,
+        eff_audit,
+    );
+
+    if eff_parallel {
+        pipeline = pipeline.with_parallel(true);
+    }
 
     if !eff_json {
         println!("{}", "=========================================================================".cyan());
         println!("{}", "  🏛️  Tagisan Structured Role-Based Harmony Swarm (Bayanihan)".bold().magenta());
         println!("{}", "=========================================================================".cyan());
         println!("Objective: \"{}\"\n", eff_objective.bold().yellow());
+        println!("  • Cloud Tier:         {:?}", profile.unwrap_or_default());
+        println!("  • Downstream Exec:    {}", if pipeline.parallel_qa_doc { "Concurrent (QA + Doc in Parallel)".green().bold() } else { "Sequential".dimmed() });
         println!("  • [Stage 1] Architect:    {} [{}]", arch_m.1.cyan().bold(), arch_m.0.dimmed());
         println!("  • [Stage 2] Implementer:  {} [{}]", imp_m.1.cyan().bold(), imp_m.0.dimmed());
         println!("  • [Stage 3] QA & Test:    {} [{}]", qa_m.1.cyan().bold(), qa_m.0.dimmed());

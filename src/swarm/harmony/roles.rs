@@ -270,6 +270,7 @@ pub struct RoleModelOverrides {
     pub implementer: Option<String>,
     pub qa: Option<String>,
     pub doc: Option<String>,
+    pub profile: Option<crate::swarm::harmony::types::HarmonyTierProfile>,
 }
 
 /// Helper: Parses a string like "ollama:qwen2.5:0.5b", "anthropic:claude-3-5-sonnet", "mock:model", or "qwen2.5:0.5b" into (provider_id, model_name).
@@ -293,6 +294,8 @@ pub fn resolve_harmony_models(
     ctx: &EngineContext,
     overrides: &RoleModelOverrides,
 ) -> ((String, String), (String, String), (String, String), (String, String)) {
+    use crate::swarm::harmony::types::HarmonyTierProfile;
+
     // 1. Determine baseline provider and available models
     let has_anthropic = ctx.get_provider("anthropic").is_ok();
     let has_openai = ctx.get_provider("openai").is_ok();
@@ -301,38 +304,97 @@ pub fn resolve_harmony_models(
     let has_ollama = ctx.get_provider("ollama").is_ok();
     let has_mock = ctx.get_provider("mock").is_ok();
 
+    let profile = overrides.profile.unwrap_or(HarmonyTierProfile::Smart);
+
     // Default pair defaults
     let (mut arch_p, mut arch_m);
     let (mut impl_p, mut impl_m);
     let (mut qa_p, mut qa_m);
     let (mut doc_p, mut doc_m);
 
-    if has_anthropic {
-        // Cloud flagship setup
-        let m = "claude-3-5-sonnet-20241022";
-        arch_p = "anthropic".to_string(); arch_m = m.to_string();
-        impl_p = "anthropic".to_string(); impl_m = m.to_string();
-        qa_p = "anthropic".to_string(); qa_m = m.to_string();
-        doc_p = "anthropic".to_string(); doc_m = m.to_string();
-    } else if has_gemini {
-        // Free cloud tier setup
-        let m = "gemini-2.0-flash";
-        arch_p = "gemini".to_string(); arch_m = m.to_string();
-        impl_p = "gemini".to_string(); impl_m = m.to_string();
-        qa_p = "gemini".to_string(); qa_m = m.to_string();
-        doc_p = "gemini".to_string(); doc_m = m.to_string();
-    } else if has_openai {
-        let m = "gpt-4o";
-        arch_p = "openai".to_string(); arch_m = m.to_string();
-        impl_p = "openai".to_string(); impl_m = m.to_string();
-        qa_p = "openai".to_string(); qa_m = m.to_string();
-        doc_p = "openai".to_string(); doc_m = m.to_string();
-    } else if has_deepseek {
-        let m = "deepseek-chat";
-        arch_p = "deepseek".to_string(); arch_m = m.to_string();
-        impl_p = "deepseek".to_string(); impl_m = m.to_string();
-        qa_p = "deepseek".to_string(); qa_m = m.to_string();
-        doc_p = "deepseek".to_string(); doc_m = m.to_string();
+    let has_any_cloud = has_anthropic || has_openai || has_gemini || has_deepseek;
+
+    if has_any_cloud {
+        match profile {
+            HarmonyTierProfile::Smart => {
+                // Smart tier: Top reasoning/code for Architect & QA, cost-effective high-throughput for Doc
+                // Architect
+                if has_anthropic {
+                    arch_p = "anthropic".to_string(); arch_m = "claude-3-5-sonnet-20241022".to_string();
+                } else if has_openai {
+                    arch_p = "openai".to_string(); arch_m = "gpt-4o".to_string();
+                } else if has_deepseek {
+                    arch_p = "deepseek".to_string(); arch_m = "deepseek-chat".to_string();
+                } else {
+                    arch_p = "gemini".to_string(); arch_m = "gemini-2.0-flash".to_string();
+                }
+
+                // Implementer: DeepSeek V3 if present, else Anthropic/OpenAI/Gemini
+                if has_deepseek {
+                    impl_p = "deepseek".to_string(); impl_m = "deepseek-chat".to_string();
+                } else if has_anthropic {
+                    impl_p = "anthropic".to_string(); impl_m = "claude-3-5-sonnet-20241022".to_string();
+                } else if has_openai {
+                    impl_p = "openai".to_string(); impl_m = "gpt-4o".to_string();
+                } else {
+                    impl_p = "gemini".to_string(); impl_m = "gemini-2.0-flash".to_string();
+                }
+
+                // QA: Best testing/verification
+                if has_anthropic {
+                    qa_p = "anthropic".to_string(); qa_m = "claude-3-5-sonnet-20241022".to_string();
+                } else if has_openai {
+                    qa_p = "openai".to_string(); qa_m = "gpt-4o".to_string();
+                } else if has_deepseek {
+                    qa_p = "deepseek".to_string(); qa_m = "deepseek-chat".to_string();
+                } else {
+                    qa_p = "gemini".to_string(); qa_m = "gemini-2.0-flash".to_string();
+                }
+
+                // Doc: Gemini Flash (fastest, near-zero cost) if available, else DeepSeek/Anthropic/OpenAI
+                if has_gemini {
+                    doc_p = "gemini".to_string(); doc_m = "gemini-2.0-flash".to_string();
+                } else if has_deepseek {
+                    doc_p = "deepseek".to_string(); doc_m = "deepseek-chat".to_string();
+                } else if has_anthropic {
+                    doc_p = "anthropic".to_string(); doc_m = "claude-3-5-sonnet-20241022".to_string();
+                } else {
+                    doc_p = "openai".to_string(); doc_m = "gpt-4o".to_string();
+                }
+            }
+
+            HarmonyTierProfile::Flagship => {
+                let (p, m) = if has_anthropic {
+                    ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
+                } else if has_openai {
+                    ("openai".to_string(), "gpt-4o".to_string())
+                } else if has_deepseek {
+                    ("deepseek".to_string(), "deepseek-chat".to_string())
+                } else {
+                    ("gemini".to_string(), "gemini-2.0-flash".to_string())
+                };
+                arch_p = p.clone(); arch_m = m.clone();
+                impl_p = p.clone(); impl_m = m.clone();
+                qa_p = p.clone(); qa_m = m.clone();
+                doc_p = p; doc_m = m;
+            }
+
+            HarmonyTierProfile::Economy => {
+                let (p, m) = if has_gemini {
+                    ("gemini".to_string(), "gemini-2.0-flash".to_string())
+                } else if has_deepseek {
+                    ("deepseek".to_string(), "deepseek-chat".to_string())
+                } else if has_openai {
+                    ("openai".to_string(), "gpt-4o".to_string())
+                } else {
+                    ("anthropic".to_string(), "claude-3-5-sonnet-20241022".to_string())
+                };
+                arch_p = p.clone(); arch_m = m.clone();
+                impl_p = p.clone(); impl_m = m.clone();
+                qa_p = p.clone(); qa_m = m.clone();
+                doc_p = p; doc_m = m;
+            }
+        }
     } else if has_ollama {
         // Local Ollama intelligent rotation
         let installed = crate::providers::ollama::OllamaProvider::discover_installed_models();
@@ -340,7 +402,6 @@ pub fn resolve_harmony_models(
         let has_dolphin = installed.iter().any(|m| m.contains("dolphin-phi") || m.contains("phi"));
 
         if has_qwen && has_dolphin {
-            // Pair Qwen (strict syntax & types) with Dolphin (creative implementation)
             arch_p = "ollama".to_string(); arch_m = "qwen2.5:0.5b".to_string();
             impl_p = "ollama".to_string(); impl_m = "dolphin-phi:latest".to_string();
             qa_p = "ollama".to_string(); qa_m = "qwen2.5:0.5b".to_string();

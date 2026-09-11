@@ -86,10 +86,11 @@ pub use swarm::{
     build_standard_harmony_pipeline, extract_markdown_code_blocks, parse_provider_and_model,
     resolve_harmony_models, AgentReview, AgentShieldSecurityGate, AssemblyRoles, ConsensusVerdict,
     DelegateTaskTool, ExtractedCodeBlock, GateResult, HarmonyExecutionResult, HarmonyRole,
-    HarmonyRoleConfig, HarmonyStage, InteractiveRepl, PipelineExecutionResult, PipelineStageOutput,
-    ReplCommand, ReviewCriterion, RoleArtifact, RoleModelOverrides, SessionMetadata, SessionRecord,
-    SessionStore, StandardHarmonyRole, StructuredHarmonyPipeline, SwarmBlackboard, SwarmCoordinator,
-    SwarmMember, SyntaxValidationGate, TeamConsensusEngine, ValidationGate, VotingRule,
+    HarmonyRoleConfig, HarmonyStage, HarmonyTierProfile, InteractiveRepl, PipelineExecutionResult,
+    PipelineStageOutput, ReplCommand, ReviewCriterion, RoleArtifact, RoleModelOverrides,
+    SessionMetadata, SessionRecord, SessionStore, StandardHarmonyRole, StructuredHarmonyPipeline,
+    SwarmBlackboard, SwarmCoordinator, SwarmMember, SyntaxValidationGate, TeamConsensusEngine,
+    ValidationGate, VotingRule,
 };
 pub use tui::{run_debate_tui, Spinner};
 pub use types::{

@@ -11,7 +11,7 @@ pub use roles::{
     extract_markdown_code_blocks, parse_provider_and_model, resolve_harmony_models,
     AssemblyRoles, RoleModelOverrides, StandardHarmonyRole,
 };
-pub use types::{ExtractedCodeBlock, HarmonyRole, HarmonyRoleConfig, RoleArtifact};
+pub use types::{ExtractedCodeBlock, HarmonyRole, HarmonyRoleConfig, HarmonyTierProfile, RoleArtifact};
 
 use crate::engine::EngineContext;
 
@@ -25,6 +25,14 @@ pub fn build_standard_harmony_pipeline(
     let (arch, imp, qa, doc) = resolve_harmony_models(ctx, overrides);
 
     let mut pipeline = StructuredHarmonyPipeline::new(objective);
+
+    // Automatically enable concurrent parallel execution of Stage 3 (QA) and Stage 4 (Doc)
+    // when using Non-Local Cloud LLMs to slash pipeline turnaround latency.
+    let is_qa_cloud = matches!(qa.0.as_str(), "anthropic" | "openai" | "gemini" | "deepseek" | "xai" | "groq");
+    let is_doc_cloud = matches!(doc.0.as_str(), "anthropic" | "openai" | "gemini" | "deepseek" | "xai" | "groq");
+    if is_qa_cloud && is_doc_cloud {
+        pipeline = pipeline.with_parallel(true);
+    }
 
     // Stage 1: Lead Systems Architect
     let stage1 = HarmonyStage::new(AssemblyRoles::architect(&arch.0, &arch.1))

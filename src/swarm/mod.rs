@@ -13,8 +13,8 @@ pub use coordinator::{
 pub use harmony::{
     build_standard_harmony_pipeline, extract_markdown_code_blocks, parse_provider_and_model,
     resolve_harmony_models, AgentShieldSecurityGate, AssemblyRoles, ExtractedCodeBlock, GateResult,
-    HarmonyExecutionResult, HarmonyRole, HarmonyRoleConfig, HarmonyStage, RoleArtifact,
-    RoleModelOverrides, StandardHarmonyRole, StructuredHarmonyPipeline, SwarmBlackboard,
+    HarmonyExecutionResult, HarmonyRole, HarmonyRoleConfig, HarmonyStage, HarmonyTierProfile,
+    RoleArtifact, RoleModelOverrides, StandardHarmonyRole, StructuredHarmonyPipeline, SwarmBlackboard,
     SyntaxValidationGate, ValidationGate,
 };
 pub use repl::{InteractiveRepl, ReplCommand};

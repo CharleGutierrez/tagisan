@@ -6,6 +6,18 @@ use crate::error::Result;
 use crate::providers::LlmProvider;
 use crate::swarm::harmony::blackboard::SwarmBlackboard;
 
+/// Cloud optimization tier profile for allocating models across assembly roles.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum HarmonyTierProfile {
+    /// Smart hybrid tier: Top reasoning/coding for Architect & QA, high-speed & cost-effective for Impl & Doc.
+    #[default]
+    Smart,
+    /// Flagship tier: Uses top-tier frontier models (Claude 3.5 Sonnet / GPT-4o) across all roles.
+    Flagship,
+    /// Economy tier: Uses ultra-fast, cost-effective models (Gemini 2.0 Flash / DeepSeek V3) across all roles.
+    Economy,
+}
+
 /// Configuration defining an assigned role in the harmony assembly line.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct HarmonyRoleConfig {

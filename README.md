@@ -328,6 +328,12 @@ Execute deterministic, role-based assembly line pipelines (RFC-003) powered by l
 # Execute standard 4-stage assembly line (Architect -> Implementer -> QA -> Doc)
 tgs harmony build "Implement an async rate limiter in Rust using token bucket"
 
+# Smart Cloud Tiering (allocates Claude for Architect/QA, DeepSeek for Impl, Gemini Flash for Docs)
+tgs harmony build "Build a high-throughput microservice router" --tier smart --parallel
+
+# Ultra-fast Economy Cloud Tier (Gemini 2.0 Flash across all roles, sub-cent cost)
+tgs harmony build "Generate a CLI argument parser" --tier economy --parallel
+
 # Customize role models across local Ollama and cloud providers
 tgs harmony build "Build a thread-safe LRU cache" \
   --architect ollama:qwen2.5:0.5b \
