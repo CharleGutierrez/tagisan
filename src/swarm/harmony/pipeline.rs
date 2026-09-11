@@ -3,9 +3,10 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 use crate::engine::EngineContext;
 use crate::error::{Result, TagisanError};
+use crate::providers::LlmProvider;
 use crate::swarm::harmony::blackboard::SwarmBlackboard;
 use crate::swarm::harmony::gates::{GateResult, ValidationGate};
-use crate::swarm::harmony::types::{HarmonyRole, RoleArtifact};
+use crate::swarm::harmony::types::{FailoverEvent, HarmonyRole, RoleArtifact};
 use crate::types::{CompletionRequest, TokenUsage};
 
 /// Pipeline stage configuration containing the executing role and attached validation gates.
@@ -40,6 +41,77 @@ pub struct HarmonyExecutionResult {
     pub total_cost_usd: f64,
 }
 
+/// Renders a standardized ANSI failover alert banner to stderr when a cloud LLM evacuates to local Ollama.
+pub fn render_failover_banner(
+    original_provider: &str,
+    original_model: &str,
+    trigger_reason: &str,
+    target_provider: &str,
+    target_model: &str,
+    stage_idx: usize,
+    stage_title: &str,
+) {
+    use colored::Colorize;
+    eprintln!("\n{}", "┌───────────────────────────── ⚠️  FAILOVER NOTICE ─────────────────────────────┐".yellow().bold());
+    let print_row = |content: &str| {
+        let char_count = content.chars().count();
+        let pad = if char_count < 77 { 77 - char_count } else { 0 };
+        eprintln!("│ {}{} │", content, " ".repeat(pad));
+    };
+    print_row(&format!("Cloud Provider : {} ({})", original_provider, original_model));
+    print_row(&format!("Trigger Reason : {}", trigger_reason));
+    print_row(&format!("Action Taken   : 🔄 Evacuating to Local LLM ({}: {})", target_provider, target_model));
+    print_row("Cost Delta     : +$0.00 (Zero incremental cost on local hardware)");
+    print_row(&format!("Current Stage  : Stage {} [{}]", stage_idx + 1, stage_title));
+    print_row("Context Retained: 100% (Architecture & Types preserved on Blackboard)");
+    eprintln!("{}\n", "└───────────────────────────────────────────────────────────────────────────────┘".yellow().bold());
+}
+
+/// Emits an OS-native desktop notification alerting that failover occurred.
+pub fn send_failover_desktop_notification(
+    original_provider: &str,
+    target_model: &str,
+    trigger_reason: &str,
+) {
+    let summary = "Tagisan Harmony Swarm: Failover to Local LLM";
+    let body = format!(
+        "Cloud provider '{}' triggered failover ({}) -> Evacuated to local model '{}'.",
+        original_provider, trigger_reason, target_model
+    );
+
+    #[cfg(target_family = "unix")]
+    {
+        let _ = std::process::Command::new("notify-send")
+            .arg("-u")
+            .arg("critical")
+            .arg("-a")
+            .arg("Tagisan")
+            .arg(&summary)
+            .arg(&body)
+            .spawn();
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let script = format!(
+            "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > $null; \
+             $template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02); \
+             $textNodes = $template.GetElementsByTagName('text'); \
+             $textNodes.Item(0).AppendChild($template.CreateTextNode('{}')) > $null; \
+             $textNodes.Item(1).AppendChild($template.CreateTextNode('{}')) > $null; \
+             $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Tagisan'); \
+             $notification = [Windows.UI.Notifications.ToastNotification]::new($template); \
+             $notifier.Show($notification);",
+            summary, body
+        );
+        let _ = std::process::Command::new("powershell")
+            .arg("-NoProfile")
+            .arg("-Command")
+            .arg(&script)
+            .spawn();
+    }
+}
+
 /// The orchestrator executing the multi-stage assembly line across local and cloud LLMs.
 pub struct StructuredHarmonyPipeline {
     pub blackboard: Arc<SwarmBlackboard>,
@@ -48,6 +120,12 @@ pub struct StructuredHarmonyPipeline {
     max_stage_retries: usize,
     /// When true, Stage 3 (QA) and Stage 4 (Doc) are executed concurrently in parallel.
     pub parallel_qa_doc: bool,
+    /// When true, cloud rate limits, network faults, context errors, and budget exhaustion trigger evacuation to Ollama.
+    pub fallback_to_local: bool,
+    /// When true, reaching the financial spending cap automatically evacuates pending stages to zero-cost local Ollama.
+    pub evacuate_on_budget: bool,
+    /// When true, emits a native OS desktop notification when dynamic failover occurs.
+    pub notify_on_failover: bool,
 }
 
 impl StructuredHarmonyPipeline {
@@ -60,6 +138,9 @@ impl StructuredHarmonyPipeline {
             audit_adversary: None,
             max_stage_retries: 2,
             parallel_qa_doc: false,
+            fallback_to_local: false,
+            evacuate_on_budget: false,
+            notify_on_failover: false,
         }
     }
 
@@ -87,6 +168,60 @@ impl StructuredHarmonyPipeline {
         self
     }
 
+    /// Enable or disable automatic failover to local Ollama on cloud failure/rate limits.
+    pub fn with_fallback_to_local(mut self, fallback: bool) -> Self {
+        self.fallback_to_local = fallback;
+        self
+    }
+
+    /// Enable or disable zero-cost local evacuation when the financial spending budget is reached.
+    pub fn with_evacuate_on_budget(mut self, evacuate: bool) -> Self {
+        self.evacuate_on_budget = evacuate;
+        self
+    }
+
+    /// Enable or disable OS desktop notifications on stage failover events.
+    pub fn with_notify_on_failover(mut self, notify: bool) -> Self {
+        self.notify_on_failover = notify;
+        self
+    }
+
+    /// Resolve a zero-cost local provider and matching model for a role during failover evacuation.
+    fn resolve_local_fallback(
+        ctx: &EngineContext,
+        role_id: &str,
+    ) -> Option<(Arc<dyn LlmProvider>, String)> {
+        let prov = ctx.get_provider("ollama").or_else(|_| ctx.get_provider("local")).ok()?;
+        let installed = crate::providers::ollama::OllamaProvider::discover_installed_models();
+
+        let model = match role_id {
+            "architect" | "implementer" => {
+                if let Some(m) = installed.iter().find(|m| m.contains("dolphin-phi") || m.contains("phi")) {
+                    m.clone()
+                } else if let Some(m) = installed.iter().find(|m| m.contains("qwen2.5:0.5b") || m.contains("qwen")) {
+                    m.clone()
+                } else if let Some(first) = installed.first() {
+                    first.clone()
+                } else {
+                    crate::providers::ollama::default_ollama_model()
+                }
+            }
+            _ => {
+                if let Some(m) = installed.iter().find(|m| m.contains("qwen2.5:0.5b") || m.contains("qwen")) {
+                    m.clone()
+                } else if let Some(m) = installed.iter().find(|m| m.contains("dolphin-phi") || m.contains("phi")) {
+                    m.clone()
+                } else if let Some(first) = installed.first() {
+                    first.clone()
+                } else {
+                    crate::providers::ollama::default_ollama_model()
+                }
+            }
+        };
+
+        Some((prov, model))
+    }
+
     /// Execute the complete assembly line pipeline.
     pub async fn execute(&self, ctx: &EngineContext) -> Result<HarmonyExecutionResult> {
         if ctx.cancellation_token.is_cancelled() {
@@ -98,40 +233,42 @@ impl StructuredHarmonyPipeline {
 
         if self.parallel_qa_doc && self.stages.len() == 4 {
             // Stage 1: Lead Systems Architect
-            let a1 = Self::execute_stage_with_retries(
-                &self.stages[0],
-                &self.blackboard,
-                ctx,
-                self.max_stage_retries,
-                0,
-            )
-            .await?;
+            let a1 = self
+                .execute_stage_with_retries(
+                    &self.stages[0],
+                    &self.blackboard,
+                    ctx,
+                    self.max_stage_retries,
+                    0,
+                )
+                .await?;
             total_tokens.prompt_tokens += a1.tokens_used / 2;
             total_tokens.completion_tokens += a1.tokens_used / 2;
             self.blackboard.append_artifact(a1);
 
             // Stage 2: Senior Implementer
-            let a2 = Self::execute_stage_with_retries(
-                &self.stages[1],
-                &self.blackboard,
-                ctx,
-                self.max_stage_retries,
-                1,
-            )
-            .await?;
+            let a2 = self
+                .execute_stage_with_retries(
+                    &self.stages[1],
+                    &self.blackboard,
+                    ctx,
+                    self.max_stage_retries,
+                    1,
+                )
+                .await?;
             total_tokens.prompt_tokens += a2.tokens_used / 2;
             total_tokens.completion_tokens += a2.tokens_used / 2;
             self.blackboard.append_artifact(a2);
 
             // Stage 3 (QA) and Stage 4 (Doc) executed concurrently in parallel
-            let fut_qa = Self::execute_stage_with_retries(
+            let fut_qa = self.execute_stage_with_retries(
                 &self.stages[2],
                 &self.blackboard,
                 ctx,
                 self.max_stage_retries,
                 2,
             );
-            let fut_doc = Self::execute_stage_with_retries(
+            let fut_doc = self.execute_stage_with_retries(
                 &self.stages[3],
                 &self.blackboard,
                 ctx,
@@ -152,14 +289,15 @@ impl StructuredHarmonyPipeline {
                     return Err(TagisanError::Cancelled);
                 }
 
-                let final_artifact = Self::execute_stage_with_retries(
-                    stage,
-                    &self.blackboard,
-                    ctx,
-                    self.max_stage_retries,
-                    idx,
-                )
-                .await?;
+                let final_artifact = self
+                    .execute_stage_with_retries(
+                        stage,
+                        &self.blackboard,
+                        ctx,
+                        self.max_stage_retries,
+                        idx,
+                    )
+                    .await?;
 
                 total_tokens.prompt_tokens += final_artifact.tokens_used / 2;
                 total_tokens.completion_tokens += final_artifact.tokens_used / 2;
@@ -212,6 +350,7 @@ impl StructuredHarmonyPipeline {
 
     /// Internal helper to execute a single stage through its validation gates with critique retries.
     async fn execute_stage_with_retries(
+        &self,
         stage: &HarmonyStage,
         blackboard: &SwarmBlackboard,
         ctx: &EngineContext,
@@ -219,7 +358,60 @@ impl StructuredHarmonyPipeline {
         stage_idx: usize,
     ) -> Result<RoleArtifact> {
         let role_cfg = stage.role.config();
-        let provider = ctx.get_provider(&role_cfg.provider)?;
+        let is_already_local = role_cfg.provider.eq_ignore_ascii_case("ollama")
+            || role_cfg.provider.eq_ignore_ascii_case("local");
+
+        let mut current_provider = ctx.get_provider(&role_cfg.provider)?;
+        let mut current_model_override: Option<String> = None;
+        let mut current_failover_event: Option<FailoverEvent> = None;
+
+        // Check if pre-emptive evacuation is warranted (budget already exhausted on entry)
+        let can_evacuate_budget = self.evacuate_on_budget || self.fallback_to_local;
+        if !is_already_local && can_evacuate_budget && ctx.budget_tracker.is_exhausted() {
+            if let Some((loc_prov, loc_model)) = Self::resolve_local_fallback(ctx, &role_cfg.role_id) {
+                let trigger_reason = format!(
+                    "Token budget reached (${:.2} spent >= ${:.2} max)",
+                    ctx.budget_tracker.current_spent_usd(),
+                    ctx.budget_tracker.max_budget_usd()
+                );
+                let timestamp_epoch_ms = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as u64;
+
+                let event = FailoverEvent {
+                    original_provider: role_cfg.provider.clone(),
+                    original_model: role_cfg.model.clone(),
+                    trigger_reason: trigger_reason.clone(),
+                    evacuated_to_provider: loc_prov.provider_id().to_string(),
+                    evacuated_to_model: loc_model.clone(),
+                    timestamp_epoch_ms,
+                    cost_at_failover_usd: ctx.budget_tracker.current_spent_usd(),
+                };
+
+                render_failover_banner(
+                    &role_cfg.provider,
+                    &role_cfg.model,
+                    &trigger_reason,
+                    loc_prov.provider_id(),
+                    &loc_model,
+                    stage_idx,
+                    &role_cfg.role_title,
+                );
+
+                if self.notify_on_failover {
+                    send_failover_desktop_notification(
+                        &role_cfg.provider,
+                        &loc_model,
+                        &trigger_reason,
+                    );
+                }
+
+                current_provider = loc_prov;
+                current_model_override = Some(loc_model);
+                current_failover_event = Some(event);
+            }
+        }
 
         let mut retries = 0usize;
         let mut last_critique: Option<String> = None;
@@ -230,15 +422,105 @@ impl StructuredHarmonyPipeline {
                 return Err(TagisanError::Cancelled);
             }
 
-            let artifact = stage
+            let exec_result = stage
                 .role
-                .execute_stage(
+                .execute_stage_with_override(
                     blackboard,
-                    provider.clone(),
+                    current_provider.clone(),
+                    current_model_override.as_deref(),
                     ctx,
                     last_critique.as_deref(),
                 )
-                .await?;
+                .await;
+
+            let mut artifact = match exec_result {
+                Ok(art) => art,
+                Err(err) => {
+                    let is_trigger_error = matches!(
+                        err,
+                        TagisanError::BudgetExceeded { .. }
+                            | TagisanError::RateLimited(_, _)
+                            | TagisanError::BadResponse(_, _)
+                            | TagisanError::ContextLengthExceeded(_, _, _)
+                            | TagisanError::Network(_)
+                    );
+
+                    let can_evacuate = current_failover_event.is_none()
+                        && !is_already_local
+                        && ((self.fallback_to_local && is_trigger_error)
+                            || (self.evacuate_on_budget && matches!(err, TagisanError::BudgetExceeded { .. })));
+
+                    if can_evacuate {
+                        if let Some((loc_prov, loc_model)) = Self::resolve_local_fallback(ctx, &role_cfg.role_id) {
+                            let trigger_reason = match &err {
+                                TagisanError::BudgetExceeded { max_budget, current_spent } => {
+                                    format!("Token budget reached (${:.2} spent >= ${:.2} max)", current_spent, max_budget)
+                                }
+                                TagisanError::RateLimited(p, retry_after) => {
+                                    format!("Rate limited (HTTP 429) on '{}' (retry after: {:?})", p, retry_after)
+                                }
+                                TagisanError::BadResponse(p, msg) => {
+                                    format!("API error on '{}': {}", p, msg)
+                                }
+                                TagisanError::ContextLengthExceeded(p, cur, max) => {
+                                    format!("Context length exceeded on '{}' ({} > {})", p, cur, max)
+                                }
+                                TagisanError::Network(msg) => {
+                                    format!("Network fault: {}", msg)
+                                }
+                                _ => format!("Error: {}", err),
+                            };
+
+                            let timestamp_epoch_ms = std::time::SystemTime::now()
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .unwrap_or_default()
+                                .as_millis() as u64;
+
+                            let event = FailoverEvent {
+                                original_provider: role_cfg.provider.clone(),
+                                original_model: role_cfg.model.clone(),
+                                trigger_reason: trigger_reason.clone(),
+                                evacuated_to_provider: loc_prov.provider_id().to_string(),
+                                evacuated_to_model: loc_model.clone(),
+                                timestamp_epoch_ms,
+                                cost_at_failover_usd: ctx.budget_tracker.current_spent_usd(),
+                            };
+
+                            render_failover_banner(
+                                &role_cfg.provider,
+                                &role_cfg.model,
+                                &trigger_reason,
+                                loc_prov.provider_id(),
+                                &loc_model,
+                                stage_idx,
+                                &role_cfg.role_title,
+                            );
+
+                            if self.notify_on_failover {
+                                send_failover_desktop_notification(
+                                    &role_cfg.provider,
+                                    &loc_model,
+                                    &trigger_reason,
+                                );
+                            }
+
+                            current_provider = loc_prov;
+                            current_model_override = Some(loc_model);
+                            current_failover_event = Some(event);
+
+                            // Retry immediately with the local provider
+                            continue;
+                        }
+                    }
+
+                    return Err(err);
+                }
+            };
+
+            // Attach failover telemetry event if one occurred
+            if let Some(ref fo) = current_failover_event {
+                artifact.failover_event = Some(fo.clone());
+            }
 
             // Run all validation gates
             let mut all_passed = true;

@@ -32,7 +32,13 @@ impl TokenBudgetTracker {
             m if m.contains("gemini-2.0-flash") || m.contains("gemini-1.5-flash") => (0.10, 0.40),
             m if m.contains("gemini-1.5-pro") || m.contains("gemini-2.0-pro") => (1.25, 5.00),
             m if m.contains("deepseek-r1") || m.contains("deepseek-chat") || m.contains("deepseek-v3") => (0.55, 2.19),
-            m if m.contains("ollama") || m.contains("local") => (0.0, 0.0),
+            m if m.contains("ollama")
+                || m.contains("local")
+                || m.contains("qwen")
+                || m.contains("dolphin")
+                || m.contains("llama")
+                || m.contains("mistral")
+                || m.contains("phi") => (0.0, 0.0),
             _ => (1.0, 3.0), // fallback estimate
         };
 
@@ -53,6 +59,9 @@ impl TokenBudgetTracker {
 
     /// Convenient helper to record usage from a TokenUsage struct
     pub fn record_usage(&self, model: &str, usage: &TokenUsage) -> Result<f64> {
+        if usage.estimated_cost_usd == Some(0.0) {
+            return self.record_micro_usd(0);
+        }
         if let Some(cached) = usage.cached_prompt_tokens {
             self.record_with_cache(model, usage.prompt_tokens, usage.completion_tokens, cached)
         } else {
@@ -62,9 +71,9 @@ impl TokenBudgetTracker {
 
     /// Record an exact amount in micro-USD (1 micro-USD = $0.000001)
     pub fn record_micro_usd(&self, cost_micro: u64) -> Result<f64> {
-        let prev = self.total_micro_usd_spent.fetch_add(cost_micro, Ordering::SeqCst);
-        let new_micro = prev.saturating_add(cost_micro);
-        let total_usd = new_micro as f64 / 1_000_000.0;
+        if cost_micro == 0 {
+            return Ok(self.current_spent_usd());
+        }
 
         let max_micro = if self.max_budget_usd < 0.0 {
             0
@@ -72,15 +81,29 @@ impl TokenBudgetTracker {
             (self.max_budget_usd * 1_000_000.0).round() as u64
         };
 
-        // Enforce boundary in integer micro-USD to avoid floating point imprecision
-        if new_micro > max_micro {
-            return Err(TagisanError::BudgetExceeded {
-                max_budget: self.max_budget_usd,
-                current_spent: total_usd,
-            });
+        let mut current = self.total_micro_usd_spent.load(Ordering::SeqCst);
+        loop {
+            let new_micro = current.saturating_add(cost_micro);
+            if new_micro > max_micro {
+                let total_usd = new_micro as f64 / 1_000_000.0;
+                return Err(TagisanError::BudgetExceeded {
+                    max_budget: self.max_budget_usd,
+                    current_spent: total_usd,
+                });
+            }
+            match self.total_micro_usd_spent.compare_exchange_weak(
+                current,
+                new_micro,
+                Ordering::SeqCst,
+                Ordering::SeqCst,
+            ) {
+                Ok(_) => {
+                    let total_usd = new_micro as f64 / 1_000_000.0;
+                    return Ok(total_usd);
+                }
+                Err(actual) => current = actual,
+            }
         }
-
-        Ok(total_usd)
     }
 
     /// Record direct cost in USD
@@ -99,4 +122,61 @@ impl TokenBudgetTracker {
     pub fn max_budget_usd(&self) -> f64 {
         self.max_budget_usd
     }
+
+    /// Check if the total budget has been exhausted
+    pub fn is_exhausted(&self) -> bool {
+        let max_micro = if self.max_budget_usd < 0.0 {
+            0
+        } else {
+            (self.max_budget_usd * 1_000_000.0).round() as u64
+        };
+        self.total_micro_usd_spent.load(Ordering::Relaxed) >= max_micro
+    }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_zero_cost_never_exceeds_budget() {
+        let tracker = TokenBudgetTracker::new(0.05);
+        assert!(!tracker.is_exhausted());
+
+        // Spend entire budget
+        let spent = tracker.record_micro_usd(50_000).expect("exact budget spent");
+        assert_eq!(spent, 0.05);
+        assert!(tracker.is_exhausted());
+
+        // Further cloud call must fail
+        let err = tracker.record_micro_usd(1).unwrap_err();
+        assert!(matches!(err, TagisanError::BudgetExceeded { .. }));
+
+        // Zero-cost operations must NEVER fail, even when exhausted
+        let zero_res = tracker.record_micro_usd(0);
+        assert!(zero_res.is_ok(), "Zero-cost micro_usd must succeed when exhausted");
+        assert_eq!(zero_res.unwrap(), 0.05);
+
+        // Recording zero cost via model lookup (ollama / local)
+        let local_res = tracker.record("ollama", 1000, 1000);
+        assert!(local_res.is_ok(), "Ollama zero-cost tokens must succeed when exhausted");
+        assert_eq!(local_res.unwrap(), 0.05);
+
+        let local_cache_res = tracker.record_with_cache("local-model", 500, 500, 100);
+        assert!(local_cache_res.is_ok());
+    }
+
+    #[test]
+    fn test_zero_initial_budget_permits_zero_cost() {
+        let tracker = TokenBudgetTracker::new(0.0);
+        assert!(tracker.is_exhausted());
+
+        // Zero cost succeeds
+        assert!(tracker.record_micro_usd(0).is_ok());
+        assert!(tracker.record("ollama", 100, 100).is_ok());
+
+        // Non-zero fails
+        assert!(tracker.record_micro_usd(1).is_err());
+    }
+}
+

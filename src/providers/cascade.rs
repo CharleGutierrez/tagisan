@@ -53,8 +53,34 @@ impl CascadeProvider {
         &self.entries
     }
 
-    /// Helper to determine if an error qualifies for failover to the next provider
-    fn is_retryable(error: &TagisanError) -> bool {
+    /// Helper to determine if an error qualifies for failover to the next provider.
+    /// Allows failover on BudgetExceeded if and only if the next provider is a zero-cost local provider
+    /// (e.g. provider_id().to_lowercase() == "ollama" or "local").
+    pub fn can_failover(&self, error: &TagisanError, next_entry_idx: usize) -> bool {
+        match error {
+            TagisanError::RateLimited(_, _) => true,
+            TagisanError::BadResponse(_, _) => true,
+            TagisanError::Network(_) => true,
+            TagisanError::Authentication(_, _) => true,
+            TagisanError::ProviderNotFound(_) => true,
+            TagisanError::ContextLengthExceeded(_, _, _) => true,
+            TagisanError::BudgetExceeded { .. } => {
+                if let Some(next_entry) = self.entries.get(next_entry_idx) {
+                    let id = next_entry.provider.provider_id().to_lowercase();
+                    id == "ollama" || id == "local"
+                } else {
+                    false
+                }
+            }
+            TagisanError::Cancelled => false,
+            TagisanError::Serialization(_) => false,
+            TagisanError::Execution(_) => false,
+            TagisanError::Io(_) => false,
+        }
+    }
+
+    /// Helper to determine if an error qualifies for failover to the next provider (generic retryability)
+    pub fn is_retryable(error: &TagisanError) -> bool {
         match error {
             TagisanError::RateLimited(_, _) => true,
             TagisanError::BadResponse(_, _) => true,
@@ -126,8 +152,8 @@ impl LlmProvider for CascadeProvider {
                         "Provider '{}' failed: {}. Evaluating cascade...",
                         provider_id, err
                     );
-                    if !Self::is_retryable(&err) {
-                        // Non-retryable error (e.g. User cancelled or budget limit reached)
+                    if !self.can_failover(&err, idx + 1) {
+                        // Non-retryable error (e.g. User cancelled or budget limit reached without local fallback)
                         return Err(err);
                     }
                     last_error = Some(err);
@@ -184,7 +210,7 @@ impl LlmProvider for CascadeProvider {
                         "Provider '{}' stream initialization failed: {}. Evaluating cascade...",
                         provider_id, err
                     );
-                    if !Self::is_retryable(&err) {
+                    if !self.can_failover(&err, idx + 1) {
                         return Err(err);
                     }
                     last_error = Some(err);

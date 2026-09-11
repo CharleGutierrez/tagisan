@@ -67,6 +67,18 @@ pub struct ExtractedCodeBlock {
     pub code: String,
 }
 
+/// Telemetry record capturing a dynamic stage evacuation from cloud to local LLM.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct FailoverEvent {
+    pub original_provider: String,
+    pub original_model: String,
+    pub trigger_reason: String,
+    pub evacuated_to_provider: String,
+    pub evacuated_to_model: String,
+    pub timestamp_epoch_ms: u64,
+    pub cost_at_failover_usd: f64,
+}
+
 /// Complete output artifact produced by a single role stage.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct RoleArtifact {
@@ -78,6 +90,8 @@ pub struct RoleArtifact {
     pub code_blocks: Vec<ExtractedCodeBlock>,
     pub latency_secs: f64,
     pub tokens_used: u32,
+    #[serde(default)]
+    pub failover_event: Option<FailoverEvent>,
 }
 
 impl RoleArtifact {
@@ -105,4 +119,16 @@ pub trait HarmonyRole: Send + Sync {
         ctx: &EngineContext,
         critique: Option<&str>,
     ) -> Result<RoleArtifact>;
+
+    async fn execute_stage_with_override(
+        &self,
+        blackboard: &SwarmBlackboard,
+        provider: Arc<dyn LlmProvider>,
+        model_override: Option<&str>,
+        ctx: &EngineContext,
+        critique: Option<&str>,
+    ) -> Result<RoleArtifact> {
+        let _ = model_override;
+        self.execute_stage(blackboard, provider, ctx, critique).await
+    }
 }

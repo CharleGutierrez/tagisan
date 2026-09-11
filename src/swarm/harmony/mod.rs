@@ -6,12 +6,17 @@ pub mod types;
 
 pub use blackboard::SwarmBlackboard;
 pub use gates::{AgentShieldSecurityGate, GateResult, SyntaxValidationGate, ValidationGate};
-pub use pipeline::{HarmonyExecutionResult, HarmonyStage, StructuredHarmonyPipeline};
+pub use pipeline::{
+    render_failover_banner, send_failover_desktop_notification,
+    HarmonyExecutionResult, HarmonyStage, StructuredHarmonyPipeline,
+};
 pub use roles::{
     extract_markdown_code_blocks, parse_provider_and_model, resolve_harmony_models,
     AssemblyRoles, RoleModelOverrides, StandardHarmonyRole,
 };
-pub use types::{ExtractedCodeBlock, HarmonyRole, HarmonyRoleConfig, HarmonyTierProfile, RoleArtifact};
+pub use types::{
+    ExtractedCodeBlock, FailoverEvent, HarmonyRole, HarmonyRoleConfig, HarmonyTierProfile, RoleArtifact,
+};
 
 use crate::engine::EngineContext;
 

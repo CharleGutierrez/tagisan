@@ -352,6 +352,18 @@ enum Commands {
         /// Save generated code files to a target directory
         #[arg(long)]
         output_dir: Option<String>,
+
+        /// Automatically fallback to local Ollama on cloud rate limits or errors
+        #[arg(long)]
+        fallback_to_local: bool,
+
+        /// Automatically evacuate to zero-cost local Ollama if budget is reached
+        #[arg(long)]
+        evacuate_on_budget: bool,
+
+        /// Emit OS desktop notification when failover occurs
+        #[arg(long)]
+        notify: bool,
     },
 }
 
@@ -397,6 +409,18 @@ pub enum HarmonySubcommand {
         /// Save generated files to directory
         #[arg(long)]
         output_dir: Option<String>,
+
+        /// Automatically fallback to local Ollama on cloud rate limits or errors
+        #[arg(long)]
+        fallback_to_local: bool,
+
+        /// Automatically evacuate to zero-cost local Ollama if budget is reached
+        #[arg(long)]
+        evacuate_on_budget: bool,
+
+        /// Emit OS desktop notification when failover occurs
+        #[arg(long)]
+        notify: bool,
     },
 }
 
@@ -3123,6 +3147,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             audit,
             json,
             output_dir,
+            fallback_to_local,
+            evacuate_on_budget,
+            notify,
         } => {
             let ctx = build_engine_context(cli.max_budget);
             handle_harmony_command(
@@ -3137,6 +3164,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 audit,
                 json,
                 output_dir,
+                fallback_to_local,
+                evacuate_on_budget,
+                notify,
                 &ctx,
             )
             .await?;
@@ -3158,9 +3188,26 @@ async fn handle_harmony_command(
     audit: bool,
     json: bool,
     output_dir: Option<String>,
+    fallback_to_local: bool,
+    evacuate_on_budget: bool,
+    notify: bool,
     ctx: &EngineContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let (eff_objective, eff_arch, eff_imp, eff_qa, eff_doc, eff_tier, eff_parallel, eff_audit, eff_json, eff_out_dir) = match action {
+    let (
+        eff_objective,
+        eff_arch,
+        eff_imp,
+        eff_qa,
+        eff_doc,
+        eff_tier,
+        eff_parallel,
+        eff_audit,
+        eff_json,
+        eff_out_dir,
+        eff_fallback_to_local,
+        eff_evacuate_on_budget,
+        eff_notify,
+    ) = match action {
         Some(HarmonySubcommand::Build {
             objective: sub_obj,
             architect: sub_arch,
@@ -3172,6 +3219,9 @@ async fn handle_harmony_command(
             audit: sub_audit,
             json: sub_json,
             output_dir: sub_out_dir,
+            fallback_to_local: sub_fallback_to_local,
+            evacuate_on_budget: sub_evacuate_on_budget,
+            notify: sub_notify,
         }) => (
             sub_obj,
             sub_arch.or(architect),
@@ -3183,13 +3233,30 @@ async fn handle_harmony_command(
             sub_audit || audit,
             sub_json || json,
             sub_out_dir.or(output_dir),
+            sub_fallback_to_local || fallback_to_local,
+            sub_evacuate_on_budget || evacuate_on_budget,
+            sub_notify || notify,
         ),
         None => {
             let obj = objective.unwrap_or_else(|| {
                 eprintln!("{}: missing objective. Usage: tgs harmony build \"<objective>\"", "Error".red().bold());
                 std::process::exit(1);
             });
-            (obj, architect, implementer, qa, doc, tier, parallel, audit, json, output_dir)
+            (
+                obj,
+                architect,
+                implementer,
+                qa,
+                doc,
+                tier,
+                parallel,
+                audit,
+                json,
+                output_dir,
+                fallback_to_local,
+                evacuate_on_budget,
+                notify,
+            )
         }
     };
 
@@ -3214,7 +3281,10 @@ async fn handle_harmony_command(
         ctx,
         &overrides,
         eff_audit,
-    );
+    )
+    .with_fallback_to_local(eff_fallback_to_local)
+    .with_evacuate_on_budget(eff_evacuate_on_budget)
+    .with_notify_on_failover(eff_notify);
 
     if eff_parallel {
         pipeline = pipeline.with_parallel(true);
@@ -3227,6 +3297,15 @@ async fn handle_harmony_command(
         println!("Objective: \"{}\"\n", eff_objective.bold().yellow());
         println!("  • Cloud Tier:         {:?}", profile.unwrap_or_default());
         println!("  • Downstream Exec:    {}", if pipeline.parallel_qa_doc { "Concurrent (QA + Doc in Parallel)".green().bold() } else { "Sequential".dimmed() });
+        if eff_fallback_to_local {
+            println!("  • Local Failover:     {}", "Enabled (Dynamic Hot-swap to Ollama on Rate Limit / Error)".green().bold());
+        }
+        if eff_evacuate_on_budget {
+            println!("  • Budget Evacuation:  {}", "Enabled (Zero-cost Local Evacuation on Spending Cap)".green().bold());
+        }
+        if eff_notify {
+            println!("  • Desktop Alert:      {}", "Enabled (Native OS Toast on Failover)".green().bold());
+        }
         println!("  • [Stage 1] Architect:    {} [{}]", arch_m.1.cyan().bold(), arch_m.0.dimmed());
         println!("  • [Stage 2] Implementer:  {} [{}]", imp_m.1.cyan().bold(), imp_m.0.dimmed());
         println!("  • [Stage 3] QA & Test:    {} [{}]", qa_m.1.cyan().bold(), qa_m.0.dimmed());
@@ -3242,13 +3321,6 @@ async fn handle_harmony_command(
     } else {
         None
     };
-
-    let pipeline = crate::swarm::harmony::build_standard_harmony_pipeline(
-        &eff_objective,
-        ctx,
-        &overrides,
-        eff_audit,
-    );
 
     let result = pipeline.execute(ctx).await;
 
@@ -3277,14 +3349,27 @@ async fn handle_harmony_command(
         println!("{}", json_val);
     } else {
         for artifact in &res.artifacts {
-            println!(
-                "\n{} [{} / {}] (took {:.2}s, {} tokens)",
-                format!("─── STAGE: {} ({}) ───", artifact.role_id.to_uppercase(), artifact.role_title).green().bold(),
-                artifact.provider.bold(),
-                artifact.model.cyan(),
-                artifact.latency_secs,
-                artifact.tokens_used
-            );
+            let stage_header = format!("─── STAGE: {} ({}) ───", artifact.role_id.to_uppercase(), artifact.role_title);
+            if let Some(ref fo) = artifact.failover_event {
+                println!(
+                    "\n{} [{} / {}] (took {:.2}s, {} tokens) ⚠️  {}",
+                    stage_header.green().bold(),
+                    artifact.provider.bold(),
+                    artifact.model.cyan(),
+                    artifact.latency_secs,
+                    artifact.tokens_used,
+                    format!("[Failover: {} ({}) -> {} ({}) | Trigger: {}]", fo.original_provider, fo.original_model, fo.evacuated_to_provider, fo.evacuated_to_model, fo.trigger_reason).yellow().bold()
+                );
+            } else {
+                println!(
+                    "\n{} [{} / {}] (took {:.2}s, {} tokens)",
+                    stage_header.green().bold(),
+                    artifact.provider.bold(),
+                    artifact.model.cyan(),
+                    artifact.latency_secs,
+                    artifact.tokens_used
+                );
+            }
             println!("{}", artifact.raw_output.trim());
         }
 
@@ -3300,6 +3385,27 @@ async fn handle_harmony_command(
             res.total_cost_usd,
             res.total_latency.as_secs_f64()
         );
+
+        let failovers: Vec<&crate::swarm::harmony::FailoverEvent> = res
+            .artifacts
+            .iter()
+            .filter_map(|a| a.failover_event.as_ref())
+            .collect();
+        if !failovers.is_empty() {
+            println!("{}", "──────────────────────── Failover Telemetry ────────────────────────".yellow().bold());
+            for (idx, fo) in failovers.iter().enumerate() {
+                println!(
+                    "  [{}] Evacuated: '{}' ({}) -> '{}' ({}) | Cost at Failover: ${:.4} | Reason: {}",
+                    idx + 1,
+                    fo.original_provider.bold(),
+                    fo.original_model,
+                    fo.evacuated_to_provider.bold().green(),
+                    fo.evacuated_to_model.cyan(),
+                    fo.cost_at_failover_usd,
+                    fo.trigger_reason.yellow()
+                );
+            }
+        }
         println!("{}", "=========================================================================".cyan());
     }
 

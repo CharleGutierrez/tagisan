@@ -99,6 +99,7 @@ fn test_01_blackboard_concurrency_and_assembly() {
                 }],
                 latency_secs: 0.1,
                 tokens_used: 100,
+                failover_event: None,
             };
             bb.append_artifact(artifact);
             bb.set_metadata(format!("key_{thread_idx}"), format!("val_{thread_idx}"));
@@ -138,6 +139,7 @@ fn test_02_validation_gates_behavior() {
         code_blocks: vec![],
         latency_secs: 0.1,
         tokens_used: 20,
+        failover_event: None,
     };
     match syntax_gate.validate(&empty_artifact) {
         GateResult::RetryWithCritique { critique } => {
@@ -159,6 +161,7 @@ fn test_02_validation_gates_behavior() {
         }],
         latency_secs: 0.1,
         tokens_used: 30,
+        failover_event: None,
     };
     match syntax_gate.validate(&unbalanced_artifact) {
         GateResult::RetryWithCritique { critique } => {
@@ -180,6 +183,7 @@ fn test_02_validation_gates_behavior() {
         }],
         latency_secs: 0.1,
         tokens_used: 40,
+        failover_event: None,
     };
     assert_eq!(syntax_gate.validate(&valid_artifact), GateResult::Pass);
 
@@ -196,6 +200,7 @@ fn test_02_validation_gates_behavior() {
         }],
         latency_secs: 0.1,
         tokens_used: 50,
+        failover_event: None,
     };
     match security_gate.validate(&malicious_artifact) {
         GateResult::RetryWithCritique { critique } => {
@@ -418,11 +423,17 @@ async fn test_08_live_local_ollama_assembly_line() {
     let mut ctx = EngineContext::new(10.0);
     ctx.register_provider(Arc::new(tagisan::OllamaProvider::default_local()));
 
+    let discovered = tagisan::OllamaProvider::discover_installed_models();
+    let preferred_model = discovered
+        .into_iter()
+        .find(|m| !m.contains("embed"))
+        .unwrap_or_else(|| "llama3.2:latest".to_string());
+
     let overrides = RoleModelOverrides {
-        architect: Some("ollama:qwen2.5:0.5b".to_string()),
-        implementer: Some("ollama:dolphin-phi:latest".to_string()),
-        qa: Some("ollama:qwen2.5:0.5b".to_string()),
-        doc: Some("ollama:dolphin-phi:latest".to_string()),
+        architect: Some(format!("ollama:{}", preferred_model)),
+        implementer: Some(format!("ollama:{}", preferred_model)),
+        qa: Some(format!("ollama:{}", preferred_model)),
+        doc: Some(format!("ollama:{}", preferred_model)),
         profile: None,
     };
 

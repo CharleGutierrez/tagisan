@@ -107,12 +107,15 @@ impl StandardHarmonyRole {
         let raw_text = resp.message.extract_text();
         let code_blocks = extract_markdown_code_blocks(&raw_text);
 
-        // Record budget / tokens
-        ctx.budget_tracker.record(
-            &self.config.model,
-            resp.usage.prompt_tokens,
-            resp.usage.completion_tokens,
-        )?;
+        // Record budget / tokens (zero-cost for Ollama or local providers)
+        if self.config.provider.eq_ignore_ascii_case("ollama")
+            || self.config.provider.eq_ignore_ascii_case("local")
+            || resp.usage.estimated_cost_usd == Some(0.0)
+        {
+            ctx.budget_tracker.record_micro_usd(0)?;
+        } else {
+            ctx.budget_tracker.record_usage(&self.config.model, &resp.usage)?;
+        }
 
         let artifact = RoleArtifact {
             role_id: self.config.role_id.clone(),
@@ -123,9 +126,41 @@ impl StandardHarmonyRole {
             code_blocks,
             latency_secs: elapsed.as_secs_f64(),
             tokens_used: resp.usage.prompt_tokens + resp.usage.completion_tokens,
+            failover_event: None,
         };
 
         Ok(artifact)
+    }
+
+    /// Create a copy of this role with provider and model overridden.
+    pub fn with_provider_and_model(&self, provider: &str, model: &str) -> Self {
+        let mut new_config = self.config.clone();
+        new_config.provider = provider.to_string();
+        new_config.model = model.to_string();
+        Self {
+            config: new_config,
+            prompt_builder: self.prompt_builder.clone(),
+        }
+    }
+
+    /// Execute the role stage with an optional model override and explicit provider.
+    pub async fn execute_stage_with_override(
+        &self,
+        blackboard: &SwarmBlackboard,
+        provider: Arc<dyn LlmProvider>,
+        model_override: Option<&str>,
+        ctx: &EngineContext,
+        critique: Option<&str>,
+    ) -> Result<RoleArtifact> {
+        if let Some(m) = model_override {
+            let role = self.with_provider_and_model(provider.provider_id(), m);
+            role.execute_prompt(blackboard, provider, ctx, critique).await
+        } else if provider.provider_id() != self.config.provider {
+            let role = self.with_provider_and_model(provider.provider_id(), &self.config.model);
+            role.execute_prompt(blackboard, provider, ctx, critique).await
+        } else {
+            self.execute_prompt(blackboard, provider, ctx, critique).await
+        }
     }
 }
 
@@ -143,6 +178,25 @@ impl HarmonyRole for StandardHarmonyRole {
         critique: Option<&str>,
     ) -> Result<RoleArtifact> {
         self.execute_prompt(blackboard, provider, ctx, critique).await
+    }
+
+    async fn execute_stage_with_override(
+        &self,
+        blackboard: &SwarmBlackboard,
+        provider: Arc<dyn LlmProvider>,
+        model_override: Option<&str>,
+        ctx: &EngineContext,
+        critique: Option<&str>,
+    ) -> Result<RoleArtifact> {
+        StandardHarmonyRole::execute_stage_with_override(
+            self,
+            blackboard,
+            provider,
+            model_override,
+            ctx,
+            critique,
+        )
+        .await
     }
 }
 
