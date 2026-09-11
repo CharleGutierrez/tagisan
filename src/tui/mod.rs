@@ -251,7 +251,7 @@ fn start_debate_task(
     let ctx_budget = ctx.budget_tracker.clone();
     let ctx_cancel = ctx.cancellation_token.clone();
 
-    let default_ollama = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "llama3.2".to_string());
+    let default_ollama = crate::providers::ollama::default_ollama_model();
 
     // Determine configured providers for 3 roles
     let proponent = if ctx.get_provider("anthropic").is_ok() {

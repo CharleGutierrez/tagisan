@@ -67,6 +67,84 @@ impl OllamaProvider {
         Ok(tags.models.unwrap_or_default().into_iter().map(|m| m.name).collect())
     }
 
+    /// Returns the default model for Ollama:
+    /// 1. `OLLAMA_MODEL` environment variable if set.
+    /// 2. Auto-discovered installed model from local Ollama manifests on disk.
+    /// 3. Default fallback: `"dolphin-phi:latest"`.
+    pub fn default_model() -> String {
+        if let Ok(model) = std::env::var("OLLAMA_MODEL") {
+            let m = model.trim();
+            if !m.is_empty() {
+                return m.to_string();
+            }
+        }
+
+        let installed = Self::discover_installed_models();
+        if let Some(first) = installed.first() {
+            return first.clone();
+        }
+
+        "dolphin-phi:latest".to_string()
+    }
+
+    /// Discovers locally installed models by inspecting the Ollama manifests directory on disk
+    pub fn discover_installed_models() -> Vec<String> {
+        let mut models = Vec::new();
+        let base_models_dir = std::env::var("OLLAMA_MODELS")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|_| {
+                let home = std::env::var("USERPROFILE")
+                    .or_else(|_| std::env::var("HOME"))
+                    .unwrap_or_default();
+                std::path::PathBuf::from(home).join(".ollama").join("models")
+            });
+
+        let manifests_dir = base_models_dir
+            .join("manifests")
+            .join("registry.ollama.ai")
+            .join("library");
+
+        if let Ok(entries) = std::fs::read_dir(&manifests_dir) {
+            for entry in entries.flatten() {
+                let model_name = entry.file_name().to_string_lossy().to_string();
+                let tag_path = entry.path();
+                if tag_path.is_dir() {
+                    if let Ok(tags) = std::fs::read_dir(&tag_path) {
+                        for tag_entry in tags.flatten() {
+                            let tag = tag_entry.file_name().to_string_lossy().to_string();
+                            if tag == "latest" {
+                                models.push(format!("{}:latest", model_name));
+                            } else {
+                                models.push(format!("{}:{}", model_name, tag));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Priority order for optimal execution on local hardware:
+        // 1. dolphin-phi:latest (high-performance 3B instruct/code model, ~1.6GB)
+        // 2. qwen2.5:0.5b (ultra-fast 0.5B model, ~397MB)
+        // 3. other installed models
+        models.sort_by(|a, b| {
+            let score = |m: &str| {
+                if m.contains("dolphin-phi") {
+                    0
+                } else if m.contains("qwen2.5") {
+                    1
+                } else if m.contains("mixtral") {
+                    99
+                } else {
+                    10
+                }
+            };
+            score(a).cmp(&score(b))
+        });
+
+        models
+    }
+
     fn format_messages(&self, req: &CompletionRequest) -> Vec<OllamaMessage> {
         let mut messages = Vec::new();
         if let Some(sys) = &req.system_prompt {
@@ -156,6 +234,11 @@ impl OllamaProvider {
     fn get_keep_alive(&self) -> String {
         std::env::var("TAGISAN_OLLAMA_KEEP_ALIVE").unwrap_or_else(|_| "24h".to_string())
     }
+}
+
+/// Resolve the default Ollama model dynamically
+pub fn default_ollama_model() -> String {
+    OllamaProvider::default_model()
 }
 
 /// Advanced inference options passed directly to the llama.cpp engine inside Ollama
@@ -1562,6 +1645,25 @@ mod brutal_stress_tests {
         // Probing a verified non-existent port returns false without panic
         let dead_provider = OllamaProvider::new("http://127.0.0.1:59999");
         assert!(!dead_provider.is_alive().await);
+    }
+
+    // =========================================================================
+    // Test 9: Default Model Detection & Dynamic Local Discovery
+    // =========================================================================
+    #[test]
+    fn test_09_default_model_detection_and_discovery() {
+        let installed = OllamaProvider::discover_installed_models();
+        println!(">>> Discovered local Ollama models on disk: {:?}", installed);
+
+        let default_m = OllamaProvider::default_model();
+        println!(">>> Selected default Ollama model: {}", default_m);
+
+        assert!(!default_m.is_empty());
+        if !installed.is_empty() {
+            assert!(installed.contains(&default_m));
+        } else {
+            assert_eq!(default_m, "dolphin-phi:latest");
+        }
     }
 }
 

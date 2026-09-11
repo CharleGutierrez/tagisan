@@ -324,7 +324,7 @@ impl McpServer {
         }
 
         if let Ok(prov) = self.ctx.get_provider("ollama") {
-            let model = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "qwen2.5-coder:1.5b".to_string());
+            let model = crate::providers::ollama::default_ollama_model();
             list.push(("ollama".to_string(), model, prov));
         }
 
@@ -339,7 +339,7 @@ impl McpServer {
         }
 
         let prov = self.ctx.get_provider("ollama")?;
-        let model = std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "qwen2.5-coder:1.5b".to_string());
+        let model = crate::providers::ollama::default_ollama_model();
         Ok(("ollama".to_string(), model, prov))
     }
 

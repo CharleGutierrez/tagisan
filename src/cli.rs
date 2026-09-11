@@ -808,7 +808,7 @@ enum WorkflowAction {
 }
 
 fn default_ollama_model() -> String {
-    env::var("OLLAMA_MODEL").unwrap_or_else(|_| "llama3.2".to_string())
+    crate::providers::ollama::default_ollama_model()
 }
 
 fn is_valid_key(key: &str) -> bool {
@@ -887,7 +887,7 @@ fn default_model_for_provider(provider_id: &str) -> String {
         "anthropic" => "claude-3-5-sonnet-20241022".to_string(),
         "openai" => "gpt-4o".to_string(),
         "xai" => "grok-2-latest".to_string(),
-        _ => std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "qwen2.5-coder:1.5b".to_string()),
+        _ => default_ollama_model(),
     }
 }
 
@@ -928,9 +928,7 @@ fn resolve_provider_and_model(
 
     // Fallback to local Ollama
     let prov = ctx.get_provider("ollama")?;
-    let model = user_model.unwrap_or_else(|| {
-        std::env::var("OLLAMA_MODEL").unwrap_or_else(|_| "qwen2.5-coder:1.5b".to_string())
-    });
+    let model = user_model.unwrap_or_else(default_ollama_model);
     Ok(("ollama".to_string(), model, prov))
 }
 

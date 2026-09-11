@@ -56,7 +56,7 @@ pub use memory::{
 pub use providers::anthropic::AnthropicProvider;
 pub use providers::cascade::{CascadeEntry, CascadeProvider};
 pub use providers::gemini::GeminiProvider;
-pub use providers::ollama::{parse_thinking_blocks, OllamaProvider};
+pub use providers::ollama::{default_ollama_model, parse_thinking_blocks, OllamaProvider};
 pub use providers::openai_compat::{OpenAiCompatibleProvider, StreamingThinkParser};
 pub use providers::{BoxEventStream, LlmProvider};
 pub use strategies::debate::DialecticalDebateStrategy;

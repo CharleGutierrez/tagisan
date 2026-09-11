@@ -935,3 +935,22 @@ async fn test_08_live_ollama_daemon_probing() {
     let dead_provider = OllamaProvider::new("http://127.0.0.1:59999");
     assert!(!dead_provider.is_alive().await);
 }
+
+// =========================================================================
+// Test 9: Default Model Detection & Dynamic Local Discovery
+// =========================================================================
+#[test]
+fn test_09_default_model_detection_and_discovery() {
+    let installed = OllamaProvider::discover_installed_models();
+    println!(">>> Discovered local Ollama models on disk: {:?}", installed);
+
+    let default_m = OllamaProvider::default_model();
+    println!(">>> Selected default Ollama model: {}", default_m);
+
+    assert!(!default_m.is_empty());
+    if !installed.is_empty() {
+        assert!(installed.contains(&default_m));
+    } else {
+        assert_eq!(default_m, "dolphin-phi:latest");
+    }
+}
