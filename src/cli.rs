@@ -18,7 +18,7 @@ use crate::{
 };
 
 #[derive(Parser)]
-#[command(name = "tgs", bin_name = "tgs")]
+#[command(name = "tgs", bin_name = "tgs", version)]
 #[command(
     about = "🇵🇭 TGS (Tagisan ng Talino): High-Performance Multi-LLM Collaboration, Adversarial Debate & ECC Swarm in Rust",
     long_about = None

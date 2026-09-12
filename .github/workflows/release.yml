@@ -31,7 +31,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Build Release Binary
-        run: cargo build --release --target ${{ matrix.target }} --bin tgs
+        run: cargo build --release --target ${{ matrix.target }} --bin tgs --no-default-features
 
       - name: Package Release Archive
         shell: bash
@@ -42,7 +42,11 @@ jobs:
           cp "target/${{ matrix.target }}/release/${{ matrix.bin_name }}" "$ARCHIVE_DIR/"
           cp README.md LICENSE "$ARCHIVE_DIR/" 2>/dev/null || true
           tar -czf "${ARCHIVE_DIR}.tar.gz" "$ARCHIVE_DIR"
-          sha256sum "${ARCHIVE_DIR}.tar.gz" > "${ARCHIVE_DIR}.tar.gz.sha256"
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "${ARCHIVE_DIR}.tar.gz" > "${ARCHIVE_DIR}.tar.gz.sha256"
+          else
+            shasum -a 256 "${ARCHIVE_DIR}.tar.gz" > "${ARCHIVE_DIR}.tar.gz.sha256"
+          fi
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

@@ -1,6 +1,6 @@
 [package]
 name = "tagisan"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "High-performance Multi-LLM Collaboration, Adversarial Debate & Mixture-of-Agents Engine in Rust"
 authors = ["Charle Gutierrez"]
@@ -74,7 +74,7 @@ opentelemetry_sdk = { version = "0.27", optional = true }
 wasmtime = { version = "27", optional = true }
 
 [features]
-default = ["vella"]
+default = []
 vella = ["dep:vella", "tfhe"]
 tfhe = ["dep:tfhe"]
 pgvector = ["dep:sqlx"]
