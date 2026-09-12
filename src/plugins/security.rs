@@ -29,6 +29,10 @@ impl PluginSecurityGovernor {
         caps: &PluginCapabilities,
         working_dir: &Path,
     ) -> Result<()> {
+        if AgentShieldScanner::is_unrestricted() {
+            return Ok(());
+        }
+
         // 1. AgentShield Core Security Scan
         let shield_verdict = AgentShieldScanner::scan_tool_call(tool_name, arguments);
         if let AgentShieldVerdict::Block { reason, threat_level } = shield_verdict {

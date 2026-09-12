@@ -99,23 +99,46 @@ impl OllamaProvider {
                 std::path::PathBuf::from(home).join(".ollama").join("models")
             });
 
-        let manifests_dir = base_models_dir
-            .join("manifests")
-            .join("registry.ollama.ai")
-            .join("library");
+        let manifests_root = base_models_dir.join("manifests");
 
-        if let Ok(entries) = std::fs::read_dir(&manifests_dir) {
-            for entry in entries.flatten() {
-                let model_name = entry.file_name().to_string_lossy().to_string();
-                let tag_path = entry.path();
-                if tag_path.is_dir() {
-                    if let Ok(tags) = std::fs::read_dir(&tag_path) {
-                        for tag_entry in tags.flatten() {
-                            let tag = tag_entry.file_name().to_string_lossy().to_string();
-                            if tag == "latest" {
-                                models.push(format!("{}:latest", model_name));
-                            } else {
-                                models.push(format!("{}:{}", model_name, tag));
+        // Recursively inspect all registries in ~/.ollama/models/manifests/ (e.g. registry.ollama.ai)
+        if let Ok(registries) = std::fs::read_dir(&manifests_root) {
+            for reg_entry in registries.flatten() {
+                let reg_path = reg_entry.path();
+                if !reg_path.is_dir() {
+                    continue;
+                }
+
+                // Traverse namespaces (e.g. "library", "huihui_ai", "deepseek", etc.)
+                if let Ok(namespaces) = std::fs::read_dir(&reg_path) {
+                    for ns_entry in namespaces.flatten() {
+                        let ns_path = ns_entry.path();
+                        if !ns_path.is_dir() {
+                            continue;
+                        }
+                        let ns_name = ns_entry.file_name().to_string_lossy().to_string();
+
+                        // Traverse model repositories under this namespace
+                        if let Ok(model_entries) = std::fs::read_dir(&ns_path) {
+                            for model_entry in model_entries.flatten() {
+                                let model_path = model_entry.path();
+                                if !model_path.is_dir() {
+                                    continue;
+                                }
+                                let model_name = model_entry.file_name().to_string_lossy().to_string();
+
+                                // Traverse tags (files under model repository)
+                                if let Ok(tag_entries) = std::fs::read_dir(&model_path) {
+                                    for tag_entry in tag_entries.flatten() {
+                                        let tag_name = tag_entry.file_name().to_string_lossy().to_string();
+                                        let full_model_id = if ns_name == "library" {
+                                            format!("{}:{}", model_name, tag_name)
+                                        } else {
+                                            format!("{}/{}:{}", ns_name, model_name, tag_name)
+                                        };
+                                        models.push(full_model_id);
+                                    }
+                                }
                             }
                         }
                     }
@@ -124,16 +147,22 @@ impl OllamaProvider {
         }
 
         // Priority order for optimal execution on local hardware:
-        // 1. dolphin-phi:latest (high-performance 3B instruct/code model, ~1.6GB)
+        // 0. abliterated / uncensored models (top priority when user has installed them)
+        // 1. dolphin-phi:latest (high-performance 3B uncensored instruct/code model, ~1.6GB)
         // 2. qwen2.5:0.5b (ultra-fast 0.5B model, ~397MB)
         // 3. other installed models
         models.sort_by(|a, b| {
             let score = |m: &str| {
-                if m.contains("dolphin-phi") {
+                let m_lower = m.to_ascii_lowercase();
+                if m_lower.contains("abliterate") || m_lower.contains("uncensored") {
                     0
-                } else if m.contains("qwen2.5") {
+                } else if m_lower.contains("dolphin-phi") {
                     1
-                } else if m.contains("mixtral") {
+                } else if m_lower.contains("qwen2.5") {
+                    2
+                } else if m_lower.contains("llama3.2") {
+                    3
+                } else if m_lower.contains("mixtral") {
                     99
                 } else {
                     10

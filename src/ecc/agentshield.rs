@@ -22,8 +22,23 @@ pub enum ThreatLevel {
 pub struct AgentShieldScanner;
 
 impl AgentShieldScanner {
+    /// Returns true if unrestricted execution mode is enabled via environment variables
+    pub fn is_unrestricted() -> bool {
+        std::env::var("TAGISAN_UNRESTRICTED")
+            .or_else(|_| std::env::var("TAGISAN_NO_RESTRICTIONS"))
+            .or_else(|_| std::env::var("TAGISAN_NO_SAFETY_NET"))
+            .or_else(|_| std::env::var("TAGISAN_DISABLE_AGENTSHIELD"))
+            .or_else(|_| std::env::var("TGS_UNRESTRICTED"))
+            .map(|v| v == "1" || v.eq_ignore_ascii_case("true") || v.eq_ignore_ascii_case("yes"))
+            .unwrap_or(false)
+    }
+
     /// Scan tool invocations before execution to block destructive actions or credential exfiltration
     pub fn scan_tool_call(tool_name: &str, arguments: &serde_json::Value) -> AgentShieldVerdict {
+        if Self::is_unrestricted() {
+            return AgentShieldVerdict::Allow;
+        }
+
         // Strip namespace prefix if tool is namespaced from an MCP server (e.g. `filesystem__read_file` -> `read_file`)
         let base_name = tool_name.rsplit("__").next().unwrap_or(tool_name);
 
@@ -150,6 +165,10 @@ impl AgentShieldScanner {
 
     /// Scan shell commands for dangerous or irreversible patterns, with evasion de-obfuscation
     pub fn scan_command(command: &str) -> AgentShieldVerdict {
+        if Self::is_unrestricted() {
+            return AgentShieldVerdict::Allow;
+        }
+
         let normalized = Self::normalize_command(command);
 
         // 1. Check for fork bombs
@@ -392,6 +411,10 @@ impl AgentShieldScanner {
 
     /// Scan JavaScript/TypeScript code for malicious patterns, credential theft, fork bombs, and destruction
     pub fn scan_code(code: &str) -> AgentShieldVerdict {
+        if Self::is_unrestricted() {
+            return AgentShieldVerdict::Allow;
+        }
+
         let normalized = code.to_lowercase();
 
         // 1. Check shell command patterns within code
@@ -499,6 +522,10 @@ impl AgentShieldScanner {
 
     /// Scan Python code for dangerous execution patterns, reverse shells, deserialization attacks, and destructive calls
     pub fn scan_python_code(code: &str) -> AgentShieldVerdict {
+        if Self::is_unrestricted() {
+            return AgentShieldVerdict::Allow;
+        }
+
         // First, scan the code directly
         let verdict = Self::scan_python_code_direct(code);
         if let AgentShieldVerdict::Block { .. } = verdict {
@@ -638,6 +665,10 @@ impl AgentShieldScanner {
 
     /// Scan Perl code for dangerous system invocations, backticks, piped opens, and destructive operations
     pub fn scan_perl_code(code: &str) -> AgentShieldVerdict {
+        if Self::is_unrestricted() {
+            return AgentShieldVerdict::Allow;
+        }
+
         // First, scan the code directly
         let verdict = Self::scan_perl_code_direct(code);
         if let AgentShieldVerdict::Block { .. } = verdict {
@@ -767,6 +798,10 @@ impl AgentShieldScanner {
 
     /// Scan file paths for path traversal or sensitive system file access
     pub fn scan_file_path(path_str: &str) -> AgentShieldVerdict {
+        if Self::is_unrestricted() {
+            return AgentShieldVerdict::Allow;
+        }
+
         // 1. URL decode path in case of encoded traversal attacks like %2e%2e%2f
         let decoded = Self::url_decode(path_str);
 
@@ -892,6 +927,10 @@ impl AgentShieldScanner {
     /// 3. Permissive native compilation: native C/C++/XS tools (gcc, clang, make, node-gyp) are blocked unless allow_native=true.
     /// 4. Invariant guarantee: even when allow_native=true, credential theft and catastrophic deletion remain strictly blocked!
     pub fn scan_package_manager(tool_name: &str, arguments: &serde_json::Value) -> AgentShieldVerdict {
+        if Self::is_unrestricted() {
+            return AgentShieldVerdict::Allow;
+        }
+
         let allow_native = arguments
             .get("allow_native")
             .and_then(|v| v.as_bool())

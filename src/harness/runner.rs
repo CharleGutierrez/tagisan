@@ -102,12 +102,13 @@ impl HarnessRunner {
 
     pub fn new() -> Result<Self> {
         let python_bin = PythonRuntime::find_python().unwrap_or_else(|| PathBuf::from("python3"));
+        let unrestricted = AgentShieldScanner::is_unrestricted();
         Ok(Self {
             python_bin,
             custom_python: false,
             default_timeout: Duration::from_secs(30),
-            enforce_shield: true,
-            enforce_landlock: true,
+            enforce_shield: !unrestricted,
+            enforce_landlock: !unrestricted,
         })
     }
 

@@ -1226,10 +1226,28 @@ fn resolve_provider_and_model(
     user_provider: &str,
     user_model: Option<String>,
 ) -> Result<(String, String, Arc<dyn LlmProvider>), TagisanError> {
-    if user_provider != "auto" {
-        let prov = ctx.get_provider(user_provider)?;
-        let model = user_model.unwrap_or_else(|| default_model_for_provider(user_provider));
-        return Ok((user_provider.to_string(), model, prov));
+    let env_provider = std::env::var("TAGISAN_PROVIDER")
+        .or_else(|_| std::env::var("TGS_PROVIDER"))
+        .ok();
+    let local_only = std::env::var("TAGISAN_LOCAL_ONLY")
+        .or_else(|_| std::env::var("TAGISAN_OFFLINE"))
+        .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+        .unwrap_or(false);
+
+    let effective_user_provider = if user_provider != "auto" {
+        user_provider
+    } else if let Some(ref ep) = env_provider {
+        ep.as_str()
+    } else if local_only {
+        "ollama"
+    } else {
+        "auto"
+    };
+
+    if effective_user_provider != "auto" {
+        let prov = ctx.get_provider(effective_user_provider)?;
+        let model = user_model.unwrap_or_else(|| default_model_for_provider(effective_user_provider));
+        return Ok((effective_user_provider.to_string(), model, prov));
     }
 
     // Auto-detection strategy in priority order:
