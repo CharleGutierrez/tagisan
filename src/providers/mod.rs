@@ -5,9 +5,12 @@ use futures::stream::BoxStream;
 
 pub mod anthropic;
 pub mod cascade;
+pub mod colibri;
 pub mod gemini;
 pub mod ollama;
 pub mod openai_compat;
+
+pub use colibri::{ColibriConfig, ColibriProvider, StripingMode, StripingValidationReport};
 
 pub type BoxEventStream = BoxStream<'static, Result<StreamChunk>>;
 

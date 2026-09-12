@@ -49,8 +49,9 @@ pub use ecc::{
     load_skills_from_dir as load_ecc_skills_from_dir, resolve_agent as resolve_ecc_agent,
     resolve_skill as resolve_ecc_skill, AgentShieldScanner, AgentShieldVerdict, CachedCatalog,
     DispatchedSkill, DiversifiedDispatchResult, EccAgent, EccAuditDebate, EccSkill, InjectionMode,
-    SkillDispatcher, SkillMetadata, ThreatLevel as EccThreatLevel, TokenBudget, SKILLS_CACHE_MAGIC,
-    SKILLS_CACHE_VERSION,
+    PreservedDiagnostic, SemanticInvariantGuard, SemanticViolation, SkillDispatcher, SkillJitManager,
+    SkillJitStats, SkillMetadata, SkillTier, ThreatLevel as EccThreatLevel, TokenBudget, WarmSkillEntry,
+    SKILLS_CACHE_MAGIC, SKILLS_CACHE_VERSION,
 };
 
 pub use agent::{AgentResult, AgentStep, AutonomousAgent, WorktreeSandbox};
@@ -70,6 +71,7 @@ pub use memory::{
 };
 pub use providers::anthropic::AnthropicProvider;
 pub use providers::cascade::{CascadeEntry, CascadeProvider};
+pub use providers::colibri::{ColibriConfig, ColibriProvider, StripingMode, StripingValidationReport};
 pub use providers::gemini::GeminiProvider;
 pub use providers::ollama::{default_ollama_model, parse_thinking_blocks, OllamaProvider};
 pub use providers::openai_compat::{OpenAiCompatibleProvider, StreamingThinkParser};
@@ -104,13 +106,15 @@ pub use tools::wasm::{load_wasm_tools, WasmTool};
 pub use tools::{ToolHandler, ToolRegistry};
 pub use swarm::{
     build_standard_harmony_pipeline, extract_markdown_code_blocks, parse_provider_and_model,
-    resolve_harmony_models, AgentReview, AgentShieldSecurityGate, AssemblyRoles, ConsensusVerdict,
-    DelegateTaskTool, ExtractedCodeBlock, FailoverEvent, GateResult, HarmonyExecutionResult, HarmonyRole,
-    HarmonyRoleConfig, HarmonyStage, HarmonyTierProfile, InteractiveRepl, PipelineExecutionResult,
-    PipelineStageOutput, ReplCommand, ReviewCriterion, RoleArtifact, RoleModelOverrides,
-    SessionMetadata, SessionRecord, SessionStore, StandardHarmonyRole, StructuredHarmonyPipeline,
-    SwarmBlackboard, SwarmCoordinator, SwarmMember, SyntaxValidationGate, TeamConsensusEngine,
-    ValidationGate, VotingRule,
+    query_cluster_status, resolve_harmony_models, AgentReview, AgentShieldSecurityGate, AssemblyRoles,
+    AtlasEntry, ClusterCoordinator, ClusterMessage, ClusterStatusReport, ClusterTaskBatch, ClusterTaskResult,
+    ClusterWorker, ConsensusVerdict, DelegateTaskTool, ExtractedCodeBlock, FailoverEvent, GateResult,
+    HarmonyExecutionResult, HarmonyRole, HarmonyRoleConfig, HarmonyStage, HarmonyTierProfile,
+    InteractiveRepl, PipelineExecutionResult, PipelineStageOutput, ReplCommand, ReviewCriterion,
+    RoleArtifact, RoleModelOverrides, SessionMetadata, SessionRecord, SessionStore, StandardHarmonyRole,
+    StructuredHarmonyPipeline, SwarmAtlas, SwarmBlackboard, SwarmCoordinator, SwarmMember,
+    SyntaxValidationGate, TeamConsensusEngine, ToolExecutionResult, ToolExecutionTask, TopicCluster,
+    ValidationGate, VotingRule, WorkerInfo,
 };
 pub use tui::{run_debate_tui, Spinner};
 pub use types::{

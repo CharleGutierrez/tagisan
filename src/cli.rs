@@ -7,13 +7,14 @@ use std::sync::Arc;
 use crate::{
     all_ecc_presets, build_ecc_pipeline, load_ecc_agents_from_dir,
     resolve_ecc_agent, resolve_ecc_skill,
-    AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, CollaborationStrategy,
+    AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, ColibriProvider, CollaborationStrategy,
     CompletionRequest, ContentBlock, DagScheduler, DialecticalDebateStrategy, EccAuditDebate,
     EngineContext, GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider,
     OpenAiCompatibleProvider, ProviderCapabilities, ReadFileTool, RunCommandTool, StrategyInput,
     StreamChunkDelta, TagisanError, ToolHandler, ToolRegistry, ViewImageTool, WorkflowEvent, WorkflowPlanner, WriteFileTool,
     McpManager, WorktreeSandbox, Spinner,
     InteractiveRepl, SessionStore,
+    ClusterCoordinator, ClusterWorker, query_cluster_status, SwarmAtlas,
     SwarmCoordinator, SwarmMember, TeamConsensusEngine, VotingRule,
 };
 
@@ -940,6 +941,47 @@ enum SwarmAction {
         #[arg(short, long, default_value = "architect,tdd-engineer,security-auditor")]
         agents: String,
     },
+    /// Distributed Local P2P Cluster Mesh (Milestone 8 / Colibrì)
+    Cluster {
+        #[command(subcommand)]
+        subcommand: ClusterAction,
+    },
+    /// Agent & Skill Atlas with Routing Heat Tracking (Colibrì Live Cortex)
+    Atlas {
+        /// Optional path to custom swarm heat JSON file
+        #[arg(short, long)]
+        file: Option<String>,
+
+        /// Clear/reset heat tracking
+        #[arg(long)]
+        reset: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum ClusterAction {
+    /// Start the LAN Coordinator server
+    Coordinator {
+        /// Address and port to bind (default: 0.0.0.0:8765)
+        #[arg(short, long, default_value = "0.0.0.0:8765")]
+        bind: String,
+    },
+    /// Start a LAN Worker node connecting to Coordinator
+    Worker {
+        /// Coordinator address to connect to (default: 127.0.0.1:8765)
+        #[arg(short, long, default_value = "127.0.0.1:8765")]
+        connect: String,
+
+        /// Optional custom worker ID name
+        #[arg(short, long)]
+        id: Option<String>,
+    },
+    /// Query live status of cluster nodes and executed tasks
+    Status {
+        /// Coordinator address to query (default: 127.0.0.1:8765)
+        #[arg(short, long, default_value = "127.0.0.1:8765")]
+        coordinator: String,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -1141,6 +1183,9 @@ fn build_engine_context(max_budget: f64) -> EngineContext {
     // Register Local Ollama
     ctx.register_provider(Arc::new(OllamaProvider::default_local()));
 
+    // Register Native Colibrì Inference Provider (Dual-SSD MoE / Disk-Streamed)
+    ctx.register_provider(Arc::new(ColibriProvider::with_default_config()));
+
     ctx
 }
 
@@ -1166,6 +1211,7 @@ fn format_capabilities(caps: ProviderCapabilities) -> String {
 
 fn default_model_for_provider(provider_id: &str) -> String {
     match provider_id {
+        "colibri" => "deepseek-v4".to_string(),
         "gemini" => "gemini-2.0-flash".to_string(),
         "deepseek" => "deepseek-chat".to_string(),
         "anthropic" => "claude-3-5-sonnet-20241022".to_string(),
@@ -2965,6 +3011,50 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                             res.total_latency.as_secs_f32()
                         );
                         println!("{}\n", res.final_answer);
+                    }
+                }
+                SwarmAction::Cluster { subcommand } => {
+                    match subcommand {
+                        ClusterAction::Coordinator { bind } => {
+                            let coord = ClusterCoordinator::new(&bind);
+                            coord.run_server().await?;
+                        }
+                        ClusterAction::Worker { connect, id } => {
+                            let worker = ClusterWorker::new(&connect, id);
+                            worker.run_worker().await?;
+                        }
+                        ClusterAction::Status { coordinator } => {
+                            match query_cluster_status(&coordinator).await {
+                                Ok(report) => {
+                                    println!("{}", "╔═══════════════════════════════════════════════════════════╗".bright_cyan());
+                                    println!("║  {}  ║", "🌐 TAGISAN LOCAL P2P CLUSTER MESH STATUS               ".bold().bright_white());
+                                    println!("{}", "╠═══════════════════════════════════════════════════════════╣".bright_cyan());
+                                    println!("║ Coordinator: {:<44} ║", report.coordinator_addr);
+                                    println!("║ Active Workers: {:<41} ║", report.total_workers);
+                                    println!("║ Dispatched Tasks: {:<39} ║", report.total_dispatched_tasks);
+                                    println!("║ Completed Tasks: {:<40} ║", report.total_completed_tasks);
+                                    println!("{}", "╠═══════════════════════════════════════════════════════════╣".bright_cyan());
+                                    for w in report.workers {
+                                        println!("║  Node: {:<20} (cores: {}, tools: {}) ║", w.worker_id, w.cpu_cores, w.supported_tools.len());
+                                    }
+                                    println!("{}", "╚═══════════════════════════════════════════════════════════╝".bright_cyan());
+                                }
+                                Err(e) => {
+                                    eprintln!("Failed to query cluster status from {}: {}", coordinator, e);
+                                }
+                            }
+                        }
+                    }
+                }
+                SwarmAction::Atlas { file, reset } => {
+                    let path = file.as_deref().map(std::path::Path::new);
+                    if reset {
+                        let atlas = SwarmAtlas::new();
+                        atlas.save(path)?;
+                        println!("{}", "  ✨ Swarm heat atlas reset successfully.".bold().green());
+                    } else {
+                        let atlas = SwarmAtlas::load_or_default(path);
+                        println!("{}", atlas.render_atlas_table());
                     }
                 }
             }

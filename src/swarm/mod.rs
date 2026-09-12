@@ -1,9 +1,17 @@
+pub mod atlas;
+pub mod cluster;
 pub mod consensus;
 pub mod coordinator;
 pub mod harmony;
 pub mod repl;
 pub mod session;
 
+pub use atlas::{AtlasEntry, SwarmAtlas, TopicCluster};
+pub use cluster::{
+    query_cluster_status, ClusterCoordinator, ClusterMessage, ClusterStatusReport,
+    ClusterTaskBatch, ClusterTaskResult, ClusterWorker, ToolExecutionResult, ToolExecutionTask,
+    WorkerInfo,
+};
 pub use consensus::{
     AgentReview, ConsensusVerdict, ReviewCriterion, TeamConsensusEngine, VotingRule,
 };
@@ -19,4 +27,5 @@ pub use harmony::{
 };
 pub use repl::{InteractiveRepl, ReplCommand};
 pub use session::{SessionMetadata, SessionRecord, SessionStore};
+
 

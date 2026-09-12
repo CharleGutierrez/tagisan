@@ -3,6 +3,8 @@ pub mod agentshield;
 pub mod audit;
 pub mod pipeline;
 pub mod presets;
+pub mod semantic_guard;
+pub mod skill_jit;
 pub mod skills;
 
 pub use agent::EccAgent;
@@ -10,6 +12,8 @@ pub use agentshield::{AgentShieldScanner, AgentShieldVerdict, ThreatLevel};
 pub use audit::EccAuditDebate;
 pub use pipeline::build_ecc_pipeline;
 pub use presets::{all_presets, find_preset};
+pub use semantic_guard::{PreservedDiagnostic, SemanticInvariantGuard, SemanticViolation};
+pub use skill_jit::{SkillJitManager, SkillJitStats, SkillTier, WarmSkillEntry};
 pub use skills::{
     all_built_in_skills, compute_dir_fingerprint, estimate_tokens, extract_triggers_from_text,
     find_built_in_skill, format_cheat_sheet, format_cloud_guidelines, format_dense_invariants,
