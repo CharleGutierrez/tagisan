@@ -12,6 +12,7 @@ pub enum ReplCommand {
     Help,
     Agent(String),
     Skill(String),
+    Forge(String),
     Model(String),
     Tools,
     Memory,
@@ -84,6 +85,7 @@ impl InteractiveRepl {
             "/help" | "/h" | "/?" => ReplCommand::Help,
             "/agent" | "/persona" => ReplCommand::Agent(arg),
             "/skill" => ReplCommand::Skill(arg),
+            "/forge" => ReplCommand::Forge(arg),
             "/model" | "/m" => ReplCommand::Model(arg),
             "/tools" | "/t" => ReplCommand::Tools,
             "/memory" | "/mem" => ReplCommand::Memory,
@@ -148,6 +150,7 @@ impl InteractiveRepl {
                     {}       Display this help manual\n\
                     {} Switch agent persona (e.g. architect, tdd-engineer)\n\
                     {}   Dynamically attach an ECC skill\n\
+                    {}   Forge a skill live from binary, code, or MCP spec\n\
                     {}   Switch model name\n\
                     {}       List registered tools\n\
                     {}      Display memory stats or search memory\n\
@@ -164,6 +167,7 @@ impl InteractiveRepl {
                     "/help".bold().green(),
                     "/agent <name>".bold().green(),
                     "/skill <name>".bold().green(),
+                    "/forge <path>".bold().green(),
                     "/model <name>".bold().green(),
                     "/tools".bold().green(),
                     "/memory".bold().green(),
@@ -202,6 +206,89 @@ impl InteractiveRepl {
                     Ok(Some(format!("Attached skill '{}' to current agent session.", skill.name.bold().cyan())))
                 } else {
                     Ok(Some(format!("Skill '{}' not found in catalog.", name.bold().red())))
+                }
+            }
+            ReplCommand::Forge(target) => {
+                if target.is_empty() {
+                    return Ok(Some("Usage: /forge <path_to_code_or_mcp_or_binary> (e.g. /forge curl, /forge script.py, /forge schema.json)".to_string()));
+                }
+                let target_path = std::path::Path::new(&target);
+
+                // 1. MCP Spec JSON
+                let is_json = target.ends_with(".json") || (target_path.is_file() && target.ends_with(".json"));
+                if is_json {
+                    match crate::harness::mcp_importer::McpImporter::import(&target, None, None, true).await {
+                        Ok(res) => {
+                            if let Some(ref skill_dir) = res.skill_path {
+                                let skill_md_file = skill_dir.join("SKILL.md");
+                                if let Ok(content) = std::fs::read_to_string(&skill_md_file) {
+                                    let mut current_sys = self.agent.system_prompt.clone().unwrap_or_default();
+                                    current_sys.push_str(&format!("\n\n## Forged MCP Skill: {}\n{}", res.harness_name, content));
+                                    self.agent.system_prompt = Some(current_sys);
+                                }
+                            }
+                            return Ok(Some(format!(
+                                "✨ Forged MCP skill '{}' ({} tools) and attached to active session!",
+                                res.harness_name.bold().green(),
+                                res.tools_imported
+                            )));
+                        }
+                        Err(e) => {
+                            return Ok(Some(format!("✖ Failed to forge MCP tool: {}", e)));
+                        }
+                    }
+                }
+
+                // 2. Source Code or Codebase Directory
+                let is_source_file = target.ends_with(".py") || target.ends_with(".rs") || target.ends_with(".ts") || target.ends_with(".js") || (target_path.is_dir() && !target_path.is_file());
+                if is_source_file && target_path.exists() {
+                    let options = crate::harness::pipeline::HarnessPipelineOptions::new(target_path.to_path_buf())
+                        .with_install(true)
+                        .with_run_tests(false);
+                    let pipeline = crate::harness::pipeline::HarnessPipeline::new();
+                    match pipeline.execute(options).await {
+                        Ok(res) => {
+                            if let Some(ref skill_dir) = res.installed_path {
+                                let skill_md_file = skill_dir.join("SKILL.md");
+                                if let Ok(content) = std::fs::read_to_string(&skill_md_file) {
+                                    let mut current_sys = self.agent.system_prompt.clone().unwrap_or_default();
+                                    current_sys.push_str(&format!("\n\n## Forged Code Skill: {}\n{}", res.spec.name, content));
+                                    self.agent.system_prompt = Some(current_sys);
+                                }
+                            }
+                            return Ok(Some(format!(
+                                "✨ Forged CLI harness '{}' ({} subcommands) and attached to active session!",
+                                res.spec.name.bold().green(),
+                                res.spec.commands.len()
+                            )));
+                        }
+                        Err(e) => {
+                            return Ok(Some(format!("✖ Failed to forge codebase harness: {}", e)));
+                        }
+                    }
+                }
+
+                // 3. System Binary Ingestion (e.g. curl, git, jq)
+                match crate::harness::ingester::BinaryIngester::ingest(&target, None, None, true).await {
+                    Ok(res) => {
+                        if let Some(ref skill_dir) = res.skill_path {
+                            let skill_md_file = skill_dir.join("SKILL.md");
+                            if let Ok(content) = std::fs::read_to_string(&skill_md_file) {
+                                let mut current_sys = self.agent.system_prompt.clone().unwrap_or_default();
+                                current_sys.push_str(&format!("\n\n## Forged Binary Skill: {}\n{}", res.binary_name, content));
+                                self.agent.system_prompt = Some(current_sys);
+                            }
+                        }
+                        Ok(Some(format!(
+                            "✨ Forged binary skill '{}' ({} commands) from '{}' and attached to active session!",
+                            res.binary_name.bold().green(),
+                            res.subcommands_count,
+                            res.binary_path.display()
+                        )))
+                    }
+                    Err(e) => {
+                        Ok(Some(format!("✖ Failed to forge binary '{}': {}", target, e)))
+                    }
                 }
             }
             ReplCommand::Model(name) => {

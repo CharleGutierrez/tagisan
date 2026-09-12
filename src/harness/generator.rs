@@ -420,7 +420,7 @@ impl HarnessGenerator {
             ));
             code.push_str("        res = subprocess.run(cmd_args, capture_output=True, text=True)\n");
             code.push_str(&format!(
-                "        self.assertEqual(res.returncode, 0, f\"Command '{}' failed: {{res.stderr}}\")\n",
+                "        self.assertEqual(res.returncode, 0, f\"Command '{}' failed: {{res.stderr}} {{res.stdout}}\")\n",
                 cmd.name
             ));
             code.push_str("        data = json.loads(res.stdout)\n");

@@ -10,6 +10,38 @@ use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};
 use crate::error::{Result, TagisanError};
 use crate::python::PythonRuntime;
 
+/// Execution environment detected for sandboxed harness execution
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ExecutionEnvironment {
+    /// Direct Python interpreter
+    Direct(PathBuf),
+    /// Isolated Virtual Environment (e.g. .venv, VIRTUAL_ENV)
+    VirtualEnv {
+        venv_root: PathBuf,
+        python_bin: PathBuf,
+    },
+    /// Fast UV Ephemeral Runner (`uv run -- python`)
+    Uv {
+        project_root: PathBuf,
+        manifest_file: PathBuf,
+        uv_bin: PathBuf,
+    },
+}
+
+impl ExecutionEnvironment {
+    pub fn description(&self) -> String {
+        match self {
+            Self::Direct(p) => format!("Direct Python ({})", p.display()),
+            Self::VirtualEnv { venv_root, python_bin } => {
+                format!("VirtualEnv ({}, bin: {})", venv_root.display(), python_bin.display())
+            }
+            Self::Uv { project_root, manifest_file, .. } => {
+                format!("UV Runner (project: {}, manifest: {})", project_root.display(), manifest_file.file_name().and_then(|n| n.to_str()).unwrap_or("manifest"))
+            }
+        }
+    }
+}
+
 /// Execution outcome of a synthesized harness run
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HarnessExecutionResult {
@@ -19,6 +51,7 @@ pub struct HarnessExecutionResult {
     pub json_data: Option<serde_json::Value>,
     pub duration_ms: u64,
     pub success: bool,
+    pub environment: Option<ExecutionEnvironment>,
 }
 
 impl HarnessExecutionResult {
@@ -28,6 +61,9 @@ impl HarnessExecutionResult {
             "Exit Code: {} (Duration: {}ms)\n",
             self.exit_code, self.duration_ms
         );
+        if let Some(ref env) = self.environment {
+            out.push_str(&format!("Environment: {}\n", env.description()));
+        }
         if let Some(ref j) = self.json_data {
             out.push_str("--- JSON Output ---\n");
             out.push_str(&serde_json::to_string_pretty(j).unwrap_or_default());
@@ -50,11 +86,14 @@ impl HarnessExecutionResult {
     }
 }
 
-/// Secure harness runner that audits invocations against AgentShield before execution
+/// Secure harness runner that audits invocations against AgentShield before execution,
+/// autodetects virtual environments (uv, venv, virtualenv), and applies Linux Landlock sandboxing.
 pub struct HarnessRunner {
     python_bin: PathBuf,
+    custom_python: bool,
     default_timeout: Duration,
     enforce_shield: bool,
+    enforce_landlock: bool,
 }
 
 impl HarnessRunner {
@@ -65,13 +104,16 @@ impl HarnessRunner {
         let python_bin = PythonRuntime::find_python().unwrap_or_else(|| PathBuf::from("python3"));
         Ok(Self {
             python_bin,
+            custom_python: false,
             default_timeout: Duration::from_secs(30),
             enforce_shield: true,
+            enforce_landlock: true,
         })
     }
 
     pub fn with_python(mut self, bin: impl Into<PathBuf>) -> Self {
         self.python_bin = bin.into();
+        self.custom_python = true;
         self
     }
 
@@ -85,7 +127,90 @@ impl HarnessRunner {
         self
     }
 
+    pub fn with_landlock(mut self, enabled: bool) -> Self {
+        self.enforce_landlock = enabled;
+        self
+    }
+
+    /// Autodetects the appropriate execution environment (uv, virtualenv, or direct python)
+    pub fn detect_environment(&self, script: &Path, cwd: Option<&Path>) -> ExecutionEnvironment {
+        if self.custom_python {
+            return ExecutionEnvironment::Direct(self.python_bin.clone());
+        }
+
+        let start_dir = cwd
+            .map(|p| p.to_path_buf())
+            .or_else(|| script.parent().map(|p| p.to_path_buf()))
+            .unwrap_or_else(|| PathBuf::from("."));
+
+        // 1. Check if active VIRTUAL_ENV environment variable is set
+        if let Ok(venv_str) = std::env::var("VIRTUAL_ENV") {
+            let venv_path = PathBuf::from(venv_str);
+            let py_candidates = [
+                venv_path.join("bin").join("python3"),
+                venv_path.join("bin").join("python"),
+                venv_path.join("Scripts").join("python.exe"),
+            ];
+            for py in &py_candidates {
+                if py.is_file() {
+                    return ExecutionEnvironment::VirtualEnv {
+                        venv_root: venv_path.clone(),
+                        python_bin: py.clone(),
+                    };
+                }
+            }
+        }
+
+        // 2. Search start_dir and parent directories for .venv, venv, or manifests
+        let mut curr = Some(start_dir.as_path());
+        let mut checked_depth = 0;
+        while let Some(dir) = curr {
+            if checked_depth > 6 {
+                break;
+            }
+
+            // Check for .venv / venv
+            for venv_name in &[".venv", "venv", ".env"] {
+                let venv_dir = dir.join(venv_name);
+                let py_candidates = [
+                    venv_dir.join("bin").join("python3"),
+                    venv_dir.join("bin").join("python"),
+                    venv_dir.join("Scripts").join("python.exe"),
+                ];
+                for py in &py_candidates {
+                    if py.is_file() {
+                        return ExecutionEnvironment::VirtualEnv {
+                            venv_root: venv_dir,
+                            python_bin: py.clone(),
+                        };
+                    }
+                }
+            }
+
+            // Check for uv + manifests (pyproject.toml, requirements.txt)
+            for manifest_name in &["pyproject.toml", "requirements.txt", "Pipfile", "setup.py"] {
+                let manifest = dir.join(manifest_name);
+                if manifest.is_file() {
+                    if let Some(uv_bin) = find_uv_binary() {
+                        return ExecutionEnvironment::Uv {
+                            project_root: dir.to_path_buf(),
+                            manifest_file: manifest,
+                            uv_bin,
+                        };
+                    }
+                }
+            }
+
+            curr = dir.parent();
+            checked_depth += 1;
+        }
+
+        // 3. Fallback to standard python binary
+        ExecutionEnvironment::Direct(self.python_bin.clone())
+    }
+
     /// Safely executes a CLI harness script with argument validation through AgentShield
+    /// and ephemeral dependency sandboxing (uv / venv).
     pub async fn run(
         &self,
         script_path: impl AsRef<Path>,
@@ -116,18 +241,68 @@ impl HarnessRunner {
             }
         }
 
-        // 3. Process Execution
+        // 3. Detect Sandboxed Execution Environment (uv, venv, direct)
         let canonical_script = std::fs::canonicalize(script).unwrap_or_else(|_| script.to_path_buf());
-        let mut cmd = Command::new(&self.python_bin);
-        cmd.arg(&canonical_script);
-        for arg in args {
-            cmd.arg(arg);
-        }
+        let env = self.detect_environment(script, cwd);
 
-        if let Some(dir) = cwd {
-            cmd.current_dir(dir);
+        let mut cmd = match &env {
+            ExecutionEnvironment::Uv { uv_bin, project_root, .. } => {
+                let mut c = Command::new(uv_bin);
+                c.arg("run");
+                c.arg("--project");
+                c.arg(project_root);
+                c.arg("python");
+                c.arg(&canonical_script);
+                for arg in args {
+                    c.arg(arg);
+                }
+                c
+            }
+            ExecutionEnvironment::VirtualEnv { venv_root, python_bin } => {
+                let mut c = Command::new(python_bin);
+                c.env("VIRTUAL_ENV", venv_root);
+                let bin_dir = venv_root.join("bin");
+                if let Ok(path) = std::env::var("PATH") {
+                    c.env("PATH", format!("{}:{}", bin_dir.display(), path));
+                }
+                c.arg(&canonical_script);
+                for arg in args {
+                    c.arg(arg);
+                }
+                c
+            }
+            ExecutionEnvironment::Direct(bin) => {
+                let mut c = Command::new(bin);
+                c.arg(&canonical_script);
+                for arg in args {
+                    c.arg(arg);
+                }
+                c
+            }
+        };
+
+        let target_cwd = if let Some(dir) = cwd {
+            dir.to_path_buf()
         } else if let Some(parent) = script.parent() {
-            cmd.current_dir(parent);
+            parent.to_path_buf()
+        } else {
+            PathBuf::from(".")
+        };
+        cmd.current_dir(&target_cwd);
+
+        // 4. Linux Landlock LSM Sandboxing
+        #[cfg(target_os = "linux")]
+        if self.enforce_landlock {
+            let script_dir = canonical_script.parent().unwrap_or(Path::new(".")).to_path_buf();
+            let working_dir = target_cwd.clone();
+            let workspace_root = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+
+            unsafe {
+                cmd.pre_exec(move || {
+                    let _ = apply_linux_landlock(&script_dir, &working_dir, &workspace_root);
+                    Ok(())
+                });
+            }
         }
 
         cmd.stdout(Stdio::piped());
@@ -137,8 +312,9 @@ impl HarnessRunner {
 
         let mut child = cmd.spawn().map_err(|e| {
             TagisanError::Execution(format!(
-                "Failed to spawn harness process '{}': {}",
+                "Failed to spawn harness process '{}' (Env: {}): {}",
                 script.display(),
+                env.description(),
                 e
             ))
         })?;
@@ -207,7 +383,7 @@ impl HarnessRunner {
         let exit_code = status.code().unwrap_or(-1);
         let success = status.success();
 
-        // 4. JSON parse attempt
+        // 5. JSON parse attempt
         let json_data = if args.iter().any(|a| a == "--json") || stdout.trim().starts_with('{') {
             serde_json::from_str::<serde_json::Value>(stdout.trim()).ok()
         } else {
@@ -221,6 +397,7 @@ impl HarnessRunner {
             json_data,
             duration_ms,
             success,
+            environment: Some(env),
         })
     }
 
@@ -233,4 +410,156 @@ impl HarnessRunner {
         let args = vec![];
         self.run(test_script_path, &args, cwd).await
     }
+}
+
+/// Locates uv executable in PATH or standard install locations
+fn find_uv_binary() -> Option<PathBuf> {
+    if let Ok(path_var) = std::env::var("PATH") {
+        for dir in std::env::split_paths(&path_var) {
+            let cand = dir.join("uv");
+            if cand.is_file() {
+                return Some(cand);
+            }
+        }
+    }
+    if let Ok(home) = std::env::var("HOME") {
+        let cargo_uv = PathBuf::from(home).join(".cargo").join("bin").join("uv");
+        if cargo_uv.is_file() {
+            return Some(cargo_uv);
+        }
+    }
+    for p in &["/root/.cargo/bin/uv", "/usr/local/bin/uv", "/usr/bin/uv"] {
+        let path = PathBuf::from(p);
+        if path.is_file() {
+            return Some(path);
+        }
+    }
+    None
+}
+
+/// Linux Landlock LSM micro-sandboxing helper. Restricts process filesystem access to
+/// required system libraries, temporary directory, and current workspace.
+#[cfg(target_os = "linux")]
+unsafe fn apply_linux_landlock(
+    script_dir: &Path,
+    working_dir: &Path,
+    workspace_root: &Path,
+) -> std::result::Result<(), i32> {
+    const SYS_LANDLOCK_CREATE_RULESET: libc::c_long = 444;
+    const SYS_LANDLOCK_ADD_RULE: libc::c_long = 445;
+    const SYS_LANDLOCK_RESTRICT_SELF: libc::c_long = 446;
+    const LANDLOCK_RULE_PATH_BENEATH: u32 = 1;
+
+    const LANDLOCK_ACCESS_FS_EXECUTE: u64 = 1 << 0;
+    const LANDLOCK_ACCESS_FS_WRITE_FILE: u64 = 1 << 1;
+    const LANDLOCK_ACCESS_FS_READ_FILE: u64 = 1 << 2;
+    const LANDLOCK_ACCESS_FS_READ_DIR: u64 = 1 << 3;
+    const LANDLOCK_ACCESS_FS_REMOVE_DIR: u64 = 1 << 4;
+    const LANDLOCK_ACCESS_FS_REMOVE_FILE: u64 = 1 << 5;
+    const LANDLOCK_ACCESS_FS_MAKE_CHAR: u64 = 1 << 6;
+    const LANDLOCK_ACCESS_FS_MAKE_DIR: u64 = 1 << 7;
+    const LANDLOCK_ACCESS_FS_MAKE_REG: u64 = 1 << 8;
+    const LANDLOCK_ACCESS_FS_MAKE_SOCK: u64 = 1 << 9;
+    const LANDLOCK_ACCESS_FS_MAKE_FIFO: u64 = 1 << 10;
+    const LANDLOCK_ACCESS_FS_MAKE_BLOCK: u64 = 1 << 11;
+    const LANDLOCK_ACCESS_FS_MAKE_SYM: u64 = 1 << 12;
+    const LANDLOCK_ACCESS_FS_REFER: u64 = 1 << 13;
+    const LANDLOCK_ACCESS_FS_TRUNCATE: u64 = 1 << 14;
+
+    #[repr(C)]
+    struct LandlockRulesetAttr {
+        handled_access_fs: u64,
+    }
+
+    #[repr(C)]
+    struct LandlockPathBeneathAttr {
+        allowed_access: u64,
+        parent_fd: i32,
+    }
+
+    let read_flags = LANDLOCK_ACCESS_FS_READ_FILE
+        | LANDLOCK_ACCESS_FS_READ_DIR
+        | LANDLOCK_ACCESS_FS_EXECUTE;
+    let write_flags = read_flags
+        | LANDLOCK_ACCESS_FS_WRITE_FILE
+        | LANDLOCK_ACCESS_FS_REMOVE_DIR
+        | LANDLOCK_ACCESS_FS_REMOVE_FILE
+        | LANDLOCK_ACCESS_FS_MAKE_DIR
+        | LANDLOCK_ACCESS_FS_MAKE_REG
+        | LANDLOCK_ACCESS_FS_TRUNCATE;
+
+    let attr = LandlockRulesetAttr {
+        handled_access_fs: write_flags,
+    };
+
+    let fd = libc::syscall(
+        SYS_LANDLOCK_CREATE_RULESET,
+        &attr as *const _ as *const libc::c_void,
+        std::mem::size_of::<LandlockRulesetAttr>(),
+        0u32,
+    );
+    if fd < 0 {
+        return Err(*libc::__errno_location());
+    }
+    let ruleset_fd = fd as i32;
+
+    let read_only_paths = ["/usr", "/lib", "/lib64", "/etc", "/bin", "/opt", "/dev"];
+    for p in &read_only_paths {
+        if let Ok(c_path) = std::ffi::CString::new(*p) {
+            let pfd = libc::open(c_path.as_ptr(), libc::O_PATH | libc::O_CLOEXEC);
+            if pfd >= 0 {
+                let pb = LandlockPathBeneathAttr {
+                    allowed_access: read_flags,
+                    parent_fd: pfd,
+                };
+                libc::syscall(
+                    SYS_LANDLOCK_ADD_RULE,
+                    ruleset_fd,
+                    LANDLOCK_RULE_PATH_BENEATH,
+                    &pb as *const _ as *const libc::c_void,
+                    0u32,
+                );
+                libc::close(pfd);
+            }
+        }
+    }
+
+    let mut write_paths = vec![
+        working_dir.as_os_str().to_string_lossy().to_string(),
+        script_dir.as_os_str().to_string_lossy().to_string(),
+        workspace_root.as_os_str().to_string_lossy().to_string(),
+        "/tmp".to_string(),
+    ];
+    if let Ok(curr) = std::env::current_dir() {
+        write_paths.push(curr.as_os_str().to_string_lossy().to_string());
+    }
+
+    for p in &write_paths {
+        if let Ok(c_path) = std::ffi::CString::new(p.as_str()) {
+            let pfd = libc::open(c_path.as_ptr(), libc::O_PATH | libc::O_CLOEXEC);
+            if pfd >= 0 {
+                let pb = LandlockPathBeneathAttr {
+                    allowed_access: write_flags,
+                    parent_fd: pfd,
+                };
+                libc::syscall(
+                    SYS_LANDLOCK_ADD_RULE,
+                    ruleset_fd,
+                    LANDLOCK_RULE_PATH_BENEATH,
+                    &pb as *const _ as *const libc::c_void,
+                    0u32,
+                );
+                libc::close(pfd);
+            }
+        }
+    }
+
+    libc::prctl(libc::PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0);
+    let res = libc::syscall(SYS_LANDLOCK_RESTRICT_SELF, ruleset_fd, 0u32);
+    libc::close(ruleset_fd);
+
+    if res < 0 {
+        return Err(*libc::__errno_location());
+    }
+    Ok(())
 }

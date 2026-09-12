@@ -456,6 +456,42 @@ pub enum HarnessAction {
         /// Name of the harness or skill to test
         name: String,
     },
+    /// Autonomously diagnose and heal a broken CLI harness or failing test suite
+    Heal {
+        /// Name of the harness or skill to heal
+        name: String,
+        /// Maximum heal iterations (default: 3)
+        #[arg(short, long, default_value = "3")]
+        attempts: usize,
+    },
+    /// Ingest a black-box system binary (e.g. curl, git, ffmpeg) into an agent-native CLI and SKILL.md
+    Ingest {
+        /// Name or path of the binary to ingest
+        binary: String,
+        /// Custom name for the generated harness
+        #[arg(short, long)]
+        name: Option<String>,
+        /// Custom output directory
+        #[arg(short, long)]
+        output_dir: Option<String>,
+        /// Automatically install into .ecc/skills/<name>/
+        #[arg(short, long)]
+        install: bool,
+    },
+    /// Transpile an MCP tool schema or manifest into an agent-native CLI harness and SKILL.md
+    ImportMcp {
+        /// Path to the MCP tool JSON schema file
+        spec: String,
+        /// Custom name for the generated harness
+        #[arg(short, long)]
+        name: Option<String>,
+        /// Custom output directory
+        #[arg(short, long)]
+        output_dir: Option<String>,
+        /// Automatically install into .ecc/skills/<name>/
+        #[arg(short, long)]
+        install: bool,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]

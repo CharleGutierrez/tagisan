@@ -3,6 +3,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+use crate::harness::healer::HarnessHealer;
+use crate::harness::ingester::BinaryIngester;
+use crate::harness::mcp_importer::McpImporter;
 use crate::harness::pipeline::{HarnessPipeline, HarnessPipelineOptions};
 use crate::harness::runner::HarnessRunner;
 use crate::harness::spec::SourceType;
@@ -253,6 +256,103 @@ pub async fn handle_harness_command(
                 println!("\n{} Validation tests failed.\n", "✖ Failure:".red().bold());
                 std::process::exit(result.exit_code);
             }
+        }
+        crate::cli::HarnessAction::Heal { name, attempts } => {
+            let cli_path = resolve_harness_script(&name)?;
+            let test_path = resolve_test_script(&name)?;
+
+            println!(
+                "\n{}",
+                "┌──────────────────────────── 🩺 AUTONOMOUS HARNESS SELF-HEALING ────────────────────────────┐".magenta().bold()
+            );
+            println!(
+                "│ Target Harness  : {} │",
+                format!("{:<76}", name).yellow()
+            );
+            println!(
+                "│ Max Heal Passes : {} │",
+                format!("{:<76}", attempts).cyan()
+            );
+            println!(
+                "{}\n",
+                "└─────────────────────────────────────────────────────────────────────────────────────────────┘".magenta().bold()
+            );
+
+            let spinner = Spinner::start("Diagnosing test failure and synthesizing autonomous AST fixes...");
+            let healer = HarnessHealer::new()?.with_max_attempts(attempts);
+            let report = healer.heal(&name, &cli_path, &test_path).await?;
+
+            if report.healed {
+                spinner.success(format!("Autonomous self-healing succeeded in {} attempt(s)!", report.attempts_made));
+            } else if report.fixes_applied.is_empty() {
+                spinner.success("Harness is already healthy and all validation tests pass!");
+            } else {
+                spinner.failure(format!("Autonomous self-healing could not resolve all issues after {} attempts", attempts));
+            }
+
+            println!("\n{}", report.display_summary());
+
+            if !report.healed && !report.fixes_applied.is_empty() {
+                std::process::exit(1);
+            }
+        }
+        crate::cli::HarnessAction::Ingest { binary, name, output_dir, install } => {
+            println!(
+                "\n{}",
+                "┌─────────────────────────── 📥 BLACK-BOX BINARY INGESTION ENGINE ───────────────────────────┐".cyan().bold()
+            );
+            println!(
+                "│ Target Binary   : {} │",
+                format!("{:<76}", binary).yellow()
+            );
+            println!(
+                "│ Auto-Install    : {} │",
+                format!("{:<76}", if install { "Yes (Installing into .ecc/skills/)" } else { "No (Available locally in .tagisan/harness/)" }).blue()
+            );
+            println!(
+                "{}\n",
+                "└─────────────────────────────────────────────────────────────────────────────────────────────┘".cyan().bold()
+            );
+
+            let spinner = Spinner::start("Probing binary --help, extracting subcommands, and generating agent-native CLI...");
+            let res = BinaryIngester::ingest(
+                &binary,
+                name,
+                output_dir.map(PathBuf::from),
+                install,
+            ).await?;
+            spinner.success("Binary ingestion completed successfully!");
+
+            println!("\n{}", res.display_summary());
+        }
+        crate::cli::HarnessAction::ImportMcp { spec, name, output_dir, install } => {
+            println!(
+                "\n{}",
+                "┌───────────────────────────── 🌐 MCP TO CLI TRANSPILATION ENGINE ────────────────────────────┐".magenta().bold()
+            );
+            println!(
+                "│ MCP Spec Schema : {} │",
+                format!("{:<76}", spec).yellow()
+            );
+            println!(
+                "│ Auto-Install    : {} │",
+                format!("{:<76}", if install { "Yes (Installing into .ecc/skills/)" } else { "No (Available locally in .tagisan/harness/)" }).blue()
+            );
+            println!(
+                "{}\n",
+                "└─────────────────────────────────────────────────────────────────────────────────────────────┘".magenta().bold()
+            );
+
+            let spinner = Spinner::start("Parsing MCP tool schema and synthesizing standalone CLI with RFC-004 SKILL.md...");
+            let res = McpImporter::import(
+                &spec,
+                name,
+                output_dir.map(PathBuf::from),
+                install,
+            ).await?;
+            spinner.success("MCP transpilation completed successfully!");
+
+            println!("\n{}", res.display_summary());
         }
     }
 
