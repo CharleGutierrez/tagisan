@@ -8,8 +8,8 @@ use crate::{
     all_ecc_presets, build_ecc_pipeline, load_ecc_agents_from_dir,
     resolve_ecc_agent, resolve_ecc_skill,
     AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, ColibriProvider, CollaborationStrategy,
-    CompletionRequest, ContentBlock, DagScheduler, DialecticalDebateStrategy, EccAuditDebate,
-    EngineContext, GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider,
+    CompletionRequest, ContentBlock, DagScheduler, DeleteFileTool, DialecticalDebateStrategy, EccAuditDebate,
+    EditFileTool, EngineContext, GeminiProvider, ListDirTool, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider,
     OpenAiCompatibleProvider, ProviderCapabilities, ReadFileTool, RunCommandTool, StrategyInput,
     StreamChunkDelta, TagisanError, ToolHandler, ToolRegistry, ViewImageTool, WorkflowEvent, WorkflowPlanner, WriteFileTool,
     McpManager, WorktreeSandbox, Spinner,
@@ -117,7 +117,7 @@ enum Commands {
         #[arg(short, long)]
         model: Option<String>,
 
-        /// Comma-separated list of tools to enable: read_file, write_file, run_command, calculator, view_image, all
+        /// Comma-separated list of tools to enable: read_file, write_file, edit_file, delete_file, list_dir, run_command, calculator, view_image, all
         #[arg(short, long, default_value = "all")]
         tools: String,
 
@@ -177,7 +177,7 @@ enum Commands {
         #[arg(short, long)]
         model: Option<String>,
 
-        /// Comma-separated list of tools to enable: read_file, write_file, run_command, calculator, all
+        /// Comma-separated list of tools to enable: read_file, write_file, edit_file, delete_file, list_dir, run_command, calculator, all
         #[arg(short, long, default_value = "all")]
         tools: String,
 
@@ -1047,7 +1047,7 @@ enum EccAction {
         #[arg(short, long)]
         model: Option<String>,
 
-        /// Comma-separated list of tools: read_file, write_file, run_command, calculator, view_image, all
+        /// Comma-separated list of tools: read_file, write_file, edit_file, delete_file, list_dir, run_command, calculator, view_image, all
         #[arg(short, long, default_value = "all")]
         tools: String,
 
@@ -1088,7 +1088,7 @@ enum EccAction {
         #[arg(short, long)]
         model: Option<String>,
 
-        /// Comma-separated list of tools: read_file, write_file, run_command, calculator, all
+        /// Comma-separated list of tools: read_file, write_file, edit_file, delete_file, list_dir, run_command, calculator, all
         #[arg(short, long, default_value = "all")]
         tools: String,
 
@@ -1567,6 +1567,15 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         if enable_all || tool_list.contains(&"write_file") {
                             reg.register_tool(WriteFileTool::new());
                         }
+                        if enable_all || tool_list.contains(&"edit_file") {
+                            reg.register_tool(EditFileTool::new());
+                        }
+                        if enable_all || tool_list.contains(&"delete_file") {
+                            reg.register_tool(DeleteFileTool::new());
+                        }
+                        if enable_all || tool_list.contains(&"list_dir") {
+                            reg.register_tool(ListDirTool::new());
+                        }
                         if enable_all || tool_list.contains(&"run_command") {
                             reg.register_tool(RunCommandTool::default());
                         }
@@ -1592,6 +1601,15 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 if enable_all || tool_list.contains(&"write_file") {
                     reg.register_tool(WriteFileTool::new());
+                }
+                if enable_all || tool_list.contains(&"edit_file") {
+                    reg.register_tool(EditFileTool::new());
+                }
+                if enable_all || tool_list.contains(&"delete_file") {
+                    reg.register_tool(DeleteFileTool::new());
+                }
+                if enable_all || tool_list.contains(&"list_dir") {
+                    reg.register_tool(ListDirTool::new());
                 }
                 if enable_all || tool_list.contains(&"run_command") {
                     reg.register_tool(RunCommandTool::default());
@@ -1757,6 +1775,15 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
             if enable_all || tool_list.contains(&"write_file") {
                 registry.register_tool(WriteFileTool::new());
+            }
+            if enable_all || tool_list.contains(&"edit_file") {
+                registry.register_tool(EditFileTool::new());
+            }
+            if enable_all || tool_list.contains(&"delete_file") {
+                registry.register_tool(DeleteFileTool::new());
+            }
+            if enable_all || tool_list.contains(&"list_dir") {
+                registry.register_tool(ListDirTool::new());
             }
             if enable_all || tool_list.contains(&"run_command") {
                 registry.register_tool(RunCommandTool::default());
@@ -2240,6 +2267,15 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     if enable_all || tool_list.contains(&"write_file") || ecc_agent.tools.contains(&"write_file".to_string()) {
                         registry.register_tool(WriteFileTool::new());
                     }
+                    if enable_all || tool_list.contains(&"edit_file") || ecc_agent.tools.contains(&"edit_file".to_string()) {
+                        registry.register_tool(EditFileTool::new());
+                    }
+                    if enable_all || tool_list.contains(&"delete_file") || ecc_agent.tools.contains(&"delete_file".to_string()) {
+                        registry.register_tool(DeleteFileTool::new());
+                    }
+                    if enable_all || tool_list.contains(&"list_dir") || ecc_agent.tools.contains(&"list_dir".to_string()) {
+                        registry.register_tool(ListDirTool::new());
+                    }
                     if enable_all || tool_list.contains(&"run_command") || ecc_agent.tools.contains(&"run_command".to_string()) {
                         registry.register_tool(RunCommandTool::default());
                     }
@@ -2354,6 +2390,15 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     if enable_all || tool_list.contains(&"write_file") {
                         registry.register_tool(WriteFileTool::new());
+                    }
+                    if enable_all || tool_list.contains(&"edit_file") {
+                        registry.register_tool(EditFileTool::new());
+                    }
+                    if enable_all || tool_list.contains(&"delete_file") {
+                        registry.register_tool(DeleteFileTool::new());
+                    }
+                    if enable_all || tool_list.contains(&"list_dir") {
+                        registry.register_tool(ListDirTool::new());
                     }
                     if enable_all || tool_list.contains(&"run_command") {
                         registry.register_tool(RunCommandTool::default());

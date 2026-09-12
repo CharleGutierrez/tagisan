@@ -86,8 +86,8 @@ pub use mcp::{
     McpToolCallResult, McpToolDefinition, McpToolWrapper, StdioTransport,
 };
 pub use tools::builtin::{
-    CalculatorTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool,
-    SearchSkillsTool, ViewImageTool, WriteFileTool,
+    CalculatorTool, DeleteFileTool, EditFileTool, ListDirTool, ReadFileTool, RunCommandTool,
+    SaveMemoryTool, SearchMemoryTool, SearchSkillsTool, ViewImageTool, WriteFileTool,
 };
 pub use tools::bun::{
     extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,

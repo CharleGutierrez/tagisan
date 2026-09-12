@@ -3,7 +3,8 @@ use crate::error::{Result, TagisanError};
 use crate::types::ContentBlock;
 use async_trait::async_trait;
 use serde_json::{json, Value};
-use std::path::Path;
+use std::collections::VecDeque;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::process::Command;
@@ -163,6 +164,678 @@ impl ToolHandler for WriteFileTool {
         })?;
 
         Ok(format!("Successfully wrote {} bytes to {}", content.len(), target_path.display()))
+    }
+}
+
+// =========================================================================
+// Helpers for File CRUD Operations
+// =========================================================================
+
+fn resolve_target_path(working_dir: &Option<PathBuf>, path: &Path) -> PathBuf {
+    if path.is_relative() {
+        if let Some(ref base) = working_dir {
+            base.join(path)
+        } else {
+            path.to_path_buf()
+        }
+    } else {
+        path.to_path_buf()
+    }
+}
+
+fn format_with_commas(n: u64) -> String {
+    let s = n.to_string();
+    let mut result = String::with_capacity(s.len() + s.len() / 3);
+    let bytes = s.as_bytes();
+    let len = bytes.len();
+    for (i, &b) in bytes.iter().enumerate() {
+        if i > 0 && (len - i) % 3 == 0 {
+            result.push(',');
+        }
+        result.push(b as char);
+    }
+    result
+}
+
+fn format_bytes_human(bytes: u64) -> String {
+    if bytes < 1024 {
+        format!("{bytes} B")
+    } else if bytes < 1024 * 1024 {
+        format!("{:.1} KB ({} bytes)", bytes as f64 / 1024.0, format_with_commas(bytes))
+    } else if bytes < 1024 * 1024 * 1024 {
+        format!("{:.2} MB ({} bytes)", bytes as f64 / (1024.0 * 1024.0), format_with_commas(bytes))
+    } else {
+        format!("{:.2} GB ({} bytes)", bytes as f64 / (1024.0 * 1024.0 * 1024.0), format_with_commas(bytes))
+    }
+}
+
+async fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
+    tokio::fs::create_dir_all(dst).await?;
+    let mut entries = tokio::fs::read_dir(src).await?;
+    while let Some(entry) = entries.next_entry().await? {
+        let entry_path = entry.path();
+        let file_type = entry.file_type().await?;
+        let target_entry = dst.join(entry.file_name());
+        if file_type.is_dir() {
+            Box::pin(copy_dir_recursive(&entry_path, &target_entry)).await?;
+        } else {
+            tokio::fs::copy(&entry_path, &target_entry).await?;
+        }
+    }
+    Ok(())
+}
+
+// =========================================================================
+// 2a. EditFileTool
+// =========================================================================
+
+/// Tool for editing existing files by replacing exact content chunks, with line scoping, backup creation, and atomic writes.
+#[derive(Debug, Default, Clone)]
+pub struct EditFileTool {
+    pub working_dir: Option<PathBuf>,
+}
+
+impl EditFileTool {
+    pub fn new() -> Self {
+        Self { working_dir: None }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for EditFileTool {
+    fn name(&self) -> &'static str {
+        "edit_file"
+    }
+
+    fn description(&self) -> &'static str {
+        "Edit a file by replacing an exact chunk of target text with replacement text. Supports line-range scoping, multiple replacement toggle, automatic backup creation, and atomic writes."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "The target file to edit (absolute or relative to working directory)."
+                },
+                "target_content": {
+                    "type": "string",
+                    "description": "The exact substring or text chunk to be replaced."
+                },
+                "replacement_content": {
+                    "type": "string",
+                    "description": "The new replacement content."
+                },
+                "start_line": {
+                    "type": "integer",
+                    "description": "Optional 1-indexed line number to start scoped search range."
+                },
+                "end_line": {
+                    "type": "integer",
+                    "description": "Optional 1-indexed line number to end scoped search range."
+                },
+                "allow_multiple": {
+                    "type": "boolean",
+                    "description": "If true, replaces all occurrences in the target scope. If false (default), errors if multiple matches found."
+                },
+                "create_backup": {
+                    "type": "boolean",
+                    "description": "If true (default), writes '<path>.bak' before modifying."
+                }
+            },
+            "required": ["path", "target_content", "replacement_content"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let path_str = arguments
+            .get("path")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path'".to_string()))?;
+
+        let target_content = arguments
+            .get("target_content")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'target_content'".to_string()))?;
+
+        let replacement_content = arguments
+            .get("replacement_content")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'replacement_content'".to_string()))?;
+
+        if target_content.is_empty() {
+            return Err(TagisanError::Execution("Parameter 'target_content' cannot be empty.".to_string()));
+        }
+
+        let start_line = arguments.get("start_line").and_then(|v| v.as_u64());
+        let end_line = arguments.get("end_line").and_then(|v| v.as_u64());
+        let allow_multiple = arguments.get("allow_multiple").and_then(|v| v.as_bool()).unwrap_or(false);
+        let create_backup = arguments.get("create_backup").and_then(|v| v.as_bool()).unwrap_or(true);
+
+        let target_path = resolve_target_path(&self.working_dir, Path::new(path_str));
+
+        if !target_path.exists() {
+            return Err(TagisanError::Execution(format!("File does not exist: '{}'", target_path.display())));
+        }
+        if target_path.is_dir() {
+            return Err(TagisanError::Execution(format!("Target path is a directory, not a file: '{}'", target_path.display())));
+        }
+
+        let original_content = tokio::fs::read_to_string(&target_path)
+            .await
+            .map_err(|e| TagisanError::Execution(format!("Failed to read file '{}': {e}", target_path.display())))?;
+
+        let lines: Vec<&str> = original_content.split_inclusive('\n').collect();
+        let total_lines = lines.len();
+
+        let (prefix, slice_content, suffix, scope_desc) = if start_line.is_some() || end_line.is_some() {
+            let s = start_line.unwrap_or(1);
+            if s < 1 {
+                return Err(TagisanError::Execution("Parameter 'start_line' must be >= 1".to_string()));
+            }
+            if total_lines == 0 && s > 1 {
+                return Err(TagisanError::Execution(format!("File is empty, start_line {s} exceeds line count 0")));
+            }
+            if s as usize > total_lines && total_lines > 0 {
+                return Err(TagisanError::Execution(format!(
+                    "Parameter 'start_line' ({s}) exceeds total line count ({total_lines})"
+                )));
+            }
+
+            let e = match end_line {
+                Some(val) => {
+                    if val < 1 {
+                        return Err(TagisanError::Execution("Parameter 'end_line' must be >= 1".to_string()));
+                    }
+                    if val < s {
+                        return Err(TagisanError::Execution(format!(
+                            "Parameter 'end_line' ({val}) cannot be less than 'start_line' ({s})"
+                        )));
+                    }
+                    (val as usize).min(total_lines)
+                }
+                None => total_lines,
+            };
+
+            let start_idx = (s as usize) - 1;
+            let end_idx = e;
+
+            let prefix = lines[..start_idx].join("");
+            let slice = lines[start_idx..end_idx].join("");
+            let suffix = lines[end_idx..].join("");
+            let scope_desc = format!("lines {s}..={e}");
+            (prefix, slice, suffix, scope_desc)
+        } else {
+            (String::new(), original_content.clone(), String::new(), "entire file".to_string())
+        };
+
+        let match_count = slice_content.matches(target_content).count();
+        if match_count == 0 {
+            return Err(TagisanError::Execution(format!(
+                "Target content not found within {scope_desc} in file '{}'",
+                target_path.display()
+            )));
+        }
+        if match_count > 1 && !allow_multiple {
+            return Err(TagisanError::Execution(format!(
+                "Target content found {match_count} times within {scope_desc} in file '{}'. Set 'allow_multiple: true' to replace all matches, or narrow the search scope using 'start_line' and 'end_line'.",
+                target_path.display()
+            )));
+        }
+
+        let modified_slice = if allow_multiple {
+            slice_content.replace(target_content, replacement_content)
+        } else {
+            slice_content.replacen(target_content, replacement_content, 1)
+        };
+
+        let new_content = format!("{prefix}{modified_slice}{suffix}");
+
+        let mut backup_info = "Backup disabled".to_string();
+        if create_backup {
+            let backup_path = PathBuf::from(format!("{}.bak", target_path.display()));
+            tokio::fs::write(&backup_path, &original_content).await.map_err(|e| {
+                TagisanError::Execution(format!(
+                    "Failed to write backup file '{}': {e}",
+                    backup_path.display()
+                ))
+            })?;
+            backup_info = format!("Backup saved to '{}'", backup_path.display());
+        }
+
+        // Atomic file write using temporary file in same parent directory
+        let parent_dir = target_path.parent().unwrap_or_else(|| Path::new("."));
+        let temp_file_name = format!(
+            ".tmp_edit_{}_{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+        );
+        let temp_path = parent_dir.join(temp_file_name);
+
+        if let Err(e) = tokio::fs::write(&temp_path, &new_content).await {
+            return Err(TagisanError::Execution(format!(
+                "Failed to write temporary file '{}': {e}",
+                temp_path.display()
+            )));
+        }
+
+        if let Err(rename_err) = tokio::fs::rename(&temp_path, &target_path).await {
+            let _ = tokio::fs::remove_file(&temp_path).await;
+            tokio::fs::write(&target_path, &new_content).await.map_err(|write_err| {
+                TagisanError::Execution(format!(
+                    "Failed to write target file '{}' (rename failed: {rename_err}; direct write failed: {write_err})",
+                    target_path.display()
+                ))
+            })?;
+        }
+
+        let original_bytes = original_content.len();
+        let new_bytes = new_content.len();
+        let delta_bytes = (new_bytes as i64) - (original_bytes as i64);
+        let new_lines_count = new_content.split_inclusive('\n').count();
+
+        Ok(format!(
+            "Successfully edited file '{}'.\n\
+             - Scope: {}\n\
+             - Replacements: {} occurrence(s)\n\
+             - Size: {} bytes -> {} bytes ({:+})\n\
+             - Line count: {} -> {}\n\
+             - Backup: {}",
+            target_path.display(),
+            scope_desc,
+            match_count,
+            format_with_commas(original_bytes as u64),
+            format_with_commas(new_bytes as u64),
+            delta_bytes,
+            total_lines,
+            new_lines_count,
+            backup_info
+        ))
+    }
+}
+
+// =========================================================================
+// 2b. DeleteFileTool
+// =========================================================================
+
+/// Tool for safely deleting files or directories, with safety trash bin support.
+#[derive(Debug, Default, Clone)]
+pub struct DeleteFileTool {
+    pub working_dir: Option<PathBuf>,
+}
+
+impl DeleteFileTool {
+    pub fn new() -> Self {
+        Self { working_dir: None }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for DeleteFileTool {
+    fn name(&self) -> &'static str {
+        "delete_file"
+    }
+
+    fn description(&self) -> &'static str {
+        "Delete a file or directory. Moves items to .tagisan/trash/<timestamp>_<filename> by default for safety, or permanently deletes if trash is set to false."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Target file or directory path to delete."
+                },
+                "recursive": {
+                    "type": "boolean",
+                    "description": "If true, recursively deletes directories and contents. Required when deleting a directory (default: false)."
+                },
+                "trash": {
+                    "type": "boolean",
+                    "description": "If true (default), moves to '.tagisan/trash/<timestamp>_<filename>' for safety. If false, permanently deletes."
+                }
+            },
+            "required": ["path"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let path_str = arguments
+            .get("path")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path'".to_string()))?;
+
+        let recursive = arguments.get("recursive").and_then(|v| v.as_bool()).unwrap_or(false);
+        let trash = arguments.get("trash").and_then(|v| v.as_bool()).unwrap_or(true);
+
+        let target_path = resolve_target_path(&self.working_dir, Path::new(path_str));
+
+        let metadata = match tokio::fs::symlink_metadata(&target_path).await {
+            Ok(m) => m,
+            Err(_) => {
+                return Err(TagisanError::Execution(format!(
+                    "Target path does not exist: '{}'",
+                    target_path.display()
+                )));
+            }
+        };
+
+        let is_dir = metadata.is_dir();
+        if is_dir && !recursive {
+            return Err(TagisanError::Execution(format!(
+                "Path '{}' is a directory. Set 'recursive: true' to delete directories.",
+                target_path.display()
+            )));
+        }
+
+        if trash {
+            let base_dir = self.working_dir.clone().unwrap_or_else(|| PathBuf::from("."));
+            let trash_dir = base_dir.join(".tagisan").join("trash");
+            tokio::fs::create_dir_all(&trash_dir).await.map_err(|e| {
+                TagisanError::Execution(format!("Failed to create trash directory '{}': {e}", trash_dir.display()))
+            })?;
+
+            let timestamp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis();
+
+            let file_name = target_path
+                .file_name()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_else(|| "unnamed".to_string());
+            let trash_dest = trash_dir.join(format!("{}_{}", timestamp, file_name));
+
+            if let Err(_rename_err) = tokio::fs::rename(&target_path, &trash_dest).await {
+                // Fallback if cross-device move occurs
+                if is_dir {
+                    copy_dir_recursive(&target_path, &trash_dest).await.map_err(|e| {
+                        TagisanError::Execution(format!("Failed to copy directory to trash: {e}"))
+                    })?;
+                    tokio::fs::remove_dir_all(&target_path).await.map_err(|e| {
+                        TagisanError::Execution(format!("Failed to clean up original directory after trash move: {e}"))
+                    })?;
+                } else {
+                    tokio::fs::copy(&target_path, &trash_dest).await.map_err(|e| {
+                        TagisanError::Execution(format!("Failed to copy file to trash: {e}"))
+                    })?;
+                    tokio::fs::remove_file(&target_path).await.map_err(|e| {
+                        TagisanError::Execution(format!("Failed to clean up original file after trash move: {e}"))
+                    })?;
+                }
+            }
+
+            Ok(format!(
+                "Safely moved {} '{}' to trash at '{}'.",
+                if is_dir { "directory" } else { "file" },
+                target_path.display(),
+                trash_dest.display()
+            ))
+        } else {
+            if is_dir {
+                tokio::fs::remove_dir_all(&target_path).await.map_err(|e| {
+                    TagisanError::Execution(format!("Failed to permanently delete directory '{}': {e}", target_path.display()))
+                })?;
+                Ok(format!(
+                    "Permanently deleted directory '{}' (recursive).",
+                    target_path.display()
+                ))
+            } else {
+                let size = metadata.len();
+                tokio::fs::remove_file(&target_path).await.map_err(|e| {
+                    TagisanError::Execution(format!("Failed to permanently delete file '{}': {e}", target_path.display()))
+                })?;
+                Ok(format!(
+                    "Permanently deleted file '{}' ({} bytes).",
+                    target_path.display(),
+                    format_with_commas(size)
+                ))
+            }
+        }
+    }
+}
+
+// =========================================================================
+// 2c. ListDirTool
+// =========================================================================
+
+/// Tool for listing directory contents with recursive depth control, hidden file filtering, pattern matching, and formatted tabular outputs.
+#[derive(Debug, Default, Clone)]
+pub struct ListDirTool {
+    pub working_dir: Option<PathBuf>,
+}
+
+impl ListDirTool {
+    pub fn new() -> Self {
+        Self { working_dir: None }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+}
+
+struct ListedEntry {
+    rel_path: String,
+    entry_type: String,
+    size_bytes: u64,
+    item_count: Option<usize>,
+    modified: String,
+}
+
+#[async_trait]
+impl ToolHandler for ListDirTool {
+    fn name(&self) -> &'static str {
+        "list_dir"
+    }
+
+    fn description(&self) -> &'static str {
+        "List files and subdirectories in a structured table, including entry type, size, item count, and modification timestamp."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Directory path to list (default: '.')."
+                },
+                "max_depth": {
+                    "type": "integer",
+                    "description": "Maximum depth to traverse (1 = direct children only, default: 1)."
+                },
+                "include_hidden": {
+                    "type": "boolean",
+                    "description": "Whether to include hidden files and directories (starting with '.'). Default: false."
+                },
+                "pattern": {
+                    "type": "string",
+                    "description": "Optional substring or extension pattern filter (e.g. '.rs', 'src')."
+                }
+            }
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let path_str = arguments
+            .get("path")
+            .and_then(|v| v.as_str())
+            .unwrap_or(".");
+
+        let max_depth = arguments
+            .get("max_depth")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(1)
+            .max(1) as usize;
+
+        let include_hidden = arguments
+            .get("include_hidden")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let pattern = arguments
+            .get("pattern")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        let target_path = resolve_target_path(&self.working_dir, Path::new(path_str));
+
+        if !target_path.exists() {
+            return Err(TagisanError::Execution(format!("Path does not exist: '{}'", target_path.display())));
+        }
+        if !target_path.is_dir() {
+            return Err(TagisanError::Execution(format!("Path is not a directory: '{}'", target_path.display())));
+        }
+
+        let mut entries_collected = Vec::new();
+        let mut queue = VecDeque::new();
+        queue.push_back((target_path.clone(), String::new(), 1usize));
+
+        while let Some((curr_dir, rel_prefix, depth)) = queue.pop_front() {
+            let mut reader = match tokio::fs::read_dir(&curr_dir).await {
+                Ok(r) => r,
+                Err(e) => {
+                    return Err(TagisanError::Execution(format!(
+                        "Failed to read directory '{}': {e}",
+                        curr_dir.display()
+                    )));
+                }
+            };
+
+            while let Ok(Some(entry)) = reader.next_entry().await {
+                let file_name = entry.file_name().to_string_lossy().to_string();
+                if !include_hidden && file_name.starts_with('.') {
+                    continue;
+                }
+
+                let entry_path = entry.path();
+                let rel_path = if rel_prefix.is_empty() {
+                    file_name.clone()
+                } else {
+                    format!("{rel_prefix}/{file_name}")
+                };
+
+                let meta = match tokio::fs::symlink_metadata(&entry_path).await {
+                    Ok(m) => m,
+                    Err(_) => continue,
+                };
+
+                let is_symlink = meta.file_type().is_symlink();
+                let is_dir = meta.is_dir();
+                let entry_type = if is_symlink {
+                    "[SYMLINK]".to_string()
+                } else if is_dir {
+                    "[DIR]".to_string()
+                } else {
+                    "[FILE]".to_string()
+                };
+
+                let modified = match meta.modified() {
+                    Ok(t) => {
+                        let dt: chrono::DateTime<chrono::Local> = t.into();
+                        dt.format("%Y-%m-%d %H:%M:%S").to_string()
+                    }
+                    Err(_) => "unknown".to_string(),
+                };
+
+                let (size_bytes, item_count) = if is_dir {
+                    let mut count = 0usize;
+                    if let Ok(mut sub_reader) = tokio::fs::read_dir(&entry_path).await {
+                        while let Ok(Some(_)) = sub_reader.next_entry().await {
+                            count += 1;
+                        }
+                    }
+                    (0u64, Some(count))
+                } else {
+                    (meta.len(), None)
+                };
+
+                entries_collected.push(ListedEntry {
+                    rel_path: if is_dir { format!("{rel_path}/") } else { rel_path.clone() },
+                    entry_type,
+                    size_bytes,
+                    item_count,
+                    modified,
+                });
+
+                if is_dir && depth < max_depth && !is_symlink {
+                    queue.push_back((entry_path, rel_path, depth + 1));
+                }
+            }
+        }
+
+        if let Some(ref pat) = pattern {
+            let pat_lower = pat.to_lowercase();
+            entries_collected.retain(|e| e.rel_path.to_lowercase().contains(&pat_lower));
+        }
+
+        entries_collected.sort_by(|a, b| a.rel_path.to_lowercase().cmp(&b.rel_path.to_lowercase()));
+
+        let mut output = format!(
+            "Directory listing for: '{}' (max_depth: {}, entries: {})\n\n",
+            target_path.display(),
+            max_depth,
+            entries_collected.len()
+        );
+
+        if entries_collected.is_empty() {
+            output.push_str("No files or directories found matching the criteria.\n");
+            return Ok(output);
+        }
+
+        output.push_str(&format!(
+            "{:<10} {:<16} {:<20} {}\n",
+            "TYPE", "SIZE / ITEMS", "MODIFIED", "PATH"
+        ));
+        output.push_str(&format!("{}\n", "-".repeat(78)));
+
+        let mut total_files = 0usize;
+        let mut total_dirs = 0usize;
+        let mut total_bytes = 0u64;
+
+        for e in &entries_collected {
+            let size_or_items = if let Some(items) = e.item_count {
+                total_dirs += 1;
+                format!("{} item(s)", items)
+            } else {
+                total_files += 1;
+                total_bytes += e.size_bytes;
+                format!("{} B", format_with_commas(e.size_bytes))
+            };
+
+            output.push_str(&format!(
+                "{:<10} {:<16} {:<20} {}\n",
+                e.entry_type, size_or_items, e.modified, e.rel_path
+            ));
+        }
+
+        output.push_str(&format!("{}\n", "-".repeat(78)));
+        output.push_str(&format!(
+            "Total: {} file(s) ({}), {} directory(ies)\n",
+            total_files,
+            format_bytes_human(total_bytes),
+            total_dirs
+        ));
+
+        Ok(output)
     }
 }
 
