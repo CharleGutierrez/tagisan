@@ -461,6 +461,56 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         arch_vehent_securing_devops(),
         arch_janca_alice_bob_appsec(),
         arch_wong_real_world_cryptography(),
+        qual_kahneman_thinking_fast_slow(),
+        qual_norman_design_everyday_things(),
+        qual_sweller_cognitive_load_theory(),
+        qual_johnson_laird_mental_models(),
+        qual_chabris_invisible_gorilla(),
+        qual_portigal_interviewing_users(),
+        qual_holtzblatt_contextual_inquiry(),
+        qual_charmaz_grounded_theory(),
+        qual_miles_qualitative_analysis(),
+        qual_hall_just_enough_research(),
+        qual_thaler_nudge(),
+        qual_ariely_predictably_irrational(),
+        qual_thaler_misbehaving(),
+        qual_duke_thinking_in_bets(),
+        qual_schwartz_paradox_of_choice(),
+        qual_fogg_tiny_habits(),
+        qual_eyal_hooked(),
+        qual_pink_drive(),
+        qual_duhigg_power_of_habit(),
+        qual_chou_actionable_gamification(),
+        qual_krug_dont_make_me_think(),
+        qual_krug_rocket_surgery(),
+        qual_nielsen_usability_engineering(),
+        qual_rubin_usability_testing(),
+        qual_sauro_quantifying_ux(),
+        qual_klein_sources_of_power(),
+        qual_weick_sensemaking(),
+        qual_vaughan_challenger_launch(),
+        qual_woods_behind_human_error(),
+        qual_dekker_field_guide_human_error(),
+        qual_austin_how_to_do_things_with_words(),
+        qual_grice_studies_way_of_words(),
+        qual_hall_conversational_design(),
+        qual_nass_wired_for_speech(),
+        qual_reeves_media_equation(),
+        qual_edmondson_fearless_organization(),
+        qual_demarco_peopleware(),
+        qual_skelton_team_topologies(),
+        qual_arbinger_leadership_self_deception(),
+        qual_coyle_culture_code(),
+        qual_nodder_evil_by_design(),
+        qual_brignull_deceptive_patterns(),
+        qual_zuboff_surveillance_capitalism(),
+        qual_noble_algorithms_of_oppression(),
+        qual_boettcher_technically_wrong(),
+        qual_brown_social_life_information(),
+        qual_dourish_where_action_is(),
+        qual_suchman_plans_situated_actions(),
+        qual_norman_things_make_us_smart(),
+        qual_wiener_cybernetics(),
     ]
 }
 
@@ -1004,6 +1054,287 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "cryptography" {
         return find_built_in_skill("arch-wong-real-world-cryptography");
     }
+    // Qualitative & Behavioral Analysis Aliases (Top 50)
+    if lower == "kahneman" {
+        return find_built_in_skill("qual-kahneman-thinking-fast-slow");
+    }
+    if lower == "thinking-fast-and-slow" {
+        return find_built_in_skill("qual-kahneman-thinking-fast-slow");
+    }
+    if lower == "system-1-system-2" {
+        return find_built_in_skill("qual-kahneman-thinking-fast-slow");
+    }
+    if lower == "system-1" {
+        return find_built_in_skill("qual-kahneman-thinking-fast-slow");
+    }
+    if lower == "system-2" {
+        return find_built_in_skill("qual-kahneman-thinking-fast-slow");
+    }
+    if lower == "design-of-everyday-things" {
+        return find_built_in_skill("qual-norman-design-everyday-things");
+    }
+    if lower == "norman-doors" {
+        return find_built_in_skill("qual-norman-design-everyday-things");
+    }
+    if lower == "cognitive-load" {
+        return find_built_in_skill("qual-sweller-cognitive-load-theory");
+    }
+    if lower == "cognitive-load-theory" {
+        return find_built_in_skill("qual-sweller-cognitive-load-theory");
+    }
+    if lower == "mental-models" {
+        return find_built_in_skill("qual-johnson-laird-mental-models");
+    }
+    if lower == "johnson-laird" {
+        return find_built_in_skill("qual-johnson-laird-mental-models");
+    }
+    if lower == "invisible-gorilla" {
+        return find_built_in_skill("qual-chabris-invisible-gorilla");
+    }
+    if lower == "inattentional-blindness" {
+        return find_built_in_skill("qual-chabris-invisible-gorilla");
+    }
+    if lower == "interviewing-users" {
+        return find_built_in_skill("qual-portigal-interviewing-users");
+    }
+    if lower == "portigal" {
+        return find_built_in_skill("qual-portigal-interviewing-users");
+    }
+    if lower == "contextual-inquiry" {
+        return find_built_in_skill("qual-holtzblatt-contextual-inquiry");
+    }
+    if lower == "grounded-theory" {
+        return find_built_in_skill("qual-charmaz-grounded-theory");
+    }
+    if lower == "qualitative-analysis" {
+        return find_built_in_skill("qual-miles-qualitative-analysis");
+    }
+    if lower == "just-enough-research" {
+        return find_built_in_skill("qual-hall-just-enough-research");
+    }
+    if lower == "nudge" {
+        return find_built_in_skill("qual-thaler-nudge");
+    }
+    if lower == "choice-architecture" {
+        return find_built_in_skill("qual-thaler-nudge");
+    }
+    if lower == "predictably-irrational" {
+        return find_built_in_skill("qual-ariely-predictably-irrational");
+    }
+    if lower == "dan-ariely" {
+        return find_built_in_skill("qual-ariely-predictably-irrational");
+    }
+    if lower == "misbehaving" {
+        return find_built_in_skill("qual-thaler-misbehaving");
+    }
+    if lower == "mental-accounting" {
+        return find_built_in_skill("qual-thaler-misbehaving");
+    }
+    if lower == "thinking-in-bets" {
+        return find_built_in_skill("qual-duke-thinking-in-bets");
+    }
+    if lower == "annie-duke" {
+        return find_built_in_skill("qual-duke-thinking-in-bets");
+    }
+    if lower == "paradox-of-choice" {
+        return find_built_in_skill("qual-schwartz-paradox-of-choice");
+    }
+    if lower == "barry-schwartz" {
+        return find_built_in_skill("qual-schwartz-paradox-of-choice");
+    }
+    if lower == "tiny-habits" {
+        return find_built_in_skill("qual-fogg-tiny-habits");
+    }
+    if lower == "fogg-behavior-model" {
+        return find_built_in_skill("qual-fogg-tiny-habits");
+    }
+    if lower == "bj-fogg" {
+        return find_built_in_skill("qual-fogg-tiny-habits");
+    }
+    if lower == "hooked" {
+        return find_built_in_skill("qual-eyal-hooked");
+    }
+    if lower == "hook-model" {
+        return find_built_in_skill("qual-eyal-hooked");
+    }
+    if lower == "nir-eyal" {
+        return find_built_in_skill("qual-eyal-hooked");
+    }
+    if lower == "drive" {
+        return find_built_in_skill("qual-pink-drive");
+    }
+    if lower == "daniel-pink" {
+        return find_built_in_skill("qual-pink-drive");
+    }
+    if lower == "power-of-habit" {
+        return find_built_in_skill("qual-duhigg-power-of-habit");
+    }
+    if lower == "habit-loop" {
+        return find_built_in_skill("qual-duhigg-power-of-habit");
+    }
+    if lower == "actionable-gamification" {
+        return find_built_in_skill("qual-chou-actionable-gamification");
+    }
+    if lower == "octalysis" {
+        return find_built_in_skill("qual-chou-actionable-gamification");
+    }
+    if lower == "dont-make-me-think" {
+        return find_built_in_skill("qual-krug-dont-make-me-think");
+    }
+    if lower == "steve-krug" {
+        return find_built_in_skill("qual-krug-dont-make-me-think");
+    }
+    if lower == "rocket-surgery" {
+        return find_built_in_skill("qual-krug-rocket-surgery");
+    }
+    if lower == "rocket-surgery-made-easy" {
+        return find_built_in_skill("qual-krug-rocket-surgery");
+    }
+    if lower == "nielsen-heuristics" {
+        return find_built_in_skill("qual-nielsen-usability-engineering");
+    }
+    if lower == "jakob-nielsen" {
+        return find_built_in_skill("qual-nielsen-usability-engineering");
+    }
+    if lower == "usability-testing" {
+        return find_built_in_skill("qual-rubin-usability-testing");
+    }
+    if lower == "quantifying-ux" {
+        return find_built_in_skill("qual-sauro-quantifying-ux");
+    }
+    if lower == "sus-score" {
+        return find_built_in_skill("qual-sauro-quantifying-ux");
+    }
+    if lower == "sources-of-power" {
+        return find_built_in_skill("qual-klein-sources-of-power");
+    }
+    if lower == "recognition-primed-decision" {
+        return find_built_in_skill("qual-klein-sources-of-power");
+    }
+    if lower == "rpd" {
+        return find_built_in_skill("qual-klein-sources-of-power");
+    }
+    if lower == "gary-klein" {
+        return find_built_in_skill("qual-klein-sources-of-power");
+    }
+    if lower == "sensemaking" {
+        return find_built_in_skill("qual-weick-sensemaking");
+    }
+    if lower == "karl-weick" {
+        return find_built_in_skill("qual-weick-sensemaking");
+    }
+    if lower == "normalization-of-deviance" {
+        return find_built_in_skill("qual-vaughan-challenger-launch");
+    }
+    if lower == "diane-vaughan" {
+        return find_built_in_skill("qual-vaughan-challenger-launch");
+    }
+    if lower == "behind-human-error" {
+        return find_built_in_skill("qual-woods-behind-human-error");
+    }
+    if lower == "field-guide-human-error" {
+        return find_built_in_skill("qual-dekker-field-guide-human-error");
+    }
+    if lower == "sidney-dekker" {
+        return find_built_in_skill("qual-dekker-field-guide-human-error");
+    }
+    if lower == "how-to-do-things-with-words" {
+        return find_built_in_skill("qual-austin-how-to-do-things-with-words");
+    }
+    if lower == "speech-acts" {
+        return find_built_in_skill("qual-austin-how-to-do-things-with-words");
+    }
+    if lower == "gricean-maxims" {
+        return find_built_in_skill("qual-grice-studies-way-of-words");
+    }
+    if lower == "paul-grice" {
+        return find_built_in_skill("qual-grice-studies-way-of-words");
+    }
+    if lower == "conversational-design" {
+        return find_built_in_skill("qual-hall-conversational-design");
+    }
+    if lower == "wired-for-speech" {
+        return find_built_in_skill("qual-nass-wired-for-speech");
+    }
+    if lower == "media-equation" {
+        return find_built_in_skill("qual-reeves-media-equation");
+    }
+    if lower == "psychological-safety" {
+        return find_built_in_skill("qual-edmondson-fearless-organization");
+    }
+    if lower == "fearless-organization" {
+        return find_built_in_skill("qual-edmondson-fearless-organization");
+    }
+    if lower == "amy-edmondson" {
+        return find_built_in_skill("qual-edmondson-fearless-organization");
+    }
+    if lower == "peopleware" {
+        return find_built_in_skill("qual-demarco-peopleware");
+    }
+    if lower == "demarco-lister" {
+        return find_built_in_skill("qual-demarco-peopleware");
+    }
+    if lower == "team-topologies" {
+        return find_built_in_skill("qual-skelton-team-topologies");
+    }
+    if lower == "leadership-and-self-deception" {
+        return find_built_in_skill("qual-arbinger-leadership-self-deception");
+    }
+    if lower == "culture-code" {
+        return find_built_in_skill("qual-coyle-culture-code");
+    }
+    if lower == "evil-by-design" {
+        return find_built_in_skill("qual-nodder-evil-by-design");
+    }
+    if lower == "deceptive-patterns" {
+        return find_built_in_skill("qual-brignull-deceptive-patterns");
+    }
+    if lower == "dark-patterns" {
+        return find_built_in_skill("qual-brignull-deceptive-patterns");
+    }
+    if lower == "harry-brignull" {
+        return find_built_in_skill("qual-brignull-deceptive-patterns");
+    }
+    if lower == "surveillance-capitalism" {
+        return find_built_in_skill("qual-zuboff-surveillance-capitalism");
+    }
+    if lower == "shoshana-zuboff" {
+        return find_built_in_skill("qual-zuboff-surveillance-capitalism");
+    }
+    if lower == "algorithms-of-oppression" {
+        return find_built_in_skill("qual-noble-algorithms-of-oppression");
+    }
+    if lower == "safiya-noble" {
+        return find_built_in_skill("qual-noble-algorithms-of-oppression");
+    }
+    if lower == "technically-wrong" {
+        return find_built_in_skill("qual-boettcher-technically-wrong");
+    }
+    if lower == "social-life-of-information" {
+        return find_built_in_skill("qual-brown-social-life-information");
+    }
+    if lower == "where-the-action-is" {
+        return find_built_in_skill("qual-dourish-where-action-is");
+    }
+    if lower == "embodied-interaction" {
+        return find_built_in_skill("qual-dourish-where-action-is");
+    }
+    if lower == "plans-and-situated-actions" {
+        return find_built_in_skill("qual-suchman-plans-situated-actions");
+    }
+    if lower == "lucy-suchman" {
+        return find_built_in_skill("qual-suchman-plans-situated-actions");
+    }
+    if lower == "things-that-make-us-smart" {
+        return find_built_in_skill("qual-norman-things-make-us-smart");
+    }
+    if lower == "cybernetics" {
+        return find_built_in_skill("qual-wiener-cybernetics");
+    }
+    if lower == "norbert-wiener" {
+        return find_built_in_skill("qual-wiener-cybernetics");
+    }
+
 
     all_built_in_skills().into_iter().find(|s| s.name == lower)
 }
@@ -8782,7 +9113,7 @@ pub fn estimate_tokens(text: &str) -> usize {
 }
 
 pub const SKILLS_CACHE_MAGIC: u32 = 0x54475331; // "TGS1"
-pub const SKILLS_CACHE_VERSION: u32 = 3;
+pub const SKILLS_CACHE_VERSION: u32 = 4;
 
 /// Binary serialized cache container for fast cold startup (< 2ms)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -10579,6 +10910,10 @@ fn tokenize(text: &str) -> Vec<String> {
 fn infer_domain(name: &str) -> String {
     let lower = name.to_lowercase();
     let prefixes = [
+        ("qual-", "behavioral"),
+        ("qual", "behavioral"),
+        ("beh-", "behavioral"),
+        ("beh", "behavioral"),
         ("arch-", "architecture"),
         ("arch", "architecture"),
         ("ba-", "ba"),
@@ -15108,6 +15443,2011 @@ tgs ecc skills -q "arch-wong-real-world-cryptography"
 
 # Execute automated architectural audit
 cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+
+// =========================================================================
+// Qualitative & Behavioral Analysis Skills Built-in Implementations (Top 50)
+// =========================================================================
+
+/// 271. qual-kahneman-thinking-fast-slow Skill
+pub fn qual_kahneman_thinking_fast_slow() -> EccSkill {
+    EccSkill::new(
+        "qual-kahneman-thinking-fast-slow",
+        "Dual-process cognitive psychology: System 1 (fast, associative, heuristic-driven) vs. System 2 (slow, analytical, resource-hungry, easily fatigued) and cognitive biases.",
+        r#"---
+name: qual-kahneman-thinking-fast-slow
+description: \"Dual-process cognitive psychology: System 1 (fast, associative, heuristic-driven) vs. System 2 (slow, analytical, resource-hungry, easily fatigued) and cognitive biases.\"
+triggers: ["kahneman", "thinking-fast-and-slow", "system-1-system-2", "cognitive-bias", "availability-heuristic", "anchoring-bias", "loss-aversion", "framing-effect"]
+---
+
+# qual-kahneman-thinking-fast-slow
+> Based on **Thinking, Fast and Slow - Daniel Kahneman**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Primary user flows (search, checkout, read, navigate) must operate entirely within System 1 cognitive fluency.**\n2. **ALWAYS: Reserve deliberate System 2 friction (confirmation gates, dual-verification, explicit typing) exclusively for high-risk, irreversible operations.**\n3. **NEVER: Overload System 2 working memory with complex mental calculations or ambiguous status choices during routine tasks.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Optimize interfaces for intuitive System 1 recognition. Introduce intentional cognitive friction only at irreversible destruction boundaries.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Requiring multi-step analytical calculation for simple data entry.**\n- **Omitting confirmation barriers on destructive batch deletions.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-kahneman-thinking-fast-slow\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 272. qual-norman-design-everyday-things Skill
+pub fn qual_norman_design_everyday_things() -> EccSkill {
+    EccSkill::new(
+        "qual-norman-design-everyday-things",
+        "Cognitive ergonomics & human-centered design: Gulf of Execution, Gulf of Evaluation, affordances, visual signifiers, conceptual constraints, and feedback loops.",
+        r#"---
+name: qual-norman-design-everyday-things
+description: \"Cognitive ergonomics & human-centered design: Gulf of Execution, Gulf of Evaluation, affordances, visual signifiers, conceptual constraints, and feedback loops.\"
+triggers: ["don-norman", "design-of-everyday-things", "norman-doors", "gulf-of-execution", "gulf-of-evaluation", "affordance", "signifiers", "feedback-loop"]
+---
+
+# qual-norman-design-everyday-things
+> Based on **The Design of Everyday Things - Don Norman**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Bridge the Gulf of Evaluation in < 100ms through immediate, deterministic visual state changes and audio/haptic cues.**\n2. **ALWAYS: Every interactive control must provide unambiguous signifiers (elevation, cursor changes, hover states) matching its underlying affordance.**\n3. **NEVER: Create 'Norman doors'—interactive components whose physical appearance contradicts their functional behavior.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Make action possibilities visible and immediate. Provide deterministic feedback for all state transitions so the user never wonders if an action succeeded.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Unclickable-looking buttons or clickable static text.**\n- **Asynchronous background mutations with zero loading indicator or feedback.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-norman-design-everyday-things\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 273. qual-sweller-cognitive-load-theory Skill
+pub fn qual_sweller_cognitive_load_theory() -> EccSkill {
+    EccSkill::new(
+        "qual-sweller-cognitive-load-theory",
+        "Working memory limits and cognitive ergonomics: 4±1 item capacity, Extraneous load reduction, Germane schema formation, and Intrinsic task chunking.",
+        r#"---
+name: qual-sweller-cognitive-load-theory
+description: \"Working memory limits and cognitive ergonomics: 4±1 item capacity, Extraneous load reduction, Germane schema formation, and Intrinsic task chunking.\"
+triggers: ["sweller", "cognitive-load-theory", "working-memory", "extraneous-load", "split-attention-effect", "modality-effect", "progressive-disclosure"]
+---
+
+# qual-sweller-cognitive-load-theory
+> Based on **Cognitive Load Theory - John Sweller, Paul Ayres, Slava Kalyuga**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Eliminate extraneous cognitive load by removing visual clutter, redundant text, and split-attention layouts.**\n2. **ALWAYS: Bound visible decision choices per viewport to 4 ± 1 items; chunk complex multi-factor forms into progressive stages.**\n3. **NEVER: Force users to hold disconnected reference information in working memory across disparate tabs or modal dialogs.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Structure user interfaces to preserve working memory limits. Group related attributes into cohesive chunks and reveal complexity progressively.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Displaying 30 un-grouped form fields on a single sprawling screen.**\n- **Forcing users to memorize codes from one screen to enter on another.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-sweller-cognitive-load-theory\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 274. qual-johnson-laird-mental-models Skill
+pub fn qual_johnson_laird_mental_models() -> EccSkill {
+    EccSkill::new(
+        "qual-johnson-laird-mental-models",
+        "Cognitive representation and analog reasoning: How humans construct internal dynamic mental models of system states, causality, and domain metaphors.",
+        r#"---
+name: qual-johnson-laird-mental-models
+description: \"Cognitive representation and analog reasoning: How humans construct internal dynamic mental models of system states, causality, and domain metaphors.\"
+triggers: ["johnson-laird", "mental-models", "cognitive-representation", "causal-reasoning", "analog-models", "conceptual-metaphor"]
+---
+
+# qual-johnson-laird-mental-models
+> Based on **Mental Models: Towards a Cognitive Science of Language, Inference, and Consciousness - Philip Johnson-Laird**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Map software state models (files, carts, channels, boards) 1:1 to users' pre-existing domain mental models and physical analogies.**\n2. **ALWAYS: Maintain internal consistency in state transitions; identical actions must produce identical outcomes across the application.**\n3. **NEVER: Expose mechanical backend leaks (raw foreign keys, cache invalidation delays, internal error codes) that violate the user's mental model.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Align application interactions with the user's intuitive conceptual model. Preserve spatial and metaphorical fidelity across all state transitions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using database table column names as UI form labels.**\n- **Having 'Archive' mean 'permanently delete' in one tab and 'hide' in another.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-johnson-laird-mental-models\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 275. qual-chabris-invisible-gorilla Skill
+pub fn qual_chabris_invisible_gorilla() -> EccSkill {
+    EccSkill::new(
+        "qual-chabris-invisible-gorilla",
+        "Inattentional blindness, change blindness, and the illusion of attention: Human focus tunnels vision, causing critical peripheral alerts to be ignored.",
+        r#"---
+name: qual-chabris-invisible-gorilla
+description: \"Inattentional blindness, change blindness, and the illusion of attention: Human focus tunnels vision, causing critical peripheral alerts to be ignored.\"
+triggers: ["chabris", "invisible-gorilla", "inattentional-blindness", "change-blindness", "focal-attention", "banner-blindness", "inline-validation"]
+---
+
+# qual-chabris-invisible-gorilla
+> Based on **The Invisible Gorilla: How Our Intuitions Deceive Us - Christopher Chabris & Daniel Simons**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Anchor critical validation errors and status updates directly inside the user's active foveal gaze zone (inline inputs, cursor anchor).**\n2. **ALWAYS: Use localized visual motion or contrast shifts only when an immediate user intervention is strictly required.**\n3. **NEVER: Rely on peripheral toast messages, far-off notification bars, or bottom-corner badges for critical blocking errors.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Place feedback directly within the active task focus area. Prevent inattentional blindness by co-locating warnings with the causative input control.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Flashing error messages in the upper-right header while user types at the bottom of the page.**\n- **Assuming users notice passive banner alerts.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-chabris-invisible-gorilla\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 276. qual-portigal-interviewing-users Skill
+pub fn qual_portigal_interviewing_users() -> EccSkill {
+    EccSkill::new(
+        "qual-portigal-interviewing-users",
+        "Qualitative user research: Semi-structured interviewing, uncovering tacit mental models, listening for compensating workarounds, and field inquiry.",
+        r#"---
+name: qual-portigal-interviewing-users
+description: \"Qualitative user research: Semi-structured interviewing, uncovering tacit mental models, listening for compensating workarounds, and field inquiry.\"
+triggers: ["portigal", "interviewing-users", "user-research", "semi-structured-interview", "field-inquiry", "tacit-knowledge", "compensating-workarounds"]
+---
+
+# qual-portigal-interviewing-users
+> Based on **Interviewing Users: How to Uncover Compelling Insights - Steve Portigal**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Base feature requirements on observed user workarounds (spreadsheets, copy-pasting, post-it notes) rather than speculative user requests.**\n2. **ALWAYS: Frame qualitative discovery around actual past behavior ('Tell me about the last time you...') rather than hypothetical futures.**\n3. **NEVER: Ask leading questions or validate roadmap assumptions through speculative user surveys.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design software that eliminates observed human workarounds and compensatory habits. Ground functional workflows in real-world qualitative user transcripts.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Building features based on speculative user feature voting without behavioral observation.**\n- **Designing for hypothetical idealized workflows.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-portigal-interviewing-users\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 277. qual-holtzblatt-contextual-inquiry Skill
+pub fn qual_holtzblatt_contextual_inquiry() -> EccSkill {
+    EccSkill::new(
+        "qual-holtzblatt-contextual-inquiry",
+        "Contextual Design: Apprenticeship model, observing work in its real situated context, work models (flow, sequence, artifact, culture, physical), and affinity diagrams.",
+        r#"---
+name: qual-holtzblatt-contextual-inquiry
+description: \"Contextual Design: Apprenticeship model, observing work in its real situated context, work models (flow, sequence, artifact, culture, physical), and affinity diagrams.\"
+triggers: ["holtzblatt", "beyer", "contextual-inquiry", "contextual-design", "situated-work", "affinity-diagram", "work-modeling", "interruption-safe"]
+---
+
+# qual-holtzblatt-contextual-inquiry
+> Based on **Contextual Inquiry and Design - Karen Holtzblatt & Hugh Beyer**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Design interfaces to be interruption-safe: auto-save drafts locally in client storage and seamlessly restore state across reloads and tab closures.**\n2. **ALWAYS: Account for environmental noise, multi-monitor setups, and physical context in UI layout and contrast ratios.**\n3. **NEVER: Erase unsubmitted user input upon network disconnection, session timeout, or accidental navigation.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Ensure zero data loss during multi-step workflows. Cache state continuously in local client storage to survive real-world workplace interruptions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Clearing an entire 15-field form when validation fails.**\n- **Session timeout that permanently wipes half-completed data entry.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-holtzblatt-contextual-inquiry\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 278. qual-charmaz-grounded-theory Skill
+pub fn qual_charmaz_grounded_theory() -> EccSkill {
+    EccSkill::new(
+        "qual-charmaz-grounded-theory",
+        "Constructivist Grounded Theory: Inductive coding, theoretical sampling, constant comparative method, and emergent schema category generation from empirical field data.",
+        r#"---
+name: qual-charmaz-grounded-theory
+description: \"Constructivist Grounded Theory: Inductive coding, theoretical sampling, constant comparative method, and emergent schema category generation from empirical field data.\"
+triggers: ["charmaz", "grounded-theory", "inductive-coding", "theoretical-sampling", "constant-comparative", "emergent-taxonomy", "verbatim-codes"]
+---
+
+# qual-charmaz-grounded-theory
+> Based on **Constructing Grounded Theory - Kathy Charmaz**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Derive database enums, tags, and workflow categories inductively from verbatim user terminology and observed empirical field data.**\n2. **ALWAYS: Test schema abstractions against raw qualitative field data through continuous comparative analysis.**\n3. **NEVER: Impose rigid top-down data classifications that force users to miscategorize their real-world artifacts.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Ground entity definitions and taxonomy schemas directly in empirical user terminology and qualitative observations, avoiding synthetic abstractions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Hardcoding rigid status enums that don't match the client's actual lifecycle stages.**\n- **Inventing developer jargon for domain concepts.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-charmaz-grounded-theory\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 279. qual-miles-qualitative-analysis Skill
+pub fn qual_miles_qualitative_analysis() -> EccSkill {
+    EccSkill::new(
+        "qual-miles-qualitative-analysis",
+        "Rigorous qualitative analysis: Data condensation, matrix and network displays, drawing and verifying conclusions, pattern coding, and qualitative audit trails.",
+        r#"---
+name: qual-miles-qualitative-analysis
+description: \"Rigorous qualitative analysis: Data condensation, matrix and network displays, drawing and verifying conclusions, pattern coding, and qualitative audit trails.\"
+triggers: ["miles-huberman", "saldana", "qualitative-analysis", "data-condensation", "matrix-displays", "pattern-coding", "qualitative-audit-trail"]
+---
+
+# qual-miles-qualitative-analysis
+> Based on **Qualitative Data Analysis: A Methods Sourcebook - Matthew B. Miles, A. Michael Huberman, Johnny Saldaña**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Structure qualitative feedback logs into matrix displays (Frequency, Severity, User Role, Workaround Cost) for rigorous pattern detection.**\n2. **ALWAYS: Maintain an auditable chain of evidence connecting qualitative user observations to specific code modifications.**\n3. **NEVER: Dismiss user feedback as 'anecdotal' without systematic thematic coding and triangulation.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Transform unstructured qualitative user feedback into structured, auditable thematic matrices to drive prioritized engineering iterations.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Ignoring qualitative bug descriptions in favor of purely synthetic synthetic unit tests.**\n- **Lacking traceability from user issue to code fix.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-miles-qualitative-analysis\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 280. qual-hall-just-enough-research Skill
+pub fn qual_hall_just_enough_research() -> EccSkill {
+    EccSkill::new(
+        "qual-hall-just-enough-research",
+        "Pragmatic design research: Risk reduction, answering the right questions, organizational research, competitive analysis, evaluative vs generative inquiry.",
+        r#"---
+name: qual-hall-just-enough-research
+description: \"Pragmatic design research: Risk reduction, answering the right questions, organizational research, competitive analysis, evaluative vs generative inquiry.\"
+triggers: ["erika-hall", "just-enough-research", "pragmatic-research", "risk-reduction", "generative-research", "evaluative-research", "assumption-testing"]
+---
+
+# qual-hall-just-enough-research
+> Based on **Just Enough Research - Erika Hall**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Identify and rank the riskiest behavioral assumptions before generating high-fidelity code.**\n2. **ALWAYS: Validate assumptions using the lowest-fidelity disposable prototype possible (sketches, paper mocks, simple CLI).**\n3. **NEVER: Write thousands of lines of full-stack code to answer a question that could be resolved with a 15-minute user interview.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+De-risk software development by testing critical user assumptions with minimal, lightweight prototypes prior to full architectural implementation.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Building an entire complex microservice architecture before validating if any user wants the core feature.**\n- **Confusing code velocity with user value.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-hall-just-enough-research\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 281. qual-thaler-nudge Skill
+pub fn qual_thaler_nudge() -> EccSkill {
+    EccSkill::new(
+        "qual-thaler-nudge",
+        "Choice architecture & libertarian paternalism: Defaults, feedback, mapping choices to welfare, incentives, structured choices, and error tolerance.",
+        r#"---
+name: qual-thaler-nudge
+description: \"Choice architecture & libertarian paternalism: Defaults, feedback, mapping choices to welfare, incentives, structured choices, and error tolerance.\"
+triggers: ["thaler", "sunstein", "nudge", "choice-architecture", "defaults", "libertarian-paternalism", "error-tolerance", "benevolent-defaults"]
+---
+
+# qual-thaler-nudge
+> Based on **Nudge: Improving Decisions About Health, Wealth, and Happiness - Richard H. Thaler & Cass R. Sunstein**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Configure default settings to the safest, most pro-user, privacy-preserving, and sustainable option (Benevolent Defaults).**\n2. **ALWAYS: Provide transparent, single-click mechanisms for users to inspect and modify default behaviors.**\n3. **NEVER: Deploy predatory defaults that exploit cognitive inertia (pre-checked subscriptions, hidden marketing opt-ins).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement benevolent choice architecture: pre-select optimal security, privacy, and cost-efficiency defaults while keeping user overrides frictionless.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Pre-selecting recurring payment add-ons during checkout.**\n- **Defaulting to public data visibility without explicit user consent.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-thaler-nudge\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 282. qual-ariely-predictably-irrational Skill
+pub fn qual_ariely_predictably_irrational() -> EccSkill {
+    EccSkill::new(
+        "qual-ariely-predictably-irrational",
+        "Predictable human irrationality: The decoy effect, the zero-price effect (free goods distort value evaluation), anchoring, and social vs market norms.",
+        r#"---
+name: qual-ariely-predictably-irrational
+description: \"Predictable human irrationality: The decoy effect, the zero-price effect (free goods distort value evaluation), anchoring, and social vs market norms.\"
+triggers: ["ariely", "predictably-irrational", "decoy-effect", "zero-price-effect", "anchoring", "social-vs-market-norms", "behavioral-economics"]
+---
+
+# qual-ariely-predictably-irrational
+> Based on **Predictably Irrational: The Hidden Forces That Shape Our Decisions - Dan Ariely**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Account for numerical anchoring in comparative pricing tables and tiered subscription displays.**\n2. **ALWAYS: Keep social and collaborative features governed by social norms; never contaminate peer collaboration with transactional micro-fees.**\n3. **NEVER: Use the 'Free' hook to disguise coercive lock-in or surprise downstream billing charges.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design comparative interfaces and value exchanges with awareness of cognitive anchoring and norm boundaries, avoiding coercive financial decoys.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Charging micropayments for peer-to-peer social messaging.**\n- **Hidden recurring charges triggered after a 'Free Trial' without explicit advance notice.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-ariely-predictably-irrational\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 283. qual-thaler-misbehaving Skill
+pub fn qual_thaler_misbehaving() -> EccSkill {
+    EccSkill::new(
+        "qual-thaler-misbehaving",
+        "Behavioral economic anomalies: Mental accounting, endowment effect, sunk cost fallacy, perceived fairness, and bounded self-control.",
+        r#"---
+name: qual-thaler-misbehaving
+description: \"Behavioral economic anomalies: Mental accounting, endowment effect, sunk cost fallacy, perceived fairness, and bounded self-control.\"
+triggers: ["thaler-misbehaving", "mental-accounting", "endowment-effect", "sunk-cost-fallacy", "perceived-fairness", "bounded-rationality"]
+---
+
+# qual-thaler-misbehaving
+> Based on **Misbehaving: The Making of Behavioral Economics - Richard H. Thaler**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Ensure account billing, downgrades, and refunds respect perceived fairness and provide immediate confirmation.**\n2. **ALWAYS: Present financial data categorized according to users' mental accounts (e.g. Operating vs Capital, Personal vs Business).**\n3. **NEVER: Leverage the sunk-cost fallacy to manipulate users into continuing unwanted subscriptions or completing bloated forms.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Align application accounting and state transitions with users' psychological mental accounts and transparent standards of transactional fairness.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Refusing prorated refunds on accidental annual renewals.**\n- **Hiding the cancel button behind 5 pages of guilt-tripping 'look what you will lose' prompts.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-thaler-misbehaving\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 284. qual-duke-thinking-in-bets Skill
+pub fn qual_duke_thinking_in_bets() -> EccSkill {
+    EccSkill::new(
+        "qual-duke-thinking-in-bets",
+        "Probabilistic decision-making under uncertainty: Decoupling decision quality from outcomes ('resulting'), combating hindsight bias, and scenario forecasting.",
+        r#"---
+name: qual-duke-thinking-in-bets
+description: \"Probabilistic decision-making under uncertainty: Decoupling decision quality from outcomes ('resulting'), combating hindsight bias, and scenario forecasting.\"
+triggers: ["annie-duke", "thinking-in-bets", "resulting-fallacy", "probabilistic-decisions", "hindsight-bias", "decision-audit", "uncertainty"]
+---
+
+# qual-duke-thinking-in-bets
+> Based on **Thinking in Bets: Making Smarter Decisions When You Don't Have All the Facts - Annie Duke**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Record decision quality, assumptions, and confidence scores at the moment of execution, decoupled from runtime outcomes.**\n2. **ALWAYS: Present predictions and recommendations to users with explicit confidence intervals and probabilistic uncertainty bounds.**\n3. **NEVER: Commit the 'resulting' fallacy by punishing users or rewriting rules simply because a high-probability decision encountered a low-probability variance.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Incorporate explicit probabilistic modeling and confidence calibration into system alerts and decision logs, preventing hindsight bias.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Displaying binary deterministic assertions for machine learning predictions.**\n- **Blaming operators for executing sound probabilistic protocols when rare variance occurs.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-duke-thinking-in-bets\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 285. qual-schwartz-paradox-of-choice Skill
+pub fn qual_schwartz_paradox_of_choice() -> EccSkill {
+    EccSkill::new(
+        "qual-schwartz-paradox-of-choice",
+        "Choice overload and decision paralysis: Maximizers vs. Satisficers, opportunity cost salience, escalation of expectations, and post-decision regret.",
+        r#"---
+name: qual-schwartz-paradox-of-choice
+description: \"Choice overload and decision paralysis: Maximizers vs. Satisficers, opportunity cost salience, escalation of expectations, and post-decision regret.\"
+triggers: ["barry-schwartz", "paradox-of-choice", "choice-overload", "decision-paralysis", "maximizers-vs-satisficers", "option-curation"]
+---
+
+# qual-schwartz-paradox-of-choice
+> Based on **The Paradox of Choice: Why More Is Less - Barry Schwartz**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Cap default visible options in menus, templates, and selections to 3 ± 1 high-confidence choices.**\n2. **ALWAYS: Provide curated 'Recommended', 'Most Popular', or 'Default' paths to empower fast satisficing decisions.**\n3. **NEVER: Confront users with an uncurated, unranked catalog of 50+ choices for a single operational decision.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Eliminate decision paralysis by curating option sets, highlighting recommended defaults, and gating exhaustive lists behind progressive disclosure.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Presenting 40 equally-weighted configuration flags during initial onboarding.**\n- **Overwhelming search results without intelligent sorting or faceted filtering.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-schwartz-paradox-of-choice\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 286. qual-fogg-tiny-habits Skill
+pub fn qual_fogg_tiny_habits() -> EccSkill {
+    EccSkill::new(
+        "qual-fogg-tiny-habits",
+        "The Fogg Behavior Model: B = M * A * P (Behavior happens when Motivation, Ability, and a Prompt converge). The Ability Curve and tiny action recipes.",
+        r#"---
+name: qual-fogg-tiny-habits
+description: \"The Fogg Behavior Model: B = M * A * P (Behavior happens when Motivation, Ability, and a Prompt converge). The Ability Curve and tiny action recipes.\"
+triggers: ["bj-fogg", "tiny-habits", "fogg-behavior-model", "behavior-design", "ability-curve", "prompt-timing", "activation-friction"]
+---
+
+# qual-fogg-tiny-habits
+> Based on **Tiny Habits: The Small Changes That Change Everything - BJ Fogg**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Optimize for user activation by maximizing Ability (reducing friction to < 30 seconds and < 2 clicks) rather than relying on high Motivation.**\n2. **ALWAYS: Place Prompts (triggers) only where and when the user has both the Motivation and the immediate Ability to complete the action.**\n3. **NEVER: Demand complex user inputs or multi-step tasks at moments of low motivation or high environmental distraction.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Maximize user ability by eliminating interaction steps. Ensure prompts coincide exactly with the user's capability and context to act immediately.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Requiring email verification before a user can test a basic search query.**\n- **Triggering survey prompts while a user is actively debugging a production error.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-fogg-tiny-habits\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 287. qual-eyal-hooked Skill
+pub fn qual_eyal_hooked() -> EccSkill {
+    EccSkill::new(
+        "qual-eyal-hooked",
+        "The Hook Framework: Trigger (external/internal), Action (in anticipation of reward), Variable Reward (tribe, hunt, self), and Investment (loading the next trigger).",
+        r#"---
+name: qual-eyal-hooked
+description: \"The Hook Framework: Trigger (external/internal), Action (in anticipation of reward), Variable Reward (tribe, hunt, self), and Investment (loading the next trigger).\"
+triggers: ["nir-eyal", "hooked", "hook-model", "habit-forming", "variable-reward", "user-investment", "stored-value"]
+---
+
+# qual-eyal-hooked
+> Based on **Hooked: How to Build Habit-Forming Products - Nir Eyal**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Ensure every user session concludes with an Investment step (saved preference, created artifact, accumulated data) that increases future system value.**\n2. **ALWAYS: Transition user reliance from external prompts (push notifications, emails) to internal emotional triggers (competence, clarity).**\n3. **NEVER: Deploy variable reward schedules for slot-machine manipulation that does not deliver genuine user utility.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Structure user interactions to store tangible value with every session, creating positive intrinsic reinforcement loops without manipulative dark patterns.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Endless scrolling feeds with zero stopping cues or stored value.**\n- **Sending spammy generic notification triggers with zero personalized contextual relevance.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-eyal-hooked\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 288. qual-pink-drive Skill
+pub fn qual_pink_drive() -> EccSkill {
+    EccSkill::new(
+        "qual-pink-drive",
+        "Intrinsic motivation (Motivation 3.0): The fatal flaws of carrot-and-stick extrinsic rewards; the three pillars of Autonomy, Mastery, and Purpose.",
+        r#"---
+name: qual-pink-drive
+description: \"Intrinsic motivation (Motivation 3.0): The fatal flaws of carrot-and-stick extrinsic rewards; the three pillars of Autonomy, Mastery, and Purpose.\"
+triggers: ["daniel-pink", "drive", "intrinsic-motivation", "autonomy-mastery-purpose", "motivation-3-0", "competence-feedback"]
+---
+
+# qual-pink-drive
+> Based on **Drive: The Surprising Truth About What Motivates Us - Daniel H. Pink**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Provide users with sovereign autonomy over their workspace (keyboard shortcuts, custom layouts, export formats).**\n2. **ALWAYS: Design clear, transparent feedback loops that signal progressive mastery and competence over the tool.**\n3. **NEVER: Replace genuine product utility or mastery with superficial extrinsic gamification badges, points, or leaderboards.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Foster intrinsic motivation by granting user autonomy, clear feedback on functional mastery, and transparency of purpose across all system operations.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Adding meaningless digital confetti and badges for routine data entry.**\n- **Locking workspace layout customization behind arbitrary paywalls.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-pink-drive\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 289. qual-duhigg-power-of-habit Skill
+pub fn qual_duhigg_power_of_habit() -> EccSkill {
+    EccSkill::new(
+        "qual-duhigg-power-of-habit",
+        "The neurological Habit Loop: Cue, Routine, Reward. The golden rule of habit change (substituting routines while maintaining cues and rewards), and keystone habits.",
+        r#"---
+name: qual-duhigg-power-of-habit
+description: \"The neurological Habit Loop: Cue, Routine, Reward. The golden rule of habit change (substituting routines while maintaining cues and rewards), and keystone habits.\"
+triggers: ["charles-duhigg", "power-of-habit", "habit-loop", "cue-routine-reward", "keystone-habits", "habit-transformation"]
+---
+
+# qual-duhigg-power-of-habit
+> Based on **The Power of Habit: Why We Do What We Do in Life and Business - Charles Duhigg**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Attach new software routines to existing, deeply established user cues (e.g. 'when a pull request is approved', 'when a build finishes').**\n2. **ALWAYS: Deliver immediate, tangible rewards (visual confirmation, automated time saved) upon routine completion.**\n3. **NEVER: Expect users to adopt new behaviors without anchoring to an unambiguous environmental or system cue.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Anchor digital workflows to existing environmental cues and deliver immediate closure feedback to solidify productive organizational habits.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Expecting users to remember to manually trigger periodic maintenance scripts.**\n- **Omitting success confirmation states when automated jobs finish.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-duhigg-power-of-habit\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 290. qual-chou-actionable-gamification Skill
+pub fn qual_chou_actionable_gamification() -> EccSkill {
+    EccSkill::new(
+        "qual-chou-actionable-gamification",
+        "The Octalysis Framework: 8 Core Drives of human motivation. Balancing White Hat (Meaning, Empowerment, Social) vs Black Hat (Scarcity, Impatience, Loss).",
+        r#"---
+name: qual-chou-actionable-gamification
+description: \"The Octalysis Framework: 8 Core Drives of human motivation. Balancing White Hat (Meaning, Empowerment, Social) vs Black Hat (Scarcity, Impatience, Loss).\"
+triggers: ["yu-kai-chou", "actionable-gamification", "octalysis", "white-hat-gamification", "black-hat-gamification", "core-drives", "empowerment-of-creativity"]
+---
+
+# qual-chou-actionable-gamification
+> Based on **Actionable Gamification: Beyond Points, Badges, and Leaderboards - Yu-kai Chou**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Prioritize White Hat motivational drives (Empowerment of Creativity, Accomplishment, Epic Meaning) to foster sustainable, healthy engagement.**\n2. **ALWAYS: Ensure users feel in total control of their pacing, choices, and data.**\n3. **NEVER: Deploy Black Hat mechanics (artificial timers, forced waiting loops, loss threat coercion) that induce anxiety and fatigue.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Employ human-centric design grounded in empowerment and creativity, strictly avoiding predatory black-hat scarcity loops.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Fabricating artificial countdown clocks on checkout pages.**\n- **Locking user progress behind artificial 24-hour cool-down timers.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-chou-actionable-gamification\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 291. qual-krug-dont-make-me-think Skill
+pub fn qual_krug_dont_make_me_think() -> EccSkill {
+    EccSkill::new(
+        "qual-krug-dont-make-me-think",
+        "Common sense web usability: The First Law of Usability, designing for billboard scanning, visual hierarchy, omission of needless words, and clear street signs.",
+        r#"---
+name: qual-krug-dont-make-me-think
+description: \"Common sense web usability: The First Law of Usability, designing for billboard scanning, visual hierarchy, omission of needless words, and clear street signs.\"
+triggers: ["steve-krug", "dont-make-me-think", "web-usability", "billboard-scanning", "visual-hierarchy", "omission-of-needless-words", "self-evident-design"]
+---
+
+# qual-krug-dont-make-me-think
+> Based on **Don't Make Me Think, Revisited - Steve Krug**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Make pages and UI components self-evident; a user should grasp what it is and how to use it without reading instructional paragraphs.**\n2. **ALWAYS: Create clear visual hierarchies where relative importance corresponds to visual prominence.**\n3. **NEVER: Require users to read instructions before performing primary tasks.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Eliminate cognitive overhead: make interface affordances and visual hierarchies so clear that every page is self-evident at a glance.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Placing long blocks of explanatory text above a simple form.**\n- **Using ambiguous iconography without accompanying text labels.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-krug-dont-make-me-think\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 292. qual-krug-rocket-surgery Skill
+pub fn qual_krug_rocket_surgery() -> EccSkill {
+    EccSkill::new(
+        "qual-krug-rocket-surgery",
+        "Do-it-yourself qualitative usability testing: Testing 3 users every month, think-aloud protocol, ruthless triage (the morning debrief), and the Law of Triage.",
+        r#"---
+name: qual-krug-rocket-surgery
+description: \"Do-it-yourself qualitative usability testing: Testing 3 users every month, think-aloud protocol, ruthless triage (the morning debrief), and the Law of Triage.\"
+triggers: ["rocket-surgery-made-easy", "diy-usability-testing", "think-aloud-protocol", "ruthless-triage", "usability-testing-protocol", "low-cost-testing"]
+---
+
+# qual-krug-rocket-surgery
+> Based on **Rocket Surgery Made Easy - Steve Krug**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Instrument application user journeys with observable click and step event telemetry to facilitate think-aloud friction triage.**\n2. **ALWAYS: Practice ruthless triage: fix the most severe usability blocker first before polishing minor aesthetic details.**\n3. **NEVER: Defer usability testing until end-of-project staging; test low-fidelity interactive wires immediately.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Build software with observable state checkpoints to enable rapid qualitative think-aloud debugging and ruthless issue triage.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Postponing user testing until a multi-month engineering release is finalized.**\n- **Fixing cosmetic font issues while core checkout navigation is broken.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-krug-rocket-surgery\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 293. qual-nielsen-usability-engineering Skill
+pub fn qual_nielsen_usability_engineering() -> EccSkill {
+    EccSkill::new(
+        "qual-nielsen-usability-engineering",
+        "Canonical usability engineering: Nielsen's 10 Usability Heuristics, heuristic evaluation methods, discount usability testing, and severity ratings.",
+        r#"---
+name: qual-nielsen-usability-engineering
+description: \"Canonical usability engineering: Nielsen's 10 Usability Heuristics, heuristic evaluation methods, discount usability testing, and severity ratings.\"
+triggers: ["jakob-nielsen", "usability-engineering", "nielsen-heuristics", "heuristic-evaluation", "severity-ratings", "discount-usability", "error-prevention"]
+---
+
+# qual-nielsen-usability-engineering
+> Based on **Usability Engineering - Jakob Nielsen**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce visibility of system status with continuous progress indicators updating in < 100ms.**\n2. **ALWAYS: Provide explicit Emergency Exits: universal `Escape`, `Cancel`, and `Undo` support across all state changes.**\n3. **NEVER: Display unformatted system exceptions or cryptic error codes without human-readable recovery guidance.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Comply strictly with Nielsen's 10 Usability Heuristics: maintain continuous status visibility, support universal undo, and provide actionable error recovery.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Modal dialogs with no cancel or close button.**\n- **Error popups displaying raw database stack traces to end users.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-nielsen-usability-engineering\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 294. qual-rubin-usability-testing Skill
+pub fn qual_rubin_usability_testing() -> EccSkill {
+    EccSkill::new(
+        "qual-rubin-usability-testing",
+        "Empirical usability test design: Formative vs summative testing, test plan formulation, performance benchmarks (Task Completion, Time on Task), and data moderation.",
+        r#"---
+name: qual-rubin-usability-testing
+description: \"Empirical usability test design: Formative vs summative testing, test plan formulation, performance benchmarks (Task Completion, Time on Task), and data moderation.\"
+triggers: ["rubin-chisnell", "usability-testing-handbook", "test-plan", "task-completion-rate", "time-on-task", "formative-testing", "summative-testing"]
+---
+
+# qual-rubin-usability-testing
+> Based on **Handbook of Usability Testing - Jeffrey Rubin & Dana Chisnell**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Define quantifiable benchmark criteria (Task Completion Rate > 90%, zero critical errors) for core user user journeys.**\n2. **ALWAYS: Design end-to-end task flows with unambiguous start and success criteria.**\n3. **NEVER: Ship complex user workflows without validating that novice users can complete the primary task unaided.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Establish rigorous task completion and error-free execution benchmarks for all generated user pathways prior to production deployment.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming a feature is usable because the engineer who wrote it can navigate it.**\n- **Releasing multi-step workflows with zero automated completion metrics.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-rubin-usability-testing\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 295. qual-sauro-quantifying-ux Skill
+pub fn qual_sauro_quantifying_ux() -> EccSkill {
+    EccSkill::new(
+        "qual-sauro-quantifying-ux",
+        "Practical statistics for user research: System Usability Scale (SUS), Single Ease Question (SEQ), Net Promoter, task completion confidence intervals, and small sample stats.",
+        r#"---
+name: qual-sauro-quantifying-ux
+description: \"Practical statistics for user research: System Usability Scale (SUS), Single Ease Question (SEQ), Net Promoter, task completion confidence intervals, and small sample stats.\"
+triggers: ["jeff-sauro", "james-lewis", "quantifying-ux", "system-usability-scale", "sus-score", "single-ease-question", "seq", "ux-statistics"]
+---
+
+# qual-sauro-quantifying-ux
+> Based on **Quantifying the User Experience - Jeff Sauro & James R. Lewis**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Target an empirical System Usability Scale (SUS) equivalent score >= 80 for production interfaces.**\n2. **ALWAYS: Embed single-question micro-telemetry (SEQ: 1 to 7 ease rating) immediately following complex task completion.**\n3. **NEVER: Rely on subjective personal opinions to evaluate interaction difficulty when standardized psychometric UX metrics exist.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Incorporate standardized psychometric UX measurement (SUS targets, post-task SEQ capture) directly into application telemetry.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Treating UX quality as a purely subjective aesthetic debate.**\n- **Failing to measure user perceived effort after complex configuration flows.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-sauro-quantifying-ux\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 296. qual-klein-sources-of-power Skill
+pub fn qual_klein_sources_of_power() -> EccSkill {
+    EccSkill::new(
+        "qual-klein-sources-of-power",
+        "Naturalistic Decision Making (NDM): Recognition-Primed Decision (RPD) model, expert intuition under time pressure, mental simulation, and pre-mortems.",
+        r#"---
+name: qual-klein-sources-of-power
+description: \"Naturalistic Decision Making (NDM): Recognition-Primed Decision (RPD) model, expert intuition under time pressure, mental simulation, and pre-mortems.\"
+triggers: ["gary-klein", "sources-of-power", "naturalistic-decision-making", "recognition-primed-decision", "rpd-model", "pre-mortem", "mental-simulation"]
+---
+
+# qual-klein-sources-of-power
+> Based on **Sources of Power: How People Make Decisions - Gary Klein**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Incident-response and operations dashboards must present rich situational cues and a single pre-validated primary action to enable fast mental simulation.**\n2. **ALWAYS: Conduct a Pre-Mortem before initiating high-risk architectural deployments or automated migration scripts.**\n3. **NEVER: Force operators into analytical multi-criteria comparison modals during high-severity production incidents.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design operational controls that support recognition-primed expert decisions: display clear situational context and singular executable remediation paths.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Forcing an on-call engineer to configure 12 query parameters while production is down.**\n- **Skipping pre-mortem risk identification on major releases.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-klein-sources-of-power\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 297. qual-weick-sensemaking Skill
+pub fn qual_weick_sensemaking() -> EccSkill {
+    EccSkill::new(
+        "qual-weick-sensemaking",
+        "Organizational sensemaking: Retrospective, grounded in identity construction, social, continuous, extracted cues, driven by plausibility rather than accuracy.",
+        r#"---
+name: qual-weick-sensemaking
+description: \"Organizational sensemaking: Retrospective, grounded in identity construction, social, continuous, extracted cues, driven by plausibility rather than accuracy.\"
+triggers: ["karl-weick", "sensemaking", "high-reliability-organizations", "retrospective-sensemaking", "extracted-cues", "plausibility-over-accuracy", "shared-narrative"]
+---
+
+# qual-weick-sensemaking
+> Based on **Sensemaking in Organizations - Karl E. Weick**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Provide unified chronological event timelines during production incidents so all cross-functional responders share identical situational sensemaking.**\n2. **ALWAYS: Support real-time collaborative annotations directly attached to system state changes.**\n3. **NEVER: Fragment incident telemetry across disjointed tools without a central, synchronized narrative timeline.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Construct collaborative observability timelines that synthesize disparate system cues into an actionable, plausible shared narrative for incident teams.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Isolating audit logs in separate databases with non-synchronized timestamps.**\n- **Lacking collaborative shared notes during incident response.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-weick-sensemaking\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 298. qual-vaughan-challenger-launch Skill
+pub fn qual_vaughan_challenger_launch() -> EccSkill {
+    EccSkill::new(
+        "qual-vaughan-challenger-launch",
+        "The Normalization of Deviance: How operational anomalies and out-of-spec signals become incrementally accepted as normal until catastrophic system failure occurs.",
+        r#"---
+name: qual-vaughan-challenger-launch
+description: \"The Normalization of Deviance: How operational anomalies and out-of-spec signals become incrementally accepted as normal until catastrophic system failure occurs.\"
+triggers: ["diane-vaughan", "challenger-launch", "normalization-of-deviance", "safety-culture", "incremental-risk", "anomaly-acceptance", "operational-drift"]
+---
+
+# qual-vaughan-challenger-launch
+> Based on **The Challenger Launch Decision: Risky Technology, Culture, and Deviance at NASA - Diane Vaughan**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Treat intermittent system warnings, flaky tests, and recurring background errors as critical technical debt; maintain zero-tolerance alerts.**\n2. **ALWAYS: Explicitly track operational drift by measuring deviations between specified behavior and actual runtime telemetry.**\n3. **NEVER: Silence or permanently ignore recurring alerts simply because 'the system hasn't crashed yet'.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Enforce strict anomaly accountability: prevent normalization of deviance by tracking alert creep, flaky test drift, and degraded thresholds as blocking defects.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Muting a failing alert channel because 'it fires all the time'.**\n- **Retrying flaky tests 5 times until they accidentally pass in CI.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-vaughan-challenger-launch\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 299. qual-woods-behind-human-error Skill
+pub fn qual_woods_behind_human_error() -> EccSkill {
+    EccSkill::new(
+        "qual-woods-behind-human-error",
+        "Human error as symptom: Brittle automation, clumsy systems, conflicting goals, cognitive vulnerability, and the demands of operational complexity.",
+        r#"---
+name: qual-woods-behind-human-error
+description: \"Human error as symptom: Brittle automation, clumsy systems, conflicting goals, cognitive vulnerability, and the demands of operational complexity.\"
+triggers: ["david-woods", "sidney-dekker", "richard-cook", "behind-human-error", "clumsy-automation", "blameless-culture", "systemic-vulnerability"]
+---
+
+# qual-woods-behind-human-error
+> Based on **Behind Human Error - David D. Woods, Sidney Dekker, Richard Cook, Leila Johannesen**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Treat operator errors as symptoms of deeper interface ambiguity, brittle automation, or contradictory organizational goals.**\n2. **ALWAYS: Provide confirmation dialogs that display the exact blast radius and entity impact before executing irreversible operations.**\n3. **NEVER: Blame 'human error' or 'operator negligence' in post-mortems or system documentation.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Eliminate clumsy automation: design safety envelopes, blast-radius previews, and resilient recovery mechanisms that treat user errors as design failures.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Closing post-mortems with 'action item: retrain the operator'.**\n- **Silent automated scripts that execute massive destructive actions without confirmation.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-woods-behind-human-error\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 300. qual-dekker-field-guide-human-error Skill
+pub fn qual_dekker_field_guide_human_error() -> EccSkill {
+    EccSkill::new(
+        "qual-dekker-field-guide-human-error",
+        "The New View of human error: Moving from 'who did it' to 'what made their actions make sense at the time'. Resilience engineering and systemic safety.",
+        r#"---
+name: qual-dekker-field-guide-human-error
+description: \"The New View of human error: Moving from 'who did it' to 'what made their actions make sense at the time'. Resilience engineering and systemic safety.\"
+triggers: ["dekker-field-guide", "new-view-safety", "resilience-engineering", "local-rationality", "blameless-post-mortem", "safety-differently"]
+---
+
+# qual-dekker-field-guide-human-error
+> Based on **The Field Guide to Understanding 'Human Error' - Sidney Dekker**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Design system limits to degrade gracefully and provide soft boundaries rather than catastrophic cliff-like failures.**\n2. **ALWAYS: Reconstruct operational breakdowns from the perspective of the operator's local rationality at that exact moment.**\n3. **NEVER: Design punitive system features that lock out, fine, or publicly shame operators for operational mistakes.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement resilient safety envelopes with soft boundaries and graceful degradation, understanding the local rationality of human operators under pressure.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Hard-failing an entire transaction pipeline because a single non-critical validation field was formatted unusually.**\n- **Punitive error handling.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-dekker-field-guide-human-error\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 301. qual-austin-how-to-do-things-with-words Skill
+pub fn qual_austin_how_to_do_things_with_words() -> EccSkill {
+    EccSkill::new(
+        "qual-austin-how-to-do-things-with-words",
+        "Speech Act Theory: Performative utterances vs constatives; locutionary (meaning), illocutionary (force/action), and perlocutionary (effect) acts.",
+        r#"---
+name: qual-austin-how-to-do-things-with-words
+description: \"Speech Act Theory: Performative utterances vs constatives; locutionary (meaning), illocutionary (force/action), and perlocutionary (effect) acts.\"
+triggers: ["jl-austin", "how-to-do-things-with-words", "speech-act-theory", "performatives", "illocutionary-force", "perlocutionary-effect", "agent-commitments"]
+---
+
+# qual-austin-how-to-do-things-with-words
+> Based on **How to Do Things with Words - J. L. Austin**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Treat AI conversational agent messages that mutate database state or authorize external actions as formal illocutionary performative contracts.**\n2. **ALWAYS: Require explicit cryptographic or secondary user confirmation before an agent executes irreversible illocutionary side effects.**\n3. **NEVER: Conflate informational conversational text with autonomous tool execution commitments.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Separate informational chat output from transactional performative acts, requiring explicit confirmation gates for all autonomous tool executions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Autonomous agents executing money transfers or database drops from unverified conversational intent.**\n- **Treating tool execution as plain chat.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-austin-how-to-do-things-with-words\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 302. qual-grice-studies-way-of-words Skill
+pub fn qual_grice_studies_way_of_words() -> EccSkill {
+    EccSkill::new(
+        "qual-grice-studies-way-of-words",
+        "The Cooperative Principle and Gricean Maxims: Maxim of Quantity (informative, not verbose), Quality (truthful), Relation (relevant), and Manner (perspicuous).",
+        r#"---
+name: qual-grice-studies-way-of-words
+description: \"The Cooperative Principle and Gricean Maxims: Maxim of Quantity (informative, not verbose), Quality (truthful), Relation (relevant), and Manner (perspicuous).\"
+triggers: ["paul-grice", "gricean-maxims", "cooperative-principle", "conversational-implicature", "maxim-of-quantity", "maxim-of-quality", "maxim-of-relation", "maxim-of-manner"]
+---
+
+# qual-grice-studies-way-of-words
+> Based on **Studies in the Way of Words (Logic and Conversation) - H. Paul Grice**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce Grice's Maxims on all AI agent outputs: provide maximum relevance with minimum necessary word count; eliminate sycophancy and conversational filler.**\n2. **ALWAYS: Cite verifiable sources or grounded database state for factual claims (Maxim of Quality).**\n3. **NEVER: Allow an AI agent to emit hallucinations, ambiguous jargon, or circular reasoning.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Filter all agent dialogue through Grice's Maxims: deliver dense, accurate, relevant, and orderly responses stripped of conversational bloat.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **AI agents writing 4 paragraphs of enthusiastic boilerplate before answering a direct yes/no question.**\n- **Unverified hallucinated API arguments.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-grice-studies-way-of-words\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 303. qual-hall-conversational-design Skill
+pub fn qual_hall_conversational_design() -> EccSkill {
+    EccSkill::new(
+        "qual-hall-conversational-design",
+        "Principles of conversational UI: Human conversation as collaborative turn-taking, context retention, progressive disclosure in dialogue, and repair protocols.",
+        r#"---
+name: qual-hall-conversational-design
+description: \"Principles of conversational UI: Human conversation as collaborative turn-taking, context retention, progressive disclosure in dialogue, and repair protocols.\"
+triggers: ["erika-hall-conversation", "conversational-design", "turn-taking", "context-retention", "repair-protocol", "conversational-ui", "dialogue-management"]
+---
+
+# qual-hall-conversational-design
+> Based on **Conversational Design - Erika Hall**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Support graceful conversational repair: allow users to clarify, correct mid-sentence, or pivot intent without resetting conversation history.**\n2. **ALWAYS: Retain conversational context and referential pronouns ('it', 'that', 'the previous file') across turns.**\n3. **NEVER: Force users into rigid keyword matching or drop context after a minor validation error.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Maintain persistent conversational state and natural repair protocols, enabling seamless turn-taking, clarification, and context resolution.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Chatbots that reset the entire session when an unrecognized word is entered.**\n- **Requiring users to re-state the entire context every turn.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-hall-conversational-design\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 304. qual-nass-wired-for-speech Skill
+pub fn qual_nass_wired_for_speech() -> EccSkill {
+    EccSkill::new(
+        "qual-nass-wired-for-speech",
+        "Psychology of voice interfaces: Automatic social attribution to synthesized voice, voice personality consistency, emotion perception, and speech cadence.",
+        r#"---
+name: qual-nass-wired-for-speech
+description: \"Psychology of voice interfaces: Automatic social attribution to synthesized voice, voice personality consistency, emotion perception, and speech cadence.\"
+triggers: ["clifford-nass", "scott-brave", "wired-for-speech", "voice-interfaces", "vocal-cadence", "speech-personality", "voice-ergonomics"]
+---
+
+# qual-nass-wired-for-speech
+> Based on **Wired for Speech: How Voice Activates and Advances the Human Computer Relationship - Clifford Nass & Scott Brave**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Maintain strict personality and tonal consistency across synthesized voice and audio prompts.**\n2. **ALWAYS: Bound voice interface response latency to < 500ms to match the cadence of human conversation.**\n3. **NEVER: Shift voice tone jarringly from warm conversational speech to robotic system error codes.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Deliver voice interactions with sub-500ms latency and consistent vocal cadence, respecting human evolutionary social wiring for spoken interaction.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Voice bots taking 4 seconds of silence before responding to a simple query.**\n- **Reading raw numeric error stack traces through text-to-speech.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-nass-wired-for-speech\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 305. qual-reeves-media-equation Skill
+pub fn qual_reeves_media_equation() -> EccSkill {
+    EccSkill::new(
+        "qual-reeves-media-equation",
+        "The Media Equation (Media = Real Life): Human interactions with computers and autonomous agents are fundamentally social and obey real-world psychological rules.",
+        r#"---
+name: qual-reeves-media-equation
+description: \"The Media Equation (Media = Real Life): Human interactions with computers and autonomous agents are fundamentally social and obey real-world psychological rules.\"
+triggers: ["reeves-nass", "media-equation", "social-actors", "politeness-protocol", "reciprocity", "agent-etiquette", "flattery-effects"]
+---
+
+# qual-reeves-media-equation
+> Based on **The Media Equation: How People Treat Computers, Television, and New Media Like Real People and Places - Byron Reeves & Clifford Nass**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Program AI agents to take ownership of communicative breakdowns (e.g. 'I didn't quite catch that') rather than blaming the user.**\n2. **ALWAYS: Observe human social norms of politeness, reciprocity, and respect in agent dialogue.**\n3. **NEVER: Insult, condescend to, or scold the user in error messages or automated prompts.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design agent communications according to social psychology principles: maintain humility, assume ownership of confusion, and practice conversational etiquette.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **System error messages stating 'User entered invalid data' or 'User failed to configure'.**\n- **Condescending or patronizing chatbot responses.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-reeves-media-equation\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 306. qual-edmondson-fearless-organization Skill
+pub fn qual_edmondson_fearless_organization() -> EccSkill {
+    EccSkill::new(
+        "qual-edmondson-fearless-organization",
+        "Psychological safety: Creating environments where people feel safe to take interpersonal risks, voice concerns, admit errors, and challenge the status quo.",
+        r#"---
+name: qual-edmondson-fearless-organization
+description: \"Psychological safety: Creating environments where people feel safe to take interpersonal risks, voice concerns, admit errors, and challenge the status quo.\"
+triggers: ["amy-edmondson", "fearless-organization", "psychological-safety", "blameless-culture", "interpersonal-risk", "error-reporting", "learning-organization"]
+---
+
+# qual-edmondson-fearless-organization
+> Based on **The Fearless Organization: Creating Psychological Safety in the Workplace - Amy C. Edmondson**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Design collaboration, code review, and issue tracking systems with blameless language, positive feedback loops, and private drafting spaces.**\n2. **ALWAYS: Celebrate early bug reporting and architectural vulnerability disclosures as valuable team contributions.**\n3. **NEVER: Implement public shame leaderboards, punitive defect metrics, or surveillance telemetry that targets individual engineers.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Construct collaborative development workflows that foster psychological safety: normalize inquiries, support blameless reviews, and protect risk-taking.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Displaying 'Bug Creator of the Week' leaderboards.**\n- **Locking down pull requests with aggressive, punitive automated commentary.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-edmondson-fearless-organization\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 307. qual-demarco-peopleware Skill
+pub fn qual_demarco_peopleware() -> EccSkill {
+    EccSkill::new(
+        "qual-demarco-peopleware",
+        "The sociology of software development: Flow state, environmental factors, uninterrupted work time, the cost of context switching, and team jelling.",
+        r#"---
+name: qual-demarco-peopleware
+description: \"The sociology of software development: Flow state, environmental factors, uninterrupted work time, the cost of context switching, and team jelling.\"
+triggers: ["demarco-lister", "peopleware", "flow-state", "context-switching", "uninterrupted-time", "team-jelling", "developer-ergonomics"]
+---
+
+# qual-demarco-peopleware
+> Based on **Peopleware: Productive Projects and Teams - Tom DeMarco & Timothy Lister**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Protect developer and user flow states: batch notifications asynchronously and provide dedicated 'Do Not Disturb' focus modes.**\n2. **ALWAYS: Preserve full workspace state across app sessions to eliminate context reconstitution overhead.**\n3. **NEVER: Trigger synchronous modal popups or marketing banners that steal cursor focus during active typing or coding.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Protect deep flow state: buffer asynchronous notifications, eliminate focus-stealing popups, and guarantee instantaneous workspace state resumption.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Stealing keyboard focus with an update modal while user is typing.**\n- **Sending immediate notifications for every minor background sync.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-demarco-peopleware\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 308. qual-skelton-team-topologies Skill
+pub fn qual_skelton_team_topologies() -> EccSkill {
+    EccSkill::new(
+        "qual-skelton-team-topologies",
+        "Sociotechnical system design: Conway's Law in practice, managing team cognitive load, four team types (Stream-Aligned, Enabling, Complicated-Subsystem, Platform).",
+        r#"---
+name: qual-skelton-team-topologies
+description: \"Sociotechnical system design: Conway's Law in practice, managing team cognitive load, four team types (Stream-Aligned, Enabling, Complicated-Subsystem, Platform).\"
+triggers: ["skelton-pais", "team-topologies", "conways-law", "team-cognitive-load", "stream-aligned", "platform-team", "fast-flow", "fracture-planes"]
+---
+
+# qual-skelton-team-topologies
+> Based on **Team Topologies: Organizing Business and Technology Teams for Fast Flow - Matthew Skelton & Manuel Pais**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Align software architecture and service boundaries strictly with individual team cognitive load limits.**\n2. **ALWAYS: Provide self-service internal developer platforms (IDPs) that reduce cognitive load for stream-aligned teams.**\n3. **NEVER: Create sprawling shared services or monoliths whose blast radius exceeds the cognitive comprehension of a single team.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Decompose system modules along cognitive fracture planes, matching service boundaries to autonomous team cognitive capacities.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assigning a 50-service microservice mesh to a single 3-person team.**\n- **Monolithic codebases requiring cross-team approval for single-line changes.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-skelton-team-topologies\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 309. qual-arbinger-leadership-self-deception Skill
+pub fn qual_arbinger_leadership_self_deception() -> EccSkill {
+    EccSkill::new(
+        "qual-arbinger-leadership-self-deception",
+        "Interpersonal psychology & self-deception: 'The Box' (treating people as objects vs people), self-justification cycles, and overcoming organizational silos.",
+        r#"---
+name: qual-arbinger-leadership-self-deception
+description: \"Interpersonal psychology & self-deception: 'The Box' (treating people as objects vs people), self-justification cycles, and overcoming organizational silos.\"
+triggers: ["arbinger-institute", "leadership-and-self-deception", "out-of-the-box", "self-justification", "people-as-people", "empathy-in-systems"]
+---
+
+# qual-arbinger-leadership-self-deception
+> Based on **Leadership and Self-Deception: Getting Out of the Box - The Arbinger Institute**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Design administrative tools, moderation queues, and customer support portals that treat users as people with legitimate, complex needs.**\n2. **ALWAYS: Empower frontline support operators with context and override capabilities rather than forcing rigid algorithmic denial scripts.**\n3. **NEVER: Treat users or team members as adversarial telemetry targets or passive data-extraction objects.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Infuse human-centered empathy into administrative and customer service systems, enabling contextual discretion over rigid algorithmic enforcement.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Support ticket systems that auto-close tickets with canned robotic responses.**\n- **Treating users as statistical telemetry anomalies.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-arbinger-leadership-self-deception\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 310. qual-coyle-culture-code Skill
+pub fn qual_coyle_culture_code() -> EccSkill {
+    EccSkill::new(
+        "qual-coyle-culture-code",
+        "Organizational group dynamics: Three foundational behavioral skills: Build Safety (belonging cues), Share Vulnerability (cooperation loops), and Establish Purpose.",
+        r#"---
+name: qual-coyle-culture-code
+description: \"Organizational group dynamics: Three foundational behavioral skills: Build Safety (belonging cues), Share Vulnerability (cooperation loops), and Establish Purpose.\"
+triggers: ["daniel-coyle", "culture-code", "belonging-cues", "share-vulnerability", "establish-purpose", "cooperation-loops", "high-trust-teams"]
+---
+
+# qual-coyle-culture-code
+> Based on **The Culture Code: The Secrets of Highly Successful Groups - Daniel Coyle**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Establish clear purpose beacons in user interfaces and engineering documentation (why this workflow matters).**\n2. **ALWAYS: Build collaborative rituals (automated shared retrospectives, blameless post-mortems) that normalize sharing vulnerabilities.**\n3. **NEVER: Cultivate an engineering culture of isolated hero-coders who conceal architectural debt and mistakes.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Incorporate explicit belonging cues, shared vulnerability loops, and purpose beacons into collaborative engineering platforms.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Concealing system outages from customers or team members.**\n- **Celebrating individual 80-hour hero coding sprints that introduce unmaintainable code.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-coyle-culture-code\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 311. qual-nodder-evil-by-design Skill
+pub fn qual_nodder_evil_by_design() -> EccSkill {
+    EccSkill::new(
+        "qual-nodder-evil-by-design",
+        "Persuasive design and ethical ergonomics: Deconstructing how interaction patterns exploit the Seven Deadly Sins to coerce and manipulate users.",
+        r#"---
+name: qual-nodder-evil-by-design
+description: \"Persuasive design and ethical ergonomics: Deconstructing how interaction patterns exploit the Seven Deadly Sins to coerce and manipulate users.\"
+triggers: ["chris-nodder", "evil-by-design", "persuasive-design", "ethical-design", "manipulation-patterns", "design-ethics", "cognitive-exploitation"]
+---
+
+# qual-nodder-evil-by-design
+> Based on **Evil by Design: Interaction Design to Lead Us into Temptation - Chris Nodder**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Deploy persuasive design patterns exclusively in service of user-aligned, explicitly chosen goals (learning, saving, health).**\n2. **ALWAYS: Clearly disclose algorithmic trade-offs and incentives in recommendation interfaces.**\n3. **NEVER: Exploit user cognitive fatigue, fear, or emotional vulnerability to compel purchases or consent.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Subject all conversion and engagement funnels to ethical audits, ensuring persuasion aligns strictly with the user's sovereign intent.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using countdown timers to induce artificial panic buying.**\n- **Exploiting user guilt or social comparison to drive engagement.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-nodder-evil-by-design\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 312. qual-brignull-deceptive-patterns Skill
+pub fn qual_brignull_deceptive_patterns() -> EccSkill {
+    EccSkill::new(
+        "qual-brignull-deceptive-patterns",
+        "Taxonomy of deceptive design: Roach Motel, Sneak into Basket, Confirmshaming, Hidden Costs, Forced Continuity, and Obstruction (Sludge).",
+        r#"---
+name: qual-brignull-deceptive-patterns
+description: \"Taxonomy of deceptive design: Roach Motel, Sneak into Basket, Confirmshaming, Hidden Costs, Forced Continuity, and Obstruction (Sludge).\"
+triggers: ["harry-brignull", "deceptive-patterns", "dark-patterns", "roach-motel", "confirmshaming", "sneak-into-basket", "forced-continuity", "click-to-cancel"]
+---
+
+# qual-brignull-deceptive-patterns
+> Based on **Deceptive Patterns: Exposing the Tricks Tech Companies Use to Control You - Harry Brignull**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce Click-to-Cancel equivalence: canceling a subscription or deleting an account must require <= the clicks and steps it took to subscribe.**\n2. **ALWAYS: Display full pricing, fees, and renewal terms transparently upfront without hidden surprises at the final checkout step.**\n3. **NEVER: Use confirmshaming ('No thanks, I hate saving money') or roach-motel obstacle courses.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Strictly ban all deceptive design patterns: provide 1-click subscription cancellations, transparent pricing, and zero confirmshaming text.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Requiring a phone call to cancel an account created online in 30 seconds.**\n- **Confirmshaming opt-out buttons with manipulative copy.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-brignull-deceptive-patterns\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 313. qual-zuboff-surveillance-capitalism Skill
+pub fn qual_zuboff_surveillance_capitalism() -> EccSkill {
+    EccSkill::new(
+        "qual-zuboff-surveillance-capitalism",
+        "The behavioral surplus economy: Behavioral data extraction, modification of human behavior, instrumentarian power, and the right to sanctuary.",
+        r#"---
+name: qual-zuboff-surveillance-capitalism
+description: \"The behavioral surplus economy: Behavioral data extraction, modification of human behavior, instrumentarian power, and the right to sanctuary.\"
+triggers: ["shoshana-zuboff", "surveillance-capitalism", "behavioral-surplus", "data-minimization", "privacy-by-default", "instrumentarian-power", "user-sanctuary"]
+---
+
+# qual-zuboff-surveillance-capitalism
+> Based on **The Age of Surveillance Capitalism - Shoshana Zuboff**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce strict data minimization: collect only the minimum telemetry strictly required for operational feature functionality.**\n2. **ALWAYS: Store user behavioral data and search history locally on client devices with client-side encryption whenever feasible.**\n3. **NEVER: Secretly harvest, monetize, or leak user behavioral clickstream surplus to third-party ad networks.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Build local-first, privacy-by-default systems that minimize behavioral telemetry and preserve the user's digital sanctuary.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Embedding 15 third-party ad tracking scripts into a utility tool.**\n- **Uploading raw un-anonymized user keystrokes to remote servers.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-zuboff-surveillance-capitalism\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 314. qual-noble-algorithms-of-oppression Skill
+pub fn qual_noble_algorithms_of_oppression() -> EccSkill {
+    EccSkill::new(
+        "qual-noble-algorithms-of-oppression",
+        "Algorithmic bias and structural power: How commercial search and ranking algorithms encode, amplify, and normalize historical social biases.",
+        r#"---
+name: qual-noble-algorithms-of-oppression
+description: \"Algorithmic bias and structural power: How commercial search and ranking algorithms encode, amplify, and normalize historical social biases.\"
+triggers: ["safiya-noble", "algorithms-of-oppression", "algorithmic-bias", "search-bias", "structural-inequity", "representational-fairness", "fair-ranking"]
+---
+
+# qual-noble-algorithms-of-oppression
+> Based on **Algorithms of Oppression: How Search Engines Reinforce Racism - Safiya Umoja Noble**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Audit search ranking algorithms and recommendation models for representational fairness and bias amplification.**\n2. **ALWAYS: Provide transparent explanations of ranking criteria and allow users to override personalized algorithmic feeds.**\n3. **NEVER: Assume automated ranking algorithms are neutral or objective simply because they are executed by machine code.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Incorporate fairness audits and transparent ranking explanations into all search and recommendation pipelines, actively preventing bias amplification.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Deploying opaque ranking models that amplify historical discriminatory stereotypes.**\n- **Hiding the criteria used to rank or filter user search results.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-noble-algorithms-of-oppression\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 315. qual-boettcher-technically-wrong Skill
+pub fn qual_boettcher_technically_wrong() -> EccSkill {
+    EccSkill::new(
+        "qual-boettcher-technically-wrong",
+        "Ethical product design: Eliminating toxic tech blind spots, rigid identity models, algorithmic cruelty, and exclusionary form validation.",
+        r#"---
+name: qual-boettcher-technically-wrong
+description: \"Ethical product design: Eliminating toxic tech blind spots, rigid identity models, algorithmic cruelty, and exclusionary form validation.\"
+triggers: ["wachter-boettcher", "technically-wrong", "toxic-tech", "inclusive-design", "algorithmic-cruelty", "flexible-validation", "identity-modeling"]
+---
+
+# qual-boettcher-technically-wrong
+> Based on **Technically Wrong: Sexist Apps, Biased Algorithms, and Other Threats of Toxic Tech - Sara Wachter-Boettcher**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Ensure form validation schemas accommodate flexible international names (UTF-8, single names, apostrophes, arbitrary lengths).**\n2. **ALWAYS: Support inclusive, non-binary, and optional gender/identity attributes in demographic schemas.**\n3. **NEVER: Trigger algorithmic cruelty by surfacing traumatic memories or anniversary alerts without sensitive opt-out controls.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design inclusive, compassionate data schemas and notification engines that respect international naming conventions and diverse human identities.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Form validation rejecting names like 'O'Connor' or single-character names.**\n- **Forcing binary gender selection on a product that doesn't need it.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-boettcher-technically-wrong\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 316. qual-brown-social-life-information Skill
+pub fn qual_brown_social_life_information() -> EccSkill {
+    EccSkill::new(
+        "qual-brown-social-life-information",
+        "Sociotechnical ecosystems: Information embedded in social context, communities of practice, the periphery of work, and the fallacy of pure digital abstraction.",
+        r#"---
+name: qual-brown-social-life-information
+description: \"Sociotechnical ecosystems: Information embedded in social context, communities of practice, the periphery of work, and the fallacy of pure digital abstraction.\"
+triggers: ["john-seely-brown", "paul-duguid", "social-life-of-information", "communities-of-practice", "periphery-of-work", "sociotechnical-context"]
+---
+
+# qual-brown-social-life-information
+> Based on **The Social Life of Information - John Seely Brown & Paul Duguid**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Build digital tools that respect and support informal human collaboration practices rather than imposing rigid bureaucratic workflows.**\n2. **ALWAYS: Preserve the rich peripheral context (informal notes, collaborative history, annotations) surrounding formal business data records.**\n3. **NEVER: Strip away human contextual nuance in the pursuit of sterile, rigid automated workflows.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Incorporate peripheral social context, collaborative annotations, and community practice support into formal enterprise workflows.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Enforcing a rigid 10-step bureaucratic workflow that destroys informal peer communication.**\n- **Discarding user notes during record lifecycle updates.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-brown-social-life-information\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 317. qual-dourish-where-action-is Skill
+pub fn qual_dourish_where_action_is() -> EccSkill {
+    EccSkill::new(
+        "qual-dourish-where-action-is",
+        "Embodied interaction: Phenomenological human-computer interaction, tangible computing, social computing, and direct manipulation in space and time.",
+        r#"---
+name: qual-dourish-where-action-is
+description: \"Embodied interaction: Phenomenological human-computer interaction, tangible computing, social computing, and direct manipulation in space and time.\"
+triggers: ["paul-dourish", "where-the-action-is", "embodied-interaction", "tangible-computing", "phenomenology-hci", "direct-manipulation", "spatial-consistency"]
+---
+
+# qual-dourish-where-action-is
+> Based on **Where the Action Is: The Foundations of Embodied Interaction - Paul Dourish**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Maintain continuous direct manipulation physics (inertial scrolling, tactile drag-and-drop, spatial consistency) in visual UI.**\n2. **ALWAYS: Ground software interactions in tangible, physical metaphors that honor human bodily and spatial intuition.**\n3. **NEVER: Break spatial consistency when manipulating graphical objects on a digital canvas or workspace.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement direct manipulation physics with sub-16ms render loops, preserving spatial continuity and tactile embodiment.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Jumping or teleporting elements during drag-and-drop interactions.**\n- **Inconsistent gesture mappings that violate spatial continuity.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-dourish-where-action-is\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 318. qual-suchman-plans-situated-actions Skill
+pub fn qual_suchman_plans_situated_actions() -> EccSkill {
+    EccSkill::new(
+        "qual-suchman-plans-situated-actions",
+        "Situated action theory: Human action is inherently situated and contingent on immediate circumstances; abstract plans break down in complex real-world interaction.",
+        r#"---
+name: qual-suchman-plans-situated-actions
+description: \"Situated action theory: Human action is inherently situated and contingent on immediate circumstances; abstract plans break down in complex real-world interaction.\"
+triggers: ["lucy-suchman", "plans-and-situated-actions", "situated-action", "contingent-behavior", "breakdown-repair", "human-machine-communication"]
+---
+
+# qual-suchman-plans-situated-actions
+> Based on **Plans and Situated Actions: The Problem of Human-Machine Communication - Lucy Suchman**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Design multi-step workflows to be fluidly adaptable to unexpected real-time changes, supporting out-of-order execution and flexible state branching.**\n2. **ALWAYS: Provide robust, immediate breakdown-and-repair mechanisms when user actions diverge from the happy path.**\n3. **NEVER: Trap users in rigid linear wizards that prohibit backward navigation or mid-stream situational pivots.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Enable flexible, situated workflows: allow users to jump between sections, edit out of sequence, and adapt to changing real-time conditions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Locking wizard steps so users cannot navigate back to edit step 1 after reaching step 3.**\n- **Failing when user performs an unanticipated action.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-suchman-plans-situated-actions\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 319. qual-norman-things-make-us-smart Skill
+pub fn qual_norman_things_make_us_smart() -> EccSkill {
+    EccSkill::new(
+        "qual-norman-things-make-us-smart",
+        "Cognitive artifacts: Tools that expand human cognition, experiential vs reflective cognition, human-centered technology, and perceptual representations.",
+        r#"---
+name: qual-norman-things-make-us-smart
+description: \"Cognitive artifacts: Tools that expand human cognition, experiential vs reflective cognition, human-centered technology, and perceptual representations.\"
+triggers: ["norman-things-make-us-smart", "cognitive-artifacts", "experiential-cognition", "reflective-cognition", "human-centered-technology", "visual-representations"]
+---
+
+# qual-norman-things-make-us-smart
+> Based on **Things That Make Us Smart: Defending Human Attributes in the Age of the Machine - Don Norman**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Build external visual representations (graphs, topological maps, timeline charts) that expand human cognitive reflection.**\n2. **ALWAYS: Offload tedious mental calculations, memory lookups, and index translations to the machine.**\n3. **NEVER: Force users to perform mental state-tracking that software can compute and display in microseconds.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Offload cognitive burden to visual representations: render multi-factor relationships as intuitive visual matrices, freeing human mental capacity.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Requiring users to calculate tax, shipping, and discounts in their heads.**\n- **Displaying dense walls of raw text instead of structured visual summaries.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-norman-things-make-us-smart\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 320. qual-wiener-cybernetics Skill
+pub fn qual_wiener_cybernetics() -> EccSkill {
+    EccSkill::new(
+        "qual-wiener-cybernetics",
+        "Cybernetics & systems control: Circular causal feedback loops, negative feedback for homeostasis, information entropy, and human-machine symbiotic control.",
+        r#"---
+name: qual-wiener-cybernetics
+description: \"Cybernetics & systems control: Circular causal feedback loops, negative feedback for homeostasis, information entropy, and human-machine symbiotic control.\"
+triggers: ["norbert-wiener", "cybernetics", "feedback-loops", "circular-causality", "negative-feedback", "homeostasis", "closed-loop-systems"]
+---
+
+# qual-wiener-cybernetics
+> Based on **Cybernetics: Or Control and Communication in the Animal and the Machine - Norbert Wiener**
+
+## 1. Core Psychological Foundations & Formal Invariants
+
+1. **ALWAYS: Close feedback loops immediately: provide visible, continuous sensory feedback on the effects of user actions, enabling real-time error correction.**\n2. **ALWAYS: Design asynchronous systems to broadcast live progress percentages and bidirectional error-correction channels.**\n3. **NEVER: Leave users in open-loop states (e.g. silent background jobs with zero status or feedback).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Maintain closed-loop cybernetic feedback across all interactive operations: deliver real-time state broadcasts and instant error-correction paths.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Triggering long-running asynchronous operations with no progress bar or cancellation option.**\n- **Silent failures with zero user feedback.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"qual-wiener-cybernetics\"
+
+# Execute automated qualitative & behavioral audit
+cargo test --test qual_skills_brutal_tests
 ```
 "#,
     )
