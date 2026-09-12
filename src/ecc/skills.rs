@@ -411,6 +411,56 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         ba_johnson_gui_bloopers_heuristics(),
         ba_crud_form_functional_specifications(),
         ba_information_architecture_wireflow(),
+        arch_kleppmann_distributed_data(),
+        arch_coulouris_distributed_systems(),
+        arch_petrov_database_internals(),
+        arch_vitillo_distributed_systems(),
+        arch_ozsu_distributed_databases(),
+        arch_gray_transaction_processing(),
+        arch_bailis_database_systems(),
+        arch_akidau_streaming_systems(),
+        arch_shapira_kafka_definitive(),
+        arch_robinson_graph_databases(),
+        arch_fowler_enterprise_patterns(),
+        arch_martin_clean_architecture(),
+        arch_tune_architecture_modernization(),
+        arch_ghosh_functional_domain_modeling(),
+        arch_ford_software_architecture_hard_parts(),
+        arch_bryant_computer_systems(),
+        arch_herlihy_multiprocessor_programming(),
+        arch_gregg_systems_performance(),
+        arch_love_linux_kernel(),
+        arch_mckenney_parallel_programming(),
+        arch_nygard_release_it(),
+        arch_beyer_site_reliability_engineering(),
+        arch_rosenthal_chaos_engineering(),
+        arch_davis_cloud_native_patterns(),
+        arch_ibryam_kubernetes_patterns(),
+        arch_newman_building_microservices(),
+        arch_newman_monolith_to_microservices(),
+        arch_richardson_microservices_patterns(),
+        arch_richards_fundamentals_architecture(),
+        arch_burns_designing_distributed_systems(),
+        arch_stevens_tcp_ip_illustrated(),
+        arch_jin_designing_web_apis(),
+        arch_grigorik_high_performance_networking(),
+        arch_hohpe_enterprise_integration_patterns(),
+        arch_indrasiri_grpc_up_and_running(),
+        arch_bass_software_architecture_practice(),
+        arch_clements_documenting_architectures(),
+        arch_brown_c4_model(),
+        arch_rozanski_software_systems_architecture(),
+        arch_keeling_design_it(),
+        arch_majors_observability_engineering(),
+        arch_parker_distributed_tracing_practice(),
+        arch_beyer_sre_workbook(),
+        arch_fowler_production_ready_microservices(),
+        arch_campbell_database_reliability_engineering(),
+        arch_shostack_threat_modeling(),
+        arch_gilman_zero_trust_networks(),
+        arch_vehent_securing_devops(),
+        arch_janca_alice_bob_appsec(),
+        arch_wong_real_world_cryptography(),
     ]
 }
 
@@ -887,6 +937,74 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "wireflow" || lower == "jesse-james-garrett" || lower == "5-planes" {
         return find_built_in_skill("ba-information-architecture-wireflow");
     }
+    // Systems & Architecture Analysis Aliases (Top 50)
+    if lower == "distributed-systems" || lower == "ddia" {
+        return find_built_in_skill("arch-kleppmann-distributed-data");
+    }
+    if lower == "vector-clocks" {
+        return find_built_in_skill("arch-coulouris-distributed-systems");
+    }
+    if lower == "raft" || lower == "lsm-tree" || lower == "paxos" {
+        return find_built_in_skill("arch-petrov-database-internals");
+    }
+    if lower == "circuit-breaker" {
+        return find_built_in_skill("arch-vitillo-distributed-systems");
+    }
+    if lower == "aries" {
+        return find_built_in_skill("arch-gray-transaction-processing");
+    }
+    if lower == "streaming-systems" || lower == "watermarks" {
+        return find_built_in_skill("arch-akidau-streaming-systems");
+    }
+    if lower == "kafka" {
+        return find_built_in_skill("arch-shapira-kafka-definitive");
+    }
+    if lower == "clean-architecture" {
+        return find_built_in_skill("arch-martin-clean-architecture");
+    }
+    if lower == "poeaa" {
+        return find_built_in_skill("arch-fowler-enterprise-patterns");
+    }
+    if lower == "cache-lines" {
+        return find_built_in_skill("arch-bryant-computer-systems");
+    }
+    if lower == "lock-free" {
+        return find_built_in_skill("arch-herlihy-multiprocessor-programming");
+    }
+    if lower == "sre" || lower == "slo" {
+        return find_built_in_skill("arch-beyer-site-reliability-engineering");
+    }
+    if lower == "chaos-engineering" {
+        return find_built_in_skill("arch-rosenthal-chaos-engineering");
+    }
+    if lower == "microservices" {
+        return find_built_in_skill("arch-newman-building-microservices");
+    }
+    if lower == "strangler-fig" {
+        return find_built_in_skill("arch-newman-monolith-to-microservices");
+    }
+    if lower == "saga" {
+        return find_built_in_skill("arch-richardson-microservices-patterns");
+    }
+    if lower == "c4-model" {
+        return find_built_in_skill("arch-brown-c4-model");
+    }
+    if lower == "adr" {
+        return find_built_in_skill("arch-keeling-design-it");
+    }
+    if lower == "opentelemetry" || lower == "otel" {
+        return find_built_in_skill("arch-parker-distributed-tracing-practice");
+    }
+    if lower == "stride" {
+        return find_built_in_skill("arch-shostack-threat-modeling");
+    }
+    if lower == "zero-trust" || lower == "mtls" {
+        return find_built_in_skill("arch-gilman-zero-trust-networks");
+    }
+    if lower == "cryptography" {
+        return find_built_in_skill("arch-wong-real-world-cryptography");
+    }
+
     all_built_in_skills().into_iter().find(|s| s.name == lower)
 }
 
@@ -8664,7 +8782,7 @@ pub fn estimate_tokens(text: &str) -> usize {
 }
 
 pub const SKILLS_CACHE_MAGIC: u32 = 0x54475331; // "TGS1"
-pub const SKILLS_CACHE_VERSION: u32 = 2;
+pub const SKILLS_CACHE_VERSION: u32 = 3;
 
 /// Binary serialized cache container for fast cold startup (< 2ms)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -9298,6 +9416,11 @@ impl SkillDispatcher {
                 if let Some(doc_ids) = self.trigger_index.get(&hyphenated) {
                     candidates.extend(doc_ids.iter().copied());
                 }
+                if let Some(aliased) = find_built_in_skill(&hyphenated) {
+                    if let Some(&doc_id) = self.name_index.get(&aliased.name) {
+                        candidates.insert(doc_id);
+                    }
+                }
             }
         }
 
@@ -9343,11 +9466,24 @@ impl SkillDispatcher {
             let mut score = 0.0f32;
             let mut matched_triggers = Vec::new();
 
-            // 3a. Exact Name Match (+200.0)
+            // 3a. Exact Name or Alias Match (+200.0 / +150.0)
             let lower_name = meta.name.to_lowercase();
             let spaced_name = lower_name.replace('-', " ");
             if lower_query.contains(&lower_name) || lower_query.contains(&spaced_name) {
                 score += 200.0;
+            } else {
+                for n in 1..=max_n {
+                    for window in words.windows(n) {
+                        let hyphenated = window.join("-");
+                        if let Some(aliased) = find_built_in_skill(&hyphenated) {
+                            if aliased.name == meta.name {
+                                score += 150.0;
+                                matched_triggers.push(hyphenated);
+                                break;
+                            }
+                        }
+                    }
+                }
             }
 
             // 3b. Trigger Matches (+100 for first, +25 subsequent, max +150)
@@ -10443,6 +10579,8 @@ fn tokenize(text: &str) -> Vec<String> {
 fn infer_domain(name: &str) -> String {
     let lower = name.to_lowercase();
     let prefixes = [
+        ("arch-", "architecture"),
+        ("arch", "architecture"),
         ("ba-", "ba"),
         ("ba", "ba"),
         ("azure", "azure"),
@@ -12815,6 +12953,2161 @@ tgs ecc skills -q "information-architecture-wireflow"
 
 # Execute automated functional audit
 cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+
+// =========================================================================
+// Systems & Architecture Analysis Skills Built-in Implementations (Top 50)
+// =========================================================================
+
+/// 222. arch-kleppmann-distributed-data Skill
+pub fn arch_kleppmann_distributed_data() -> EccSkill {
+    EccSkill::new(
+        "arch-kleppmann-distributed-data",
+        "Foundational distributed data systems: Unreliable networks, clock skew, linearizability vs. serializability, hybrid logical clocks, consensus limits, and dual-write mitigations.",
+        r#"---
+name: arch-kleppmann-distributed-data
+description: "Foundational distributed data systems: Unreliable networks, clock skew, linearizability vs. serializability, hybrid logical clocks, consensus limits, and dual-write mitigations."
+triggers: ["kleppmann", "distributed-data", "linearizability", "serializability", "dual-write", "hybrid-logical-clocks", "unreliable-network", "two-phase-commit-fallacy"]
+---
+
+# arch-kleppmann-distributed-data
+> Based on **Designing Data-Intensive Applications - Martin Kleppmann**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Reject system wall-clock (NTP) for transaction ordering; enforce monotonic sequencer, Lamport timestamps, or Hybrid Logical Clocks (HLC).**
+2. **NEVER: Execute dual-writes to database and message broker without a Transactional Outbox or Change Data Capture (CDC).**
+3. **STRICT_REJECT: Distributed transactions assuming network synchrony or instantaneous message delivery.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Define data consistency models (Linearizable, Sequential, Causal, Read-After-Write). Enforce Transactional Outbox for all broker events. Eliminate reliance on NTP timestamps.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using local system time for distributed event ordering.**
+- **Writing to database then publishing to Kafka without transactional outbox.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-kleppmann-distributed-data"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 223. arch-coulouris-distributed-systems Skill
+pub fn arch_coulouris_distributed_systems() -> EccSkill {
+    EccSkill::new(
+        "arch-coulouris-distributed-systems",
+        "Classical distributed systems theory: RPC failure semantics (at-least-once, at-most-once), vector clocks, causal ordering, distributed mutual exclusion, and Byzantine fault models.",
+        r#"---
+name: arch-coulouris-distributed-systems
+description: "Classical distributed systems theory: RPC failure semantics (at-least-once, at-most-once), vector clocks, causal ordering, distributed mutual exclusion, and Byzantine fault models."
+triggers: ["coulouris", "distributed-systems-theory", "vector-clocks", "causal-ordering", "rpc-semantics", "byzantine-fault", "distributed-mutual-exclusion"]
+---
+
+# arch-coulouris-distributed-systems
+> Based on **Distributed Systems: Concepts and Design - George Coulouris, Jean Dollimore, Tim Kindberg, Gordon Blair**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Design all distributed network mutations for at-least-once transport with explicit idempotent receiver deduplication.**
+2. **ALWAYS: Track causal precedence of concurrent distributed operations using Vector Clocks when multi-master replication is enabled.**
+3. **NEVER: Assume exactly-once delivery across uncoordinated network boundaries without end-to-end idempotency tokens.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Specify RPC failure modes (crash-stop vs crash-recovery). Attach unique transaction/mutation UUIDs to enable idempotent retries. Implement vector clocks for concurrent updates.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming RPC calls never fail or time out.**
+- **Treating distributed network calls as identical to in-memory function invocations.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-coulouris-distributed-systems"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 224. arch-petrov-database-internals Skill
+pub fn arch_petrov_database_internals() -> EccSkill {
+    EccSkill::new(
+        "arch-petrov-database-internals",
+        "Storage engines and distributed consensus: B-Trees, Log-Structured Merge (LSM) Trees, Memtables, SSTables, Write-Ahead Logging (WAL), Paxos, and Raft consensus.",
+        r#"---
+name: arch-petrov-database-internals
+description: "Storage engines and distributed consensus: B-Trees, Log-Structured Merge (LSM) Trees, Memtables, SSTables, Write-Ahead Logging (WAL), Paxos, and Raft consensus."
+triggers: ["petrov", "database-internals", "lsm-tree", "sstable", "memtable", "wal", "raft-consensus", "paxos", "storage-engine"]
+---
+
+# arch-petrov-database-internals
+> Based on **Database Internals: A Deep Dive into How Distributed Data Systems Work - Alex Petrov**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: High-throughput write pipelines must utilize append-only Write-Ahead Logging (WAL) and memory table flushing before persisting sorted string tables (SSTables).**
+2. **ALWAYS: Consensus clusters (Raft/Paxos) require a strict majority quorum ((N/2) + 1) to commit log entries.**
+3. **NEVER: Commit state changes to disk without fsync flushing the WAL to non-volatile storage.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Architect storage layers based on read/write asymmetry (B-Trees for point lookups, LSM-Trees for write bursts). Enforce Raft quorum mechanics for replicated leader election.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Modifying database files in-place without write-ahead logging.**
+- **Allowing split-brain leader elections without majority quorum.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-petrov-database-internals"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 225. arch-vitillo-distributed-systems Skill
+pub fn arch_vitillo_distributed_systems() -> EccSkill {
+    EccSkill::new(
+        "arch-vitillo-distributed-systems",
+        "Pragmatic distributed engineering: Client-side timeouts, exponential backoff with full jitter, circuit breakers, gossip protocols, heartbeat leasing, and backpressure propagation.",
+        r#"---
+name: arch-vitillo-distributed-systems
+description: "Pragmatic distributed engineering: Client-side timeouts, exponential backoff with full jitter, circuit breakers, gossip protocols, heartbeat leasing, and backpressure propagation."
+triggers: ["vitillo", "understanding-distributed-systems", "circuit-breaker", "exponential-backoff", "jitter", "gossip-protocol", "heartbeating", "backpressure"]
+---
+
+# arch-vitillo-distributed-systems
+> Based on **Understanding Distributed Systems - Roberto Vitillo**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Guard all downstream client requests with strict timeouts and exponential backoff with decorrelated full jitter.**
+2. **ALWAYS: Trip circuit breakers when downstream error rate exceeds predefined threshold (e.g. 50% over 10s) to shed load and prevent cascading collapse.**
+3. **NEVER: Retry immediately upon receiving 503 Service Unavailable or 429 Too Many Requests.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Equip all inter-service communication with circuit breakers, adaptive client timeouts, and bounded thread pools. Implement gossip protocols for node discovery.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Retrying failed RPC calls immediately in a tight loop, creating thundering herd outages.**
+- **Unbounded inbound request queues without backpressure shedding.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-vitillo-distributed-systems"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 226. arch-ozsu-distributed-databases Skill
+pub fn arch_ozsu_distributed_databases() -> EccSkill {
+    EccSkill::new(
+        "arch-ozsu-distributed-databases",
+        "Distributed database architecture: Horizontal and vertical fragmentation, distributed query optimization, 2-phase commit (2PC), distributed deadlock detection, and data replication.",
+        r#"---
+name: arch-ozsu-distributed-databases
+description: "Distributed database architecture: Horizontal and vertical fragmentation, distributed query optimization, 2-phase commit (2PC), distributed deadlock detection, and data replication."
+triggers: ["ozsu", "distributed-databases", "database-fragmentation", "distributed-query-optimization", "two-phase-commit", "distributed-deadlock", "shard-key"]
+---
+
+# arch-ozsu-distributed-databases
+> Based on **Principles of Distributed Database Systems - M. Tamer Özsu & Patrick Valduriez**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Partition data along high-cardinality shard keys aligned with primary query predicate to enable single-partition query routing.**
+2. **NEVER: Execute unindexed multi-shard cross-partition distributed joins across cluster nodes in real-time OLTP requests.**
+3. **AUDIT: Two-phase commit (2PC) coordinator blocking timeouts and implement heuristic transaction commit/rollback resolution.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Define horizontal/vertical table partitioning schemes. Ensure queries specify the shard/tenant key to avoid broadcast queries. Document distributed 2PC coordinator failure handlers.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Performing distributed cross-partition joins in latency-sensitive user paths.**
+- **Leaving distributed 2PC participants blocked indefinitely upon coordinator crash.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-ozsu-distributed-databases"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 227. arch-gray-transaction-processing Skill
+pub fn arch_gray_transaction_processing() -> EccSkill {
+    EccSkill::new(
+        "arch-gray-transaction-processing",
+        "Formal transaction processing: ACID guarantees, ARIES recovery algorithm (Analysis, Redo, Undo), serializability theory, two-phase locking (2PL), and compensation transactions.",
+        r#"---
+name: arch-gray-transaction-processing
+description: "Formal transaction processing: ACID guarantees, ARIES recovery algorithm (Analysis, Redo, Undo), serializability theory, two-phase locking (2PL), and compensation transactions."
+triggers: ["jim-gray", "transaction-processing", "aries-recovery", "acid", "two-phase-locking", "isolation-levels", "undo-redo-log"]
+---
+
+# arch-gray-transaction-processing
+> Based on **Transaction Processing: Concepts and Techniques - Jim Gray & Andreas Reuter**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Transaction state engine must support ARIES-compliant crash recovery: Analysis phase, Redo of all logged changes, and Undo of uncommitted transactions.**
+2. **ALWAYS: Enforce explicit isolation levels (Read Committed, Repeatable Read, Serializable) and provide deterministic retry loops for serialization failures (409 Conflict).**
+3. **NEVER: Release locks before the end of the transaction in Two-Phase Locking (2PL) protocols.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Specify exact ACID transactional boundary. Provide compensation transactions for multi-stage operations. Implement ARIES recovery logging with write-ahead logs.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Ignoring database serialization failures without retry logic.**
+- **Performing partial rollbacks without compensation logs.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-gray-transaction-processing"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 228. arch-bailis-database-systems Skill
+pub fn arch_bailis_database_systems() -> EccSkill {
+    EccSkill::new(
+        "arch-bailis-database-systems",
+        "Modern database systems architecture: Relational query compilation, columnar vectorized execution, shared-nothing vs shared-disk topologies, and HTAP hybridization.",
+        r#"---
+name: arch-bailis-database-systems
+description: "Modern database systems architecture: Relational query compilation, columnar vectorized execution, shared-nothing vs shared-disk topologies, and HTAP hybridization."
+triggers: ["bailis-stonebraker", "red-book", "columnar-execution", "vectorized-query", "shared-nothing", "htap", "oltp-olap-separation"]
+---
+
+# arch-bailis-database-systems
+> Based on **Readings in Database Systems ('The Red Book') - Peter Bailis, Joseph M. Hellerstein, Michael Stonebraker**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Separate OLTP write workloads from OLAP aggregation workloads; route analytical queries to columnar stores (DuckDB, ClickHouse, BigQuery).**
+2. **ALWAYS: Vectorized execution engines must operate on SIMD-aligned contiguous column batches rather than row-at-a-time iterator tuples.**
+3. **NEVER: Run full-table analytical scans or aggregations on transactional master primary nodes.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design hybrid transactional/analytical processing (HTAP) architecture with physical read/write segregation. Use columnar formats (Parquet, Arrow) for analytical batch pipelines.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Running heavy reporting aggregations directly on production OLTP primary instances.**
+- **Using row-oriented stores for scanning billions of analytical log records.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-bailis-database-systems"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 229. arch-akidau-streaming-systems Skill
+pub fn arch_akidau_streaming_systems() -> EccSkill {
+    EccSkill::new(
+        "arch-akidau-streaming-systems",
+        "The unified streaming architecture: What (transformations), Where (event-time windowing), When (watermarks), and How (accumulating vs retracting triggers).",
+        r#"---
+name: arch-akidau-streaming-systems
+description: "The unified streaming architecture: What (transformations), Where (event-time windowing), When (watermarks), and How (accumulating vs retracting triggers)."
+triggers: ["akidau", "streaming-systems", "event-time", "processing-time", "watermarks", "sliding-windows", "session-windows", "stream-triggers"]
+---
+
+# arch-akidau-streaming-systems
+> Based on **Streaming Systems - Tyler Akidau, Slava Chernyak, Reuven Lax**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Window stream calculations by Event Time (when the event occurred) rather than Processing Time (when the server ingested it).**
+2. **ALWAYS: Establish explicit Watermarks representing event-time completeness and define deterministic Late-Data handling (side outputs or retractions).**
+3. **NEVER: Assume event arrivals are ordered across distributed producers.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model streaming computations using the 4 dimensions: What (transform), Where (window), When (watermark/trigger), and How (accumulation mode). Handle out-of-order and late data deterministically.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Grouping streaming events by server ingestion clock.**
+- **Dropping late-arriving events silently without dead-letter or side-output logging.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-akidau-streaming-systems"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 230. arch-shapira-kafka-definitive Skill
+pub fn arch_shapira_kafka_definitive() -> EccSkill {
+    EccSkill::new(
+        "arch-shapira-kafka-definitive",
+        "Distributed commit log architecture: Partitioning mechanics, consumer group rebalancing, exact partition causal ordering, producer ACKs (all vs 1), and compacted topics.",
+        r#"---
+name: arch-shapira-kafka-definitive
+description: "Distributed commit log architecture: Partitioning mechanics, consumer group rebalancing, exact partition causal ordering, producer ACKs (all vs 1), and compacted topics."
+triggers: ["shapira-kafka", "kafka-architecture", "commit-log", "consumer-groups", "partition-key", "producer-acks", "compacted-topics", "rebalance-protocol"]
+---
+
+# arch-shapira-kafka-definitive
+> Based on **Kafka: The Definitive Guide - Gwen Shapira, Todd Palino, Rajeev Sivaram, Krit Petty**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Partition keys must map directly to entity aggregate root IDs to guarantee strictly sequential causal order per entity.**
+2. **ALWAYS: Set producer `acks=all` (min.insync.replicas >= 2) for mission-critical events to guarantee durability against broker failures.**
+3. **NEVER: Commit consumer offsets before processing the batch to completion unless at-most-once loss is explicitly permitted.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design event topologies with dedicated topic partitions, consumer group rebalancing strategies, and key-based ordering. Configure compaction for state-store topics.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using random partition keys when domain entities require sequential event processing.**
+- **Committing consumer offsets asynchronously before executing side effects.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-shapira-kafka-definitive"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 231. arch-robinson-graph-databases Skill
+pub fn arch_robinson_graph_databases() -> EccSkill {
+    EccSkill::new(
+        "arch-robinson-graph-databases",
+        "Graph database architecture: Property graph data model, index-free adjacency, recursive traversal algorithms, and relationship-centric domain modeling.",
+        r#"---
+name: arch-robinson-graph-databases
+description: "Graph database architecture: Property graph data model, index-free adjacency, recursive traversal algorithms, and relationship-centric domain modeling."
+triggers: ["robinson-graph", "graph-databases", "index-free-adjacency", "property-graph", "graph-traversal", "cypher-patterns", "relationship-first"]
+---
+
+# arch-robinson-graph-databases
+> Based on **Graph Databases - Ian Robinson, Jim Webber, Emil Eifrem**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Queries traversing interconnected domain relationships beyond 2 hops must utilize index-free adjacency instead of recursive relational JOINs.**
+2. **ALWAYS: Maintain directional typed relationships with first-class properties to eliminate costly associative junction tables.**
+3. **NEVER: Perform full-graph global scans without index anchor entry points.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model networks, permissions, social graphs, and bill-of-materials as property graphs. Anchor traversals at indexed nodes and traverse pointers in O(1) per edge.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Writing recursive SQL CTEs with 5+ JOINs for deeply nested graph navigation.**
+- **Treating graph databases as simple key-value document stores.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-robinson-graph-databases"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 232. arch-fowler-enterprise-patterns Skill
+pub fn arch_fowler_enterprise_patterns() -> EccSkill {
+    EccSkill::new(
+        "arch-fowler-enterprise-patterns",
+        "Canonical enterprise application architecture: Unit of Work, Identity Map, Repository, Data Mapper, Domain Model, Service Layer, and Optimistic Offline Locking.",
+        r#"---
+name: arch-fowler-enterprise-patterns
+description: "Canonical enterprise application architecture: Unit of Work, Identity Map, Repository, Data Mapper, Domain Model, Service Layer, and Optimistic Offline Locking."
+triggers: ["fowler-poeaa", "unit-of-work", "identity-map", "data-mapper", "domain-model", "optimistic-offline-lock", "enterprise-architecture"]
+---
+
+# arch-fowler-enterprise-patterns
+> Based on **Patterns of Enterprise Application Architecture (PoEAA) - Martin Fowler**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Domain entities must remain persistence-ignorant; all database interaction is mediated by Repository and Data Mapper boundaries.**
+2. **ALWAYS: Multi-entity updates in a single business request must be tracked in a Unit of Work to prevent partial database flushes.**
+3. **ALWAYS: Prevent lost concurrent updates using Optimistic Offline Locking (version column check).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement Domain Model with Unit of Work and Identity Map. Encapsulate business rules in entities, not database triggers or anemic DTOs. Enforce version-based concurrency checks.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Anemic domain models with business logic scattered across controllers and SQL queries.**
+- **Overwriting concurrent updates without checking entity version stamps.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-fowler-enterprise-patterns"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 233. arch-martin-clean-architecture Skill
+pub fn arch_martin_clean_architecture() -> EccSkill {
+    EccSkill::new(
+        "arch-martin-clean-architecture",
+        "Hexagonal and Clean Architecture: Dependency Inversion Principle, Boundary Crossings, Entities, Use Cases, Interface Adapters, and Framework Independence.",
+        r#"---
+name: arch-martin-clean-architecture
+description: "Hexagonal and Clean Architecture: Dependency Inversion Principle, Boundary Crossings, Entities, Use Cases, Interface Adapters, and Framework Independence."
+triggers: ["clean-architecture", "uncle-bob", "hexagonal-architecture", "ports-and-adapters", "dependency-inversion", "onion-architecture", "use-case-interactor"]
+---
+
+# arch-martin-clean-architecture
+> Based on **Clean Architecture: A Craftsman's Guide to Software Structure - Robert C. Martin**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Source code dependencies must point strictly inwards: inner business use cases know nothing about outer frameworks, databases, or UI.**
+2. **ALWAYS: Outer infrastructure layers implement interfaces defined by the inner domain (Dependency Inversion Principle).**
+3. **NEVER: Import web frameworks (e.g. Express, Axum, Actix, Spring) or ORM models inside domain entities.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Structure codebases into Entities, Use Cases, Interface Adapters, and Frameworks. Expose domain capabilities via Ports and plug in external dependencies via Adapters.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Importing database connection pools directly into domain entity files.**
+- **Coupling business validation rules to HTTP request parameters.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-martin-clean-architecture"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 234. arch-tune-architecture-modernization Skill
+pub fn arch_tune_architecture_modernization() -> EccSkill {
+    EccSkill::new(
+        "arch-tune-architecture-modernization",
+        "Strategic domain modernization: Wardley Mapping, Bounded Context Canvas, Core vs Supporting Domains, Anti-Corruption Layers (ACL), and socio-technical team topologies.",
+        r#"---
+name: arch-tune-architecture-modernization
+description: "Strategic domain modernization: Wardley Mapping, Bounded Context Canvas, Core vs Supporting Domains, Anti-Corruption Layers (ACL), and socio-technical team topologies."
+triggers: ["tune-modernization", "bounded-context-canvas", "anti-corruption-layer", "wardley-mapping", "core-domain", "legacy-migration", "socio-technical"]
+---
+
+# arch-tune-architecture-modernization
+> Based on **Architecture Modernization - Nick Tune**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Modernized bounded contexts must interface with legacy services through an explicit Anti-Corruption Layer (ACL) with DTO translation.**
+2. **ALWAYS: Prioritize engineering effort and custom code on Core Strategic Domains; outsource or adopt off-the-shelf software for Generic/Commodity domains.**
+3. **NEVER: Allow legacy domain models to contaminate greenfield bounded context schemas.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Map system domains into Core, Supporting, and Generic using Wardley Mapping. Enforce Anti-Corruption Layers at all legacy migration boundaries.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Directly exposing legacy database tables to new microservices without translation.**
+- **Treating all services as equally important without strategic domain triage.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-tune-architecture-modernization"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 235. arch-ghosh-functional-domain-modeling Skill
+pub fn arch_ghosh_functional_domain_modeling() -> EccSkill {
+    EccSkill::new(
+        "arch-ghosh-functional-domain-modeling",
+        "Functional domain architectures: Pure functional cores, Algebraic Data Types (ADTs), Monadic pipelines, reactive event streams, and side-effect isolation.",
+        r#"---
+name: arch-ghosh-functional-domain-modeling
+description: "Functional domain architectures: Pure functional cores, Algebraic Data Types (ADTs), Monadic pipelines, reactive event streams, and side-effect isolation."
+triggers: ["ghosh-functional", "functional-domain-modeling", "algebraic-data-types", "pure-core-imperative-shell", "monadic-error-handling", "reactive-streams"]
+---
+
+# arch-ghosh-functional-domain-modeling
+> Based on **Functional and Reactive Domain Modeling - Debasish Ghosh**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Model domain entity state transitions as pure, deterministic functions: (State x Event) -> Result<NewState, DomainError>.**
+2. **ALWAYS: Model all domain invariants as unrepresentable invalid states using Algebraic Data Types (Tagged Enums/Unions).**
+3. **NEVER: Perform I/O, network calls, or database writes inside core domain entity methods.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Isolate all mutations to a pure functional core. Push all side-effects (database, network, file) to the outer imperative shell. Enforce exhaustive pattern matching on domain ADTs.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Embedding database calls or clock lookups inside domain calculation methods.**
+- **Using nullable primitive fields that permit illegal domain states.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-ghosh-functional-domain-modeling"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 236. arch-ford-software-architecture-hard-parts Skill
+pub fn arch_ford_software_architecture_hard_parts() -> EccSkill {
+    EccSkill::new(
+        "arch-ford-software-architecture-hard-parts",
+        "Modern distributed architecture trade-offs: Service granularity, distributed data decomposition, transactional sagas, contract management, and coupling analysis.",
+        r#"---
+name: arch-ford-software-architecture-hard-parts
+description: "Modern distributed architecture trade-offs: Service granularity, distributed data decomposition, transactional sagas, contract management, and coupling analysis."
+triggers: ["architecture-hard-parts", "architectural-tradeoffs", "granularity-disintegrators", "saga-orchestration", "data-decomposition", "connascence"]
+---
+
+# arch-ford-software-architecture-hard-parts
+> Based on **Software Architecture: The Hard Parts - Neal Ford, Mark Richards, Pramod Sadalage, Zhamak Dehghani**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Every architectural proposal must document explicit trade-offs across consistency, latency, elasticity, and operational complexity.**
+2. **ALWAYS: Decompose monolith services only when explicit disintegrators (differing scalability, team autonomy, security boundaries) justify distributed overhead.**
+3. **NEVER: Split services without decomposing their underlying database schemas.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Apply architectural disintegrator/integrator drivers to justify service boundaries. Avoid distributed transactions; select Choreographed or Orchestrated Sagas with compensating actions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Splitting a monolith into microservices while leaving a shared monolithic database.**
+- **Adopting distributed microservices for small applications without team/scale justifications.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-ford-software-architecture-hard-parts"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 237. arch-bryant-computer-systems Skill
+pub fn arch_bryant_computer_systems() -> EccSkill {
+    EccSkill::new(
+        "arch-bryant-computer-systems",
+        "Hardware-aware systems engineering: CPU memory hierarchies (L1/L2/L3), cache lines, spatial/temporal locality, branch prediction, virtual memory, and process linking.",
+        r#"---
+name: arch-bryant-computer-systems
+description: "Hardware-aware systems engineering: CPU memory hierarchies (L1/L2/L3), cache lines, spatial/temporal locality, branch prediction, virtual memory, and process linking."
+triggers: ["csapp", "mechanical-sympathy", "cache-lines", "spatial-locality", "branch-prediction", "virtual-memory", "hardware-sympathy"]
+---
+
+# arch-bryant-computer-systems
+> Based on **Computer Systems: A Programmer's Perspective (CS:APP) - Randal E. Bryant & David R. O'Hallaron**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Hot-path data structures must be laid out in contiguous memory (Arrays/Vecs) to maximize CPU L1/L2 cache hit ratios and prefetching.**
+2. **ALWAYS: Prevent cache line bouncing (false sharing) by padding atomic variables across distinct 64-byte cache line boundaries.**
+3. **NEVER: Traverse multidimensional arrays in column-major order in row-major memory representations (stride-1 access invariant).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Structure performance-critical data structures for cache locality. Align hot structs to 64-byte boundaries. Eliminate pointer chasing inside tight inner execution loops.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Linked lists in hot paths causing continuous L1 cache misses.**
+- **Concurrent threads updating adjacent atomic variables on the same 64-byte cache line.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-bryant-computer-systems"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 238. arch-herlihy-multiprocessor-programming Skill
+pub fn arch_herlihy_multiprocessor_programming() -> EccSkill {
+    EccSkill::new(
+        "arch-herlihy-multiprocessor-programming",
+        "Multi-core concurrency theory: Linearizability, lock-free & wait-free data structures, Compare-And-Swap (CAS), ABA problem, hazard pointers, and transactional memory.",
+        r#"---
+name: arch-herlihy-multiprocessor-programming
+description: "Multi-core concurrency theory: Linearizability, lock-free & wait-free data structures, Compare-And-Swap (CAS), ABA problem, hazard pointers, and transactional memory."
+triggers: ["herlihy-shavit", "multiprocessor-programming", "lock-free", "wait-free", "compare-and-swap", "aba-problem", "hazard-pointers", "atomic-concurrency"]
+---
+
+# arch-herlihy-multiprocessor-programming
+> Based on **The Art of Multiprocessor Programming - Maurice Herlihy & Nir Shavit**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Shared concurrent state must prefer lock-free single-writer or bounded message-passing channels over coarse-grained global mutex locks.**
+2. **ALWAYS: Protect Compare-And-Swap (CAS) pointers from the ABA problem using generation counters or hazard pointers.**
+3. **NEVER: Hold a mutex lock across an asynchronous `.await` or blocking I/O boundary.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement multi-threaded coordination using lock-free primitives or bounded MPSC queues. Verify linearizability of concurrent data structures. Eliminate lock convoying.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Holding locks while waiting for network responses.**
+- **Assuming increment operators (i++) are thread-safe without atomic memory ordering.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-herlihy-multiprocessor-programming"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 239. arch-gregg-systems-performance Skill
+pub fn arch_gregg_systems_performance() -> EccSkill {
+    EccSkill::new(
+        "arch-gregg-systems-performance",
+        "Performance engineering methodology: USE Method (Utilization, Saturation, Errors), Off-CPU latency analysis, Flame Graphs, eBPF tracing, and operating system bottlenecks.",
+        r#"---
+name: arch-gregg-systems-performance
+description: "Performance engineering methodology: USE Method (Utilization, Saturation, Errors), Off-CPU latency analysis, Flame Graphs, eBPF tracing, and operating system bottlenecks."
+triggers: ["brendan-gregg", "systems-performance", "use-method", "flame-graphs", "ebpf-profiling", "off-cpu-analysis", "saturation-metrics"]
+---
+
+# arch-gregg-systems-performance
+> Based on **Systems Performance: Enterprise and the Cloud - Brendan Gregg**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Instrument system bottlenecks using the USE method: track Utilization (%), Saturation (queue depth), and Errors for every physical and logical resource.**
+2. **ALWAYS: Profile latency with Off-CPU analysis and Flame Graphs to distinguish CPU execution time from lock/I/O wait time.**
+3. **NEVER: Benchmark or optimize performance without an isolated baseline, fixed warmup period, and statistical percentiles (p50, p99, p99.9).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Instrument services with USE metrics for CPU, memory, disks, and network sockets. Generate Flame Graphs for bottleneck identification. Eliminate off-CPU thread blocking.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Relying on average latency metrics while ignoring p99 tail latency spikes.**
+- **Optimizing CPU instructions when the real bottleneck is lock contention or disk I/O wait.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-gregg-systems-performance"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 240. arch-love-linux-kernel Skill
+pub fn arch_love_linux_kernel() -> EccSkill {
+    EccSkill::new(
+        "arch-love-linux-kernel",
+        "Operating system internals: Process scheduling, Virtual File System (VFS), Page Cache, non-blocking I/O (epoll, io_uring), memory mapping, and interrupt handling.",
+        r#"---
+name: arch-love-linux-kernel
+description: "Operating system internals: Process scheduling, Virtual File System (VFS), Page Cache, non-blocking I/O (epoll, io_uring), memory mapping, and interrupt handling."
+triggers: ["robert-love", "linux-kernel", "epoll", "io-uring", "page-cache", "vfs", "memory-mapping", "non-blocking-io"]
+---
+
+# arch-love-linux-kernel
+> Based on **Linux Kernel Development - Robert Love**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: High-throughput network and disk I/O must utilize asynchronous event-driven readiness polling (epoll/kqueue) or completion queues (io_uring).**
+2. **ALWAYS: Leverage the OS page cache via memory-mapped files (mmap) for read-intensive file databases and read-only catalogs.**
+3. **NEVER: Spawn an unbounded OS thread per connection; bound worker thread pools to available hardware concurrency.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design server runtimes using event loops (epoll/io_uring) with bounded worker pools. Use mmap for cold startup acceleration. Eliminate redundant user/kernel data copying.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Spawning 10,000 OS threads for 10,000 connections (thread stack OOM).**
+- **Repeatedly reading small disk chunks with synchronous read() syscalls.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-love-linux-kernel"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 241. arch-mckenney-parallel-programming Skill
+pub fn arch_mckenney_parallel_programming() -> EccSkill {
+    EccSkill::new(
+        "arch-mckenney-parallel-programming",
+        "Advanced multi-core synchronization: Read-Copy Update (RCU), memory consistency models (Acquire-Release vs Sequential Consistency), cache coherence, and NUMA architecture.",
+        r#"---
+name: arch-mckenney-parallel-programming
+description: "Advanced multi-core synchronization: Read-Copy Update (RCU), memory consistency models (Acquire-Release vs Sequential Consistency), cache coherence, and NUMA architecture."
+triggers: ["mckenney-parallel", "rcu", "read-copy-update", "memory-ordering", "acquire-release", "numa-architecture", "cache-coherence"]
+---
+
+# arch-mckenney-parallel-programming
+> Based on **Is Parallel Programming Hard, And, If So, What Can You Do About It? - Paul E. McKenney**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Read-heavy, write-rare shared data structures must use Read-Copy Update (RCU) or atomic pointer swap to achieve zero-synchronization reader throughput.**
+2. **ALWAYS: Use explicit Acquire-Release memory ordering for atomic flags instead of defaulting to heavyweight Sequentially Consistent barriers.**
+3. **NEVER: Cross NUMA node boundaries in latency-critical core loops without CPU thread pinning.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement RCU for concurrent reader scalability. Pin worker threads to NUMA cores. Use atomic acquire-release semantics for lock-free ring buffers.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using SeqCst atomic barriers across all variables, stalling the CPU instruction pipeline.**
+- **Allowing thread migration across NUMA nodes during high-throughput computing.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-mckenney-parallel-programming"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 242. arch-nygard-release-it Skill
+pub fn arch_nygard_release_it() -> EccSkill {
+    EccSkill::new(
+        "arch-nygard-release-it",
+        "Production resilience patterns: Circuit Breakers, Bulkheads, Timeouts, Shed Load, Fail Fast, and antipatterns like Cascading Failures, Dogpiling, and Unbounded Pools.",
+        r#"---
+name: arch-nygard-release-it
+description: "Production resilience patterns: Circuit Breakers, Bulkheads, Timeouts, Shed Load, Fail Fast, and antipatterns like Cascading Failures, Dogpiling, and Unbounded Pools."
+triggers: ["nygard-release-it", "circuit-breaker-pattern", "bulkhead-pattern", "shed-load", "cascading-failure", "fail-fast", "production-resilience"]
+---
+
+# arch-nygard-release-it
+> Based on **Release It!: Design and Deploy Production-Ready Software - Michael T. Nygard**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Isolate external downstream integration points with dedicated Bulkheads (separate thread/connection pools) so one failing dependency cannot starve the host.**
+2. **ALWAYS: Wrap network calls in Circuit Breakers that trip to OPEN state upon consecutive error thresholds.**
+3. **NEVER: Configure unbounded queues or connection pools for external services.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Equip every external API client with a Circuit Breaker, a Bulkhead connection pool, and strict socket timeouts. Fail fast when resource saturation exceeds safe thresholds.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Shared connection pool where one slow third-party API exhausts all server threads.**
+- **Missing socket timeouts leading to hung connections indefinitely.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-nygard-release-it"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 243. arch-beyer-site-reliability-engineering Skill
+pub fn arch_beyer_site_reliability_engineering() -> EccSkill {
+    EccSkill::new(
+        "arch-beyer-site-reliability-engineering",
+        "Google SRE principles: Service Level Indicators (SLIs), Service Level Objectives (SLOs), Error Budgets, Eliminating Toil, Cascading Failure Mitigation, and Overload Handling.",
+        r#"---
+name: arch-beyer-site-reliability-engineering
+description: "Google SRE principles: Service Level Indicators (SLIs), Service Level Objectives (SLOs), Error Budgets, Eliminating Toil, Cascading Failure Mitigation, and Overload Handling."
+triggers: ["google-sre", "sli-slo", "error-budgets", "eliminating-toil", "overload-shedding", "cascading-failure-prevention", "site-reliability"]
+---
+
+# arch-beyer-site-reliability-engineering
+> Based on **Site Reliability Engineering (SRE Book) - Betsy Beyer, Chris Jones, Jennifer Petoff, Niall Richard Murphy**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Quantify system reliability with explicit SLIs (availability, latency) and derive SLOs with Error Budgets that gate feature deployment velocity.**
+2. **ALWAYS: Shed load gracefully when approaching capacity limits using priority shedding (drop non-critical background jobs, preserve critical user transactions).**
+3. **NEVER: Page on-call engineers for alerts that do not require immediate, manual human intervention.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Define SLI/SLO metrics for all API contracts. Implement automated load shedding based on CPU/queue saturation. Freeze deployments when error budget is exhausted.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Alerting on transient CPU spikes instead of user-facing SLO degradation.**
+- **Allowing unbounded queue growth under load rather than shedding non-essential requests.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-beyer-site-reliability-engineering"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 244. arch-rosenthal-chaos-engineering Skill
+pub fn arch_rosenthal_chaos_engineering() -> EccSkill {
+    EccSkill::new(
+        "arch-rosenthal-chaos-engineering",
+        "Hypothesis-driven chaos experiments: Steady-state verification, automated fault injection, blast radius containment, GameDays, and catastrophic failure mitigation.",
+        r#"---
+name: arch-rosenthal-chaos-engineering
+description: "Hypothesis-driven chaos experiments: Steady-state verification, automated fault injection, blast radius containment, GameDays, and catastrophic failure mitigation."
+triggers: ["chaos-engineering", "fault-injection", "steady-state-verification", "blast-radius", "chaos-monkey", "game-days", "resilience-testing"]
+---
+
+# arch-rosenthal-chaos-engineering
+> Based on **Chaos Engineering: System Resiliency in Practice - Casey Rosenthal & Nora Jones**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Formulate chaos experiments with a verifiable hypothesis based on normal steady-state behavior (e.g. 99% of requests succeed with <200ms latency).**
+2. **ALWAYS: Limit the blast radius of chaos fault injections to a canary percentage (e.g. 5% of traffic) with automated emergency abort switches.**
+3. **NEVER: Run chaos experiments in production without real-time observability telemetry validating steady-state thresholds.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Define steady-state metrics. Conduct controlled fault-injection tests (kill instances, sever network links, inject 500ms latency). Verify graceful degradation.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Injecting massive cluster-wide failures without automated abort triggers.**
+- **Relying on unit tests alone while never verifying behavior during network partition.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-rosenthal-chaos-engineering"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 245. arch-davis-cloud-native-patterns Skill
+pub fn arch_davis_cloud_native_patterns() -> EccSkill {
+    EccSkill::new(
+        "arch-davis-cloud-native-patterns",
+        "Cloud-native architectural invariants: Stateless application nodes, declarative configuration, ephemeral compute, distributed coordination, and event-driven choreography.",
+        r#"---
+name: arch-davis-cloud-native-patterns
+description: "Cloud-native architectural invariants: Stateless application nodes, declarative configuration, ephemeral compute, distributed coordination, and event-driven choreography."
+triggers: ["cornelia-davis", "cloud-native-patterns", "stateless-services", "ephemeral-compute", "declarative-configuration", "twelve-factor", "change-tolerant"]
+---
+
+# arch-davis-cloud-native-patterns
+> Based on **Cloud Native Patterns: Designing change-tolerant software - Cornelia Davis**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Application compute containers must be strictly stateless; all durable state is stored in external distributed datastores.**
+2. **ALWAYS: Software instances must be designed for instant termination (SIGTERM shutdown drain) and zero-downtime rolling upgrades.**
+3. **NEVER: Store user session state or uploaded files on the container's local ephemeral filesystem.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Adhere strictly to Twelve-Factor methodology. Externalize configuration via environment variables. Design nodes for arbitrary kill/restart lifecycle.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Writing uploaded files to local disk paths that disappear on container restart.**
+- **Maintaining in-memory session caches that break under multi-instance horizontal scaling.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-davis-cloud-native-patterns"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 246. arch-ibryam-kubernetes-patterns Skill
+pub fn arch_ibryam_kubernetes_patterns() -> EccSkill {
+    EccSkill::new(
+        "arch-ibryam-kubernetes-patterns",
+        "Container orchestration patterns: Sidecar, Ambassador, Adapter, Init Container, Health Probes (Liveness, Readiness, Startup), and Controller reconciliation loops.",
+        r#"---
+name: arch-ibryam-kubernetes-patterns
+description: "Container orchestration patterns: Sidecar, Ambassador, Adapter, Init Container, Health Probes (Liveness, Readiness, Startup), and Controller reconciliation loops."
+triggers: ["kubernetes-patterns", "sidecar-pattern", "ambassador-pattern", "init-container", "liveness-readiness-probes", "controller-loop", "declarative-reconcile"]
+---
+
+# arch-ibryam-kubernetes-patterns
+> Based on **Kubernetes Patterns: Reusable Elements for Designing Cloud-Native Applications - Bilgin Ibryam & Roland Huß**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Separate core business containers from auxiliary concerns (logging, proxying, metric scraping) using the Sidecar pattern.**
+2. **ALWAYS: Expose explicit `/livez` (liveness: is process deadlocked?) and `/readyz` (readiness: can process accept traffic?) HTTP probe endpoints.**
+3. **NEVER: Mark readiness probe as healthy before database connection pools and warm caches are initialized.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement Sidecar/Ambassador patterns for peripheral concerns. Define distinct liveness, readiness, and startup probes with calibrated failure thresholds.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Conflating liveness with readiness, causing Kubernetes to reboot containers that are simply warming up.**
+- **Bundling monitoring proxies and business servers in a single monolithic container.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-ibryam-kubernetes-patterns"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 247. arch-newman-building-microservices Skill
+pub fn arch_newman_building_microservices() -> EccSkill {
+    EccSkill::new(
+        "arch-newman-building-microservices",
+        "Microservices architectural foundations: Independent deployability, service decomposition by business capability, consumer-driven contracts, and avoiding shared databases.",
+        r#"---
+name: arch-newman-building-microservices
+description: "Microservices architectural foundations: Independent deployability, service decomposition by business capability, consumer-driven contracts, and avoiding shared databases."
+triggers: ["sam-newman", "building-microservices", "independent-deployability", "service-decomposition", "consumer-driven-contracts", "microservices-foundations"]
+---
+
+# arch-newman-building-microservices
+> Based on **Building Microservices (2nd Edition) - Sam Newman**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Every microservice must own its private datastore; direct cross-service database access is strictly prohibited.**
+2. **ALWAYS: Maintain independent deployability: modifying one service must never mandate simultaneous deployment of another service.**
+3. **NEVER: Share database tables, schemas, or foreign keys across microservice boundaries.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Decompose systems along business capability boundaries. Enforce API contracts (OpenAPI/Protobuf) with backward-compatibility checks. Isolate datastores per service.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Two microservices querying the same SQL database tables directly.**
+- **Lock-step deployments where Service A v2 requires Service B v2 to be deployed simultaneously.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-newman-building-microservices"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 248. arch-newman-monolith-to-microservices Skill
+pub fn arch_newman_monolith_to_microservices() -> EccSkill {
+    EccSkill::new(
+        "arch-newman-monolith-to-microservices",
+        "Evolutionary decomposition strategies: Strangler Fig pattern, database decomposition, Change Data Capture (CDC), branch by abstraction, and UI composition.",
+        r#"---
+name: arch-newman-monolith-to-microservices
+description: "Evolutionary decomposition strategies: Strangler Fig pattern, database decomposition, Change Data Capture (CDC), branch by abstraction, and UI composition."
+triggers: ["monolith-to-microservices", "strangler-fig", "database-decomposition", "change-data-capture", "branch-by-abstraction", "migration-patterns"]
+---
+
+# arch-newman-monolith-to-microservices
+> Based on **Monolith to Microservices - Sam Newman**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Decompose monolithic applications incrementally using the Strangler Fig pattern behind an API Gateway/Reverse Proxy.**
+2. **ALWAYS: Synchronize database separation asynchronously using Change Data Capture (CDC) or Transactional Outbox during the transition phase.**
+3. **NEVER: Attempt a big-bang rewrite of a production monolithic system.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement Strangler Fig reverse proxy to intercept and route legacy endpoints to new microservices. Use CDC for zero-downtime data synchronization.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Big-bang multi-year rewrites that fail before reaching production.**
+- **Migrating application code to microservices while leaving the database monolithic.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-newman-monolith-to-microservices"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 249. arch-richardson-microservices-patterns Skill
+pub fn arch_richardson_microservices_patterns() -> EccSkill {
+    EccSkill::new(
+        "arch-richardson-microservices-patterns",
+        "Transactional distributed patterns: Saga pattern (Orchestration vs Choreography), CQRS, Event Sourcing, API Gateway, and Distributed Queries.",
+        r#"---
+name: arch-richardson-microservices-patterns
+description: "Transactional distributed patterns: Saga pattern (Orchestration vs Choreography), CQRS, Event Sourcing, API Gateway, and Distributed Queries."
+triggers: ["chris-richardson", "microservices-patterns", "saga-pattern", "orchestrated-saga", "choreographed-saga", "cqrs", "event-sourcing", "api-gateway"]
+---
+
+# arch-richardson-microservices-patterns
+> Based on **Microservices Patterns - Chris Richardson**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Multi-service distributed transactions must be orchestrated via Sagas with explicit compensating transactions for rollback on failure.**
+2. **ALWAYS: Materialize cross-service read queries using Command Query Responsibility Segregation (CQRS) views built from domain event streams.**
+3. **NEVER: Use Two-Phase Commit (2PC) or XA transactions across distributed microservices.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement Saga orchestrator for multi-step distributed operations (e.g. CreateOrder -> ReserveCredit -> Fulfill). Define compensation actions for every step. Use CQRS for read views.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using distributed 2PC locks across microservices, creating distributed deadlocks.**
+- **Direct synchronous fan-out REST queries to 10 services to assemble a single read view.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-richardson-microservices-patterns"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 250. arch-richards-fundamentals-architecture Skill
+pub fn arch_richards_fundamentals_architecture() -> EccSkill {
+    EccSkill::new(
+        "arch-richards-fundamentals-architecture",
+        "Architectural principles: Architectural characteristics (-ilities), component cohesion, connascence, architectural styles, and trade-off evaluation.",
+        r#"---
+name: arch-richards-fundamentals-architecture
+description: "Architectural principles: Architectural characteristics (-ilities), component cohesion, connascence, architectural styles, and trade-off evaluation."
+triggers: ["fundamentals-software-architecture", "architectural-characteristics", "connascence", "component-cohesion", "architecture-styles", "tradeoff-analysis"]
+---
+
+# arch-richards-fundamentals-architecture
+> Based on **Fundamentals of Software Architecture - Mark Richards & Neal Ford**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Analyze and minimize Connascence of Execution, Timing, and Algorithm between collaborating components.**
+2. **ALWAYS: Explicitly document the top 3 architectural characteristics (e.g. Scalability, Security, Maintainability) driving design decisions.**
+3. **NEVER: Prioritize non-functional characteristics that conflict with core business drivers without documented consensus.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Measure coupling via static and dynamic connascence. Select architectural styles (Microkernel, Event-Driven, Space-Based, Microservices) based on explicit characteristic drivers.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Prematurely adopting microservices when the application requirements favor a modular monolith.**
+- **Ignoring timing connascence where services assume identical network speeds.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-richards-fundamentals-architecture"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 251. arch-burns-designing-distributed-systems Skill
+pub fn arch_burns_designing_distributed_systems() -> EccSkill {
+    EccSkill::new(
+        "arch-burns-designing-distributed-systems",
+        "Patterns for containerized distributed systems: Sidecar, Ambassador, Adapter, Replicated Load-Balanced Services, Sharded Services, and Scatter/Gather.",
+        r#"---
+name: arch-burns-designing-distributed-systems
+description: "Patterns for containerized distributed systems: Sidecar, Ambassador, Adapter, Replicated Load-Balanced Services, Sharded Services, and Scatter/Gather."
+triggers: ["brendan-burns", "designing-distributed-systems", "scatter-gather", "ambassador", "adapter", "sharded-services", "distributed-primitives"]
+---
+
+# arch-burns-designing-distributed-systems
+> Based on **Designing Distributed Systems - Brendan Burns**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Parallel distributed search/aggregation queries must implement Scatter/Gather with strict timeout deadlines and partial result aggregation.**
+2. **ALWAYS: Partition sharded services using consistent hashing to minimize data movement during node additions/removals.**
+3. **NEVER: Allow a single slow leaf node in a Scatter/Gather cluster to hold up the aggregated client response past the deadline.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement Scatter/Gather with root coordinator fan-out, leaf node execution, and deadline cancellation. Use consistent hashing for distributed sharded state.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Waiting indefinitely for the slowest leaf node in a scatter/gather query.**
+- **Using naive modulo hashing (hash(key) % N) causing total rehash on node failure.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-burns-designing-distributed-systems"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 252. arch-stevens-tcp-ip-illustrated Skill
+pub fn arch_stevens_tcp_ip_illustrated() -> EccSkill {
+    EccSkill::new(
+        "arch-stevens-tcp-ip-illustrated",
+        "Low-level networking foundations: TCP 3-way handshake, flow control, sliding window, congestion control (CUBIC/BBR), TIME_WAIT states, and socket options (SO_REUSEADDR).",
+        r#"---
+name: arch-stevens-tcp-ip-illustrated
+description: "Low-level networking foundations: TCP 3-way handshake, flow control, sliding window, congestion control (CUBIC/BBR), TIME_WAIT states, and socket options (SO_REUSEADDR)."
+triggers: ["stevens-tcp-ip", "tcp-flow-control", "sliding-window", "congestion-control", "time-wait", "socket-options", "tcp-handshake", "network-protocols"]
+---
+
+# arch-stevens-tcp-ip-illustrated
+> Based on **TCP/IP Illustrated, Volume 1: The Protocols - W. Richard Stevens & Kevin R. Fall**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: High-volume network services must reuse persistent pooled connections (HTTP Keep-Alive / TCP connection pooling) to prevent ephemeral port exhaustion (TIME_WAIT).**
+2. **ALWAYS: Configure TCP_NODELAY (disable Nagle's algorithm) for latency-sensitive interactive RPC payloads to eliminate 40ms delayed ACK stalls.**
+3. **NEVER: Create new TCP sockets per request inside hot request loops.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Configure socket options (TCP_NODELAY, SO_REUSEADDR). Tune TCP receive/send buffer windows. Implement persistent connection pooling to avoid TIME_WAIT socket storms.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Opening and closing TCP connections for every single API call.**
+- **Suffering 40ms latency spikes due to Nagle's algorithm interacting with delayed ACKs.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-stevens-tcp-ip-illustrated"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 253. arch-jin-designing-web-apis Skill
+pub fn arch_jin_designing_web_apis() -> EccSkill {
+    EccSkill::new(
+        "arch-jin-designing-web-apis",
+        "Production REST API architecture: Resource-oriented design, idempotency keys, cursor-based pagination, rate limiting (Token Bucket), versioning, and webhook security.",
+        r#"---
+name: arch-jin-designing-web-apis
+description: "Production REST API architecture: Resource-oriented design, idempotency keys, cursor-based pagination, rate limiting (Token Bucket), versioning, and webhook security."
+triggers: ["designing-web-apis", "restful-design", "idempotency-key", "cursor-pagination", "rate-limiting", "token-bucket", "webhook-signatures"]
+---
+
+# arch-jin-designing-web-apis
+> Based on **Designing Web APIs - Brenda Jin, Saurabh Sahni, Amir Shevat**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: State-altering POST/PATCH requests must require client-provided `Idempotency-Key` headers with cached response replay on duplicate submissions.**
+2. **ALWAYS: Paginate large collections using opaque Cursor-based pagination (`limit` & `starting_after`), never SQL `OFFSET` pagination.**
+3. **ALWAYS: Verify incoming webhook authenticity using HMAC-SHA256 signatures with timestamp anti-replay validation.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design REST APIs with idempotent mutations, cursor pagination, token-bucket rate limiting, and HMAC-signed webhooks. Return standardized RFC 7807 Problem Details.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using offset-based pagination (`OFFSET 100000`) causing quadratic database scan degradation.**
+- **Non-idempotent billing or checkout endpoints leading to duplicate customer charges.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-jin-designing-web-apis"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 254. arch-grigorik-high-performance-networking Skill
+pub fn arch_grigorik_high_performance_networking() -> EccSkill {
+    EccSkill::new(
+        "arch-grigorik-high-performance-networking",
+        "Modern transport protocols: HTTP/2 multiplexing, HPACK header compression, HTTP/3 (QUIC over UDP), TLS 1.3 0-RTT handshakes, and transport latency optimization.",
+        r#"---
+name: arch-grigorik-high-performance-networking
+description: "Modern transport protocols: HTTP/2 multiplexing, HPACK header compression, HTTP/3 (QUIC over UDP), TLS 1.3 0-RTT handshakes, and transport latency optimization."
+triggers: ["grigorik-networking", "http2-multiplexing", "quic-http3", "tls-optimization", "head-of-line-blocking", "hpack", "transport-performance"]
+---
+
+# arch-grigorik-high-performance-networking
+> Based on **High Performance Browser Networking - Ilya Grigorik**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Internal microservice transport must utilize HTTP/2 or HTTP/3 multiplexing to stream multiple concurrent requests over a single TCP/UDP connection.**
+2. **ALWAYS: Enable TLS 1.3 session resumption (0-RTT / session tickets) to eliminate extra round-trip handshakes.**
+3. **NEVER: Open multiple parallel TCP connections to the same host when HTTP/2 multiplexing is available.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Optimize transport layers with HTTP/2 multiplexing, QUIC packet loss isolation, and TLS 1.3 session resumption. Eliminate head-of-line blocking.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Opening 6 parallel HTTP/1.1 connections to bypass head-of-line blocking in modern environments.**
+- **Disabling connection reuse, forcing TLS handshakes on every payload.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-grigorik-high-performance-networking"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 255. arch-hohpe-enterprise-integration-patterns Skill
+pub fn arch_hohpe_enterprise_integration_patterns() -> EccSkill {
+    EccSkill::new(
+        "arch-hohpe-enterprise-integration-patterns",
+        "Enterprise messaging patterns: Pipes and Filters, Message Router, Splitter, Aggregator, Resequencer, Dead Letter Channel, and Content-Based Router.",
+        r#"---
+name: arch-hohpe-enterprise-integration-patterns
+description: "Enterprise messaging patterns: Pipes and Filters, Message Router, Splitter, Aggregator, Resequencer, Dead Letter Channel, and Content-Based Router."
+triggers: ["enterprise-integration-patterns", "eip", "pipes-and-filters", "message-router", "dead-letter-channel", "splitter-aggregator", "resequencer"]
+---
+
+# arch-hohpe-enterprise-integration-patterns
+> Based on **Enterprise Integration Patterns (EIP) - Gregor Hohpe & Bobby Woolf**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Poison messages that fail parsing or processing after N retry attempts must be automatically diverted to an isolated Dead Letter Channel (DLC/DLQ).**
+2. **ALWAYS: Composed message processing must assemble disparate asynchronous responses using an Aggregator with a correlation ID and completion timeout.**
+3. **NEVER: Discard failed messages silently without routing to an inspection dead-letter store.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Architect event pipelines using canonical EIP primitives: Pipes & Filters, Content-Based Routers, Splitter/Aggregators, and Dead Letter Queues with Correlation IDs.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Retrying unparseable malformed messages infinitely, clogging the message broker queue.**
+- **Losing asynchronous sub-task responses due to missing correlation IDs.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-hohpe-enterprise-integration-patterns"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 256. arch-indrasiri-grpc-up-and-running Skill
+pub fn arch_indrasiri_grpc_up_and_running() -> EccSkill {
+    EccSkill::new(
+        "arch-indrasiri-grpc-up-and-running",
+        "High-performance binary RPC: Protocol Buffers v3, Unary and Streaming RPCs (Client, Server, Bidirectional), Interceptors, Deadline Propagation, and Name Resolution.",
+        r#"---
+name: arch-indrasiri-grpc-up-and-running
+description: "High-performance binary RPC: Protocol Buffers v3, Unary and Streaming RPCs (Client, Server, Bidirectional), Interceptors, Deadline Propagation, and Name Resolution."
+triggers: ["grpc-architecture", "protobuf", "deadline-propagation", "grpc-interceptors", "bidirectional-streaming", "binary-rpc", "schema-evolution"]
+---
+
+# arch-indrasiri-grpc-up-and-running
+> Based on **gRPC: Up and Running - Kasun Indrasiri & Danesh Kuruppu**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Propagate gRPC context deadlines across all downstream RPC invocations; terminate processing immediately when the deadline expires.**
+2. **ALWAYS: Enforce backward and forward compatibility in `.proto` files: never alter existing field tag numbers or remove reserved fields.**
+3. **NEVER: Pass unauthenticated gRPC requests across cluster boundaries without TLS and interceptor token validation.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Define all internal service APIs using Protocol Buffers with numbered fields. Propagate gRPC deadlines across all RPC hops. Implement auth and tracing interceptors.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Renumbering or deleting fields in `.proto` files, breaking existing deployed clients.**
+- **Continuing expensive downstream database queries after the client gRPC deadline has expired.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-indrasiri-grpc-up-and-running"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 257. arch-bass-software-architecture-practice Skill
+pub fn arch_bass_software_architecture_practice() -> EccSkill {
+    EccSkill::new(
+        "arch-bass-software-architecture-practice",
+        "SEI architecture methodology: Quality Attribute Scenarios (QAW), Architecture Tradeoff Analysis Method (ATAM), Sensitivity Points, Trade-off Points, and Architectural Tactics.",
+        r#"---
+name: arch-bass-software-architecture-practice
+description: "SEI architecture methodology: Quality Attribute Scenarios (QAW), Architecture Tradeoff Analysis Method (ATAM), Sensitivity Points, Trade-off Points, and Architectural Tactics."
+triggers: ["sei-architecture", "atam", "quality-attribute-scenarios", "sensitivity-points", "tradeoff-points", "architectural-tactics", "software-architecture-practice"]
+---
+
+# arch-bass-software-architecture-practice
+> Based on **Software Architecture in Practice (4th Edition) - Len Bass, Paul Clements, Rick Kazman**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Formulate non-functional quality attributes as concrete ATAM Scenarios: Stimulus, Source, Environment, Artifact, Response, and Response Measure.**
+2. **ALWAYS: Identify and document Architectural Sensitivity Points (decisions critical to a specific attribute) and Trade-off Points (decisions affecting multiple conflicting attributes).**
+3. **NEVER: Adopt architectural tactics without validating their trade-offs against system quality attributes.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Conduct ATAM evaluations for major design choices. Specify quality attributes with measurable responses (e.g. latency under 95% load). Map architectural tactics to attributes.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Vague requirements like 'the system must be scalable' without stimulus/response metrics.**
+- **Choosing architectural styles based on hype rather than ATAM quality trade-offs.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-bass-software-architecture-practice"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 258. arch-clements-documenting-architectures Skill
+pub fn arch_clements_documenting_architectures() -> EccSkill {
+    EccSkill::new(
+        "arch-clements-documenting-architectures",
+        "Formal architecture documentation: 4+1 View Model, Module Views, Component-and-Connector (C&C) Views, Allocation Views, and interface specifications.",
+        r#"---
+name: arch-clements-documenting-architectures
+description: "Formal architecture documentation: 4+1 View Model, Module Views, Component-and-Connector (C&C) Views, Allocation Views, and interface specifications."
+triggers: ["documenting-architectures", "views-and-beyond", "component-and-connector", "module-views", "allocation-views", "4-plus-1-views", "architectural-views"]
+---
+
+# arch-clements-documenting-architectures
+> Based on **Documenting Software Architectures: Views and Beyond - Paul Clements et al.**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Distinguish Module Views (static code, classes, layers) from Component-and-Connector Views (runtime processes, threads, sockets, pipes).**
+2. **ALWAYS: Document every architectural interface with syntax, semantic invariants, error states, and quality attribute bounds.**
+3. **NEVER: Present an architectural diagram where boxes and arrows have ambiguous or mixed semantics.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Document architectures across the 3 fundamental viewtypes: Module Views (structure), Component-and-Connector Views (runtime), and Allocation Views (deployment/hardware).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Mixing static code dependencies and dynamic network connections in the same diagram.**
+- **Diagrams with unlabeled arrows and undefined box semantics.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-clements-documenting-architectures"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 259. arch-brown-c4-model Skill
+pub fn arch_brown_c4_model() -> EccSkill {
+    EccSkill::new(
+        "arch-brown-c4-model",
+        "Hierarchical architecture visualization: Level 1 (System Context), Level 2 (Containers), Level 3 (Components), Level 4 (Code), and diagramming as code.",
+        r#"---
+name: arch-brown-c4-model
+description: "Hierarchical architecture visualization: Level 1 (System Context), Level 2 (Containers), Level 3 (Components), Level 4 (Code), and diagramming as code."
+triggers: ["c4-model", "simon-brown", "system-context", "containers-diagram", "components-diagram", "diagrams-as-code", "hierarchical-architecture"]
+---
+
+# arch-brown-c4-model
+> Based on **The C4 Model for Software Architecture - Simon Brown**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Architecture specifications must provide explicit C4 Level 1 (System Context) and Level 2 (Containers with protocols/ports) before synthesizing implementation code.**
+2. **ALWAYS: Every container and component box must specify its explicit technology, role, and interaction protocol (e.g. `gRPC / TLS`).**
+3. **NEVER: Create monolithic unsegmented diagrams containing code-level details alongside cloud-level systems.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Structure system documentation using the 4 C4 levels: Context (users & software systems), Containers (applications & datastores), Components (modules), and Code (classes).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Skipping container boundaries and trying to explain entire distributed systems with a single diagram.**
+- **Omitting protocols, ports, and technologies from architectural boxes.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-brown-c4-model"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 260. arch-rozanski-software-systems-architecture Skill
+pub fn arch_rozanski_software_systems_architecture() -> EccSkill {
+    EccSkill::new(
+        "arch-rozanski-software-systems-architecture",
+        "Viewpoints and Perspectives framework: Functional, Information, Concurrency, Development, Deployment, Operational viewpoints; and Security, Performance, Availability perspectives.",
+        r#"---
+name: arch-rozanski-software-systems-architecture
+description: "Viewpoints and Perspectives framework: Functional, Information, Concurrency, Development, Deployment, Operational viewpoints; and Security, Performance, Availability perspectives."
+triggers: ["rozanski-woods", "viewpoints-and-perspectives", "concurrency-viewpoint", "information-viewpoint", "availability-perspective", "architectural-perspectives"]
+---
+
+# arch-rozanski-software-systems-architecture
+> Based on **Software Systems Architecture - Nick Rozanski & Eóin Woods**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Review every architectural design against cross-cutting Perspectives: Security, Performance, Availability, and Evolution.**
+2. **ALWAYS: Validate the Concurrency Viewpoint: identify all concurrent execution threads, shared resources, and synchronization primitives to prevent deadlocks.**
+3. **NEVER: Complete an architectural spec without detailing the Operational and Deployment Viewpoints.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Evaluate architecture across core viewpoints (Functional, Information, Concurrency, Deployment) and apply cross-cutting perspectives (Security, Performance, Availability).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Designing systems without a concurrency viewpoint, leading to race conditions in production.**
+- **Treating operational deployment as an afterthought delegated entirely to operations.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-rozanski-software-systems-architecture"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 261. arch-keeling-design-it Skill
+pub fn arch_keeling_design_it() -> EccSkill {
+    EccSkill::new(
+        "arch-keeling-design-it",
+        "Actionable architecture practices: Architecture Decision Records (ADRs), Risk-Driven Architecture, Architecture Katas, and collaborative design facilitation.",
+        r#"---
+name: arch-keeling-design-it
+description: "Actionable architecture practices: Architecture Decision Records (ADRs), Risk-Driven Architecture, Architecture Katas, and collaborative design facilitation."
+triggers: ["keeling-design-it", "adr", "architecture-decision-records", "risk-driven-architecture", "architecture-katas", "design-mindset"]
+---
+
+# arch-keeling-design-it
+> Based on **Design It!: From Programmer to Software Architect - Michael Keeling**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Every non-trivial structural decision, database selection, or protocol change must be recorded as an immutable Architecture Decision Record (ADR).**
+2. **ALWAYS: ADR format must strictly include: Title, Status (Proposed/Accepted/Superseded), Context, Decision, and Consequences (positive, negative, neutral).**
+3. **NEVER: Overrule or reverse an accepted ADR without committing a new superseding ADR documenting the altered context.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Maintain an `/adrs` directory recording every significant architectural choice. Prioritize engineering work using Risk-Driven Architecture matrices.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Making major architectural changes via chat or meetings without committing an ADR to the repository.**
+- **Failing to document negative consequences and trade-offs of architectural decisions.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-keeling-design-it"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 262. arch-majors-observability-engineering Skill
+pub fn arch_majors_observability_engineering() -> EccSkill {
+    EccSkill::new(
+        "arch-majors-observability-engineering",
+        "High-cardinality observability: Column-level truth, structured events, wide events, eliminating alert fatigue, and answering novel unknown-unknown system queries.",
+        r#"---
+name: arch-majors-observability-engineering
+description: "High-cardinality observability: Column-level truth, structured events, wide events, eliminating alert fatigue, and answering novel unknown-unknown system queries."
+triggers: ["charity-majors", "observability-engineering", "high-cardinality", "structured-wide-events", "unknown-unknowns", "bubbleup-analysis", "telemetry"]
+---
+
+# arch-majors-observability-engineering
+> Based on **Observability Engineering - Charity Majors, Liz Fong-Jones, George Miranda**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Emit canonical structured Wide JSON Events per request containing high-cardinality metadata (user_id, tenant_id, trace_id, build_sha, latency_ms).**
+2. **ALWAYS: Avoid relying on pre-aggregated metrics that destroy high-cardinality dimensions needed for root-cause debugging.**
+3. **NEVER: Use unstructured plaintext logging (`println!`, `console.log`) in production server code.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Instrument all requests with structured, wide events carrying rich context and high-cardinality fields. Ensure queries can slice and dice by arbitrary dimensions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Logging unstructured strings without correlation IDs or tenant metadata.**
+- **Pre-aggregating metrics at the client, making it impossible to identify which specific tenant experienced errors.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-majors-observability-engineering"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 263. arch-parker-distributed-tracing-practice Skill
+pub fn arch_parker_distributed_tracing_practice() -> EccSkill {
+    EccSkill::new(
+        "arch-parker-distributed-tracing-practice",
+        "Distributed tracing fundamentals: OpenTelemetry (OTel), W3C Trace Context (`traceparent`, `tracestate`), Baggage propagation, Spans, and Critical Path analysis.",
+        r#"---
+name: arch-parker-distributed-tracing-practice
+description: "Distributed tracing fundamentals: OpenTelemetry (OTel), W3C Trace Context (`traceparent`, `tracestate`), Baggage propagation, Spans, and Critical Path analysis."
+triggers: ["distributed-tracing", "opentelemetry", "otel", "w3c-trace-context", "traceparent", "span-hierarchy", "critical-path-analysis"]
+---
+
+# arch-parker-distributed-tracing-practice
+> Based on **Distributed Tracing in Practice - Austin Parker, Daniel Spoonhower, Jonathan Mace, Ben Sigelman, Rebecca Isaacs**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Extract and propagate W3C `traceparent` headers across every HTTP, gRPC, and asynchronous message broker hop.**
+2. **ALWAYS: Model distributed operations as a hierarchy of Spans representing start time, end time, status, and semantic attributes.**
+3. **NEVER: Break the trace context chain when spawning background tasks or worker threads.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement OpenTelemetry SDK instrumentation. Inject and extract W3C `traceparent` across all network boundaries. Propagate baggage context for tenant/environment tracking.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Generating new trace IDs inside downstream microservices, breaking the distributed trace graph.**
+- **Dropping trace headers when enqueuing messages into Kafka or RabbitMQ.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-parker-distributed-tracing-practice"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 264. arch-beyer-sre-workbook Skill
+pub fn arch_beyer_sre_workbook() -> EccSkill {
+    EccSkill::new(
+        "arch-beyer-sre-workbook",
+        "Practical SRE implementation: Multi-window multi-burn-rate alerting, postmortem culture with actionable follow-ups, canary release gating, and disaster recovery.",
+        r#"---
+name: arch-beyer-sre-workbook
+description: "Practical SRE implementation: Multi-window multi-burn-rate alerting, postmortem culture with actionable follow-ups, canary release gating, and disaster recovery."
+triggers: ["sre-workbook", "multi-burn-rate-alerting", "canary-gating", "postmortem-action-items", "disaster-recovery", "slo-engineering"]
+---
+
+# arch-beyer-sre-workbook
+> Based on **The Site Reliability Workbook - Betsy Beyer, David N. Blank-Edelman et al.**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Implement Multi-Window Multi-Burn-Rate alerting: trigger pages only when error budget is burning rapidly across both short and long windows (e.g. 14.4x in 1h AND 5m).**
+2. **ALWAYS: Automate canary release gating: halt deployments immediately when canary error rate deviates from baseline.**
+3. **NEVER: Write a blameless postmortem without filing concrete, prioritized engineering tickets to eliminate the underlying root cause.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Configure multi-burn-rate alert rules against SLOs. Enforce automated canary rollbacks on error budget degradation. Conduct blameless postmortems with verifiable prevention tasks.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Alerting on single spike anomalies that self-resolve in 30 seconds.**
+- **Holding postmortems that produce no actionable architecture or prevention tasks.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-beyer-sre-workbook"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 265. arch-fowler-production-ready-microservices Skill
+pub fn arch_fowler_production_ready_microservices() -> EccSkill {
+    EccSkill::new(
+        "arch-fowler-production-ready-microservices",
+        "Production readiness standards: Stability, reliability, scalability, fault tolerance, catastrophe preparedness, performance monitoring, security hardening, and documentation.",
+        r#"---
+name: arch-fowler-production-ready-microservices
+description: "Production readiness standards: Stability, reliability, scalability, fault tolerance, catastrophe preparedness, performance monitoring, security hardening, and documentation."
+triggers: ["production-ready-microservices", "production-readiness-checklist", "stability-standards", "graceful-shutdown", "catastrophe-preparedness"]
+---
+
+# arch-fowler-production-ready-microservices
+> Based on **Production-Ready Microservices - Susan J. Fowler**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Microservices must implement graceful shutdown handling: listen for SIGTERM, stop accepting new traffic, drain in-flight requests, and flush telemetry before exit.**
+2. **ALWAYS: Validate every production microservice against an automated readiness checklist (SLOs, runbooks, dashboard links, backup procedures).**
+3. **NEVER: Terminate a production container abruptly without a graceful connection drain period.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Fulfill all 8 pillars of the Production Readiness Review. Implement SIGTERM drain loops (e.g. 30s grace period). Publish automated service runbooks.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Containers terminating instantly with SIGKILL, severing in-flight HTTP connections and dropping data.**
+- **Deploying services with zero runbooks, monitoring dashboards, or on-call alerts.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-fowler-production-ready-microservices"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 266. arch-campbell-database-reliability-engineering Skill
+pub fn arch_campbell_database_reliability_engineering() -> EccSkill {
+    EccSkill::new(
+        "arch-campbell-database-reliability-engineering",
+        "Database SRE operations: Zero-downtime schema migrations (Expand-Contract pattern), replication topology health, backup verification, RPO/RTO metrics, and capacity planning.",
+        r#"---
+name: arch-campbell-database-reliability-engineering
+description: "Database SRE operations: Zero-downtime schema migrations (Expand-Contract pattern), replication topology health, backup verification, RPO/RTO metrics, and capacity planning."
+triggers: ["database-reliability", "expand-contract-migration", "zero-downtime-schema", "rpo-rto", "backup-verification", "replication-lag-monitoring"]
+---
+
+# arch-campbell-database-reliability-engineering
+> Based on **Database Reliability Engineering - Laine Campbell & Charity Majors**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Execute database schema migrations using the Expand-and-Contract (Parallel Run) pattern across multiple releases to eliminate table locks and downtime.**
+2. **ALWAYS: Verify database backups through automated scheduled restore drills into isolated test environments; unverified backups are considered non-existent.**
+3. **NEVER: Execute raw `ALTER TABLE` operations on multi-million row tables that acquire exclusive DDL locks during peak production traffic.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design all schema changes to be backward-compatible (Expand -> Migrate Data -> Contract). Measure and alert on Replication Lag and RPO/RTO targets. Automate backup restore validation.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Running locking DDL migrations that lock production tables for minutes or hours.**
+- **Assuming backups work without ever performing automated restore drills.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-campbell-database-reliability-engineering"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 267. arch-shostack-threat-modeling Skill
+pub fn arch_shostack_threat_modeling() -> EccSkill {
+    EccSkill::new(
+        "arch-shostack-threat-modeling",
+        "Systematic threat modeling: STRIDE framework (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege), Data Flow Diagrams (DFDs), and trust boundaries.",
+        r#"---
+name: arch-shostack-threat-modeling
+description: "Systematic threat modeling: STRIDE framework (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege), Data Flow Diagrams (DFDs), and trust boundaries."
+triggers: ["adam-shostack", "threat-modeling", "stride-framework", "data-flow-diagram", "trust-boundaries", "security-threat-analysis"]
+---
+
+# arch-shostack-threat-modeling
+> Based on **Threat Modeling: Designing for Security - Adam Shostack**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Every architecture spec crossing a Trust Boundary must undergo explicit STRIDE threat evaluation.**
+2. **ALWAYS: Identify and authenticate actors at every boundary (Anti-Spoofing); digitally sign and hash critical payload transitions (Anti-Tampering).**
+3. **NEVER: Assume communication within a private network or cluster is safe without explicit boundary authentication.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Create Data Flow Diagrams (DFDs) highlighting trust boundaries. Generate STRIDE threat matrices and map concrete mitigations to every identified threat.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Treating the internal network as a trusted zone with zero authentication between microservices.**
+- **Failing to log identity tokens on state-modifying actions, preventing repudiation defense.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-shostack-threat-modeling"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 268. arch-gilman-zero-trust-networks Skill
+pub fn arch_gilman_zero_trust_networks() -> EccSkill {
+    EccSkill::new(
+        "arch-gilman-zero-trust-networks",
+        "Perimeterless zero trust architecture: Mutual TLS (mTLS), cryptographic machine identities (SPIFFE/SPIRE), microsegmentation, continuous authentication, and dynamic authorization.",
+        r#"---
+name: arch-gilman-zero-trust-networks
+description: "Perimeterless zero trust architecture: Mutual TLS (mTLS), cryptographic machine identities (SPIFFE/SPIRE), microsegmentation, continuous authentication, and dynamic authorization."
+triggers: ["zero-trust-networks", "mtls", "spiffe-spire", "microsegmentation", "continuous-authentication", "perimeterless-security"]
+---
+
+# arch-gilman-zero-trust-networks
+> Based on **Zero Trust Networks - Evan Gilman & Doug Barth**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce Mutual TLS (mTLS) with cryptographically validated machine identities (e.g. SPIFFE IDs) for all service-to-service communication.**
+2. **ALWAYS: Authorize every network request dynamically based on caller identity, target resource, and context (Least Privilege access control).**
+3. **NEVER: Rely on IP addresses or network CIDR blocks as proof of caller identity.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement Zero Trust data planes using mTLS and SPIFFE/SPIRE certificates with automated rotation (e.g. hourly/daily). Enforce microsegmentation policies.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Relying on IP whitelists for authentication in elastic cloud environments.**
+- **Unencrypted plain HTTP communication between internal microservices.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-gilman-zero-trust-networks"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 269. arch-vehent-securing-devops Skill
+pub fn arch_vehent_securing_devops() -> EccSkill {
+    EccSkill::new(
+        "arch-vehent-securing-devops",
+        "Cloud security architecture: Defense in depth, automated CI/CD pipeline security gating, secret management with dynamic rotation, and infrastructure-as-code hardening.",
+        r#"---
+name: arch-vehent-securing-devops
+description: "Cloud security architecture: Defense in depth, automated CI/CD pipeline security gating, secret management with dynamic rotation, and infrastructure-as-code hardening."
+triggers: ["securing-devops", "defense-in-depth", "secret-management", "cloud-security", "pipeline-security-gating", "vault-rotation", "iac-security"]
+---
+
+# arch-vehent-securing-devops
+> Based on **Securing DevOps: Security in the Cloud - Julien Vehent**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Zero secrets (API keys, private keys, database passwords) committed in code, git history, or static configuration files.**
+2. **ALWAYS: Inject credentials dynamically at runtime using ephemeral secret managers (HashiCorp Vault, AWS Secrets Manager) with short TTLs and automated rotation.**
+3. **NEVER: Run container processes as root (`USER 0`); enforce non-root unprivileged container execution.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Automate security scanning (SAST, DAST, dependency vulnerability scanning) in CI/CD. Enforce ephemeral secret injection and non-root container runtimes.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Hardcoding API keys or database passwords in source code or docker images.**
+- **Running containers with full root capabilities and host filesystem access.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-vehent-securing-devops"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 270. arch-janca-alice-bob-appsec Skill
+pub fn arch_janca_alice_bob_appsec() -> EccSkill {
+    EccSkill::new(
+        "arch-janca-alice-bob-appsec",
+        "Application security fundamentals: OWASP Top 10 mitigations, secure SDLC, input validation allowlists, parameterized queries, and defensive coding practices.",
+        r#"---
+name: arch-janca-alice-bob-appsec
+description: "Application security fundamentals: OWASP Top 10 mitigations, secure SDLC, input validation allowlists, parameterized queries, and defensive coding practices."
+triggers: ["alice-bob-appsec", "tanya-janca", "owasp-top-10", "input-validation", "parameterized-queries", "sql-injection-mitigation", "bola-defense"]
+---
+
+# arch-janca-alice-bob-appsec
+> Based on **Alice and Bob Learn Application Security - Tanya Janca**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Validate and sanitize all external inputs using strict allowlists (never blocklists); reject any payload failing validation schemas.**
+2. **ALWAYS: Prevent SQL Injection by mandating parameterized queries or prepared statements; string concatenation in SQL queries is strictly prohibited.**
+3. **ALWAYS: Enforce object-level authorization checks (BOLA/IDOR prevention) verifying the authenticated user owns the requested resource ID.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement defensive coding against OWASP Top 10. Use parameterized queries everywhere. Enforce strict JSON schema input validation and object-level authorization.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Concatenating user input directly into SQL, shell, or LDAP queries.**
+- **Trusting client-supplied IDs in URLs without checking user ownership permissions (IDOR).**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-janca-alice-bob-appsec"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 271. arch-wong-real-world-cryptography Skill
+pub fn arch_wong_real_world_cryptography() -> EccSkill {
+    EccSkill::new(
+        "arch-wong-real-world-cryptography",
+        "Modern applied cryptography: Authenticated Encryption with Associated Data (AEAD: AES-GCM, ChaCha20-Poly1305), password hashing (Argon2id), TLS 1.3, and CSPRNG.",
+        r#"---
+name: arch-wong-real-world-cryptography
+description: "Modern applied cryptography: Authenticated Encryption with Associated Data (AEAD: AES-GCM, ChaCha20-Poly1305), password hashing (Argon2id), TLS 1.3, and CSPRNG."
+triggers: ["david-wong", "real-world-cryptography", "aead", "aes-gcm", "chacha20-poly1305", "argon2id", "csprng", "tls-1-3"]
+---
+
+# arch-wong-real-world-cryptography
+> Based on **Real-World Cryptography - David Wong**
+
+## 1. Core Architectural Theoretical Foundations & Formal Invariants
+
+1. **ALWAYS: Hash user passwords using Argon2id with memory-hard parameters (e.g. 64MB memory, 3 iterations) and a unique per-user salt.**
+2. **ALWAYS: Symmetric data encryption must utilize Authenticated Encryption with Associated Data (AEAD, e.g. AES-256-GCM or ChaCha20-Poly1305) with unique nonces.**
+3. **NEVER: Implement custom cryptographic algorithms or use broken ciphers (MD5, SHA-1, DES, 3DES, ECB mode).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Use authenticated encryption (AEAD) for sensitive data at rest and in transit. Hash passwords with Argon2id. Generate random tokens using Cryptographically Secure PRNGs.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Hashing passwords with fast algorithms like MD5, SHA-1, or plain SHA-256.**
+- **Using AES in ECB mode without an initialization vector or authentication tag.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "arch-wong-real-world-cryptography"
+
+# Execute automated architectural audit
+cargo test --test arch_skills_brutal_tests
 ```
 "#,
     )
