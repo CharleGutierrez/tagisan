@@ -21,7 +21,7 @@ impl OllamaProvider {
         let timeout_secs = std::env::var("OLLAMA_TIMEOUT_SECS")
             .ok()
             .and_then(|s| s.parse().ok())
-            .unwrap_or(600);
+            .unwrap_or(1800);
 
         let client = reqwest::Client::builder()
             .connect_timeout(std::time::Duration::from_secs(10))

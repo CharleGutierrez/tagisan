@@ -166,7 +166,8 @@ pub fn build_ecc_pipeline(
         2. Verify proper error handling, modularity, and DRY principles.\n\
         3. Provide categorized feedback ([Blocker], [Suggestion], [Nitpick]).",
     )
-    .with_agent(review_agent);
+    .with_agent(review_agent)
+    .with_retry_policy(RetryPolicy::exponential(2, Duration::from_secs(5), 2.0));
 
     // 4b. Security Audit (Security Auditor) - Parallel branch with Review
     let security = presets::security_auditor();
@@ -190,7 +191,8 @@ pub fn build_ecc_pipeline(
         2. Identify any unhandled boundary conditions or potential denial-of-service risks.\n\
         3. Recommend concrete hardening steps for any detected vulnerabilities.",
     )
-    .with_agent(security_agent);
+    .with_agent(security_agent)
+    .with_retry_policy(RetryPolicy::exponential(2, Duration::from_secs(5), 2.0));
 
     // 5. Verify & Synthesize (Chief Adjudicator / Lakandiwa)
     let verify_prompt = equip_skills(
@@ -224,7 +226,8 @@ pub fn build_ecc_pipeline(
             objective
         ),
     )
-    .with_agent(verify_agent);
+    .with_agent(verify_agent)
+    .with_retry_policy(RetryPolicy::exponential(2, Duration::from_secs(5), 2.0));
 
     // Register all nodes
     graph.add_task(plan_node)?;

@@ -1910,7 +1910,14 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 .with_id("tagisan_wf")
                 .with_event_sender(event_tx);
 
-            if let Some(limit) = concurrency {
+            let effective_concurrency = concurrency.or_else(|| {
+                if crate::ecc::skills::SkillDispatcher::is_local_provider(&provider_id) {
+                    Some(1)
+                } else {
+                    None
+                }
+            });
+            if let Some(limit) = effective_concurrency {
                 scheduler = scheduler.with_concurrency_limit(limit);
             }
 
@@ -2463,7 +2470,14 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         .with_id("ecc_pipeline")
                         .with_event_sender(event_tx);
 
-                    if let Some(limit) = concurrency {
+                    let effective_concurrency = concurrency.or_else(|| {
+                        if crate::ecc::skills::SkillDispatcher::is_local_provider(&provider_id) {
+                            Some(1)
+                        } else {
+                            None
+                        }
+                    });
+                    if let Some(limit) = effective_concurrency {
                         scheduler = scheduler.with_concurrency_limit(limit);
                     }
 
