@@ -308,6 +308,57 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         erp_sox_internal_controls_audit(),
         erp_data_retention_gdpr_compliance(),
         erp_tax_engine_jurisdiction_rules(),
+        // Data Analytics & Analytics Engineering Architect Skills (Top 50 Books)
+        analytics_kimball_dimensional_modeling(),
+        analytics_etl_pipeline_patterns(),
+        analytics_data_vault_architecture(),
+        analytics_dbt_modeling_dag(),
+        analytics_advanced_sql_windowing(),
+        analytics_celko_relational_logic(),
+        analytics_tukey_eda_heuristics(),
+        analytics_practical_statistics(),
+        analytics_intuitive_statistics(),
+        analytics_statistical_learning_islp(),
+        analytics_bayesian_rethinking(),
+        analytics_mathematical_inference(),
+        analytics_kohavi_ab_experimentation(),
+        analytics_causal_mixtape(),
+        analytics_econometric_causality(),
+        analytics_counterfactual_causality(),
+        analytics_kleppmann_data_intensive(),
+        analytics_akidau_stream_processing(),
+        analytics_kafka_event_streaming(),
+        analytics_data_engineering_lifecycle(),
+        analytics_realtime_olap_pipelines(),
+        analytics_python_pandas_wrangling(),
+        analytics_duckdb_embedded_olap(),
+        analytics_polars_lazy_processing(),
+        analytics_high_performance_compute(),
+        analytics_cli_data_science(),
+        analytics_tufte_visual_display(),
+        analytics_storytelling_with_data(),
+        analytics_wilke_data_visualization(),
+        analytics_few_dashboard_design(),
+        analytics_cairo_visual_integrity(),
+        analytics_d3_interactive_graphics(),
+        analytics_parmenter_kpi_framework(),
+        analytics_lean_startup_metrics(),
+        analytics_hubbard_measurement_value(),
+        analytics_semantic_metadata_layer(),
+        analytics_semantic_metrics_governance(),
+        analytics_okr_goal_tracking(),
+        analytics_hyndman_time_series(),
+        analytics_box_jenkins_arima(),
+        analytics_anomaly_outlier_detection(),
+        analytics_python_signal_processing(),
+        analytics_feature_engineering_pipeline(),
+        analytics_geron_ml_pipelines(),
+        analytics_kuhn_predictive_modeling(),
+        analytics_elements_statistical_learning(),
+        analytics_redman_data_quality(),
+        analytics_data_observability_monitors(),
+        analytics_dama_data_governance(),
+        analytics_dataops_automated_testing(),
     ]
 }
 
@@ -543,6 +594,94 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
     if lower == "tax-engine" || lower == "sales-tax" || lower == "vat" || lower == "tax-nexus" {
         return find_built_in_skill("erp-tax-engine-jurisdiction-rules");
+    }
+    // Data Analytics & Analytics Engineering Skills Aliases
+    if lower == "kimball" || lower == "star-schema" || lower == "dimensional-modeling" || lower == "snowflake-schema" {
+        return find_built_in_skill("analytics-kimball-dimensional-modeling");
+    }
+    if lower == "etl-patterns" || lower == "kimball-etl" || lower == "data-warehouse-etl" {
+        return find_built_in_skill("analytics-etl-pipeline-patterns");
+    }
+    if lower == "data-vault" || lower == "raw-vault" || lower == "business-vault" {
+        return find_built_in_skill("analytics-data-vault-architecture");
+    }
+    if lower == "dbt" || lower == "dbt-dag" || lower == "analytics-engineering" {
+        return find_built_in_skill("analytics-dbt-modeling-dag");
+    }
+    if lower == "window-functions" || lower == "advanced-sql" || lower == "sql-windowing" {
+        return find_built_in_skill("analytics-advanced-sql-windowing");
+    }
+    if lower == "celko" || lower == "nested-sets" || lower == "relational-division" {
+        return find_built_in_skill("analytics-celko-relational-logic");
+    }
+    if lower == "tukey-eda" || lower == "tukey" || lower == "eda" || lower == "tukey-fences" {
+        return find_built_in_skill("analytics-tukey-eda-heuristics");
+    }
+    if lower == "practical-statistics" || lower == "bootstrap-resampling" || lower == "permutation-test" {
+        return find_built_in_skill("analytics-practical-statistics");
+    }
+    if lower == "intuitive-statistics" || lower == "naked-statistics" || lower == "simpsons-paradox" {
+        return find_built_in_skill("analytics-intuitive-statistics");
+    }
+    if lower == "statistical-learning" || lower == "islp" || lower == "bias-variance" {
+        return find_built_in_skill("analytics-statistical-learning-islp");
+    }
+    if lower == "bayesian-rethinking" || lower == "mcelreath" || lower == "collider-bias" {
+        return find_built_in_skill("analytics-bayesian-rethinking");
+    }
+    if lower == "mathematical-inference" || lower == "all-of-statistics" || lower == "wasserman" {
+        return find_built_in_skill("analytics-mathematical-inference");
+    }
+    if lower == "ab-testing" || lower == "srm" || lower == "sample-ratio-mismatch" || lower == "kohavi" {
+        return find_built_in_skill("analytics-kohavi-ab-experimentation");
+    }
+    if lower == "causal-mixtape" || lower == "rubin-causal-model" || lower == "potential-outcomes" || lower == "analytics-causal-inference" {
+        return find_built_in_skill("analytics-causal-mixtape");
+    }
+    if lower == "difference-in-differences" || lower == "did" || lower == "econometric-causality" || lower == "mostly-harmless-econometrics" {
+        return find_built_in_skill("analytics-econometric-causality");
+    }
+    if lower == "counterfactual" || lower == "counterfactual-causality" || lower == "ipw" {
+        return find_built_in_skill("analytics-counterfactual-causality");
+    }
+    if lower == "duckdb" || lower == "embedded-olap" {
+        return find_built_in_skill("analytics-duckdb-embedded-olap");
+    }
+    if lower == "polars" || lower == "lazyframe" {
+        return find_built_in_skill("analytics-polars-lazy-processing");
+    }
+    if lower == "tufte" || lower == "data-ink" || lower == "chartjunk" {
+        return find_built_in_skill("analytics-tufte-visual-display");
+    }
+    if lower == "storytelling-with-data" || lower == "knaflic" {
+        return find_built_in_skill("analytics-storytelling-with-data");
+    }
+    if lower == "bullet-graph" || lower == "stephen-few" {
+        return find_built_in_skill("analytics-few-dashboard-design");
+    }
+    if lower == "kpi" || lower == "parmenter" || lower == "kri" {
+        return find_built_in_skill("analytics-parmenter-kpi-framework");
+    }
+    if lower == "cohort-retention" || lower == "lean-analytics" || lower == "omtm" || lower == "aarrr" {
+        return find_built_in_skill("analytics-lean-startup-metrics");
+    }
+    if lower == "time-series-forecasting" || lower == "stl-decomposition" || lower == "hyndman" {
+        return find_built_in_skill("analytics-hyndman-time-series");
+    }
+    if lower == "arima" || lower == "box-jenkins" || lower == "sarima" {
+        return find_built_in_skill("analytics-box-jenkins-arima");
+    }
+    if lower == "isolation-forest" || lower == "outlier-detection" || lower == "anomaly-detection" {
+        return find_built_in_skill("analytics-anomaly-outlier-detection");
+    }
+    if lower == "data-observability" || lower == "5-pillars-observability" || lower == "freshness-monitoring" {
+        return find_built_in_skill("analytics-data-observability-monitors");
+    }
+    if lower == "data-governance" || lower == "dama" || lower == "dmbok" || lower == "master-data-management" {
+        return find_built_in_skill("analytics-dama-data-governance");
+    }
+    if lower == "dataops" || lower == "dataops-testing" || lower == "data-pipeline-testing" {
+        return find_built_in_skill("analytics-dataops-automated-testing");
     }
     all_built_in_skills().into_iter().find(|s| s.name == lower)
 }
@@ -3968,6 +4107,4067 @@ graph TD
     )
 }
 
+
+/// 121. analytics-kimball-dimensional-modeling Skill
+pub fn analytics_kimball_dimensional_modeling() -> EccSkill {
+    EccSkill::new(
+        "analytics-kimball-dimensional-modeling",
+        "Enterprise dimensional modeling: Star/Snowflake schemas, Fact table types (transaction, periodic snapshot, accumulating snapshot, factless), SCD Types 1-6, conformed dimensions, and Bus Architecture. Triggers: kimball-dimensional-modeling, dimensional-modeling, star-schema, snowflake-schema, fact-table, dimension-table, scd-type-2, conformed-dimensions, bus-architecture, surrogate-keys.",
+        r#"# Analytics Kimball Dimensional Modeling
+> Based on **The Data Warehouse Toolkit - Ralph Kimball & Margy Ross**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Star Schema DDL: DuckDB & PostgreSQL
+CREATE TABLE dim_date (
+    date_key INT PRIMARY KEY, -- YYYYMMDD
+    full_date DATE NOT NULL,
+    day_of_week VARCHAR(10) NOT NULL,
+    month INT NOT NULL,
+    quarter INT NOT NULL,
+    year INT NOT NULL,
+    is_weekend BOOLEAN NOT NULL
+);
+
+CREATE TABLE dim_customer (
+    customer_sk BIGINT PRIMARY KEY, -- Surrogate Key
+    customer_id VARCHAR(50) NOT NULL, -- Natural/Business Key
+    full_name VARCHAR(100) NOT NULL,
+    segment VARCHAR(50) NOT NULL,
+    state VARCHAR(50) NOT NULL,
+    valid_from TIMESTAMP NOT NULL,
+    valid_to TIMESTAMP NOT NULL DEFAULT '9999-12-31 23:59:59',
+    is_current BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE fct_sales (
+    sales_key BIGINT PRIMARY KEY,
+    date_key INT NOT NULL REFERENCES dim_date(date_key),
+    customer_sk BIGINT NOT NULL REFERENCES dim_customer(customer_sk),
+    order_number VARCHAR(50) NOT NULL, -- Degenerate Dimension
+    quantity INT NOT NULL CHECK (quantity > 0),
+    unit_price NUMERIC(12, 4) NOT NULL,
+    discount_amount NUMERIC(12, 4) NOT NULL DEFAULT 0.0000,
+    net_sales_amount NUMERIC(12, 4) NOT NULL
+);
+
+CREATE INDEX idx_fct_sales_date ON fct_sales(date_key);
+CREATE INDEX idx_fct_sales_cust ON fct_sales(customer_sk);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 SCD Type 2 Temporal Validity Invariant
+For any customer record $i$ with natural key $K$:
+$$\text{valid\_from}_{i} < \text{valid\_to}_{i}$$
+For consecutive revisions $i$ and $i+1$ of the same natural key $K$:
+$$\text{valid\_to}_{i} = \text{valid\_from}_{i+1}$$
+$$\sum_{r \in \text{Revisions}(K)} [\text{is\_current} = \text{TRUE}] \equiv 1$$
+
+### 2.2 Additive vs Non-Additive Metric Invariant
+Net sales is fully additive across all dimensions:
+$$\text{Net Sales} = \sum_{j \in \text{Lines}} (\text{quantity}_j \times \text{unit\_price}_j - \text{discount}_j)$$
+Unit prices and ratios are non-additive and must be calculated post-aggregation:
+$$\text{Average Unit Price} = \frac{\sum \text{Net Sales}}{\sum \text{Quantity}} \neq \text{AVG}(\text{unit\_price})$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+stateDiagram-v2
+    [*] --> NewRecord
+    NewRecord --> InsertCurrent: Natural key not found
+    InsertCurrent --> ActiveRecord: Set valid_from=NOW(), is_current=TRUE
+    ActiveRecord --> ChangeDetected: Incoming payload has mutated attribute
+    ChangeDetected --> ExpireOldRecord: UPDATE old SET valid_to=NOW(), is_current=FALSE
+    ExpireOldRecord --> InsertNewSCD2: INSERT new with valid_from=NOW(), valid_to=9999-12-31
+    InsertNewSCD2 --> ActiveRecord
+```
+- **Invariant**: Once expired (`is_current = FALSE`), a historical dimension row is immutable.
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+-- SCD Type 2 Merge in DuckDB / PostgreSQL
+WITH incoming AS (
+    SELECT customer_id, full_name, segment, state FROM staging_customer
+),
+to_expire AS (
+    SELECT d.customer_sk
+    FROM dim_customer d
+    JOIN incoming i ON d.customer_id = i.customer_id
+    WHERE d.is_current = TRUE
+      AND (d.full_name != i.full_name OR d.segment != i.segment OR d.state != i.state)
+)
+UPDATE dim_customer
+SET valid_to = CURRENT_TIMESTAMP, is_current = FALSE
+WHERE customer_sk IN (SELECT customer_sk FROM to_expire);
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Enforce grain strictly: one row per physical transaction event.
+- Use integer surrogate keys for dimensions; never expose natural keys as primary keys.
+- Preserve temporal continuity in SCD2: valid_from < valid_to, exactly one is_current=TRUE per natural key.
+- Never aggregate non-additive metrics (averages/ratios) in ETL; store raw numerators and denominators.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Design and implement an enterprise dimensional star schema following Kimball best practices:
+1. Formulate a conformed bus matrix identifying shared dimensions (Date, Customer, Organization, Product) across business processes.
+2. Implement automated SCD Type 2 dimension loaders in SQL/dbt with zero temporal overlap.
+3. Validate grain integrity and fact additive behavior using automated assertions.
+```
+"#,
+    )
+}
+
+/// 122. analytics-etl-pipeline-patterns Skill
+pub fn analytics_etl_pipeline_patterns() -> EccSkill {
+    EccSkill::new(
+        "analytics-etl-pipeline-patterns",
+        "Enterprise ETL/ELT architecture: 34 subsystems of ETL, surrogate key generation pipelines, late-arriving dimensions and facts, audit logging, and change data capture. Triggers: etl-pipeline-patterns, kimball-etl, data-warehouse-etl, surrogate-key-pipeline, late-arriving-facts, late-arriving-dimensions, data-profiling, cdc-pipeline.",
+        r#"# Analytics Etl Pipeline Patterns
+> Based on **The Data Warehouse ETL Toolkit - Ralph Kimball & Joe Caserta**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Pipeline Audit & Control Metadata Schema
+CREATE TABLE etl_batch_control (
+    batch_id UUID PRIMARY KEY,
+    pipeline_name VARCHAR(100) NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('RUNNING', 'SUCCESS', 'FAILED')),
+    rows_extracted BIGINT NOT NULL DEFAULT 0,
+    rows_inserted BIGINT NOT NULL DEFAULT 0,
+    rows_updated BIGINT NOT NULL DEFAULT 0,
+    rows_rejected BIGINT NOT NULL DEFAULT 0,
+    start_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    end_time TIMESTAMP
+);
+
+CREATE TABLE etl_late_arriving_facts (
+    fact_id BIGINT PRIMARY KEY,
+    natural_key VARCHAR(100) NOT NULL,
+    unresolved_dimension VARCHAR(50) NOT NULL,
+    payload JSONB NOT NULL,
+    received_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Late-Arriving Dimension Invariant
+When a fact arrives with natural key $K_{dim}$ not yet present in dimension $D$:
+$$\text{Assign surrogate key } SK = -1 \quad (\text{Default 'Unknown' Member})$$
+$$\text{Enqueue to } \text{LateArrivingQueue}(K_{dim}, \text{fact\_id})$$
+Upon arrival of dimension record $K_{dim}$ at $T_{load}$:
+$$\text{UPDATE } F \text{ SET } SK = SK_{new} \text{ WHERE } SK = -1 \land K_{dim} = \text{match}$$
+
+### 2.2 Pipeline Row Conservation Invariant
+For every batch execution $B$:
+$$\text{Rows}_{\text{Extracted}} = \text{Rows}_{\text{Inserted}} + \text{Rows}_{\text{Updated}} + \text{Rows}_{\text{Rejected}}$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+stateDiagram-v2
+    [*] --> Extract
+    Extract --> CleanseAndProfile: Extract source CDC
+    CleanseAndProfile --> RejectRow: Validation failed
+    CleanseAndProfile --> SurrogateKeyLookup: Validation passed
+    SurrogateKeyLookup --> DefaultUnknown: Dimension member missing
+    SurrogateKeyLookup --> LoadFact: Dimension member exists
+    DefaultUnknown --> EnqueueLateArriving
+    EnqueueLateArriving --> LoadFact
+    LoadFact --> CommitBatch
+    CommitBatch --> [*]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+-- Late Arriving Surrogate Key Resolution
+INSERT INTO dim_customer (customer_sk, customer_id, full_name, segment, state, valid_from, is_current)
+VALUES (-1, 'UNKNOWN', 'Unknown Customer', 'Unknown', 'NA', '1970-01-01', TRUE)
+ON CONFLICT (customer_sk) DO NOTHING;
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Maintain an audit log for every pipeline run recording extracted, inserted, updated, and rejected row counts.
+- Allocate surrogate key -1 for missing dimension members; never allow NULL foreign keys in fact tables.
+- Isolate bad source data into error quarantine tables without terminating the pipeline.
+- Implement strictly idempotent load steps using staging deduplication and upserts.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Architect a fault-tolerant Kimball ETL delivery subsystem:
+1. Implement surrogate key generation and late-arriving dimension handling with placeholder keys.
+2. Build an audit logging mechanism tracking row conservation: Extracted = Inserted + Updated + Rejected.
+3. Design change data capture (CDC) deduplication and backfill replay strategies.
+```
+"#,
+    )
+}
+
+/// 123. analytics-data-vault-architecture Skill
+pub fn analytics_data_vault_architecture() -> EccSkill {
+    EccSkill::new(
+        "analytics-data-vault-architecture",
+        "Data Vault 2.0 enterprise modeling: Hubs (business keys), Links (units of work relationships), and Satellites (descriptive context with hash diffs). Scalable, insert-only architecture. Triggers: data-vault-architecture, data-vault, raw-vault, business-vault, hubs-links-satellites, hash-keys, hash-diff, dv2, insert-only-warehouse.",
+        r#"# Analytics Data Vault Architecture
+> Based on **Building a Scalable Data Warehouse with Data Vault 2.0 - Dan Linstedt & Michael Olschimke**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Data Vault 2.0 Core DDL
+CREATE TABLE hub_customer (
+    customer_hk CHAR(32) PRIMARY KEY, -- MD5/SHA256 Hash Key
+    customer_bk VARCHAR(50) NOT NULL, -- Business Key
+    load_dts TIMESTAMP NOT NULL,
+    rec_src VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE lnk_customer_order (
+    order_customer_hk CHAR(32) PRIMARY KEY,
+    customer_hk CHAR(32) NOT NULL REFERENCES hub_customer(customer_hk),
+    order_hk CHAR(32) NOT NULL,
+    load_dts TIMESTAMP NOT NULL,
+    rec_src VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE sat_customer (
+    customer_hk CHAR(32) NOT NULL REFERENCES hub_customer(customer_hk),
+    load_dts TIMESTAMP NOT NULL,
+    hash_diff CHAR(32) NOT NULL, -- Hash of all descriptive columns
+    customer_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    tier VARCHAR(20),
+    rec_src VARCHAR(50) NOT NULL,
+    PRIMARY KEY (customer_hk, load_dts)
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Hash Key & Hash Diff Computation
+Let $BK$ be the business key and $C_1, C_2, \dots, C_n$ be descriptive attributes:
+$$HK = \text{MD5}(\text{UPPER}(\text{TRIM}(BK)))$$
+$$\text{HashDiff} = \text{MD5}(\text{COALESCE}(\text{TRIM}(C_1), '') \parallel ';' \parallel \dots \parallel ';' \parallel \text{COALESCE}(\text{TRIM}(C_n), ''))$$
+
+### 2.2 Insert-Only Satellite Invariant
+A new satellite record is inserted if and only if:
+$$\text{HashDiff}_{\text{incoming}} \neq \text{HashDiff}_{\text{current}}$$
+No rows in Hubs, Links, or Satellites are ever updated or deleted in Raw Vault.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Source[Staging Stream] --> Hash[Compute Hash Keys & HashDiff]
+    Hash --> Hub[Insert Hub if BK not seen]
+    Hash --> Link[Insert Link if HK pair not seen]
+    Hash --> SatCheck{HashDiff != Latest Sat HashDiff?}
+    SatCheck -->|Yes| InsertSat[Insert New Satellite Row]
+    SatCheck -->|No| Discard[No-op Skip]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+-- DuckDB Data Vault Hash Staging
+SELECT 
+    md5(upper(trim(customer_id))) AS customer_hk,
+    customer_id AS customer_bk,
+    md5(coalesce(trim(name),'') || ';' || coalesce(trim(email),'') || ';' || coalesce(trim(tier),'')) AS hash_diff,
+    current_timestamp AS load_dts,
+    'CRM_SOURCE' AS rec_src
+FROM raw_customers;
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Hash keys must be deterministic: UPPER, TRIM, and standard concatenation separator.
+- Hubs store business keys and hash keys only; never put descriptive attributes in Hubs or Links.
+- Satellites are strictly append-only; insert a new row only when HashDiff changes.
+- Links model unit-of-work relationships across multiple hubs.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build an enterprise Data Vault 2.0 architecture:
+1. Generate Raw Vault DDL (Hubs, Links, Satellites) with cryptographic hash keys (SHA-256/MD5).
+2. Author scalable ingestion pipelines applying deterministic HashDiff comparison.
+3. Design the Business Vault and Information Mart layer (Point-in-Time PIT and Bridge tables).
+```
+"#,
+    )
+}
+
+/// 124. analytics-dbt-modeling-dag Skill
+pub fn analytics_dbt_modeling_dag() -> EccSkill {
+    EccSkill::new(
+        "analytics-dbt-modeling-dag",
+        "dbt analytics engineering DAG design: Medallion layering (staging, intermediate, marts), incremental materializations, custom generic tests, and snapshot SCD2 automation. Triggers: dbt-modeling-dag, dbt, analytics-engineering, dbt-dag, staging-marts, dbt-incremental, dbt-tests, dbt-snapshots, jinja-sql.",
+        r#"# Analytics Dbt Modeling Dag
+> Based on **Analytics Engineering with SQL and dbt - Rui Machado & Helder Silva**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Mart Incremental Table DDL (DuckDB / Snowflake)
+CREATE TABLE fct_orders (
+    order_id VARCHAR(50) PRIMARY KEY,
+    customer_id VARCHAR(50) NOT NULL,
+    order_date DATE NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    total_amount NUMERIC(14, 4) NOT NULL,
+    updated_at TIMESTAMP NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Incremental Convergence Invariant
+An incremental model $M$ evaluated on window $[t_0, t]$ must yield identical state to full refresh:
+$$M_{\text{incremental}}(\Delta D_t) \equiv M_{\text{full}}(D_{0..t})$$
+
+### 2.2 DAG Acyclicity Invariant
+Let $G = (V, E)$ be the dbt dependency graph where $u \to v$ indicates model $v$ depends on $u$:
+$$\forall v \in V, \quad v \notin \text{Descendants}(v) \quad (\text{No cycles permitted})$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph LR
+    Sources --> Staging[stg_*.sql: 1-to-1 Renaming & Casting]
+    Staging --> Intermediate[int_*.sql: Business Logic & Joins]
+    Intermediate --> Marts[fct_* and dim_*: Reporting Entities]
+    Marts --> Exposures[Dashboards & ML Models]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+-- dbt Incremental Pattern
+{{ config(
+    materialized='incremental',
+    unique_key='order_id',
+    incremental_strategy='merge'
+) }}
+
+WITH source_data AS (
+    SELECT * FROM {{ ref('stg_orders') }}
+    {% if is_incremental() %}
+    WHERE updated_at > (SELECT MAX(updated_at) FROM {{ this }})
+    {% endif %}
+)
+SELECT * FROM source_data;
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Structure dbt models into 3 distinct layers: staging (cleaning), intermediate (joins), and marts (business facts/dims).
+- Always specify unique_key in incremental models to avoid duplicate records on merge.
+- Add primary key uniqueness and not_null schema tests to every staging and mart model.
+- Refactor repeated CTEs into intermediate models or generic dbt macros.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Construct a production dbt analytics engineering DAG:
+1. Establish modular staging, intermediate, and marts layers following medallion architecture.
+2. Implement high-performance incremental models using merge strategies and lookback windows.
+3. Formulate comprehensive generic tests, singular tests, and dbt snapshots for SCD tracking.
+```
+"#,
+    )
+}
+
+/// 125. analytics-advanced-sql-windowing Skill
+pub fn analytics_advanced_sql_windowing() -> EccSkill {
+    EccSkill::new(
+        "analytics-advanced-sql-windowing",
+        "Advanced analytical SQL: window frames, lead/lag offsets, cumulative distributions, dense ranking, sessionization, and gaps-and-islands problem solving. Triggers: advanced-sql-windowing, sql-window-functions, windowing, lead-lag, dense-rank, sessionization, gaps-and-islands, rolling-aggregations.",
+        r#"# Analytics Advanced Sql Windowing
+> Based on **SQL for Data Analysis - Cathy Tanimura**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Event Stream Table for Window Analytics
+CREATE TABLE user_events (
+    event_id BIGINT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    event_timestamp TIMESTAMP NOT NULL,
+    event_type VARCHAR(50) NOT NULL,
+    page_url VARCHAR(255)
+);
+
+CREATE INDEX idx_user_events_stream ON user_events(user_id, event_timestamp);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Dense Rank Continuity Invariant
+For sorted series $X = [x_1, x_2, \dots, x_n]$:
+$$\text{DENSE\_RANK}(x_i) - \text{DENSE\_RANK}(x_{i-1}) \in \{0, 1\}$$
+
+### 2.2 Gaps-and-Islands Grouping Invariant
+Let $t_i$ be event time and $t_{i-1}$ be preceding event time for a user:
+$$\text{IsNewSession} = \begin{cases} 1 & \text{if } t_i - t_{i-1} > 30 \text{ minutes} \lor t_{i-1} \text{ is NULL} \\ 0 & \text{otherwise} \end{cases}$$
+$$\text{SessionID} = \sum_{k=1}^i \text{IsNewSession}_k$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    RawEvents[Ordered User Events] --> PrevTime[LAG event_timestamp]
+    PrevTime --> GapCheck{Delta > 30 mins?}
+    GapCheck -->|Yes| NewIsland[Mark New Island Flag = 1]
+    GapCheck -->|No| SameIsland[Mark Flag = 0]
+    NewIsland --> CumulativeSum[SUM Flag OVER Window]
+    SameIsland --> CumulativeSum
+    CumulativeSum --> SessionGroups[Distinct Session IDs]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+-- 30-Minute Inactivity Sessionization in SQL
+WITH flagged_events AS (
+    SELECT 
+        event_id,
+        user_id,
+        event_timestamp,
+        CASE 
+            WHEN event_timestamp - LAG(event_timestamp) OVER (PARTITION BY user_id ORDER BY event_timestamp) > INTERVAL '30 minutes'
+                 OR LAG(event_timestamp) OVER (PARTITION BY user_id ORDER BY event_timestamp) IS NULL 
+            THEN 1 ELSE 0 
+        END AS is_new_session
+    FROM user_events
+)
+SELECT 
+    event_id,
+    user_id,
+    event_timestamp,
+    SUM(is_new_session) OVER (PARTITION BY user_id ORDER BY event_timestamp ROWS UNBOUNDED PRECEDING) AS session_id
+FROM flagged_events;
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Use ROWS BETWEEN for deterministic physical window frames; avoid unbounded RANGE unless ordering is unique.
+- Solve sessionization via LAG() timestamp delta followed by running SUM() over partition.
+- DENSE_RANK guarantees consecutive integer rank without gaps; RANK skips numbers on ties.
+- Compute rolling 7-day or 30-day moving averages using PRECEDING frame bounds.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Author advanced analytical SQL solutions:
+1. Formulate sessionization and gaps-and-islands algorithms using window offsets and running sums.
+2. Build cohort retention matrices and rolling trailing aggregations with exact window frames.
+3. Optimize window execution plans via composite sorting indexes on PARTITION BY + ORDER BY keys.
+```
+"#,
+    )
+}
+
+/// 126. analytics-celko-relational-logic Skill
+pub fn analytics_celko_relational_logic() -> EccSkill {
+    EccSkill::new(
+        "analytics-celko-relational-logic",
+        "Advanced relational logic, Nested Sets tree models, relational division, temporal intervals, and ANSI Three-Valued Logic (3VL). Triggers: celko-relational-logic, relational-logic, nested-sets, tree-traversal-sql, relational-division, three-valued-logic, temporal-intervals.",
+        r#"# Analytics Celko Relational Logic
+> Based on **Joe Celko's SQL for Smarties - Joe Celko**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Celko Nested Sets Hierarchy
+CREATE TABLE org_chart (
+    emp_id INT PRIMARY KEY,
+    emp_name VARCHAR(100) NOT NULL,
+    lft INT NOT NULL UNIQUE CHECK (lft > 0),
+    rgt INT NOT NULL UNIQUE CHECK (rgt > lft),
+    CONSTRAINT chk_nested_range CHECK (lft < rgt)
+);
+
+CREATE INDEX idx_nested_sets ON org_chart(lft, rgt);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Nested Sets Invariant
+For every node $N$ in a nested sets hierarchy:
+$$\text{Count of Subtree Descendants} = \frac{\text{rgt}_N - \text{lft}_N - 1}{2}$$
+For any child node $C$ under parent $P$:
+$$\text{lft}_P < \text{lft}_C < \text{rgt}_C < \text{rgt}_P$$
+
+### 2.2 Relational Exact Division
+A entity $E$ matches all requirements $R$ if and only if:
+$$\text{Count}(E \cap R) = |R| \land \text{Count}(E \setminus R) = 0$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Root[Root: lft=1, rgt=14] --> SubA[Dept A: lft=2, rgt=7]
+    Root --> SubB[Dept B: lft=8, rgt=13]
+    SubA --> Emp1[Emp 1: lft=3, rgt=4]
+    SubA --> Emp2[Emp 2: lft=5, rgt=6]
+    SubB --> Emp3[Emp 3: lft=9, rgt=10]
+    SubB --> Emp4[Emp 4: lft=11, rgt=12]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+-- Relational Division: Candidates possessing ALL required skills
+SELECT candidate_id
+FROM candidate_skills
+WHERE skill_name IN ('SQL', 'Rust', 'DuckDB')
+GROUP BY candidate_id
+HAVING COUNT(DISTINCT skill_name) = 3;
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- In nested sets: node descendants count is strictly (rgt - lft - 1) / 2.
+- Querying entire subtrees in nested sets requires zero recursion: WHERE lft BETWEEN p.lft AND p.rgt.
+- Remember 3-valued logic: NULL = NULL yields UNKNOWN; NOT IN with NULL returns zero rows.
+- Implement relational division using GROUP BY and HAVING COUNT(DISTINCT requirement) = total.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Implement complex relational structures using Celko's engineering principles:
+1. Design Nested Sets tree schemas supporting instant sub-tree traversal without recursive CTEs.
+2. Implement exact relational division queries for multi-attribute matching and skill matrices.
+3. Enforce strict ANSI 3-valued logic safety when handling NULLs in outer joins and NOT IN clauses.
+```
+"#,
+    )
+}
+
+/// 127. analytics-tukey-eda-heuristics Skill
+pub fn analytics_tukey_eda_heuristics() -> EccSkill {
+    EccSkill::new(
+        "analytics-tukey-eda-heuristics",
+        "Tukey exploratory heuristics: 5-number summary, box-and-whisker diagnostics, IQR Tukey Fences, stem-and-leaf, and median polish for two-way additive layouts. Triggers: tukey-eda-heuristics, exploratory-data-analysis, tukey-eda, box-plot, interquartile-range, iqr, tukey-fences, stem-and-leaf, median-polish.",
+        r#"# Analytics Tukey Eda Heuristics
+> Based on **Exploratory Data Analysis - John W. Tukey**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Summary Metrics Table for Tukey EDA Profiling
+CREATE TABLE eda_metric_profile (
+    metric_name VARCHAR(100) PRIMARY KEY,
+    sample_size BIGINT NOT NULL,
+    min_val DOUBLE PRECISION NOT NULL,
+    q1_val DOUBLE PRECISION NOT NULL,
+    median_val DOUBLE PRECISION NOT NULL,
+    q3_val DOUBLE PRECISION NOT NULL,
+    max_val DOUBLE PRECISION NOT NULL,
+    iqr DOUBLE PRECISION NOT NULL,
+    lower_fence DOUBLE PRECISION NOT NULL,
+    upper_fence DOUBLE PRECISION NOT NULL,
+    outlier_count BIGINT NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Tukey Fences Invariant
+Let $Q_1$ and $Q_3$ be the 25th and 75th percentiles. Interquartile Range:
+$$IQR = Q_3 - Q_1$$
+$$\text{Lower Inner Fence } (LF) = Q_1 - 1.5 \times IQR$$
+$$\text{Upper Inner Fence } (UF) = Q_3 + 1.5 \times IQR$$
+$$\text{Lower Outer Fence} = Q_1 - 3.0 \times IQR, \quad \text{Upper Outer Fence} = Q_3 + 3.0 \times IQR$$
+A data point $x$ is an outlier if $x < LF \lor x > UF$.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Data[Raw Sample] --> Sort[Order Data Points]
+    Sort --> FiveNum[Extract Min, Q1, Median, Q3, Max]
+    FiveNum --> CalcIQR[IQR = Q3 - Q1]
+    CalcIQR --> Fences[Compute LF = Q1 - 1.5*IQR, UF = Q3 + 1.5*IQR]
+    Fences --> FilterOutliers[Identify Outliers < LF or > UF]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Tukey EDA Fences in Python / Polars
+import polars as pl
+
+def compute_tukey_fences(series: pl.Series) -> dict:
+    q1 = series.quantile(0.25)
+    q3 = series.quantile(0.75)
+    iqr = q3 - q1
+    lf = q1 - 1.5 * iqr
+    uf = q3 + 1.5 * iqr
+    outliers = series.filter((series < lf) | (series > uf))
+    return {"q1": q1, "q3": q3, "iqr": iqr, "lf": lf, "uf": uf, "outliers_count": len(outliers)}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Compute Tukey Fences: LF = Q1 - 1.5 * IQR and UF = Q3 + 1.5 * IQR.
+- Data points outside inner fences are flagged as potential outliers for manual review.
+- Always report 5-number summary (Min, Q1, Median, Q3, Max) rather than solely Mean and StdDev.
+- Use median polish for additive two-way contingency tables to resist outlier skew.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build automated Tukey EDA heuristic pipelines:
+1. Implement vectorized 5-number summary and IQR fence calculations in DuckDB/Polars.
+2. Formulate median polish algorithms decomposing row and column effects in matrix data.
+3. Automatically generate box-and-whisker distributions and outlier inspection queues.
+```
+"#,
+    )
+}
+
+/// 128. analytics-practical-statistics Skill
+pub fn analytics_practical_statistics() -> EccSkill {
+    EccSkill::new(
+        "analytics-practical-statistics",
+        "Practical statistical methods: bootstrap resampling, permutation testing, robust statistics, median absolute deviation (MAD), and sampling distribution validation. Triggers: practical-statistics, bootstrap-resampling, permutation-test, robust-statistics, median-absolute-deviation, mad, trimmed-mean, sampling-variability.",
+        r#"# Analytics Practical Statistics
+> Based on **Practical Statistics for Data Scientists - Peter Bruce, Andrew Bruce, Peter Gedeck**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Statistical Test Results Tracking
+CREATE TABLE experiment_hypothesis_tests (
+    test_id UUID PRIMARY KEY,
+    metric_name VARCHAR(100) NOT NULL,
+    test_type VARCHAR(50) NOT NULL, -- BOOTSTRAP, PERMUTATION
+    observed_diff DOUBLE PRECISION NOT NULL,
+    p_value DOUBLE PRECISION NOT NULL,
+    ci_lower DOUBLE PRECISION NOT NULL,
+    ci_upper DOUBLE PRECISION NOT NULL,
+    iterations INT NOT NULL DEFAULT 10000
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Median Absolute Deviation (MAD)
+For sample $X$:
+$$MAD = \text{median}(|X_i - \text{median}(X)|)$$
+$$\hat{\sigma}_{\text{robust}} = 1.4826 \times MAD$$
+
+### 2.2 Bootstrap Standard Error
+Given $B$ bootstrap samples $\hat{\theta}^*_1, \dots, \hat{\theta}^*_B$:
+$$SE_{\text{boot}} = \sqrt{\frac{1}{B-1}\sum_{b=1}^B (\hat{\theta}^*_b - \bar{\theta}^*)^2}$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Data[Sample Groups A & B] --> CalcObs[Calculate Observed Delta]
+    CalcObs --> Pool[Pool Data & Strip Group Labels]
+    Pool --> Shuffle[Permute / Shuffle Pooled Data]
+    Shuffle --> Reassign[Reassign to Synthetic A & B]
+    Reassign --> Recalc[Compute Permuted Delta]
+    Recalc --> Iterate{Repeat 10,000 times}
+    Iterate --> CalcPVal[p = Count(|Delta_perm| >= |Delta_obs|) / 10000]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+import numpy as np
+
+def permutation_test(group_a: np.ndarray, group_b: np.ndarray, n_iter: int = 10000) -> float:
+    obs_diff = np.abs(np.mean(group_a) - np.mean(group_b))
+    combined = np.concatenate([group_a, group_b])
+    n_a = len(group_a)
+    count = 0
+    for _ in range(n_iter):
+        np.random.shuffle(combined)
+        perm_diff = np.abs(np.mean(combined[:n_a]) - np.mean(combined[n_a:]))
+        if perm_diff >= obs_diff:
+            count += 1
+    return count / n_iter
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Use bootstrap resampling to estimate standard errors and confidence intervals without normality assumptions.
+- Calculate robust scale via MAD: sigma_est = 1.4826 * median(|x - median(x)|).
+- Apply permutation tests to determine exact p-values for difference in means or medians.
+- Rely on trimmed mean (e.g. 10% trim) to protect location metrics from heavy-tailed outliers.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Architect a production statistical inference library:
+1. Build non-parametric bootstrap and permutation testing harnesses executing 10,000+ iterations.
+2. Implement robust estimators (Huber loss, trimmed mean, MAD) resistant to non-Gaussian noise.
+3. Validate sample size adequacy and empirical sampling distributions across continuous KPIs.
+```
+"#,
+    )
+}
+
+/// 129. analytics-intuitive-statistics Skill
+pub fn analytics_intuitive_statistics() -> EccSkill {
+    EccSkill::new(
+        "analytics-intuitive-statistics",
+        "Foundational intuitive statistics: Central Limit Theorem (CLT), Law of Large Numbers, standard errors, Type I/II errors, statistical power, and Simpson's Paradox. Triggers: intuitive-statistics, central-limit-theorem, clt, law-of-large-numbers, standard-error, simpsons-paradox, type-1-type-2-errors, statistical-power.",
+        r#"# Analytics Intuitive Statistics
+> Based on **Naked Statistics - Charles Wheelan**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Metric Sampling Distribution Summary
+CREATE TABLE sampling_distribution_runs (
+    run_id UUID PRIMARY KEY,
+    population_size BIGINT NOT NULL,
+    sample_size INT NOT NULL,
+    mean_of_means DOUBLE PRECISION NOT NULL,
+    empirical_se DOUBLE PRECISION NOT NULL,
+    theoretical_se DOUBLE PRECISION NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Central Limit Theorem Invariant
+For independent, identically distributed random variables with mean $\mu$ and variance $\sigma^2$:
+$$\bar{X}_n = \frac{1}{n}\sum_{i=1}^n X_i \xrightarrow{d} \mathcal{N}\left(\mu, \frac{\sigma^2}{n}\right) \quad \text{as } n \to \infty$$
+$$\text{Standard Error } (SE) = \frac{s}{\sqrt{n}}$$
+
+### 2.2 Simpson's Paradox Invariant
+An observed correlation in aggregate can reverse when conditioned on confounding variable $Z$:
+$$\text{sgn}\left(\frac{\partial E[Y|X]}{\partial X}\right) \neq \text{sgn}\left(\frac{\partial E[Y|X, Z]}{\partial X}\right)$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Population[Non-Normal Population] --> Draw[Draw K Samples of size N]
+    Draw --> SampleMeans[Compute Mean for each Sample]
+    SampleMeans --> Distribution[Plot Means Distribution]
+    Distribution --> BellCurve[Distribution converges to Gaussian N(mu, sigma^2/N)]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# CLT Verification in Python
+import numpy as np
+
+def verify_clt(population: np.ndarray, sample_size: int = 100, num_samples: int = 1000):
+    sample_means = [np.mean(np.random.choice(population, size=sample_size)) for _ in range(num_samples)]
+    theoretical_se = np.std(population) / np.sqrt(sample_size)
+    empirical_se = np.std(sample_means)
+    return {"mean": np.mean(sample_means), "theoretical_se": theoretical_se, "empirical_se": empirical_se}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Standard Error of the Mean is s / sqrt(n); increasing sample size 4x cuts SE by half.
+- Always segment data to detect Simpson's Paradox where aggregate trends contradict sub-cohort trends.
+- Balance Type I error alpha (false positive) and Type II error beta (false negative).
+- Statistical significance is not practical significance: tiny effects become significant at massive n.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Design foundational statistical safeguards for analytics reporting:
+1. Implement automated checks detecting Simpson's paradox across high-cardinality dimensions.
+2. Calculate power curves and minimum sample sizes to prevent underpowered experiments.
+3. Formulate intuitive standard error and confidence interval displays for executive stakeholders.
+```
+"#,
+    )
+}
+
+/// 130. analytics-statistical-learning-islp Skill
+pub fn analytics_statistical_learning_islp() -> EccSkill {
+    EccSkill::new(
+        "analytics-statistical-learning-islp",
+        "Core statistical learning: Bias-Variance tradeoff, K-Fold Cross-Validation, Ridge (L2) and Lasso (L1) regularized regression, and logistic classification. Triggers: statistical-learning-islp, islp, bias-variance-tradeoff, cross-validation, ridge-regression, lasso-regression, regularized-loss, logistic-regression.",
+        r#"# Analytics Statistical Learning Islp
+> Based on **An Introduction to Statistical Learning - Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Cross-Validation Performance Log
+CREATE TABLE model_cv_runs (
+    model_id UUID PRIMARY KEY,
+    algorithm VARCHAR(50) NOT NULL,
+    hyperparameters JSONB NOT NULL,
+    k_folds INT NOT NULL DEFAULT 5,
+    mean_cv_rmse DOUBLE PRECISION NOT NULL,
+    std_cv_rmse DOUBLE PRECISION NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Bias-Variance Decomposition
+For target $y = f(x) + \epsilon$ with $\epsilon \sim \mathcal{N}(0, \sigma^2_\epsilon)$:
+$$E[(y - \hat{f}(x))^2] = \text{Bias}(\hat{f}(x))^2 + \text{Var}(\hat{f}(x)) + \sigma^2_\epsilon$$
+
+### 2.2 Elastic Net & Regularized Loss Invariant
+$$\min_\beta \left( \frac{1}{2n} \|y - X\beta\|_2^2 + \lambda_1 \|\beta\|_1 + \frac{\lambda_2}{2} \|\beta\|_2^2 \right)$$
+- When $\lambda_2 = 0$, pure Lasso ($L_1$ penalty) forces non-informative coefficients to exact zero.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Dataset --> Split[Split into K Equal Folds]
+    Split --> Fold1[Train on K-1 folds, Test on Fold 1]
+    Split --> Fold2[Train on K-1 folds, Test on Fold 2]
+    Split --> FoldK[Train on K-1 folds, Test on Fold K]
+    Fold1 --> Aggregate[Compute Mean CV Error & Standard Error]
+    Fold2 --> Aggregate
+    FoldK --> Aggregate
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+from sklearn.linear_model import LassoCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+
+pipeline = make_pipeline(StandardScaler(), LassoCV(cv=5, random_state=42))
+# pipeline.fit(X_train, y_train)
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- High bias causes underfitting; high variance causes overfitting on training data.
+- Use K-Fold Cross-Validation (K=5 or 10) to select hyperparameters minimizing test error.
+- Lasso (L1) yields sparse models via feature selection; Ridge (L2) shrinks collinear weights.
+- Always standardize features (zero mean, unit variance) prior to fitting penalized regression.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build statistical learning regression and classification engines:
+1. Implement cross-validated Ridge and Lasso pipelines with automated lambda grid search.
+2. Evaluate bias-variance profiles using empirical learning curves across training set sizes.
+3. Validate classification thresholds optimizing precision-recall tradeoffs for imbalanced business KPIs.
+```
+"#,
+    )
+}
+
+/// 131. analytics-bayesian-rethinking Skill
+pub fn analytics_bayesian_rethinking() -> EccSkill {
+    EccSkill::new(
+        "analytics-bayesian-rethinking",
+        "Bayesian modeling: DAG causal graphs, prior predictive simulation, MCMC sampling, Highest Posterior Density Intervals (HPDI), and collider conditioning avoidance. Triggers: bayesian-rethinking, bayesian-modeling, prior-posterior, directed-acyclic-graphs, collider-bias, mcmc-sampling, hpdi, posterior-predictive.",
+        r#"# Analytics Bayesian Rethinking
+> Based on **Statistical Rethinking - Richard McElreath**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Bayesian Model Parameter Posterior Summary
+CREATE TABLE bayesian_posteriors (
+    model_name VARCHAR(100) NOT NULL,
+    parameter_name VARCHAR(100) NOT NULL,
+    mean DOUBLE PRECISION NOT NULL,
+    std_dev DOUBLE PRECISION NOT NULL,
+    hpdi_lower_95 DOUBLE PRECISION NOT NULL,
+    hpdi_upper_95 DOUBLE PRECISION NOT NULL,
+    r_hat DOUBLE PRECISION NOT NULL CHECK (r_hat < 1.05),
+    PRIMARY KEY (model_name, parameter_name)
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Bayes' Theorem Invariant
+$$P(\theta | D) = \frac{P(D | \theta) P(\theta)}{P(D)} = \frac{P(D | \theta) P(\theta)}{\int P(D | \theta) P(\theta) d\theta}$$
+
+### 2.2 Collider Bias Invariant
+In DAG $X \to C \leftarrow Y$, conditioning on collider $C$ creates spurious association:
+$$X \perp Y \quad \text{but} \quad X \not\perp Y \mid C$$
+Rule: NEVER condition on a collider when estimating the causal effect of $X$ on $Y$.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Prior[Define Generative Prior P(theta)] --> PriorPred[Prior Predictive Simulation]
+    PriorPred --> Likelihood[Formulate Data Likelihood P(D|theta)]
+    Likelihood --> HMC[Run Hamiltonian Monte Carlo Sampling]
+    HMC --> CheckConv[Check R-hat < 1.01 and ESS > 400]
+    CheckConv --> Posterior[Analyze HPDI & Posterior Predictive Checks]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# PyMC Generative Model
+import pymc as pm
+
+with pm.Model() as model:
+    alpha = pm.Normal("alpha", mu=0, sigma=10)
+    beta = pm.Normal("beta", mu=0, sigma=5)
+    sigma = pm.Exponential("sigma", lam=1)
+    mu = alpha + beta * x_obs
+    y = pm.Normal("y", mu=mu, sigma=sigma, observed=y_obs)
+    # trace = pm.sample(draws=2000, tune=1000, target_accept=0.95)
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Perform prior predictive checks before observing data to verify realistic parameter ranges.
+- Never condition on a collider (X -> C <- Y); it creates spurious correlations.
+- Convergence requires Gelman-Rubin R-hat < 1.05 and high Effective Sample Size (ESS).
+- Report 89% or 95% HPDI (Highest Posterior Density Interval) rather than point estimates.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Implement Bayesian statistical modeling workflows:
+1. Formulate causal DAGs identifying backdoor adjustment paths and excluding colliders.
+2. Execute Hamiltonian Monte Carlo (HMC) sampling with convergence verification (R-hat, divergences).
+3. Generate posterior predictive distributions to validate model calibration against empirical data.
+```
+"#,
+    )
+}
+
+/// 132. analytics-mathematical-inference Skill
+pub fn analytics_mathematical_inference() -> EccSkill {
+    EccSkill::new(
+        "analytics-mathematical-inference",
+        "Rigorous mathematical inference: Maximum Likelihood Estimation (MLE), Fisher Information, Cramér-Rao Lower Bound, asymptotic normality, and empirical CDFs. Triggers: mathematical-inference, all-of-statistics, maximum-likelihood, mle, fisher-information, cramer-rao, asymptotic-normality, empirical-cdf.",
+        r#"# Analytics Mathematical Inference
+> Based on **All of Statistics - Larry Wasserman**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- MLE Estimation Results Store
+CREATE TABLE mle_parameter_estimates (
+    estimation_id UUID PRIMARY KEY,
+    model_type VARCHAR(50) NOT NULL,
+    param_name VARCHAR(50) NOT NULL,
+    mle_value DOUBLE PRECISION NOT NULL,
+    fisher_info DOUBLE PRECISION NOT NULL,
+    cramer_rao_bound DOUBLE PRECISION NOT NULL,
+    asymptotic_se DOUBLE PRECISION NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Fisher Information & Cramér-Rao Invariant
+$$I_n(\theta) = -E\left[ \frac{\partial^2}{\partial \theta^2} \ell_n(\theta) \right] = n I_1(\theta)$$
+For any unbiased estimator $\hat{\theta}$:
+$$\text{Var}(\hat{\theta}) \ge \frac{1}{I_n(\theta)}$$
+
+### 2.2 Asymptotic Normality of MLE
+$$\sqrt{n}(\hat{\theta}_{\text{MLE}} - \theta_0) \xrightarrow{d} \mathcal{N}\left(0, I_1(\theta_0)^{-1}\right)$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Likelihood[Formulate Log-Likelihood Function] --> Score[Compute Score Function = First Derivative]
+    Score --> Hessian[Compute Negative Hessian = Fisher Information]
+    Score --> Solve[Solve Score = 0 for MLE]
+    Solve --> VarBound[Asymptotic Variance = Inverse Fisher Info]
+    VarBound --> ConfInterval[Construct Wald 95% Confidence Interval]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+import numpy as np
+
+def mle_exponential(data: np.ndarray):
+    n = len(data)
+    lambda_hat = n / np.sum(data)
+    fisher_info = n / (lambda_hat ** 2)
+    se = 1.0 / np.sqrt(fisher_info)
+    return {"lambda_mle": lambda_hat, "se": se, "ci_95": (lambda_hat - 1.96*se, lambda_hat + 1.96*se)}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Maximum Likelihood Estimator (MLE) is asymptotically efficient, attaining Cramér-Rao lower bound.
+- Asymptotic variance of MLE equals the inverse of the Fisher Information matrix.
+- Construct Wald confidence intervals as theta_hat +/- z * SE where SE = 1 / sqrt(I(theta)).
+- Glivenko-Cantelli theorem guarantees uniform convergence of empirical CDF to true CDF.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Construct mathematically rigorous statistical inference modules:
+1. Derive exact log-likelihoods, score equations, and Fisher Information matrices.
+2. Prove asymptotic normality and construct Wald and Likelihood-Ratio test statistics.
+3. Validate coverage probabilities of parametric and non-parametric confidence intervals.
+```
+"#,
+    )
+}
+
+/// 133. analytics-kohavi-ab-experimentation Skill
+pub fn analytics_kohavi_ab_experimentation() -> EccSkill {
+    EccSkill::new(
+        "analytics-kohavi-ab-experimentation",
+        "Enterprise online controlled experimentation: Sample Ratio Mismatch (SRM) chi-square test, Overall Evaluation Criterion (OEC), sample size sizing, Twyman's law, and guardrail metrics. Triggers: kohavi-ab-experimentation, ab-testing, online-controlled-experiments, srm, sample-ratio-mismatch, chi-square-srm, oec, minimum-detectable-effect, twymans-law.",
+        r#"# Analytics Kohavi Ab Experimentation
+> Based on **Trustworthy Online Controlled Experiments - Ronny Kohavi, Diane Tang, Ya Xu**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- A/B Experiment Registry & SRM Guardrails
+CREATE TABLE experiment_runs (
+    experiment_id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    control_ratio DOUBLE PRECISION NOT NULL DEFAULT 0.5,
+    treatment_ratio DOUBLE PRECISION NOT NULL DEFAULT 0.5,
+    control_count BIGINT NOT NULL DEFAULT 0,
+    treatment_count BIGINT NOT NULL DEFAULT 0,
+    srm_p_value DOUBLE PRECISION,
+    srm_flagged BOOLEAN NOT NULL DEFAULT FALSE,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('ACTIVE', 'CONCLUDED', 'INVALID_SRM'))
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Sample Ratio Mismatch (SRM) Chi-Square Invariant
+Let $O_C, O_T$ be observed traffic counts and $E_C, E_T$ be expected counts based on design ratios $r_C, r_T$:
+$$E_C = (O_C + O_T) \times r_C, \quad E_T = (O_C + O_T) \times r_T$$
+$$\chi^2 = \frac{(O_C - E_C)^2}{E_C} + \frac{(O_T - E_T)^2}{E_T} \sim \chi^2(1)$$
+If $p = P(\chi^2(1) \ge \chi^2_{\text{obs}}) < 0.001$, experiment is invalid due to SRM. All downstream metrics are VOID.
+
+### 2.2 Sample Size Determination per Variant
+For two-sided test with significance $\alpha = 0.05$ ($z_{1-\alpha/2} = 1.96$) and power $1 - \beta = 0.80$ ($z_{1-\beta} = 0.84$):
+$$n \approx \frac{16 \sigma^2}{\Delta^2}$$
+where $\Delta = \mu_T - \mu_C$ is the Minimum Detectable Effect (MDE).
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Traffic[User Visits Site] --> Hash[MD5 User ID + Salt]
+    Hash --> Modulo{Bucket <= Ratio?}
+    Modulo -->|Control| VariantA[Assign Control]
+    Modulo -->|Treatment| VariantB[Assign Treatment]
+    VariantA --> LogEvent[Log Allocation Event]
+    VariantB --> LogEvent
+    LogEvent --> DailySRM[Daily SRM Chi-Square Check]
+    DailySRM -->|p < 0.001| Abort[INVALIDATE: Abort Experiment]
+    DailySRM -->|p >= 0.001| ComputeOEC[Compute OEC & Guardrail Metrics]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+from scipy.stats import chisquare
+
+def verify_srm(obs_control: int, obs_treatment: int, p_control: float = 0.5) -> dict:
+    total = obs_control + obs_treatment
+    exp_control = total * p_control
+    exp_treatment = total * (1.0 - p_control)
+    chi2_stat, p_val = chisquare([obs_control, obs_treatment], [exp_control, exp_treatment])
+    is_srm = p_val < 0.001
+    return {"chi2": chi2_stat, "p_value": p_val, "srm_detected": is_srm}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Always run the SRM Chi-Square test before analyzing A/B experiment results.
+- If SRM p-value < 0.001, halt the experiment; never attempt to interpret metric deltas.
+- Twyman's Law: Any statistic that appears extraordinarily positive or negative is almost certainly an error.
+- Enforce sample size requirements prior to launch: n >= 16 * sigma^2 / MDE^2.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Architect an enterprise experimentation platform:
+1. Build automated SRM detection pipelines terminating skewed experiments (p < 0.001).
+2. Formulate composite OEC (Overall Evaluation Criterion) functions balancing conversion vs latency.
+3. Enforce sequential testing and variance reduction (CUPED) to accelerate decision cycles.
+```
+"#,
+    )
+}
+
+/// 134. analytics-causal-mixtape Skill
+pub fn analytics_causal_mixtape() -> EccSkill {
+    EccSkill::new(
+        "analytics-causal-mixtape",
+        "Causal identification: potential outcomes framework, Average Treatment Effect (ATE), selection bias decomposition, instrumental variables, and regression discontinuity. Triggers: causal-mixtape, causal-inference, rubin-causal-model, potential-outcomes, ate, att, selection-bias, instrumental-variables, regression-discontinuity.",
+        r#"# Analytics Causal Mixtape
+> Based on **Causal Inference: The Mixtape - Scott Cunningham**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Causal Analysis Cohort Data Table
+CREATE TABLE causal_cohort_observations (
+    entity_id BIGINT PRIMARY KEY,
+    treatment_assigned INT NOT NULL CHECK (treatment_assigned IN (0, 1)),
+    observed_outcome DOUBLE PRECISION NOT NULL,
+    running_variable DOUBLE PRECISION, -- For Regression Discontinuity
+    instrument DOUBLE PRECISION -- For Instrumental Variables
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Potential Outcomes & Selection Bias Decomposition
+Let $Y_i(1)$ and $Y_i(0)$ be potential outcomes under treatment and control:
+$$E[Y | D = 1] - E[Y | D = 0] = \underbrace{E[Y(1) - Y(0)]}_{\text{ATE}} + \underbrace{\{E[Y(0) | D=1] - E[Y(0) | D=0]\}}_{\text{Selection Bias}}$$
+In randomized experiments, assignment $D \perp (Y(1), Y(0)) \implies \text{Selection Bias} = 0$.
+
+### 2.2 Wald Instrumental Variable Estimator
+For binary instrument $Z$, treatment $D$, and outcome $Y$:
+$$\hat{\beta}_{\text{IV}} = \frac{E[Y | Z = 1] - E[Y | Z = 0]}{E[D | Z = 1] - E[D | Z = 0]} = \frac{\text{Cov}(Y, Z)}{\text{Cov}(D, Z)}$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    ObservedDiff[Observed Group Difference] --> CheckRandom{Randomized Assignment?}
+    CheckRandom -->|Yes| ValidATE[Selection Bias = 0: Observed Diff = ATE]
+    CheckRandom -->|No| Identify[Causal Identification Strategy]
+    Identify --> IV[Instrumental Variables: Z -> D -> Y]
+    Identify --> RDD[Regression Discontinuity: Cutoff c]
+    Identify --> Match[Propensity Score Matching]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Instrumental Variable Wald Estimator in Python
+import numpy as np
+
+def wald_iv_estimator(z: np.ndarray, d: np.ndarray, y: np.ndarray) -> float:
+    delta_y = np.mean(y[z == 1]) - np.mean(y[z == 0])
+    delta_d = np.mean(d[z == 1]) - np.mean(d[z == 0])
+    if abs(delta_d) < 1e-6:
+        raise ValueError("Weak instrument: zero compliance effect")
+    return delta_y / delta_d
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Observed difference in means equals ATE plus Selection Bias; observational studies contain selection bias.
+- An instrument Z must satisfy Relevance (Cov(Z, D) != 0) and Exclusion Restriction (Cov(Z, epsilon) = 0).
+- Regression Discontinuity compares entities immediately above and below an arbitrary threshold cutoff.
+- Never interpret raw correlation as causation without an explicit identification strategy.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build production causal inference engines:
+1. Implement potential outcomes estimation with explicit selection bias diagnostics.
+2. Build Two-Stage Least Squares (2SLS) and Wald instrumental variable estimators with weak instrument F-tests.
+3. Design Sharp and Fuzzy Regression Discontinuity (RDD) pipelines with optimal bandwidth selection.
+```
+"#,
+    )
+}
+
+/// 135. analytics-econometric-causality Skill
+pub fn analytics_econometric_causality() -> EccSkill {
+    EccSkill::new(
+        "analytics-econometric-causality",
+        "Applied econometrics: Difference-in-Differences (DiD), parallel trends testing, Two-Way Fixed Effects (TWFE), omitted variable bias formula, and cluster-robust standard errors. Triggers: econometric-causality, mostly-harmless-econometrics, difference-in-differences, did-estimator, omitted-variable-bias, 2sls, parallel-trends.",
+        r#"# Analytics Econometric Causality
+> Based on **Mostly Harmless Econometrics - Joshua Angrist & Jörn-Steffen Pischke**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Panel Data Table for Difference-in-Differences
+CREATE TABLE panel_observations (
+    entity_id BIGINT NOT NULL,
+    time_period INT NOT NULL,
+    is_treated_group INT NOT NULL CHECK (is_treated_group IN (0, 1)),
+    is_post_period INT NOT NULL CHECK (is_post_period IN (0, 1)),
+    outcome DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (entity_id, time_period)
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Difference-in-Differences (DiD) Estimator
+Let $\bar{Y}_{G, T}$ be the sample mean of group $G \in \{T, C\}$ at time $T \in \{1, 2\}$:
+$$\hat{\delta}_{\text{DiD}} = (\bar{Y}_{T, 2} - \bar{Y}_{T, 1}) - (\bar{Y}_{C, 2} - \bar{Y}_{C, 1})$$
+Regression specification:
+$$Y_{it} = \alpha + \beta \cdot \text{Treated}_i + \gamma \cdot \text{Post}_t + \delta_{\text{DiD}} (\text{Treated}_i \times \text{Post}_t) + \epsilon_{it}$$
+
+### 2.2 Omitted Variable Bias (OVB) Invariant
+$$\hat{\beta}_{\text{short}} = \beta_{\text{long}} + \gamma \frac{\text{Cov}(X, Z)}{\text{Var}(X)}$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    PrePeriod[Pre-Treatment Periods 1..k] --> TestParallel{Parallel Pre-Trends Test}
+    TestParallel -->|Reject: Non-parallel| Invalidate[DiD Invalid: Trends diverging before treatment]
+    TestParallel -->|Accept: Parallel trends| Intervention[Intervention Occurs at Period k+1]
+    Intervention --> PostPeriod[Post-Treatment Periods k+1..T]
+    PostPeriod --> EstimateDiD[Compute (Delta Y_treat) - (Delta Y_control)]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+import numpy as np
+
+def calculate_did(y_t1: float, y_t2: float, y_c1: float, y_c2: float) -> float:
+    # DiD = (Y_T2 - Y_T1) - (Y_C2 - Y_C1)
+    treat_diff = y_t2 - y_t1
+    control_diff = y_c2 - y_c1
+    return treat_diff - control_diff
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- DiD formula: (Y_treatment_post - Y_treatment_pre) - (Y_control_post - Y_control_pre).
+- The fundamental identifying assumption is Parallel Trends: treatment and control must track identically in pre-period.
+- Always cluster standard errors at the state/entity level to prevent deflated p-values from autocorrelation.
+- Omitted Variable Bias = (Relationship of omitted with Y) * (Regression of omitted on X).
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Implement an econometric causal analysis suite:
+1. Build automated Difference-in-Differences estimators with event-study pre-trend diagnostic tests.
+2. Formulate Two-Way Fixed Effects regressions with cluster-robust sandwich covariance estimators.
+3. Validate parallel trends robustness against staggered rollouts using Callaway-Sant'Anna estimators.
+```
+"#,
+    )
+}
+
+/// 136. analytics-counterfactual-causality Skill
+pub fn analytics_counterfactual_causality() -> EccSkill {
+    EccSkill::new(
+        "analytics-counterfactual-causality",
+        "Counterfactual causal theory: identifiability conditions (Exchangeability, Positivity, Consistency), Inverse Probability Weighting (IPW), marginal structural models, and g-computation. Triggers: counterfactual-causality, causal-inference-what-if, exchangeability, positivity, consistency, inverse-probability-weighting, ipw, g-methods.",
+        r#"# Analytics Counterfactual Causality
+> Based on **Causal Inference: What If - Miguel Hernán & James Robins**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Propensity Scores & IPW Weights Table
+CREATE TABLE propensity_weighted_cohort (
+    subject_id BIGINT PRIMARY KEY,
+    treatment INT NOT NULL CHECK (treatment IN (0, 1)),
+    propensity_score DOUBLE PRECISION NOT NULL CHECK (propensity_score > 0.0 AND propensity_score < 1.0),
+    ipw_weight DOUBLE PRECISION NOT NULL,
+    outcome DOUBLE PRECISION NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Identifiability Conditions
+1. **Conditional Exchangeability**: $Y(a) \perp A \mid L$
+2. **Positivity**: $P(A = a \mid L = l) > 0 \quad \forall a, l$
+3. **Consistency**: If $A = a$, then $Y = Y(a)$
+
+### 2.2 Inverse Probability Weighting (IPW) Invariant
+Let $e(L) = P(A = 1 \mid L)$ be the propensity score:
+$$W = \frac{A}{e(L)} + \frac{1 - A}{1 - e(L)}$$
+In the pseudo-population weighted by $W$, treatment assignment is unconfounded by $L$.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Confounders[Measure Confounders L] --> FitPropensity[Fit Logistic Regression: P(A=1|L)]
+    FitPropensity --> CheckPositivity{Verify Positivity: 0.01 < e(L) < 0.99}
+    CheckPositivity -->|Fail| Trim[Trim Non-Overlapping Support]
+    CheckPositivity -->|Pass| CalcWeights[Calculate IPW Weights W]
+    CalcWeights --> FitMSM[Fit Marginal Structural Model on Weighted Cohort]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+import numpy as np
+
+def compute_ipw_weights(treatment: np.ndarray, prop_score: np.ndarray) -> np.ndarray:
+    # Truncate to prevent extreme weights
+    ps = np.clip(prop_score, 0.01, 0.99)
+    weights = treatment / ps + (1 - treatment) / (1 - ps)
+    return weights
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Identifiability requires 3 pillars: Exchangeability (no unmeasured confounding), Positivity, Consistency.
+- Inverse Probability Weighting: W = A / e(L) + (1 - A) / (1 - e(L)).
+- Clip extreme propensity scores (e.g. [0.01, 0.99]) to avoid high-variance weight explosion.
+- Check covariate balance post-weighting: standardized mean difference should be < 0.1 for all features.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build counterfactual estimation pipelines:
+1. Implement Inverse Probability Weighting (IPW) with stabilized weights and covariate balance checks.
+2. Detect positivity violations and support overlap failures across high-dimensional confounders.
+3. Formulate G-computation algorithms simulating multi-stage dynamic treatment regimes.
+```
+"#,
+    )
+}
+
+/// 137. analytics-kleppmann-data-intensive Skill
+pub fn analytics_kleppmann_data_intensive() -> EccSkill {
+    EccSkill::new(
+        "analytics-kleppmann-data-intensive",
+        "Data systems architecture: LSM-trees vs B-trees, replication quorums, write-skew anomalies, partitioning schemes, and event sourcing. Triggers: kleppmann-data-intensive, data-intensive-applications, lsm-trees, sstables, b-trees, quorum-consensus, write-skew, replication-partitioning.",
+        r#"# Analytics Kleppmann Data Intensive
+> Based on **Designing Data-Intensive Applications - Martin Kleppmann**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Replication Quorum Node Metadata
+CREATE TABLE quorum_cluster_nodes (
+    node_id INT PRIMARY KEY,
+    datacenter VARCHAR(50) NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('LEADER', 'FOLLOWER')),
+    last_applied_index BIGINT NOT NULL,
+    is_alive BOOLEAN NOT NULL DEFAULT TRUE
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Quorum Consensus Invariant
+In a cluster of $N$ replicas with read quorum $R$ and write quorum $W$:
+$$R + W > N$$
+Guarantees that at least one node in the read set $R$ contains the latest write from $W$.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Write[Incoming Write] --> WAL[Append to Write-Ahead Log]
+    WAL --> MemTable[Write to In-Memory MemTable]
+    MemTable --> Full{MemTable Full?}
+    Full -->|Yes| Flush[Flush to Immutable SSTable on Disk]
+    Full -->|No| Ack[Return Ack to Client]
+    Flush --> Compaction[Background Leveled / Size-Tiered Compaction]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+// Rust Quorum Overlap Validator
+pub fn validate_quorum(n: usize, r: usize, w: usize) -> bool {
+    r + w > n && w > n / 2
+}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Quorum consensus condition: R + W > N ensures read quorum contains at least one up-to-date replica.
+- LSM-Trees (Log-Structured Merge-trees) optimize sequential writes; B-Trees optimize random reads.
+- Prevent write-skew race conditions under Snapshot Isolation using explicit row locking or serializable isolation.
+- Change Data Capture (CDC) turns operational database commit logs into deterministic event streams.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Architect reliable, high-throughput distributed data backends:
+1. Configure leaderless and leader-based replication topologies with strict quorum validation (R + W > N).
+2. Tune LSM-tree SSTable compaction algorithms (leveled vs size-tiered) to balance write amplification.
+3. Design CDC-driven event-sourced pipelines ensuring zero loss and deterministic ordering.
+```
+"#,
+    )
+}
+
+/// 138. analytics-akidau-stream-processing Skill
+pub fn analytics_akidau_stream_processing() -> EccSkill {
+    EccSkill::new(
+        "analytics-akidau-stream-processing",
+        "Stream processing primitives: What, Where, When, How questions; event-time watermarking, tumbling/sliding/session windows, triggers, and late data accumulation. Triggers: akidau-stream-processing, stream-processing, streaming-systems, event-time-watermarks, tumbling-windows, sliding-windows, session-windows, triggers-accumulation.",
+        r#"# Analytics Akidau Stream Processing
+> Based on **Streaming Systems - Tyler Akidau, Slava Chernyak, Reuven Lax**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Stream Watermark & Window State Tracking
+CREATE TABLE stream_watermark_state (
+    partition_id INT PRIMARY KEY,
+    current_watermark TIMESTAMP NOT NULL,
+    max_event_time_seen TIMESTAMP NOT NULL,
+    allowed_lateness_sec INT NOT NULL DEFAULT 300
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Watermark Monotonicity Invariant
+Let $W(t)$ be the event-time watermark at processing time $t$:
+$$W(t) = \max_{i} (E_i) - \Delta_{\text{skew}}$$
+$$W(t_2) \ge W(t_1) \quad \forall t_2 > t_1 \quad (\text{Watermark never moves backwards})$$
+Late data condition: Event $e$ is late iff $\text{event\_time}(e) < W(t)$.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Event[Incoming Stream Event] --> ExtractTime[Extract Event Timestamp]
+    ExtractTime --> WatermarkCheck{Event Time < Current Watermark?}
+    WatermarkCheck -->|Yes| LateData[Route to Late Data / Retract Trigger]
+    WatermarkCheck -->|No| WindowAssign[Assign to Tumbling / Sliding Window]
+    WindowAssign --> Emit{Watermark passes Window End?}
+    Emit -->|Yes| Flush[Emit Window Aggregation Result]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+// Rust Monotonic Watermark Tracker
+pub struct WatermarkTracker {
+    current_watermark: u64,
+    allowed_lateness_ms: u64,
+}
+
+impl WatermarkTracker {
+    pub fn update(&mut self, event_time_ms: u64) -> u64 {
+        if event_time_ms > self.allowed_lateness_ms {
+            let proposed = event_time_ms - self.allowed_lateness_ms;
+            if proposed > self.current_watermark {
+                self.current_watermark = proposed;
+            }
+        }
+        self.current_watermark
+    }
+}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- The 4 questions: What is computed (transforms)? Where in event time (windowing)? When in processing time (watermarks)? How results relate (accumulating/retracting)?
+- Watermarks must be monotonically increasing; they establish completeness guarantees in event time.
+- Tumbling windows partition time discretely; session windows dynamically merge on user inactivity gaps.
+- Handle late arrivals explicitly using allowed lateness windows and retraction streams.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Design real-time stream processing architectures:
+1. Implement heuristic and punctuated event-time watermarking engines in Rust/Flink.
+2. Build dynamic sessionization windows merging overlapping state upon out-of-order event arrival.
+3. Configure accumulating and retracting triggers emitting low-latency speculative updates.
+```
+"#,
+    )
+}
+
+/// 139. analytics-kafka-event-streaming Skill
+pub fn analytics_kafka_event_streaming() -> EccSkill {
+    EccSkill::new(
+        "analytics-kafka-event-streaming",
+        "Apache Kafka event streaming: partition topologies, consumer group rebalancing, commit offsets, log compaction, and Exactly-Once Semantics (EOS). Triggers: kafka-event-streaming, apache-kafka, event-streaming, kafka-partitions, consumer-groups, exactly-once-semantics, kafka-eos, transactional-producer.",
+        r#"# Analytics Kafka Event Streaming
+> Based on **Kafka: The Definitive Guide - Gwen Shapira et al.**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Kafka Consumer Offset Checkpoint Table
+CREATE TABLE kafka_consumer_offsets (
+    consumer_group VARCHAR(100) NOT NULL,
+    topic VARCHAR(100) NOT NULL,
+    partition_id INT NOT NULL,
+    committed_offset BIGINT NOT NULL,
+    last_heartbeat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (consumer_group, topic, partition_id)
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Exactly-Once Semantics (EOS) Sequence Invariant
+For producer with Producer ID ($PID$) sending message with sequence number $seq$:
+$$\text{Broker Acceptance Condition}: \quad seq = seq_{\text{last}} + 1$$
+If $seq \le seq_{\text{last}}$, message is rejected as duplicate. If $seq > seq_{\text{last}} + 1$, broker raises out-of-order error.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Prod[Transactional Producer] --> Begin[beginTransaction]
+    Begin --> Send[Send messages to Partition P1, P2]
+    Send --> Offsets[sendOffsetsToTransaction]
+    Offsets --> Commit[commitTransaction: 2-Phase Commit]
+    Commit --> WriteMarker[Write COMMIT marker to log]
+    WriteMarker --> Consumers[Read_Committed Consumers read data]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Python Kafka Idempotent Producer Configuration
+producer_config = {
+    'bootstrap.servers': 'localhost:9092',
+    'enable.idempotence': True,
+    'acks': 'all',
+    'retries': 10000000,
+    'max.in.flight.requests.per.connection': 5
+}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Set enable.idempotence=True and acks=all to guarantee zero message duplication and zero data loss.
+- Partition key determines ordering: Kafka guarantees strict ordering within a single partition only.
+- Consumer lag (LogEndOffset - CurrentOffset) is the primary operational health metric.
+- Use transactional producer (read-process-write) for end-to-end Exactly-Once Semantics.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Construct production Apache Kafka event architectures:
+1. Size and distribute partition counts matching analytical consumer parallelism requirements.
+2. Implement transactional producers achieving Exactly-Once Semantics (EOS) across topic hops.
+3. Build consumer lag monitoring systems automatically remediating rebalance storms.
+```
+"#,
+    )
+}
+
+/// 140. analytics-data-engineering-lifecycle Skill
+pub fn analytics_data_engineering_lifecycle() -> EccSkill {
+    EccSkill::new(
+        "analytics-data-engineering-lifecycle",
+        "Data engineering lifecycle: generation, storage, ingestion, transformation, and serving; architecture tradeoffs across batch vs streaming. Triggers: data-engineering-lifecycle, fundamentals-of-data-engineering, data-ingestion-storage, serving-transformation, batch-vs-streaming, data-architecture-tradeoffs.",
+        r#"# Analytics Data Engineering Lifecycle
+> Based on **Fundamentals of Data Engineering - Joe Reis & Matt Housley**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Pipeline SLA Performance Metadata
+CREATE TABLE pipeline_sla_metrics (
+    pipeline_id VARCHAR(100) PRIMARY KEY,
+    cadence VARCHAR(20) NOT NULL CHECK (cadence IN ('STREAMING', 'MICROBATCH', 'HOURLY', 'DAILY')),
+    target_sla_sec INT NOT NULL,
+    actual_latency_sec INT NOT NULL,
+    cost_per_run_usd NUMERIC(10, 4) NOT NULL,
+    last_success_timestamp TIMESTAMP NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Latency vs Throughput Tradeoff
+Let $B$ be batch size and $T_{\text{overhead}}$ be per-batch fixed overhead:
+$$\text{Throughput}(B) = \frac{B}{B \cdot t_{\text{item}} + T_{\text{overhead}}}$$
+As $B \to \infty$, throughput reaches maximum $\frac{1}{t_{\text{item}}}$, but latency increases linearly with $B$.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph LR
+    Source[Generation: Apps, DBs] --> Ingest[Ingestion: Batch / Streaming]
+    Ingest --> Storage[Storage: Object Store / Lakehouse]
+    Storage --> Transform[Transformation: SQL, dbt, Spark]
+    Transform --> Serving[Serving: Analytics, ML, Reverse ETL]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Batch vs Streaming Tradeoff Decision Matrix
+def choose_pipeline_architecture(max_tolerable_latency_sec: int, budget_tier: str) -> str:
+    if max_tolerable_latency_sec < 60:
+        return "STREAMING_EVENT_DRIVEN"
+    elif max_tolerable_latency_sec < 3600 and budget_tier != "LOW":
+        return "MICROBATCH_5MIN"
+    else:
+        return "SCHEDULED_BATCH_HOURLY" 
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- The 5 lifecycle stages: Generation -> Ingestion -> Storage -> Transformation -> Serving.
+- Address undercurrents throughout: Security, Data Management, DataOps, Architecture, Orchestration.
+- Choose batch by default unless business value demonstrably requires sub-minute streaming latency.
+- Design every transformation step to be idempotent: re-running never produces duplicate data.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Formulate end-to-end data engineering lifecycle blueprints:
+1. Conduct objective latency vs cost tradeoff evaluations between streaming and micro-batch architectures.
+2. Design secure, cost-optimized object storage lakehouse tiering (Bronze/Silver/Gold).
+3. Implement automated orchestration DAGs embedding DataOps and governance undercurrents.
+```
+"#,
+    )
+}
+
+/// 141. analytics-realtime-olap-pipelines Skill
+pub fn analytics_realtime_olap_pipelines() -> EccSkill {
+    EccSkill::new(
+        "analytics-realtime-olap-pipelines",
+        "Real-time analytical OLAP pipelines: ClickHouse, Apache Pinot, StarRocks, vectorized columnar execution, MergeTree engines, and materialized views. Triggers: realtime-olap-pipelines, clickhouse, pinot, starrocks, realtime-olap, columnar-mergetree, materialized-views, streaming-ingestion.",
+        r#"# Analytics Realtime Olap Pipelines
+> Based on **Building Real-Time Data Pipelines - Gerard Maas & François Garillot**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- ClickHouse Real-Time OLAP DDL
+CREATE TABLE default.events_stream (
+    event_time DateTime64(3),
+    user_id UInt64,
+    event_type LowCardinality(String),
+    cost Float64
+) ENGINE = MergeTree()
+PARTITION BY toYYYYMM(event_time)
+ORDER BY (event_type, user_id, event_time)
+SETTINGS index_granularity = 8192;
+
+CREATE MATERIALIZED VIEW default.events_hourly_mv
+ENGINE = SummingMergeTree()
+PRIMARY KEY (toStartOfHour(event_time), event_type)
+AS SELECT 
+    toStartOfHour(event_time) AS hour,
+    event_type,
+    count() AS total_events,
+    sum(cost) AS total_cost
+FROM default.events_stream
+GROUP BY hour, event_type;
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Sparse Index Granularity Invariant
+Let $N$ be total row count and $G = 8192$ be index granularity:
+$$\text{Number of Index Marks} = \left\lceil \frac{N}{8192} \right\rceil$$
+Binary search over primary index marks runs in $O(\log_2(N/G))$ memory buffer operations.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Kafka[Kafka Topic Stream] --> Buffer[ClickHouse In-Memory Buffer Part]
+    Buffer --> WritePart[Write Compressed Columnar Part to Disk]
+    WritePart --> MergeParts[Background MergeTree Engine Compaction]
+    MergeParts --> ReadQuery[Sub-second Analytical Vectorized Aggregations]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+-- ClickHouse Query with SummingMergeTree final state
+SELECT hour, event_type, sum(total_events), sum(total_cost)
+FROM default.events_hourly_mv
+GROUP BY hour, event_type;
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Use MergeTree engines in ClickHouse; choose primary key ordering to maximize compression and filter skipping.
+- SummingMergeTree and AggregatingMergeTree perform pre-aggregations during background part merges.
+- LowCardinality(String) dictionary-encodes repetitive string columns, slashing memory by 80%.
+- Stream into buffer tables or ingest in micro-batches (>= 1,000 rows) to avoid creating tiny disk parts.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build sub-second real-time OLAP systems with ClickHouse/Pinot:
+1. Design optimized sparse primary keys matching the dominant query filter and group-by predicates.
+2. Deploy materialized views with AggregatingMergeTree engines for pre-computed metric rollups.
+3. Architect Kafka streaming ingestion pipelines buffering micro-batches to prevent part explosion.
+```
+"#,
+    )
+}
+
+/// 142. analytics-python-pandas-wrangling Skill
+pub fn analytics_python_pandas_wrangling() -> EccSkill {
+    EccSkill::new(
+        "analytics-python-pandas-wrangling",
+        "High-performance data wrangling in pandas: split-apply-combine, memory downcasting, categorical types, MultiIndex operations, and vectorized transformations. Triggers: python-pandas-wrangling, pandas-data-wrangling, split-apply-combine, groupby-aggregations, memory-downcasting, categorical-types, multiindex.",
+        r#"# Analytics Python Pandas Wrangling
+> Based on **Python for Data Analysis - Wes McKinney**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Analytical Aggregation Table Result
+CREATE TABLE pandas_agg_results (
+    cohort_month VARCHAR(7) NOT NULL,
+    channel VARCHAR(50) NOT NULL,
+    active_users BIGINT NOT NULL,
+    total_spend NUMERIC(14, 2) NOT NULL,
+    retention_rate_d30 NUMERIC(6, 4) NOT NULL,
+    PRIMARY KEY (cohort_month, channel)
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Split-Apply-Combine Partition Invariant
+Let dataframe $D$ be partitioned by key set $K = \{k_1, \dots, k_m\}$:
+$$\bigcup_{i=1}^m D_{k_i} = D \quad \text{and} \quad D_{k_i} \cap D_{k_j} = \emptyset \quad \forall i \neq j$$
+$$\sum_{i=1}^m |D_{k_i}| = |D|$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    RawDF[Raw Large DataFrame] --> Downcast[Downcast int64->int32, float64->float32]
+    Downcast --> Categorize[Convert Low-Cardinality object->category]
+    Categorize --> GroupBy[Split: GroupBy Cohort & Channel]
+    GroupBy --> Apply[Apply Vectorized Aggregations: sum, mean]
+    Apply --> Combine[Combine into Compact Analytical Summary]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+import pandas as pd
+
+def optimize_pandas_memory(df: pd.DataFrame) -> pd.DataFrame:
+    for col in df.columns:
+        if df[col].dtype == 'object' and df[col].nunique() / len(df) < 0.5:
+            df[col] = df[col].astype('category')
+        elif df[col].dtype == 'int64':
+            df[col] = pd.to_numeric(df[col], downcast='integer')
+        elif df[col].dtype == 'float64':
+            df[col] = pd.to_numeric(df[col], downcast='float')
+    return df
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Convert low-cardinality string columns (nunique / len < 0.5) to category to slash RAM usage.
+- Downcast int64 -> int32/int16 and float64 -> float32; cuts memory consumption up to 75%.
+- Avoid row-by-row iteration (iterrows); always use vectorized expressions or groupby agg.
+- Chain operations using pipe() for readable, functional data transformation pipelines.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build enterprise Python pandas data manipulation pipelines:
+1. Implement automated memory profiling and type downcasting routines for large-scale datasets.
+2. Build multi-level index pivot tables and windowed aggregations using vectorized groupby idioms.
+3. Benchmark and refactor bottlenecks utilizing PyArrow-backed pandas 2.0 backend engines.
+```
+"#,
+    )
+}
+
+/// 143. analytics-duckdb-embedded-olap Skill
+pub fn analytics_duckdb_embedded_olap() -> EccSkill {
+    EccSkill::new(
+        "analytics-duckdb-embedded-olap",
+        "Embedded in-memory OLAP with DuckDB: vectorized execution, direct Parquet/CSV querying without loading, zero-copy Arrow integration, and out-of-core streaming. Triggers: duckdb-embedded-olap, duckdb, embedded-olap, parquet-querying, columnar-vectorized, arrow-zero-copy, out-of-core-processing.",
+        r#"# Analytics Duckdb Embedded Olap
+> Based on **DuckDB in Action - Mark Needham & Michael Hunger**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- DuckDB Analytical Persistent Catalog
+CREATE TABLE parquet_metadata_cache (
+    file_path VARCHAR PRIMARY KEY,
+    row_count BIGINT NOT NULL,
+    min_timestamp TIMESTAMP,
+    max_timestamp TIMESTAMP,
+    file_size_bytes BIGINT NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Parquet Statistics Min/Max Pushdown
+For query with filter condition $X > c$ over Parquet row group $RG_j$:
+$$\text{If } \max_{x \in RG_j}(X) \le c, \quad \text{Skip reading entire Row Group } RG_j$$
+Eliminates I/O for non-matching data partitions entirely.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    ParquetFiles[Parquet Files on S3/Disk] --> Pushdown[Pushdown Projection & Predicates]
+    Pushdown --> VectorBatch[Stream in 2048-row Vector Chunks]
+    VectorBatch --> SIMD[SIMD Vectorized Query Execution]
+    SIMD --> ArrowOut[Zero-Copy Export to Apache Arrow]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+-- DuckDB In-Place Parquet Aggregation
+SELECT 
+    vendor_id,
+    date_trunc('month', pickup_datetime) AS month,
+    count(*) AS trip_count,
+    avg(trip_distance) AS avg_dist,
+    sum(total_amount) AS revenue
+FROM read_parquet('s3://taxi-data/parquet/*.parquet')
+WHERE passenger_count > 0
+GROUP BY ALL
+ORDER BY month, revenue DESC;
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Query Parquet files directly using read_parquet('*.parquet') without loading data into tables.
+- DuckDB executes in vectorized 2048-row chunks with automatic SIMD hardware acceleration.
+- Use GROUP BY ALL to automatically infer grouping keys from the SELECT list.
+- Interoperate with Polars, Pandas, and Arrow using zero-copy in-process pointers.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Architect embedded OLAP analytical runtimes using DuckDB:
+1. Build direct-query engines over Parquet data lakes utilizing min/max column statistics pushdown.
+2. Integrate DuckDB with Apache Arrow for zero-copy memory transfers into local ML pipelines.
+3. Configure out-of-core spilling thresholds to process datasets larger than physical RAM.
+```
+"#,
+    )
+}
+
+/// 144. analytics-polars-lazy-processing Skill
+pub fn analytics_polars_lazy_processing() -> EccSkill {
+    EccSkill::new(
+        "analytics-polars-lazy-processing",
+        "Rust-native Polars analytics: LazyFrame query planning, predicate/projection/slice pushdown, parallel expression execution, and streaming engines. Triggers: polars-lazy-processing, polars, polars-rust, lazyframe-optimizer, predicate-pushdown, projection-pushdown, arrow-native.",
+        r#"# Analytics Polars Lazy Processing
+> Based on **Data Analysis with Polars - Jeroen Janssens**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Polars Pipeline Execution Trace Log
+CREATE TABLE polars_job_metrics (
+    job_id UUID PRIMARY KEY,
+    rows_scanned BIGINT NOT NULL,
+    rows_output BIGINT NOT NULL,
+    execution_time_ms BIGINT NOT NULL,
+    peak_memory_mb DOUBLE PRECISION NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Relational Algebra Pushdown Optimization
+Let $\sigma_p$ be predicate filter and $\pi_C$ be column projection:
+$$\pi_C(\sigma_p(R)) \equiv \pi_C(\sigma_p(\pi_{C \cup \text{Vars}(p)}(R)))$$
+Polars reads only columns $C \cup \text{Vars}(p)$ from disk, discarding non-matching rows before materialization.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    LazyCode[LazyFrame: .filter().select().groupby()] --> Plan[Construct Logical Plan]
+    Plan --> Optimize[Query Optimizer: Pushdown Predicates & Projections]
+    Optimize --> Physical[Construct Physical Plan with Rayon Threads]
+    Physical --> Collect[Execute .collect() across CPU Cores]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+import polars as pl
+
+q = (
+    pl.scan_parquet("data/*.parquet")
+    .filter(pl.col("status") == "COMPLETED")
+    .group_by(["cohort", "region"])
+    .agg([
+        pl.col("revenue").sum().alias("total_rev"),
+        pl.col("user_id").n_unique().alias("unique_users")
+    ])
+    .sort("total_rev", descending=True)
+)
+# df = q.collect(streaming=True)
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Always use scan_parquet() and LazyFrame; call .collect() only at the final step.
+- Polars optimizer automatically re-orders operations: filters and column selections are pushed to source.
+- Never use Python loops or apply(); use Polars native expression contexts (select, with_columns).
+- Enable streaming=True in .collect() to process datasets that exceed available RAM.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Design high-performance analytical engines using Polars and Apache Arrow:
+1. Formulate lazy query plans utilizing projection and predicate pushdown for optimal I/O throughput.
+2. Build multi-threaded aggregation pipelines scaling linearly across CPU cores with Rayon.
+3. Deploy Polars streaming mode to execute out-of-core transforms on multi-gigabyte datasets.
+```
+"#,
+    )
+}
+
+/// 145. analytics-high-performance-compute Skill
+pub fn analytics_high_performance_compute() -> EccSkill {
+    EccSkill::new(
+        "analytics-high-performance-compute",
+        "High-performance numerical analytics: profiling bottlenecks, NumPy SIMD vectorization, Numba JIT compilation, multiprocessing, and Amdahl's Law optimization. Triggers: high-performance-compute, high-performance-python, numba-jit, numpy-vectorization, amdahls-law, cython, memory-profiling, gil-bypass.",
+        r#"# Analytics High Performance Compute
+> Based on **High Performance Python - Micha Gorelick & Ian Ozsvald**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Compute Profiling Benchmark Results
+CREATE TABLE compute_benchmarks (
+    function_name VARCHAR(100) PRIMARY KEY,
+    implementation VARCHAR(50) NOT NULL, -- PURE_PYTHON, NUMPY, NUMBA_JIT
+    execution_time_ms DOUBLE PRECISION NOT NULL,
+    speedup_factor DOUBLE PRECISION NOT NULL,
+    memory_peak_mb DOUBLE PRECISION NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Amdahl's Law Speedup Limit
+For program with parallel fraction $p$ accelerated by factor $s$ across $n$ cores:
+$$S(n) = \frac{1}{(1 - p) + \frac{p}{n}}$$
+As $n \to \infty$, maximum theoretical speedup is bounded strictly by $\frac{1}{1 - p}$.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Identify[Profile Code: cProfile, line_profiler] --> Bottleneck{Found CPU Hotspot?}
+    Bottleneck -->|Yes| Vectorize[Vectorize with NumPy SIMD]
+    Vectorize --> JIT[Compile Hot Loops with @numba.njit]
+    JIT --> Parallel[Scale over Cores via Multiprocessing / Rayon]
+    Bottleneck -->|No| IOBound[Optimize I/O: Async or Polars Streaming]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+from numba import njit, prange
+import numpy as np
+
+@njit(parallel=True, fastmath=True)
+def compute_distance_matrix(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    n = len(x)
+    dist = np.zeros((n, n), dtype=np.float64)
+    for i in prange(n):
+        for j in range(n):
+            dist[i, j] = np.sqrt((x[i] - x[j])**2 + (y[i] - y[j])**2)
+    return dist
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Measure first with cProfile and line_profiler before attempting any code optimization.
+- Replace Python loops over numerical arrays with @numba.njit(parallel=True, fastmath=True).
+- Amdahl's Law dictates that optimizing a step taking 10% of runtime can never exceed 1.11x total speedup.
+- Use zero-copy memory views and contiguous NumPy arrays (C-contiguous) for optimal CPU cache utilization.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Engineer high-throughput quantitative compute runtimes:
+1. Conduct granular profiling (CPU instructions, cache misses, memory footprint) across analytical bottlenecks.
+2. Implement JIT-compiled kernels (Numba / Cython / Rust FFI) achieving native C-speed execution.
+3. Structure parallel tasks bypassing the GIL via multiprocessing and shared-memory Arrow buffers.
+```
+"#,
+    )
+}
+
+/// 146. analytics-cli-data-science Skill
+pub fn analytics_cli_data_science() -> EccSkill {
+    EccSkill::new(
+        "analytics-cli-data-science",
+        "UNIX command-line analytics: streaming pipes, stream filtering, jq, xsv, csvkit, GNU parallel, and composable command-line pipelines. Triggers: cli-data-science, command-line-analytics, jq-json, csvkit, xsv, gnu-parallel, unix-pipes, reproducible-cli.",
+        r#"# Analytics Cli Data Science
+> Based on **Data Science on the Command Line - Jeroen Janssens**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- CLI Pipeline Run Tracking
+CREATE TABLE cli_job_executions (
+    command_hash CHAR(32) PRIMARY KEY,
+    raw_command TEXT NOT NULL,
+    exit_code INT NOT NULL,
+    input_records BIGINT NOT NULL,
+    output_records BIGINT NOT NULL,
+    execution_time_sec DOUBLE PRECISION NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Pipe Stream Invariance
+Let $f_1, f_2, \dots, f_k$ be stateless stream filter programs:
+$$(f_k \circ \dots \circ f_1)(S) = f_k(\dots(f_1(S)))$$
+Memory overhead remains strictly $O(1)$ constant buffer size regardless of stream size $|S|$.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph LR
+    Source[Raw JSON / CSV Stream] --> JQ[jq: Parse & Filter Objects]
+    JQ --> XSV[xsv: Select & Slice Columns]
+    XSV --> Parallel[parallel: Distribute across Cores]
+    Parallel --> Output[Sink: Parquet / Database]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# High-Performance CLI One-Liner Pipeline
+# Extract 99th percentile response time per endpoint from 10GB logs
+cat access.log \
+  | jq -r '[.endpoint, .response_time_ms] | @csv' \
+  | xsv select 1,2 \
+  | xsv stats --nulls \
+  | xsv table
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Compose UNIX command-line tools via standard pipes (stdin -> filter -> stdout).
+- Use xsv for blazing-fast CSV slicing, indexing, frequency counts, and joins.
+- Use jq for zero-dependency JSON extraction and reshaping.
+- Scale multi-core batch processing using GNU parallel: parallel --jobs 8 < jobs.txt.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build reproducible command-line data processing architectures:
+1. Construct streaming UNIX pipelines utilizing jq, xsv, and awk operating in constant memory.
+2. Parallelize batch processing across multi-core systems using GNU parallel.
+3. Package CLI tools into deterministic, containerized pipelines for automated CI/CD validation.
+```
+"#,
+    )
+}
+
+/// 147. analytics-tufte-visual-display Skill
+pub fn analytics_tufte_visual_display() -> EccSkill {
+    EccSkill::new(
+        "analytics-tufte-visual-display",
+        "Tufte information design: Data-Ink Ratio maximization, chartjunk elimination, Lie Factor calculation, sparklines, small multiples, and graphical integrity. Triggers: tufte-visual-display, data-ink-ratio, tufte, chartjunk-elimination, lie-factor, sparklines, small-multiples, graphical-integrity.",
+        r#"# Analytics Tufte Visual Display
+> Based on **The Visual Display of Quantitative Information - Edward R. Tufte**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Visualization Audit Metrics
+CREATE TABLE chart_integrity_audits (
+    chart_id VARCHAR(50) PRIMARY KEY,
+    chart_title VARCHAR(100) NOT NULL,
+    data_ink_ratio DOUBLE PRECISION NOT NULL CHECK (data_ink_ratio > 0.0 AND data_ink_ratio <= 1.0),
+    lie_factor DOUBLE PRECISION NOT NULL,
+    has_3d_effects BOOLEAN NOT NULL DEFAULT FALSE,
+    has_heavy_gridlines BOOLEAN NOT NULL DEFAULT FALSE,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('APPROVED', 'REJECTED_CHARTJUNK'))
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Data-Ink Ratio Invariant
+$$\text{Data-Ink Ratio} = \frac{\text{Data-Ink}}{\text{Total Ink Used to Print Graphic}} \le 1.0$$
+Objective: Maximize data-ink ratio; erase non-data-ink and redundant data-ink.
+
+### 2.2 Lie Factor Invariant
+$$\text{Lie Factor} = \frac{\text{Size of Effect Shown in Graphic}}{\text{Size of Effect in Data}} = \frac{\frac{|G_2 - G_1|}{G_1}}{\frac{|D_2 - D_1|}{D_1}}$$
+A truthful graphic must have:
+$$0.95 \le \text{Lie Factor} \le 1.05$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    RawChart[Draft Chart] --> AuditInk[Measure Non-Data Ink: 3D, Heavy Grids, Moiré]
+    AuditInk --> StripJunk[Strip Chartjunk: Remove borders, soften grid to light gray]
+    StripJunk --> CalcLie[Compute Lie Factor: Size Effect Graphic / Size Effect Data]
+    CalcLie --> ValidLie{0.95 <= Lie Factor <= 1.05?}
+    ValidLie -->|No| RedesignScale[Fix Truncated / Non-Linear Scales]
+    ValidLie -->|Yes| Approve[Publish High Data-Ink Graphic]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Tufte Lie Factor Calculator
+def calculate_lie_factor(graphic_val_1: float, graphic_val_2: float, data_val_1: float, data_val_2: float) -> float:
+    size_effect_graphic = abs(graphic_val_2 - graphic_val_1) / graphic_val_1
+    size_effect_data = abs(data_val_2 - data_val_1) / data_val_1
+    if size_effect_data == 0:
+        return 1.0
+    return size_effect_graphic / size_effect_data
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Maximize the Data-Ink Ratio: every drop of ink must represent meaningful quantitative variation.
+- Eliminate chartjunk: ban 3D pseudo-perspective, dark grid lines, decorative textures, and useless icons.
+- Maintain Lie Factor between 0.95 and 1.05; graphic variations must match data variations.
+- Use sparklines (word-sized data graphics) to show dense historical context directly within text.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Deploy Tufte quantitative visual integrity standards across business intelligence:
+1. Audit dashboard assets enforcing Data-Ink Ratio maximization and complete chartjunk elimination.
+2. Calculate and alert on Lie Factor violations caused by non-zero baselines or non-linear scaling.
+3. Implement small multiples and embedded sparklines displaying high-density temporal context.
+```
+"#,
+    )
+}
+
+/// 148. analytics-storytelling-with-data Skill
+pub fn analytics_storytelling_with_data() -> EccSkill {
+    EccSkill::new(
+        "analytics-storytelling-with-data",
+        "Visual storytelling: preattentive visual attributes, decluttering charts, Gestalt principles of perception, visual hierarchy, and focus-directing design. Triggers: storytelling-with-data, preattentive-attributes, decluttering-charts, gestalt-principles, visual-hierarchy, action-oriented-analytics.",
+        r#"# Analytics Storytelling With Data
+> Based on **Storytelling with Data - Cole Nussbaumer Knaflic**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Presentation Chart Style Specification
+CREATE TABLE viz_style_specs (
+    spec_id VARCHAR(50) PRIMARY KEY,
+    primary_color CHAR(7) NOT NULL DEFAULT '#1E40AF', -- Intentional focal accent
+    neutral_color CHAR(7) NOT NULL DEFAULT '#94A3B8', -- Muted gray background
+    alert_color CHAR(7) NOT NULL DEFAULT '#DC2626',
+    font_family VARCHAR(50) NOT NULL DEFAULT 'Inter',
+    max_accent_elements INT NOT NULL DEFAULT 3
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Sensory Memory Preattentive Threshold
+Preattentive visual features (Color Hue, Position, Size) are processed in sensory memory:
+$$T_{\text{perception}} < 200 \text{ ms}$$
+Invariant: Use at most 1 primary preattentive accent color per visual to prevent cognitive dissonance:
+$$\sum \text{Accent Hues} \le 1 \quad (\text{Rest must be muted grays})$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    RawData[Raw Visualization] --> Step1[Understand the Context & Target Audience]
+    Step1 --> Step2[Choose Appropriate Display: Bar, Line, Table]
+    Step2 --> Step3[Eliminate Clutter: Remove borders, legends, ticks]
+    Step3 --> Step4[Apply Gestalt: Proximity, Similarity, Enclosure]
+    Step4 --> Step5[Direct Attention: Apply Preattentive Color Accent]
+    Step5 --> Step6[Tell a Story: Action-Oriented Title & Annotations]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Decluttering Matplotlib Style Example
+import matplotlib.pyplot as plt
+
+def apply_storytelling_style(ax):
+    # Remove top and right spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color('#CBD5E1')
+    ax.spines['bottom'].set_color('#CBD5E1')
+    ax.tick_params(colors='#64748B')
+    ax.yaxis.grid(True, linestyle='--', alpha=0.5, color='#E2E8F0')
+    ax.xaxis.grid(False)
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Declutter: remove borders, 3D effects, dark background fills, and redundant axis labels.
+- Color must be used intentionally: mute 90% of data in light gray; highlight the focal point in bold blue/coral.
+- Replace generic chart titles with action headlines summarizing the key takeaway.
+- Leverage Gestalt principles (proximity, similarity, enclosure) to group related data points naturally.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Standardize executive visual communications using Storytelling with Data:
+1. Formulate automated chart decluttering templates removing extraneous visual noise and chart borders.
+2. Establish strict visual hierarchies utilizing preattentive color encoding (< 200ms processing threshold).
+3. Create annotated narrative charts communicating actionable insights directly to decision makers.
+```
+"#,
+    )
+}
+
+/// 149. analytics-wilke-data-visualization Skill
+pub fn analytics_wilke_data_visualization() -> EccSkill {
+    EccSkill::new(
+        "analytics-wilke-data-visualization",
+        "Visual encoding fundamentals: aesthetic mappings, sequential vs diverging vs qualitative color scales, colorblind safety (Viridis), coordinate projections, and avoiding dual y-axes. Triggers: wilke-data-visualization, color-scale-design, visual-encodings, viridis-colormap, proportions-visuals, avoid-dual-axes, wilke-viz.",
+        r#"# Analytics Wilke Data Visualization
+> Based on **Fundamentals of Data Visualization - Claus O. Wilke**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Color Scale Registry
+CREATE TABLE color_scale_palettes (
+    palette_name VARCHAR(50) PRIMARY KEY,
+    palette_type VARCHAR(20) NOT NULL CHECK (palette_type IN ('SEQUENTIAL', 'DIVERGING', 'QUALITATIVE')),
+    is_colorblind_safe BOOLEAN NOT NULL DEFAULT TRUE,
+    hex_values JSONB NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Perceptually Uniform Color Invariant
+Let $\Delta E$ be perceptual color difference in CIELAB space and $\Delta y$ be data variation:
+$$\frac{\Delta E(c_1, c_2)}{|y_1 - y_2|} \approx \text{constant}$$
+Viridis, Inferno, and Cividis maintain strict perceptual uniformity across all color vision proficiencies.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    MetricType{Metric Data Type?}
+    MetricType -->|Ordered Continuous| Sequential[Sequential Palette: Light to Dark single hue]
+    MetricType -->|Zero-Centered Deviation| Diverging[Diverging Palette: Neutral Midpoint]
+    MetricType -->|Unordered Categories| Qualitative[Qualitative Palette: Distinct Hues, Equal Luminance]
+    Sequential --> ColorblindCheck{Passes Deuteranopia Simulation?}
+    Diverging --> ColorblindCheck
+    Qualitative --> ColorblindCheck
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Safe Diverging Colormap Midpoint in Python
+import matplotlib.colors as mcolors
+
+def get_diverging_norm(vmin: float, vmax: float, vcenter: float = 0.0):
+    return mcolors.TwoSlopeNorm(vmin=vmin, vcenter=vcenter, vmax=vmax)
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Use sequential palettes for ordered magnitude; diverging for values with a natural zero midpoint.
+- Never use rainbow/jet colormaps; use perceptually uniform Viridis or ColorBrewer palettes.
+- Never use dual y-axes with different scales; plot two separate aligned panels instead.
+- Verify colorblind accessibility: 8% of men have red-green color vision deficiency.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Implement rigorous visual encoding standards across enterprise analytics:
+1. Deploy perceptually uniform color maps (Viridis, Okabe-Ito) certified for colorblind accessibility.
+2. Eliminate misleading dual y-axes by automatically decomposing multi-scale metrics into vertically aligned panels.
+3. Validate visual encodings (position, size, color, shape) matching data scale properties.
+```
+"#,
+    )
+}
+
+/// 150. analytics-few-dashboard-design Skill
+pub fn analytics_few_dashboard_design() -> EccSkill {
+    EccSkill::new(
+        "analytics-few-dashboard-design",
+        "Dashboard UX & visual monitoring: 13 common design mistakes, Bullet Graphs, single-screen display constraint, high data density, and operational alerts. Triggers: few-dashboard-design, bullet-graph, dashboard-ux, stephen-few, high-data-density, visual-monitoring, operational-dashboards.",
+        r#"# Analytics Few Dashboard Design
+> Based on **Information Dashboard Design - Stephen Few**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Bullet Graph KPI Target Configuration
+CREATE TABLE bullet_graph_configs (
+    kpi_id VARCHAR(50) PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    current_value DOUBLE PRECISION NOT NULL,
+    target_value DOUBLE PRECISION NOT NULL,
+    poor_threshold DOUBLE PRECISION NOT NULL,
+    satisfactory_threshold DOUBLE PRECISION NOT NULL,
+    max_range DOUBLE PRECISION NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Bullet Graph Spatial Efficiency Invariant
+A bullet graph displays 5 distinct quantitative dimensions within a 1D linear profile:
+$$\text{Dimensions} = \{ \text{Actual Value}, \text{Target Marker}, \text{Poor Range}, \text{Satisfactory Range}, \text{Good Range} \}$$
+$$\text{Area}_{\text{Bullet}} \le 0.25 \times \text{Area}_{\text{Radial Gauge}}$$
+Yields $> 75\%$ screen space reduction while presenting richer operational context.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph LR
+    Sub1[Poor Range: 0..60] --> Sub2[Satisfactory: 60..85]
+    Sub2 --> Sub3[Good Range: 85..100]
+    Sub1 -.-> ActualBar[Actual Performance Bar: 78]
+    Sub2 -.-> ActualBar
+    Sub2 -.-> TargetLine[Target Marker: 80]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+// Rust Bullet Graph Validator
+pub struct BulletGraph {
+    pub actual: f64,
+    pub target: f64,
+    pub poor: f64,
+    pub satisfactory: f64,
+    pub max: f64,
+}
+
+impl BulletGraph {
+    pub fn is_on_target(&self) -> bool {
+        self.actual >= self.target
+    }
+}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Single-screen constraint: all vital operational metrics must fit on one screen without scrolling.
+- Replace circular dial gauges with linear Bullet Graphs to save 75% screen space.
+- Avoid 13 classic mistakes: excessive detail, inadequate context, useless decoration, pie charts.
+- Design for glanceability: alert status (normal, warning, critical) must be instantly perceptible.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Engineer operational dashboards following Stephen Few's principles:
+1. Enforce strict single-screen non-scrolling layouts displaying high data density without clutter.
+2. Implement custom Bullet Graph components encoding actuals, comparative targets, and qualitative ranges.
+3. Establish glanceable operational hierarchies prioritizing immediate exception detection.
+```
+"#,
+    )
+}
+
+/// 151. analytics-cairo-visual-integrity Skill
+pub fn analytics_cairo_visual_integrity() -> EccSkill {
+    EccSkill::new(
+        "analytics-cairo-visual-integrity",
+        "Visual integrity and deception detection: truncated bar axes, dual-scale manipulation, cherry-picked time windows, and visual uncertainty representation. Triggers: cairo-visual-integrity, how-charts-lie, visual-deception, truncated-axis, dual-scales, zero-baseline, uncertainty-visualization.",
+        r#"# Analytics Cairo Visual Integrity
+> Based on **How Charts Lie - Alberto Cairo**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Chart Validation Rule Results
+CREATE TABLE chart_deception_audits (
+    chart_id VARCHAR(50) PRIMARY KEY,
+    chart_type VARCHAR(30) NOT NULL,
+    y_axis_starts_at_zero BOOLEAN NOT NULL,
+    is_scale_truncated BOOLEAN NOT NULL,
+    visualizes_uncertainty BOOLEAN NOT NULL,
+    audit_verdict VARCHAR(20) NOT NULL CHECK (audit_verdict IN ('PASS', 'FAIL_MISLEADING_AXIS'))
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Bar Chart Zero-Baseline Invariant
+For bar charts where magnitude is encoded as bar length/height:
+$$y_{\text{baseline}} = 0.0000$$
+Truncating the baseline ($y_{\text{min}} > 0$) distorts the visual ratio of lengths:
+$$\frac{\text{Length}(A)}{\text{Length}(B)} = \frac{A - y_{\text{min}}}{B - y_{\text{min}}} \neq \frac{A}{B}$$
+This produces visual exaggeration and violates graphical truthfulness.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Chart[Inspect Visual Artifact] --> TypeCheck{Is it a Bar Chart?}
+    TypeCheck -->|Yes| ZeroCheck{Does Y-axis start at 0?}
+    ZeroCheck -->|No| Reject[REJECT: Truncated Bar Chart creates Lie Factor]
+    ZeroCheck -->|Yes| CheckDual{Uses Dual Y-Axes?}
+    TypeCheck -->|No: Line Chart| CheckDual
+    CheckDual -->|Yes| RejectDual[REJECT: Dual axes can arbitrarily scale trends]
+    CheckDual -->|No| CheckUncertainty[Verify Confidence Bands / Margins of Error]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Automated Bar Chart Axis Validator
+def audit_bar_chart_axes(ymin: float, chart_type: str) -> bool:
+    if chart_type.lower() == 'bar':
+        if abs(ymin) > 1e-6:
+            return False # Fails zero-baseline invariant
+    return True
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Bar charts MUST always start at zero; truncating the baseline exaggerates minor differences.
+- Line charts do not require zero baseline, but the non-zero origin must be clearly labeled.
+- Never use dual axes with different scales; they allow author to manipulate visual intersection points.
+- Always display uncertainty: show confidence intervals, margin of error, or hypothetical outcome plots.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Deploy automated chart integrity linters:
+1. Build continuous CI tests scanning dashboard Vega/D3 specs for truncated bar chart baselines.
+2. Flag deceptive visualizations exhibiting cherry-picked time intervals or uncalibrated dual axes.
+3. Enforce visual uncertainty representation (gradient bands, error bars) on all predictive forecasts.
+```
+"#,
+    )
+}
+
+/// 152. analytics-d3-interactive-graphics Skill
+pub fn analytics_d3_interactive_graphics() -> EccSkill {
+    EccSkill::new(
+        "analytics-d3-interactive-graphics",
+        "Interactive web visualization: D3.js data binding pattern (enter, update, exit), mathematical scales, SVG/Canvas rendering, transitions, and force layouts. Triggers: d3-interactive-graphics, d3js, enter-update-exit, d3-scales, svg-visualization, interactive-dashboards, data-joins.",
+        r#"# Analytics D3 Interactive Graphics
+> Based on **Interactive Data Visualization for the Web - Scott Murray**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Dynamic Dashboard Widget Layout Registry
+CREATE TABLE d3_widget_configs (
+    widget_id VARCHAR(50) PRIMARY KEY,
+    chart_type VARCHAR(50) NOT NULL,
+    width INT NOT NULL,
+    height INT NOT NULL,
+    margin_json JSONB NOT NULL,
+    animation_duration_ms INT NOT NULL DEFAULT 750
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 D3 Linear Scale Mapping Invariant
+For domain $[x_{\text{min}}, x_{\text{max}}]$ and screen range $[y_{\text{min}}, y_{\text{max}}]$:
+$$f(x) = y_{\text{min}} + \frac{x - x_{\text{min}}}{x_{\text{max}} - x_{\text{min}}} (y_{\text{max}} - y_{\text{min}})$$
+Scale function preserves order and linearity:
+$$f(x_1) < f(x_2) \iff x_1 < x_2 \quad (\text{for positive range gradient})$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Data[New Data Array] --> Join[selection.data(data, d => d.id)]
+    Join --> Enter[enter(): Create new DOM nodes for new items]
+    Join --> Update[update: Transition existing DOM elements to new positions]
+    Join --> Exit[exit(): Remove DOM elements with no matching data]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+// D3.js General Update Pattern
+function updateBars(svg, data, xScale, yScale, height) {
+    const bars = svg.selectAll("rect.bar")
+        .data(data, d => d.id);
+
+    // Enter
+    bars.enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", d => xScale(d.key))
+        .attr("y", height)
+        .attr("width", xScale.bandwidth())
+        .attr("height", 0)
+        .transition().duration(750)
+        .attr("y", d => yScale(d.value))
+        .attr("height", d => height - yScale(d.value));
+
+    // Update
+    bars.transition().duration(750)
+        .attr("x", d => xScale(d.key))
+        .attr("y", d => yScale(d.value))
+        .attr("height", d => height - yScale(d.value));
+
+    // Exit
+    bars.exit()
+        .transition().duration(750)
+        .attr("height", 0)
+        .attr("y", height)
+        .remove();
+}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- The D3 data join matches DOM elements to data items using key functions (d => d.id).
+- Master the Enter-Update-Exit pattern: enter() appends, update transitions, exit() cleans up DOM.
+- Use d3.scaleLinear and d3.scaleBand to map mathematical domains to SVG pixel coordinates.
+- Separate SVG margins pattern: wrapper <g> offset by margin.left and margin.top.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build bespoke interactive data visualization applications:
+1. Implement responsive SVG/Canvas visual graphics leveraging D3.js general update patterns.
+2. Build interactive brush, pan, zoom, and force-directed graph physics simulations.
+3. Optimize DOM rendering performance using virtual canvases for datasets exceeding 50,000 points.
+```
+"#,
+    )
+}
+
+/// 153. analytics-parmenter-kpi-framework Skill
+pub fn analytics_parmenter_kpi_framework() -> EccSkill {
+    EccSkill::new(
+        "analytics-parmenter-kpi-framework",
+        "Executive KPI design: the 10/80/10 rule, distinguishing KRIs (Key Result Indicators) from true KPIs, leading vs lagging indicators, and Critical Success Factors (CSFs). Triggers: parmenter-kpi-framework, key-performance-indicators, kri-vs-kpi, leading-indicators, critical-success-factors, 10-80-10-rule.",
+        r#"# Analytics Parmenter Kpi Framework
+> Based on **Key Performance Indicators - David Parmenter**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- KPI Classification & Governance Schema
+CREATE TABLE metric_governance_registry (
+    metric_id VARCHAR(50) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    measure_type VARCHAR(10) NOT NULL CHECK (measure_type IN ('KRI', 'RI', 'PI', 'KPI')),
+    is_financial BOOLEAN NOT NULL,
+    frequency VARCHAR(20) NOT NULL CHECK (frequency IN ('REALTIME', 'DAILY', 'WEEKLY', 'MONTHLY')),
+    executive_owner VARCHAR(100) NOT NULL,
+    critical_success_factor VARCHAR(255) NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 The 10 / 80 / 10 Metric Distribution Invariant
+In a well-governed enterprise performance management framework:
+$$\text{Count}(\text{KRIs}) \approx 10, \quad \text{Count}(\text{PIs}) \approx 80, \quad \text{Count}(\text{KPIs}) \le 10$$
+True KPIs must satisfy:
+$$\text{is\_financial} = \text{FALSE} \land \text{frequency} \in \{\text{'REALTIME'}, \text{'DAILY'}\}$$
+Financial metrics (e.g. Net Profit, EBITDA) are KRIs (outcomes), never actionable leading KPIs.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Metric[Candidate Performance Metric] --> FinancialCheck{Is it Financial?}
+    FinancialCheck -->|Yes: Dollars, Margin| KRI[Classify as KRI: Key Result Indicator]
+    FinancialCheck -->|No| FrequencyCheck{Measured 24/7 or Daily?}
+    FrequencyCheck -->|No: Monthly| PI[Classify as PI: Performance Indicator]
+    FrequencyCheck -->|Yes: Real-time| ActionCheck{Does it directly drive CEO action?}
+    ActionCheck -->|No| PI
+    ActionCheck -->|Yes| KPI[Classify as True KPI: <= 10 per Organization]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+// Rust KPI Classification Rule
+pub fn classify_metric(is_financial: bool, is_daily: bool, is_ceo_actionable: bool) -> &'static str {
+    if is_financial {
+        "KRI" // Key Result Indicator (lagging outcome)
+    } else if is_daily && is_ceo_actionable {
+        "KPI" // True Key Performance Indicator (leading, non-financial)
+    } else {
+        "PI"  // Operational Performance Indicator
+    }
+}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- The 10/80/10 Rule: Max 10 KRIs (lagging results), 80 PIs (operational), 10 KPIs (critical leading).
+- True KPIs are non-financial, measured daily or 24/7, and immediately actionable by the CEO.
+- Profit, Revenue, and EBITDA are Key Result Indicators (KRIs), NOT KPIs.
+- Tie every single KPI directly to one of the organization's Critical Success Factors (CSFs).
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Architect an enterprise KPI governance and semantics layer:
+1. Audit corporate scorecard metrics against Parmenter's 10/80/10 rule, separating KRIs from true KPIs.
+2. Link every leading operational KPI directly to Critical Success Factors (CSFs).
+3. Build real-time alerting engines notifying executive leadership upon KPI boundary deviations.
+```
+"#,
+    )
+}
+
+/// 154. analytics-lean-startup-metrics Skill
+pub fn analytics_lean_startup_metrics() -> EccSkill {
+    EccSkill::new(
+        "analytics-lean-startup-metrics",
+        "Growth & product analytics: One Metric That Matters (OMTM), Pirate Metrics (AARRR: Acquisition, Activation, Retention, Referral, Revenue), cohort retention curves, and viral loops. Triggers: lean-startup-metrics, lean-analytics, omtm, aarrr-pirate-metrics, cohort-retention, viral-coefficient, actionable-vs-vanity.",
+        r#"# Analytics Lean Startup Metrics
+> Based on **Lean Analytics - Alistair Croll & Benjamin Yoskovitz**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Cohort Retention Activity Ledger
+CREATE TABLE cohort_retention_records (
+    cohort_week DATE NOT NULL,
+    user_id BIGINT NOT NULL,
+    week_number INT NOT NULL,
+    is_active INT NOT NULL CHECK (is_active IN (0, 1)),
+    PRIMARY KEY (cohort_week, user_id, week_number)
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Viral Coefficient Invariant
+Let $i$ be invitations sent per customer and $c$ be conversion rate per invite:
+$$K = i \times c$$
+If $K > 1.0$, the product experiences exponential viral growth.
+
+### 2.2 Cohort Retention Decay Invariant
+Retention of a cohort over time $t$:
+$$R(t) = R_0 \cdot t^{-\gamma} + c$$
+- If $c = 0$, retention asymptotically decays to zero (broken product).
+- If $c > 0$, the retention curve flattens, indicating Product-Market Fit (PMF).
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Acquisition[Acquisition: User lands on site] --> Activation[Activation: Happy first experience]
+    Activation --> Retention[Retention: User returns repeatedly]
+    Retention --> Referral[Referral: User invites others K = i * c]
+    Retention --> Revenue[Revenue: User makes purchase / monetizes]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Retention Flattening Calculator in Python
+import numpy as np
+
+def check_pmf_retention_flattening(retention_weeks: list[float]) -> bool:
+    # If delta between week 8 and week 12 is less than 1%, retention has flattened
+    if len(retention_weeks) >= 12:
+        return abs(retention_weeks[-1] - retention_weeks[-4]) < 0.01 and retention_weeks[-1] > 0.05
+    return False
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Focus on the One Metric That Matters (OMTM) for your current startup stage.
+- Pirate Metrics (AARRR): Acquisition -> Activation -> Retention -> Referral -> Revenue.
+- Retention is the most critical metric: if the retention curve doesn't flatten, growth will fail.
+- Viral coefficient K = invites_per_user * conversion_rate; K > 1.0 indicates viral loop.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build product analytics and growth experimentation frameworks:
+1. Construct automated cohort retention analysis matrices tracking curve stabilization and PMF.
+2. Build AARRR pirate metrics tracking pipelines differentiating actionable metrics from vanity metrics.
+3. Model viral loop coefficients (K-factor) and user referral attribution graphs.
+```
+"#,
+    )
+}
+
+/// 155. analytics-hubbard-measurement-value Skill
+pub fn analytics_hubbard_measurement_value() -> EccSkill {
+    EccSkill::new(
+        "analytics-hubbard-measurement-value",
+        "Applied Information Economics (AIE): Expected Value of Information (EVI), Expected Value of Perfect Information (EVPI), calibrated probability estimates, and Monte Carlo decision modeling. Triggers: hubbard-measurement-value, how-to-measure-anything, applied-information-economics, evpi, value-of-information, monte-carlo-decision, calibrated-estimates.",
+        r#"# Analytics Hubbard Measurement Value
+> Based on **How to Measure Anything - Douglas W. Hubbard**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Information Economics Decision Model Table
+CREATE TABLE decision_information_values (
+    decision_id VARCHAR(50) PRIMARY KEY,
+    description TEXT NOT NULL,
+    cost_of_measurement DOUBLE PRECISION NOT NULL,
+    expected_value_perfect_info DOUBLE PRECISION NOT NULL,
+    should_measure BOOLEAN NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Expected Value of Perfect Information (EVPI)
+Let $D$ be decision choices and $\theta$ be states of nature with prior distribution $P(\theta)$:
+$$\text{EVPI} = \sum_{\theta} P(\theta) \max_{d \in D} V(d, \theta) - \max_{d \in D} \sum_{\theta} P(\theta) V(d, \theta)$$
+Rule: Never spend more on data measurement than the EVPI of the decision:
+$$\text{Cost of Measurement} \le \text{EVPI}$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Problem[Define Decision & Threshold] --> Calibrate[Elicit 90% Calibrated CIs from Experts]
+    Calibrate --> MonteCarlo[Run 100,000 Monte Carlo Simulations]
+    MonteCarlo --> ComputeEVPI[Calculate EVPI: Expected Value of Perfect Info]
+    ComputeEVPI --> CheckCost{Measurement Cost < EVPI?}
+    CheckCost -->|Yes| Measure[Proceed with Targeted Empirical Measurement]
+    CheckCost -->|No| ActNow[Make Decision Immediately without more Data]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Monte Carlo EVPI Calculation in Python
+import numpy as np
+
+def calculate_evpi(net_benefits_scenario: np.ndarray, prob_success: float) -> float:
+    # Vector of payoffs under (Decision 1 vs Decision 2) across simulations
+    val_with_info = np.mean(np.maximum(net_benefits_scenario, 0.0))
+    val_without_info = max(np.mean(net_benefits_scenario), 0.0)
+    return float(val_with_info - val_without_info)
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Anything can be measured: if it matters to business, it is observable in the real world.
+- Calculate EVPI before funding analytics: never spend $50k on research if EVPI is only $10k.
+- Calibrate estimators to give true 90% confidence intervals (hits target 9 times out of 10).
+- Run Monte Carlo simulations over range distributions rather than single-point estimates.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Implement Applied Information Economics (AIE) decision systems:
+1. Build Monte Carlo decision simulation models incorporating calibrated probabilistic ranges.
+2. Compute Expected Value of Information (EVI/EVPI) to mathematically prioritize data investments.
+3. Establish training and verification scoring loops to calibrate human expert probabilistic judgments.
+```
+"#,
+    )
+}
+
+/// 156. analytics-semantic-metadata-layer Skill
+pub fn analytics_semantic_metadata_layer() -> EccSkill {
+    EccSkill::new(
+        "analytics-semantic-metadata-layer",
+        "Semantic modeling & metadata ontologies: RDF triples, RDFS/OWL formal semantics, SPARQL querying, knowledge graphs, and unified business glossaries. Triggers: semantic-metadata-layer, enterprise-knowledge-graph, rdf-triples, owl-ontologies, sparql, metadata-catalog, business-glossary.",
+        r#"# Analytics Semantic Metadata Layer
+> Based on **The Semantic Web for the Working Ontologist - Dean Allemang & James Hendler**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Relational Triple Store Schema for Semantic Graphs
+CREATE TABLE enterprise_rdf_triples (
+    subject_uri VARCHAR(255) NOT NULL,
+    predicate_uri VARCHAR(255) NOT NULL,
+    object_uri_or_literal TEXT NOT NULL,
+    is_literal BOOLEAN NOT NULL DEFAULT FALSE,
+    graph_context VARCHAR(100) NOT NULL DEFAULT 'default',
+    PRIMARY KEY (subject_uri, predicate_uri, object_uri_or_literal)
+);
+
+CREATE INDEX idx_triples_spo ON enterprise_rdf_triples(subject_uri, predicate_uri);
+CREATE INDEX idx_triples_po ON enterprise_rdf_triples(predicate_uri, object_uri_or_literal);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Transitive SubClass Inference Invariant
+Under RDFS / OWL semantics:
+$$\forall A, B, C: \quad (A \sqsubseteq B) \land (B \sqsubseteq C) \implies (A \sqsubseteq C)$$
+$$\forall x, A, B: \quad x \in A \land (A \sqsubseteq B) \implies x \in B$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph LR
+    Sub[Subject: Customer] -->|Predicate: placesOrder| Obj[Object: Order_1234]
+    Obj -->|Predicate: hasItem| Item[Object: SKU_5567]
+    Item -->|Predicate: partOfCategory| Cat[Object: Electronics]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# SPARQL Semantic Query
+# SELECT ?customer ?order ?sku WHERE {
+#   ?customer <http://schema.org/placesOrder> ?order .
+#   ?order <http://schema.org/orderedItem> ?sku .
+# }
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Model metadata as RDF triples: Subject -> Predicate -> Object.
+- OWL enables formal semantic reasoning and automatic class inference across models.
+- Enterprise knowledge graphs connect disparate database silos into a single queryable graph.
+- Establish an enterprise business glossary mapping business terms to physical database columns.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Architect enterprise semantic metadata graphs:
+1. Build RDF/OWL ontology repositories defining corporate business entities and tax-compliant taxonomies.
+2. Deploy SPARQL query endpoints and graph traversal indexes over distributed metadata stores.
+3. Automatically link technical data dictionary columns to unified business ontology concepts.
+```
+"#,
+    )
+}
+
+/// 157. analytics-semantic-metrics-governance Skill
+pub fn analytics_semantic_metrics_governance() -> EccSkill {
+    EccSkill::new(
+        "analytics-semantic-metrics-governance",
+        "Centralized metric layers and Headless BI: Cube, dbt Semantic Layer, MetricFlow, Single Source of Truth, and preventing metric drift across tools. Triggers: semantic-metrics-governance, winning-with-data, metric-layer, headless-bi, single-source-of-truth, cube-semantic-layer, metricflow.",
+        r#"# Analytics Semantic Metrics Governance
+> Based on **Winning with Data - Tomasz Tunguz & Frank Bien**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Centralized Metric Definition Repository
+CREATE TABLE semantic_metric_definitions (
+    metric_name VARCHAR(100) PRIMARY KEY,
+    metric_type VARCHAR(30) NOT NULL CHECK (metric_type IN ('SIMPLE', 'RATIO', 'CUMULATIVE', 'DERIVED')),
+    sql_formula TEXT NOT NULL,
+    underlying_table VARCHAR(100) NOT NULL,
+    owner_team VARCHAR(50) NOT NULL,
+    version INT NOT NULL DEFAULT 1,
+    is_certified BOOLEAN NOT NULL DEFAULT TRUE
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Metric Expression Uniqueness Invariant
+For any metric identifier $M$:
+$$|\text{Definitions}(M)| \equiv 1$$
+Every BI tool, API endpoint, and dashboard must resolve metric $M$ by querying the semantic layer API:
+$$\text{Value}(M) \equiv \text{Eval}(\text{Formula}(M), \text{Dataset})$$
+Eliminates contradictory revenue figures between Finance and Sales.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    DB[Data Warehouse Tables] --> Semantic[Semantic Layer: Cube / MetricFlow]
+    Semantic --> Formula[Define Revenue = SUM(net_amount)]
+    Formula --> BI[Tableau / Looker: Queries Semantic API]
+    Formula --> App[Internal Portal: Queries Semantic API]
+    Formula --> AI[LLM Agents: Queries Semantic API]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# MetricFlow / dbt Semantic Layer Spec
+# metric:
+#   name: monthly_recurring_revenue
+#   type: simple
+#   type_params:
+#     measure: subscription_amount
+#   filter: |
+#     subscription_status = 'ACTIVE' 
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Define metrics once in the semantic layer; never hardcode aggregation SQL in BI dashboards.
+- A semantic layer prevents 'metric drift' where different departments report conflicting numbers.
+- Differentiate metric types: simple sums, ratios, cumulative lifetime metrics, derived formulas.
+- Treat metrics as code: store definitions in Git, test changes, and automate deployment.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Design and deploy enterprise headless BI semantic layers:
+1. Implement centralized metric stores (Cube / dbt MetricFlow) exposing governed GraphQL/SQL APIs.
+2. Eliminate redundant ad-hoc logic by defining business dimensions and measures as version-controlled code.
+3. Integrate AI agent querying directly with semantic layer APIs for hallucination-free analytics.
+```
+"#,
+    )
+}
+
+/// 158. analytics-okr-goal-tracking Skill
+pub fn analytics_okr_goal_tracking() -> EccSkill {
+    EccSkill::new(
+        "analytics-okr-goal-tracking",
+        "Enterprise goal alignment: Objectives and Key Results (OKRs), committed vs aspirational goals, CFRs (Conversations, Feedback, Recognition), and mathematical scoring. Triggers: okr-goal-tracking, measure-what-matters, okrs, key-results, aspirational-vs-committed, cfr-alignment, goal-scoring.",
+        r#"# Analytics Okr Goal Tracking
+> Based on **Measure What Matters - John Doerr**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Enterprise OKR Tracking Table
+CREATE TABLE okr_key_results (
+    kr_id VARCHAR(50) PRIMARY KEY,
+    objective_id VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    baseline_value DOUBLE PRECISION NOT NULL,
+    target_value DOUBLE PRECISION NOT NULL,
+    current_value DOUBLE PRECISION NOT NULL,
+    is_aspirational BOOLEAN NOT NULL DEFAULT FALSE,
+    score DOUBLE PRECISION NOT NULL DEFAULT 0.0 CHECK (score >= 0.0 AND score <= 1.0)
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Key Result Progress & Scoring Invariant
+For Key Result with baseline $B$, target $T$, and current measurement $C$:
+$$\text{Score} = \text{clamp}\left( \frac{C - B}{T - B}, 0.0, 1.0 \right)$$
+For aspirational (moonshot) OKRs:
+$$\text{Optimal Performance Sweet Spot} \in [0.6, 0.7]$$
+A consistent score of 1.0 indicates under-ambitious goal setting.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Obj[Objective: Qualitative Inspiring Goal] --> KR1[Key Result 1: Quantitative Metric]
+    Obj --> KR2[Key Result 2: Quantitative Metric]
+    Obj --> KR3[Key Result 3: Quantitative Metric]
+    KR1 --> ScoreKR[Score = (Current - Base) / (Target - Base)]
+    ScoreKR --> AvgScore[Aggregate Objective Score: Sweet spot 0.7]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+// Rust OKR Scorer
+pub fn score_key_result(baseline: f64, target: f64, current: f64) -> f64 {
+    if (target - baseline).abs() < 1e-6 {
+        return 1.0;
+    }
+    let raw = (current - baseline) / (target - baseline);
+    raw.clamp(0.0, 1.0)
+}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Objectives are qualitative, inspiring, and time-bound; Key Results are strictly quantitative.
+- Every Key Result must have a number, baseline, and target date: 'measure what matters'.
+- Score KRs from 0.0 to 1.0: a score of 0.6 - 0.7 is the sweet spot for aspirational goals.
+- Separate OKR performance evaluation from salary/compensation reviews to encourage risk-taking.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build automated OKR metric tracking architectures:
+1. Connect enterprise OKR platforms directly to data warehouse analytical tables for real-time progress.
+2. Implement mathematical scoring algorithms distinguishing committed (1.0 target) vs aspirational goals.
+3. Build cascading alignment graphs tracing team key results directly to corporate objectives.
+```
+"#,
+    )
+}
+
+/// 159. analytics-hyndman-time-series Skill
+pub fn analytics_hyndman_time_series() -> EccSkill {
+    EccSkill::new(
+        "analytics-hyndman-time-series",
+        "Modern time series forecasting: STL decomposition (LOESS), exponential smoothing (Holt-Winters), forecasting benchmarks, and accuracy metrics (MASE, MAPE, RMSE). Triggers: hyndman-time-series, fpp3, time-series-forecasting, stl-decomposition, holt-winters, exponential-smoothing, mase-metric.",
+        r#"# Analytics Hyndman Time Series
+> Based on **Forecasting: Principles and Practice - Rob J. Hyndman & George Athanasopoulos**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Time Series Forecast Evaluations
+CREATE TABLE time_series_forecast_evals (
+    series_id VARCHAR(50) PRIMARY KEY,
+    model_name VARCHAR(50) NOT NULL,
+    horizon_days INT NOT NULL,
+    mae DOUBLE PRECISION NOT NULL,
+    rmse DOUBLE PRECISION NOT NULL,
+    mase DOUBLE PRECISION NOT NULL,
+    is_better_than_naive BOOLEAN NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 STL Additive Decomposition Invariant
+$$Y_t = T_t + S_t + R_t$$
+where $T_t$ is trend, $S_t$ is seasonal component, and $R_t$ is remainder.
+
+### 2.2 Mean Absolute Scaled Error (MASE)
+$$\text{MASE} = \frac{\frac{1}{h} \sum_{t=T+1}^{T+h} |Y_t - \hat{Y}_t|}{\frac{1}{T-1} \sum_{t=2}^T |Y_t - Y_{t-1}|}$$
+- $\text{MASE} < 1.0 \implies$ Model outperforms in-sample naive persistence baseline.
+- $\text{MASE} > 1.0 \implies$ Model performs worse than a simple naive forecast.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    RawSeries[Time Series Data] --> CheckSeasonality{Seasonal Periodicity?}
+    CheckSeasonality --> STL[STL Decomposition: Extract Trend & Seasonal]
+    STL --> Decompose[Model Deseasonalized Series]
+    Decompose --> HoltWinters[Fit Holt-Winters Exponential Smoothing]
+    HoltWinters --> EvalMASE[Compute MASE vs Naive Baseline]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# MASE Calculation in Python
+import numpy as np
+
+def calculate_mase(y_train: np.ndarray, y_test: np.ndarray, y_pred: np.ndarray) -> float:
+    naive_mae = np.mean(np.abs(np.diff(y_train)))
+    if naive_mae == 0:
+        return 1.0
+    model_mae = np.mean(np.abs(y_test - y_pred))
+    return float(model_mae / naive_mae)
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Decompose time series using STL (LOESS) into Trend, Seasonality, and Remainder.
+- Use MASE (Mean Absolute Scaled Error) to evaluate forecasts: MASE < 1 beats the naive forecast.
+- Always benchmark complex forecasting models against Naive and Seasonal Naive baselines.
+- Holt-Winters supports additive (constant variance) and multiplicative (proportional variance) seasonality.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Engineer scalable automated time-series forecasting pipelines:
+1. Implement STL decomposition pipelines isolating seasonal patterns and baseline trends.
+2. Build multi-model tournament runners (ETS, ARIMA, Prophet) evaluating out-of-sample MASE.
+3. Generate calibrated prediction intervals (80% and 95%) modeling demand uncertainty for operations.
+```
+"#,
+    )
+}
+
+/// 160. analytics-box-jenkins-arima Skill
+pub fn analytics_box_jenkins_arima() -> EccSkill {
+    EccSkill::new(
+        "analytics-box-jenkins-arima",
+        "Box-Jenkins time series methodology: ARIMA/SARIMA modeling, stationary differencing, ACF/PACF diagnostics, and Ljung-Box residual white-noise testing. Triggers: box-jenkins-arima, arima-modeling, stationarity-differencing, acf-pacf, ljung-box-test, white-noise-residuals, sarima.",
+        r#"# Analytics Box Jenkins Arima
+> Based on **Time Series Analysis: Forecasting and Control - George Box et al.**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- ARIMA Model Diagnostic Registry
+CREATE TABLE arima_model_diagnostics (
+    series_id VARCHAR(50) PRIMARY KEY,
+    p INT NOT NULL, -- AR order
+    d INT NOT NULL, -- Differencing order
+    q INT NOT NULL, -- MA order
+    aic DOUBLE PRECISION NOT NULL,
+    bic DOUBLE PRECISION NOT NULL,
+    ljung_box_stat DOUBLE PRECISION NOT NULL,
+    ljung_box_p_value DOUBLE PRECISION NOT NULL,
+    residuals_are_white_noise BOOLEAN NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 ARIMA(p, d, q) Mathematical Formulation
+$$(1 - \sum_{i=1}^p \phi_i B^i) (1 - B)^d Y_t = c + (1 + \sum_{j=1}^q \theta_j B^j) \epsilon_t$$
+where $B$ is the backshift operator ($B^k Y_t = Y_{t-k}$) and $\epsilon_t \sim \mathcal{N}(0, \sigma^2)$.
+
+### 2.2 Ljung-Box White Noise Diagnostic Invariant
+$$Q = n(n + 2) \sum_{k=1}^h \frac{\hat{\rho}_k^2}{n - k} \sim \chi^2(h - p - q)$$
+Residuals are pure white noise if and only if $p = P(\chi^2 \ge Q) > 0.05$.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Raw[Raw Time Series] --> StationarityCheck{ADF Test: Is Series Stationary?}
+    StationarityCheck -->|No| Difference[Difference Series d times: (1-B)^d Y_t]
+    Difference --> StationarityCheck
+    StationarityCheck -->|Yes| InspectACF[Inspect ACF & PACF to identify p, q]
+    InspectACF --> Estimate[Estimate Parameters via MLE]
+    Estimate --> Diagnostic{Ljung-Box p-value > 0.05?}
+    Diagnostic -->|No: Autocorrelated| Refit[Adjust p, q Orders]
+    Diagnostic -->|Yes: White Noise| Forecast[Generate Production Forecast]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+from statsmodels.tsa.stattools import acf
+import numpy as np
+
+def ljung_box_test(residuals: np.ndarray, lags: int = 10) -> tuple[float, float]:
+    from statsmodels.stats.diagnostic import acorr_ljungbox
+    res = acorr_ljungbox(residuals, lags=[lags], return_df=True)
+    stat = res['lb_stat'].iloc[0]
+    p_val = res['lb_pvalue'].iloc[0]
+    return float(stat), float(p_val)
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Box-Jenkins 3-stage iterative cycle: 1. Identification -> 2. Estimation -> 3. Diagnostics.
+- Difference the series d times until stationary (verify with Augmented Dickey-Fuller test).
+- PACF cuts off at lag p for AR(p); ACF cuts off at lag q for MA(q).
+- Diagnostic rule: residuals must be uncorrelated white noise (Ljung-Box test p-value > 0.05).
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build enterprise ARIMA/SARIMA econometric forecasting modules:
+1. Implement automated Box-Jenkins pipelines running ADF unit-root tests and optimal differencing.
+2. Search hyperparameter space (p, d, q, P, D, Q) minimizing AIC/BIC information criteria.
+3. Validate residual white-noise compliance with automated Ljung-Box and normality tests.
+```
+"#,
+    )
+}
+
+/// 161. analytics-anomaly-outlier-detection Skill
+pub fn analytics_anomaly_outlier_detection() -> EccSkill {
+    EccSkill::new(
+        "analytics-anomaly-outlier-detection",
+        "Multi-dimensional anomaly detection: Isolation Forests, Local Outlier Factor (LOF), Mahalanobis distance, extreme value metrics, and anomaly scoring. Triggers: anomaly-outlier-detection, isolation-forest, local-outlier-factor, outlier-analysis, extreme-value-detection, lof-score, anomaly-scores.",
+        r#"# Analytics Anomaly Outlier Detection
+> Based on **Outlier Analysis - Charu C. Aggarwal**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Anomaly Detection Alert Incidents
+CREATE TABLE anomaly_incidents (
+    incident_id UUID PRIMARY KEY,
+    entity_id VARCHAR(100) NOT NULL,
+    detector_algorithm VARCHAR(50) NOT NULL,
+    anomaly_score DOUBLE PRECISION NOT NULL CHECK (anomaly_score >= 0.0 AND anomaly_score <= 1.0),
+    is_anomaly BOOLEAN NOT NULL DEFAULT FALSE,
+    feature_contributions JSONB NOT NULL,
+    detected_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Isolation Forest Anomaly Score Invariant
+For sample size $n$ and average path length $E(h(x))$ across isolation trees:
+$$c(n) = 2 \ln(n - 1) + 0.5772156649 - \frac{2(n - 1)}{n}$$
+$$s(x, n) = 2^{-\frac{E(h(x))}{c(n)}}$$
+- If $s \to 1.0$ (path length $E(h(x)) \to 0$): Definite anomaly (isolated rapidly).
+- If $s < 0.5$: Normal observation.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    DataPoint[Incoming Multi-Dimensional Record] --> Forest[Pass through N Isolation Trees]
+    Forest --> PathLength[Measure Tree Depth to Isolate Point]
+    PathLength --> AvgDepth[Compute Mean Path Length E(h(x))]
+    AvgDepth --> Score[Compute Anomaly Score s = 2^(-E(h)/c(n))]
+    Score --> ThresholdCheck{Score > 0.60?}
+    ThresholdCheck -->|Yes| Alert[Raise High-Priority Anomaly Incident]
+    ThresholdCheck -->|No| Normal[Pass Record as Nominal]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+from sklearn.ensemble import IsolationForest
+import numpy as np
+
+def detect_outliers_isolation_forest(X: np.ndarray, contamination: float = 0.01):
+    clf = IsolationForest(contamination=contamination, random_state=42)
+    preds = clf.fit_predict(X) # -1 for outlier, 1 for inlier
+    scores = -clf.score_samples(X) # Higher score = more anomalous
+    return {"outlier_mask": preds == -1, "scores": scores}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Isolation Forest isolates anomalies using random partitioning; outliers have short path lengths.
+- Anomaly score s(x) > 0.6 indicates strong anomaly; s(x) < 0.5 indicates normal data.
+- Local Outlier Factor (LOF) compares local density of an entity to its k-nearest neighbors.
+- Use Mahalanobis distance for multivariate Gaussian data to account for inter-feature covariance.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Deploy real-time multi-variate anomaly detection microservices:
+1. Train Isolation Forest and Local Outlier Factor models across high-dimensional feature spaces.
+2. Decompose anomaly contributions to provide explainable root-cause attribution JSON payloads.
+3. Build continuous streaming anomaly monitors alerting on operational metric drifts.
+```
+"#,
+    )
+}
+
+/// 162. analytics-python-signal-processing Skill
+pub fn analytics_python_signal_processing() -> EccSkill {
+    EccSkill::new(
+        "analytics-python-signal-processing",
+        "Signal analytics & temporal algorithms: Fast Fourier Transform (FFT) spectral analysis, Dynamic Time Warping (DTW), CUSUM drift detection, and rolling digital filters. Triggers: python-signal-processing, practical-time-series, fft-spectral-analysis, dtw-dynamic-time-warping, change-point-detection, cusum-drift.",
+        r#"# Analytics Python Signal Processing
+> Based on **Practical Time Series Analysis - Aileen Nielsen**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Signal Spectral Profile Cache
+CREATE TABLE signal_spectral_peaks (
+    sensor_id VARCHAR(50) NOT NULL,
+    dominant_frequency_hz DOUBLE PRECISION NOT NULL,
+    peak_amplitude DOUBLE PRECISION NOT NULL,
+    detected_at TIMESTAMP NOT NULL,
+    PRIMARY KEY (sensor_id, dominant_frequency_hz)
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Discrete Fourier Transform (FFT)
+For discrete signal $x_0, \dots, x_{N-1}$:
+$$X_k = \sum_{n=0}^{N-1} x_n \cdot e^{-i 2\pi k n / N}$$
+Identifies hidden periodic frequencies and cyclical components in time series.
+
+### 2.2 CUSUM Change-Point Detection Invariant
+$$S_t^+ = \max(0, S_{t-1}^+ + (X_t - \mu_0) - k)$$
+Alarm triggers when $S_t^+ > h$ where $h$ is decision threshold and $k$ is allowance.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Signal[Raw Noisy Temporal Signal] --> RollingFilter[Apply Savitzky-Golay / Butterworth Filter]
+    RollingFilter --> FFT[Compute Fast Fourier Transform]
+    FFT --> FindPeaks[Extract Top Cyclical Frequencies]
+    RollingFilter --> CUSUM[Run CUSUM Cumulative Sum Drift Detector]
+    CUSUM --> DriftCheck{S_t > Threshold h?}
+    DriftCheck -->|Yes| Alert[Trigger Structural Change-Point Alarm]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+import numpy as np
+
+def cusum_detector(series: np.ndarray, target_mean: float, allowance: float = 0.5, threshold: float = 5.0) -> list[int]:
+    s_pos = 0.0
+    change_points = []
+    for t, val in enumerate(series):
+        s_pos = max(0.0, s_pos + (val - target_mean) - allowance)
+        if s_pos > threshold:
+            change_points.append(t)
+            s_pos = 0.0 # reset
+    return change_points
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Use FFT (Fast Fourier Transform) to discover hidden cyclical periodicities in time-series data.
+- CUSUM triggers alerts on mean drift: S_t = max(0, S_{t-1} + (x_t - target) - k) > h.
+- Dynamic Time Warping (DTW) measures similarity between time series of differing lengths and speeds.
+- Apply rolling window filters (Butterworth or Savitzky-Golay) to smooth high-frequency noise.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build signal processing and change-point analytics pipelines:
+1. Implement spectral decomposition using FFT and Wavelet transforms to isolate cyclical signals.
+2. Deploy real-time CUSUM change-point detectors identifying structural macroeconomic shifts.
+3. Build Dynamic Time Warping (DTW) distance matrix engines clustering customer trajectory patterns.
+```
+"#,
+    )
+}
+
+/// 163. analytics-feature-engineering-pipeline Skill
+pub fn analytics_feature_engineering_pipeline() -> EccSkill {
+    EccSkill::new(
+        "analytics-feature-engineering-pipeline",
+        "Production feature engineering: Box-Cox power transforms, target/mean encoding with empirical Bayes smoothing, quantile binning, and interaction terms. Triggers: feature-engineering-pipeline, feature-engineering, box-cox-transform, target-encoding, empirical-bayes-smoothing, quantile-binning, tfidf-encoding.",
+        r#"# Analytics Feature Engineering Pipeline
+> Based on **Feature Engineering for Machine Learning - Alice Zheng & Amanda Casari**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Target Encoding Metadata Store
+CREATE TABLE target_encoding_priors (
+    feature_name VARCHAR(100) NOT NULL,
+    category_value VARCHAR(100) NOT NULL,
+    global_mean DOUBLE PRECISION NOT NULL,
+    category_mean DOUBLE PRECISION NOT NULL,
+    category_count BIGINT NOT NULL,
+    smoothed_value DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (feature_name, category_value)
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Empirical Bayes Smoothed Target Encoding
+For category $k$ with $n_k$ observations and sample mean $\bar{y}_k$:
+$$S_k = \lambda(n_k) \bar{y}_k + (1 - \lambda(n_k)) \bar{y}_{\text{global}}$$
+$$\text{where } \lambda(n_k) = \frac{1}{1 + e^{-(n_k - m) / s}}$$
+Prevents target leakage and overfitting on rare categories.
+
+### 2.2 Box-Cox Power Transformation
+$$y^{(\lambda)} = \begin{cases} \frac{y^\lambda - 1}{\lambda} & \text{if } \lambda \neq 0 \\ \ln(y) & \text{if } \lambda = 0 \end{cases} \quad (y > 0)$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    RawCat[High-Cardinality Categorical Feature] --> OutOfFold[Split Data into K-Folds for Encoding]
+    OutOfFold --> ComputePriors[Calculate Global Mean & Category Mean]
+    ComputePriors --> Smooth[Apply Sigmoid Shrinkage Weight lambda]
+    Smooth --> Assign[Assign Smoothed Value to Out-of-Fold Partition]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+import numpy as np
+
+def empirical_bayes_target_encode(n_k: np.ndarray, y_k: np.ndarray, global_mean: float, m: float = 10.0, s: float = 2.0) -> np.ndarray:
+    # Sigmoid smoothing weight
+    weight = 1.0 / (1.0 + np.exp(-(n_k - m) / s))
+    return weight * y_k + (1.0 - weight) * global_mean
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Prevent target encoding leakage: always compute target encoding out-of-fold using cross-validation.
+- Smooth small categories toward the global prior using empirical Bayes shrinkage.
+- Apply Box-Cox or Log1p transformations to heavy-tailed continuous variables to normalize distributions.
+- Quantile binning transforms non-linear variables into uniform categorical intervals.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Architect enterprise ML feature engineering platforms:
+1. Build leak-free out-of-fold target encoding pipelines with empirical Bayes smoothing.
+2. Implement automated power transforms (Box-Cox, Yeo-Johnson) normalizing skewed feature inputs.
+3. Deploy centralized feature stores ensuring training-serving feature parity across online and offline engines.
+```
+"#,
+    )
+}
+
+/// 164. analytics-geron-ml-pipelines Skill
+pub fn analytics_geron_ml_pipelines() -> EccSkill {
+    EccSkill::new(
+        "analytics-geron-ml-pipelines",
+        "Scikit-Learn & ML production pipelines: ColumnTransformer, cross-validation tuning, ensemble algorithms (Random Forest, XGBoost), and ROC-AUC metrics. Triggers: geron-ml-pipelines, hands-on-ml, scikit-learn-pipelines, columntransformer, cross-validation-tuning, gradient-boosting, roc-auc.",
+        r#"# Analytics Geron Ml Pipelines
+> Based on **Hands-On Machine Learning - Aurélien Géron**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Trained ML Model Artifact Registry
+CREATE TABLE ml_model_artifacts (
+    model_id UUID PRIMARY KEY,
+    model_name VARCHAR(100) NOT NULL,
+    version VARCHAR(20) NOT NULL,
+    train_roc_auc DOUBLE PRECISION NOT NULL,
+    test_roc_auc DOUBLE PRECISION NOT NULL,
+    f1_score DOUBLE PRECISION NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Data Leakage Prevention Invariant
+Let $T$ be a transformer with parameters $\theta$. For dataset split $D_{\text{train}}, D_{\text{test}}$:
+$$\theta \text{ must be estimated strictly from } D_{\text{train}}: \quad \theta = \text{Fit}(D_{\text{train}})$$
+$$D_{\text{test}}^{\prime} = \text{Transform}(D_{\text{test}}, \theta)$$
+Fitting on the combined dataset $D_{\text{train}} \cup D_{\text{test}}$ produces severe optimistic bias.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    RawData[Raw Features Dataset] --> Split[Train / Test Split 80/20]
+    Split --> ColTrans[ColumnTransformer: Numerical & Categorical pipelines]
+    ColTrans --> FitTrain[fit_transform strictly on Train set]
+    FitTrain --> Estimator[Fit Gradient Boosting Classifier]
+    Estimator --> EvalTest[transform and evaluate on Test set]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.ensemble import HistGradientBoostingClassifier
+
+num_pipe = Pipeline([('scaler', StandardScaler())])
+cat_pipe = Pipeline([('encoder', OneHotEncoder(handle_unknown='ignore'))])
+
+preprocessor = ColumnTransformer([
+    ('num', num_pipe, ['age', 'income', 'credit_score']),
+    ('cat', cat_pipe, ['channel', 'state'])
+])
+
+full_model = Pipeline([
+    ('prep', preprocessor),
+    ('clf', HistGradientBoostingClassifier(random_state=42))
+])
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Wrap preprocessing and estimation inside a single sklearn Pipeline to eliminate data leakage.
+- Use ColumnTransformer to apply different transformations to numerical vs categorical features.
+- Evaluate imbalanced classifiers using ROC-AUC and Precision-Recall AUC, never accuracy alone.
+- Tune hyperparameters with RandomizedSearchCV to explore high-dimensional spaces efficiently.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build enterprise production machine learning pipelines:
+1. Deploy end-to-end Scikit-Learn pipelines utilizing ColumnTransformer preventing data leakage.
+2. Train gradient boosted ensembles with early stopping on validation metric plateaus.
+3. Export pipeline artifacts to ONNX runtimes for low-latency sub-millisecond scoring.
+```
+"#,
+    )
+}
+
+/// 165. analytics-kuhn-predictive-modeling Skill
+pub fn analytics_kuhn_predictive_modeling() -> EccSkill {
+    EccSkill::new(
+        "analytics-kuhn-predictive-modeling",
+        "Predictive modeling diagnostics: near-zero variance predictors, Variance Inflation Factor (VIF), multicollinearity handling, SMOTE class balancing, and PCA preprocessing. Triggers: kuhn-predictive-modeling, applied-predictive-modeling, near-zero-variance, variance-inflation-factor, vif, smote-class-imbalance, pca-preprocessing.",
+        r#"# Analytics Kuhn Predictive Modeling
+> Based on **Applied Predictive Modeling - Max Kuhn & Kjell Johnson**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Predictor Quality Diagnostics Cache
+CREATE TABLE predictor_quality_audits (
+    feature_name VARCHAR(100) PRIMARY KEY,
+    frequency_ratio DOUBLE PRECISION NOT NULL,
+    percent_unique DOUBLE PRECISION NOT NULL,
+    is_near_zero_variance BOOLEAN NOT NULL,
+    vif_score DOUBLE PRECISION NOT NULL,
+    action_taken VARCHAR(50) NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Variance Inflation Factor (VIF)
+For predictor $X_j$ regressed on all other $p-1$ predictors:
+$$VIF_j = \frac{1}{1 - R_j^2}$$
+- $VIF_j > 5.0$: Moderate multicollinearity.
+- $VIF_j > 10.0$: Severe collinearity; predictor coefficients become numerically unstable and must be pruned.
+
+### 2.2 Near-Zero Variance Condition
+A feature has near-zero variance if:
+$$\frac{\text{Freq}(\text{Most Common})}{\text{Freq}(\text{2nd Most Common})} > 19.0 \quad (95/5 \text{ split}) \quad \land \quad \frac{\text{Unique Count}}{N} < 0.10$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Features[Candidate Feature Matrix] --> CheckNZV{Near-Zero Variance Check}
+    CheckNZV -->|Flagged| DropNZV[Drop Predictor: Lacks Information]
+    CheckNZV -->|Pass| CheckCorr[Compute Correlation Matrix]
+    CheckCorr --> CalcVIF[Compute Variance Inflation Factor VIF]
+    CalcVIF --> VIFCheck{VIF > 10.0?}
+    VIFCheck -->|Yes| DropCollinear[Prune or Apply PCA Reduction]
+    VIFCheck -->|No| ModelReady[Feature Matrix Validated for Modeling]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Near-Zero Variance Filter in Python
+import pandas as pd
+
+def filter_near_zero_variance(df: pd.DataFrame, freq_cut: float = 95/5, unique_cut: float = 10.0) -> list[str]:
+    dropped = []
+    n = len(df)
+    for col in df.columns:
+        counts = df[col].value_counts()
+        if len(counts) <= 1:
+            dropped.append(col); continue
+        freq_ratio = counts.iloc[0] / counts.iloc[1]
+        pct_unique = (df[col].nunique() / n) * 100
+        if freq_ratio > freq_cut and pct_unique < unique_cut:
+            dropped.append(col)
+    return dropped
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Drop near-zero variance features: frequency ratio > 95/5 and unique percentage < 10%.
+- Compute Variance Inflation Factor (VIF): remove or combine features with VIF > 10.
+- Multicollinearity inflates standard errors of regression coefficients without improving predictive power.
+- Apply SMOTE (Synthetic Minority Over-sampling) strictly on training folds to address class imbalance.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Engineer robust feature preprocessing architectures:
+1. Implement automated near-zero variance and multi-collinearity filtering pipelines.
+2. Build iterative VIF reduction algorithms eliminating correlated predictors prior to linear modeling.
+3. Deploy cross-validated SMOTE and downsampling routines balancing severe class skew.
+```
+"#,
+    )
+}
+
+/// 166. analytics-elements-statistical-learning Skill
+pub fn analytics_elements_statistical_learning() -> EccSkill {
+    EccSkill::new(
+        "analytics-elements-statistical-learning",
+        "Advanced statistical learning theory: Support Vector Machines (maximal margin hyperplanes), KKT optimality conditions, kernel methods, boosting, and cost-complexity pruning. Triggers: elements-statistical-learning, esl, statistical-learning-theory, svm-margin, kernel-tricks, boosting-trees, cost-complexity-pruning.",
+        r#"# Analytics Elements Statistical Learning
+> Based on **The Elements of Statistical Learning - Trevor Hastie, Robert Tibshirani, Jerome Friedman**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Statistical Theory Algorithm Benchmarks
+CREATE TABLE learning_theory_benchmarks (
+    algorithm VARCHAR(50) PRIMARY KEY,
+    loss_function VARCHAR(50) NOT NULL,
+    generalization_bound DOUBLE PRECISION NOT NULL,
+    empirical_risk DOUBLE PRECISION NOT NULL,
+    structural_risk DOUBLE PRECISION NOT NULL
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Support Vector Machine Maximal Margin Formulation
+$$\min_{w, b, \xi} \frac{1}{2} \|w\|^2 + C \sum_{i=1}^n \xi_i$$
+subject to:
+$$y_i (w^T \phi(x_i) + b) \ge 1 - \xi_i, \quad \xi_i \ge 0 \quad \forall i$$
+Karush-Kuhn-Tucker (KKT) complementary slackness condition:
+$$\alpha_i [y_i(w^T \phi(x_i) + b) - 1 + \xi_i] = 0$$
+
+### 2.2 Cost-Complexity Tree Pruning
+$$C_\alpha(T) = R(T) + \alpha |T|$$
+where $R(T)$ is misclassification risk, $|T|$ is terminal leaf count, and $\alpha$ is complexity penalty.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Data[Input Space X] --> Kernel[Kernel Mapping: Inner Product in Hilbert Space K(x, x')]
+    Kernel --> SolveDual[Solve Dual Quadratic Optimization for alpha_i]
+    SolveDual --> SupportVectors[Identify Support Vectors: alpha_i > 0]
+    SupportVectors --> DecisionBoundary[Construct Optimal Separating Hyperplane]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Radial Basis Function (RBF) Kernel in NumPy
+import numpy as np
+
+def rbf_kernel(X1: np.ndarray, X2: np.ndarray, gamma: float = 0.1) -> np.ndarray:
+    # K(x, y) = exp(-gamma * ||x - y||^2)
+    dist_sq = np.sum(X1**2, 1).reshape(-1, 1) + np.sum(X2**2, 1) - 2 * np.dot(X1, X2.T)
+    return np.exp(-gamma * dist_sq)
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Support Vector Machines maximize the geometric margin 2 / ||w|| between classes.
+- Only data points lying on the margin (support vectors, alpha > 0) influence the decision boundary.
+- The Kernel Trick computes inner products in high-dimensional Hilbert spaces without explicit mapping.
+- Tree cost-complexity pruning balances in-sample error R(T) against tree size alpha * |T|.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Deploy advanced statistical learning algorithms:
+1. Implement maximal-margin quadratic programming solvers with soft-margin slack penalties.
+2. Build Mercer-compliant kernel functions (RBF, Polynomial) enabling non-linear boundary separation.
+3. Formulate cost-complexity pruning routines optimizing decision tree generalization limits.
+```
+"#,
+    )
+}
+
+/// 167. analytics-redman-data-quality Skill
+pub fn analytics_redman_data_quality() -> EccSkill {
+    EccSkill::new(
+        "analytics-redman-data-quality",
+        "Data quality engineering: Friday Afternoon Measurement (FAM), the 1-10-100 Rule of Ten, root-cause error prevention at point of data creation, and core DQ dimensions. Triggers: redman-data-quality, data-quality-framework, rule-of-ten, 1-10-100-rule, friday-afternoon-measurement, dq-dimensions, root-cause-prevention.",
+        r#"# Analytics Redman Data Quality
+> Based on **Data Quality: The Field Guide - Thomas C. Redman**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Friday Afternoon Measurement (FAM) Log
+CREATE TABLE fam_data_quality_audits (
+    audit_date DATE PRIMARY KEY,
+    dataset_name VARCHAR(100) NOT NULL,
+    sample_size INT NOT NULL DEFAULT 100,
+    perfect_records INT NOT NULL,
+    defective_records INT NOT NULL,
+    data_quality_percent NUMERIC(5, 2) NOT NULL,
+    primary_defect_root_cause TEXT
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 The 1-10-100 Rule of Ten Invariant
+$$\text{Cost of Data Error} = \begin{cases} \$1 & \text{Prevention at point of creation} \\ \$10 & \text{Correction in ETL / warehouse} \\ \$100+ & \text{Failure remediation in business operations} \end{cases}$$
+Economic imperative: Move validation rules upstream to data entry sources.
+
+### 2.2 FAM Quality Fraction
+For a sample of $N = 100$ records across $K$ critical attributes:
+$$DQ\% = \frac{\text{Count}(\text{Records with ZERO defects})}{100} \times 100\%$$
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    Audit[Weekly Friday Afternoon Measurement: Sample 100 Records] --> Inspect[Inspect 10-15 Critical Attributes]
+    Inspect --> CountDefects[Count Records with ANY defect]
+    CountDefects --> Score[Score DQ%: Target >= 95%]
+    Score --> TraceOrigin[Trace Defect to Root Cause Creation Point]
+    TraceOrigin --> FixSystem[Fix Source Software to prevent recurrence]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+// Rust Friday Afternoon Measurement Calculator
+pub struct FamAudit {
+    pub total_records: usize,
+    pub defective_records: usize,
+}
+
+impl FamAudit {
+    pub fn quality_percentage(&self) -> f64 {
+        if self.total_records == 0 { return 100.0; }
+        let perfect = self.total_records.saturating_sub(self.defective_records);
+        (perfect as f64 / self.total_records as f64) * 100.0
+    }
+}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Rule of Ten (1-10-100): $1 to prevent at source, $10 to fix in ETL, $100+ to remediate downstream.
+- Run Friday Afternoon Measurement (FAM): audit 100 random records weekly across core business attributes.
+- A record with a single defective field is defective; measure percentage of completely error-free records.
+- Stop cleaning data repeatedly in ETL; trace defects to the source application and prevent them there.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build enterprise data quality management systems:
+1. Implement weekly automated Friday Afternoon Measurement (FAM) sampling protocols across operational databases.
+2. Formulate upstream validation gates enforcing the 1-10-100 cost prevention rule.
+3. Build root-cause tracking incident dashboards linking warehouse errors directly to source application defects.
+```
+"#,
+    )
+}
+
+/// 168. analytics-data-observability-monitors Skill
+pub fn analytics_data_observability_monitors() -> EccSkill {
+    EccSkill::new(
+        "analytics-data-observability-monitors",
+        "Data observability architecture: 5 pillars (Freshness, Volume, Schema, Distribution, Lineage), automated anomaly alerts, and SLA breach detection. Triggers: data-observability-monitors, data-observability, 5-pillars-observability, freshness-monitoring, volume-anomalies, schema-drift, distribution-tracking, data-lineage.",
+        r#"# Analytics Data Observability Monitors
+> Based on **Data Observability - Barr Moses, Lior Gavrish, Andy Petrella**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Data Observability 5 Pillars Monitoring Store
+CREATE TABLE table_observability_monitors (
+    table_name VARCHAR(100) PRIMARY KEY,
+    last_updated_at TIMESTAMP NOT NULL,
+    freshness_sla_sec INT NOT NULL,
+    current_row_count BIGINT NOT NULL,
+    expected_row_count_mean DOUBLE PRECISION NOT NULL,
+    expected_row_count_std DOUBLE PRECISION NOT NULL,
+    schema_hash CHAR(32) NOT NULL,
+    null_rate_percent DOUBLE PRECISION NOT NULL,
+    is_freshness_breached BOOLEAN NOT NULL DEFAULT FALSE,
+    is_volume_anomalous BOOLEAN NOT NULL DEFAULT FALSE,
+    is_schema_drifted BOOLEAN NOT NULL DEFAULT FALSE
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 The 5 Pillars of Data Observability Invariants
+1. **Freshness Invariant**:
+   $$\Delta t = T_{\text{now}} - \max(T_{\text{updated}}) \le \text{SLA}_{\text{freshness}}$$
+2. **Volume Anomaly Invariant**:
+   $$Z_{\text{volume}} = \frac{|N_{\text{rows}} - \mu_{\text{volume}}|}{\sigma_{\text{volume}}} \le 3.0$$
+3. **Schema Integrity Invariant**:
+   $$\text{Hash}(\text{Schema}_{t}) \equiv \text{Hash}(\text{Schema}_{t-1})$$
+4. **Distribution Invariant**: Null rates and quantile metrics within historical control bounds.
+5. **Lineage Invariant**: Directed acyclic graph tracking upstream dependencies and downstream consumers.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    TableUpdate[Table Ingestion Completes] --> CheckFreshness[1. Freshness: Has data updated on schedule?]
+    TableUpdate --> CheckVolume[2. Volume: Is row count within 3 sigma?]
+    TableUpdate --> CheckSchema[3. Schema: Have columns changed or types altered?]
+    TableUpdate --> CheckDistribution[4. Distribution: Have null rates or values shifted?]
+    TableUpdate --> CheckLineage[5. Lineage: Update dependency graph & downstream impact]
+    CheckFreshness --> AlertEngine{Any Pillar Breached?}
+    CheckVolume --> AlertEngine
+    CheckSchema --> AlertEngine
+    CheckDistribution --> AlertEngine
+    AlertEngine -->|Yes| PagerDuty[Dispatch Immediate DataOps Alert]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+-- Freshness and Volume Automated Observability Check
+SELECT 
+    'fct_orders' AS table_name,
+    EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - MAX(updated_at))) AS freshness_delay_sec,
+    COUNT(*) AS current_row_count,
+    COUNT(*) FILTER (WHERE customer_id IS NULL) * 100.0 / COUNT(*) AS null_rate_customer
+FROM fct_orders;
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Monitor the 5 Pillars of Data Observability: Freshness, Volume, Schema, Distribution, Lineage.
+- Freshness breach alert triggers when CURRENT_TIMESTAMP - MAX(updated_at) > SLA.
+- Volume anomaly triggers when current row count deviates > 3 standard deviations from rolling mean.
+- Schema drift must block downstream pipeline jobs to prevent silent analytics corruption.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Construct an enterprise Data Observability platform:
+1. Deploy continuous monitoring daemons evaluating the 5 pillars across all production analytical tables.
+2. Build statistical volume and freshness anomaly detectors with rolling seasonal baselines.
+3. Automatically maintain and visualize end-to-end column-level lineage dependency graphs.
+```
+"#,
+    )
+}
+
+/// 169. analytics-dama-data-governance Skill
+pub fn analytics_dama_data_governance() -> EccSkill {
+    EccSkill::new(
+        "analytics-dama-data-governance",
+        "Enterprise data governance: DAMA-DMBOK wheel, Master Data Management (MDM), golden record survivorship rules, data stewardship, and metadata management. Triggers: dama-data-governance, dama-dmbok, master-data-management, mdm-golden-record, data-governance-council, data-stewardship, data-architecture-wheel.",
+        r#"# Analytics Dama Data Governance
+> Based on **DAMA-DMBOK - DAMA International**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- Master Data Management (MDM) Golden Record Store
+CREATE TABLE mdm_golden_customer (
+    golden_customer_id UUID PRIMARY KEY,
+    primary_source_system VARCHAR(50) NOT NULL,
+    source_record_id VARCHAR(100) NOT NULL,
+    consolidated_name VARCHAR(100) NOT NULL,
+    consolidated_email VARCHAR(100) NOT NULL,
+    confidence_score DOUBLE PRECISION NOT NULL CHECK (confidence_score >= 0.0 AND confidence_score <= 1.0),
+    survivorship_rule_applied VARCHAR(50) NOT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 MDM Golden Record Deterministic Survivorship Invariant
+Let entity records $R_1, \dots, R_m$ represent the same real-world identity from source systems $S_1, \dots, S_m$:
+$$\text{Value}(A_{\text{golden}}) = \text{Select}\left( \{R_i.A\}, \text{Precedence}(S_1 \succ S_2 \succ \dots \succ S_m) \lor \max(R_i.\text{timestamp}) \right)$$
+The survivorship function must be deterministic and fully auditable.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    SourceA[CRM Customer Record] --> MatchEngine[Match Engine: Fuzzy Jaro-Winkler & Exact Keys]
+    SourceB[ERP Customer Record] --> MatchEngine
+    SourceC[Billing Customer Record] --> MatchEngine
+    MatchEngine --> MatchCheck{Confidence >= 0.85?}
+    MatchCheck -->|Yes| Survivorship[Apply Survivorship Rules: Source Precedence / Recency]
+    Survivorship --> GoldenRecord[Publish Golden Record to Master Catalog]
+    MatchCheck -->|No| StewardshipQueue[Route to Human Data Steward Queue]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+// Rust MDM Survivorship Rule Engine
+pub struct SourceAttribute {
+    pub system_priority: usize, // Lower number = higher priority
+    pub timestamp: u64,
+    pub value: String,
+}
+
+pub fn resolve_golden_value(candidates: &[SourceAttribute]) -> Option<String> {
+    candidates.iter()
+        .min_by_key(|c| (c.system_priority, u64::MAX - c.timestamp))
+        .map(|c| c.value.clone())
+}
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- The DAMA-DMBOK wheel centers on Data Governance, surrounded by 10 knowledge areas.
+- Master Data Management (MDM) establishes a Single Source of Truth ('Golden Record') for core entities.
+- Survivorship rules must be deterministic: define source-of-record hierarchy or most-recent-valid-timestamp.
+- Route ambiguous identity matches below confidence threshold (e.g. < 0.85) to Data Stewards.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Architect an enterprise data governance program adhering to DAMA-DMBOK:
+1. Formulate master data golden record survivorship rules (source-of-record priority and recency).
+2. Establish a Data Governance Council charter with clear stewardship roles and RACI matrices.
+3. Deploy automated metadata catalogs tracking classification, data lineage, and retention policies.
+```
+"#,
+    )
+}
+
+/// 170. analytics-dataops-automated-testing Skill
+pub fn analytics_dataops_automated_testing() -> EccSkill {
+    EccSkill::new(
+        "analytics-dataops-automated-testing",
+        "DataOps principles: agile data analytics, CI/CD automated testing harnesses, pre-flight circuit breakers, and ephemeral development sandboxes. Triggers: dataops-automated-testing, dataops-cookbook, dataops-pipeline, data-testing-ci-cd, circuit-breaker-testing, analytical-sandboxes, automated-data-verification.",
+        r#"# Analytics Dataops Automated Testing
+> Based on **The DataOps Cookbook - Christopher Bergh et al.**
+
+## 1. Canonical Architecture & Data Modeling (DDL)
+
+```sql
+-- DataOps Pipeline Test Execution Log
+CREATE TABLE dataops_test_executions (
+    test_run_id UUID PRIMARY KEY,
+    pipeline_id VARCHAR(100) NOT NULL,
+    git_commit_sha CHAR(40) NOT NULL,
+    environment VARCHAR(20) NOT NULL CHECK (environment IN ('DEV', 'STAGING', 'PROD')),
+    tests_executed INT NOT NULL,
+    tests_passed INT NOT NULL,
+    tests_failed INT NOT NULL,
+    circuit_breaker_triggered BOOLEAN NOT NULL,
+    executed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 2. Core Mathematical Foundations & Analytical Invariants
+
+### 2.1 Production Circuit Breaker Invariant
+Let $T = \{t_1, t_2, \dots, t_k\}$ be the pre-flight assertion suite executed on staging buffer $S$:
+$$\text{If } \sum_{i=1}^k [t_i(S) = \text{FAIL}] > 0 \implies \text{TRIGGER CIRCUIT BREAKER}$$
+$$\text{Action}: \quad \text{ROLLBACK TRANSACTION} \land \text{PREVENT PROD MERGE} \land \text{ALERT}$$
+Dirty data is strictly quarantined before reaching consumer-facing tables.
+
+## 3. Pipeline Flow & State Machine Invariants
+
+```mermaid
+graph TD
+    CodeCommit[Git Commit: New Data Model] --> CI[CI Runner: Spin Up Ephemeral DuckDB / Postgres Sandbox]
+    CI --> RunTests[Execute Unit & Schema Tests]
+    RunTests --> TestResult{All Tests Pass?}
+    TestResult -->|No| BlockPR[Block Pull Request]
+    TestResult -->|Yes| Deploy[Merge to Main & Deploy to Staging]
+    Deploy --> StagingIngest[Ingest Data into Staging Buffer]
+    StagingIngest --> CircuitBreaker{Pre-flight Integrity Assertions Pass?}
+    CircuitBreaker -->|Fail| Abort[Rollback Transaction & Alert On-Call]
+    CircuitBreaker -->|Pass| Promote[Atomic Swap / Upsert into Production Tables]
+```
+
+## 4. Production Implementation Guidelines (Rust / SQL / Python)
+
+```sql
+# Python DataOps Circuit Breaker Runner
+def run_preflight_circuit_breaker(connection, checks: list[str]) -> bool:
+    cursor = connection.cursor()
+    for query in checks:
+        cursor.execute(query)
+        result = cursor.fetchone()[0]
+        if result > 0: # Check query returns count of invalid rows
+            connection.rollback()
+            return False # Circuit breaker triggered
+    connection.commit()
+    return True
+```
+
+## 5. Actionable Prompt Recipes
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Apply DataOps principles: version control all code, automate CI/CD testing, spin up isolated sandboxes.
+- Implement automated circuit breakers: abort the pipeline and rollback if pre-flight assertions fail.
+- Test both data code (unit tests in CI) and data content (integrity tests on staging data).
+- Ensure environment parity: development sandboxes must mirror production schema and constraints.
+```
+
+### 5.2 Cloud LLM Architectural Prompt (Comprehensive Engineering Blueprint)
+```markdown
+Build enterprise DataOps continuous integration and automated testing systems:
+1. Establish automated CI/CD workflows provisioning ephemeral DuckDB/PostgreSQL sandboxes on every PR.
+2. Deploy pre-flight transactional circuit breakers aborting data loads on integrity violations.
+3. Implement automated regression testing harnesses comparing production vs pull-request data diffs.
+```
+"#,
+    )
+}
+
 /// Discover and load all ECC skills from a directory (scanning both `*.md` and `<dir>/SKILL.md`)
 pub fn load_skills_from_dir(dir: impl AsRef<Path>) -> Vec<EccSkill> {
     let mut skills = Vec::new();
@@ -4561,7 +8761,12 @@ impl SkillDispatcher {
             // 3b. Trigger Matches (+100 for first, +25 subsequent, max +150)
             let mut trigger_score = 0.0f32;
             for tr in &meta.triggers {
-                if tr.len() >= 3 && lower_query.contains(tr.as_str()) {
+                let matches = if tr.len() <= 3 {
+                    words.contains(&tr.as_str())
+                } else {
+                    lower_query.contains(tr.as_str())
+                };
+                if tr.len() >= 3 && matches {
                     if trigger_score == 0.0 {
                         trigger_score += 100.0;
                     } else if trigger_score < 150.0 {
@@ -5085,7 +9290,11 @@ pub fn extract_triggers_from_text(name: &str, description: &str, explicit_trigge
     for t in explicit_triggers {
         let clean = t.trim().to_lowercase();
         if !clean.is_empty() && !triggers.contains(&clean) {
-            triggers.push(clean);
+            triggers.push(clean.clone());
+            let spaced = clean.replace('-', " ");
+            if spaced != clean && !triggers.contains(&spaced) {
+                triggers.push(spaced);
+            }
         }
     }
 
@@ -5095,7 +9304,11 @@ pub fn extract_triggers_from_text(name: &str, description: &str, explicit_trigge
         for token in trigger_part.split(&['"', '\'', ','][..]) {
             let clean = token.trim().trim_matches('.').trim().to_lowercase();
             if clean.len() >= 3 && clean.len() <= 60 && !clean.contains('\n') && !triggers.contains(&clean) {
-                triggers.push(clean);
+                triggers.push(clean.clone());
+                let spaced = clean.replace('-', " ");
+                if spaced != clean && !triggers.contains(&spaced) {
+                    triggers.push(spaced);
+                }
             }
         }
     }
@@ -5104,7 +9317,11 @@ pub fn extract_triggers_from_text(name: &str, description: &str, explicit_trigge
         for token in kw_part.split(&[',', ';', '.'][..]) {
             let clean = token.trim().trim_matches('"').trim_matches('\'').trim().to_lowercase();
             if clean.len() >= 3 && clean.len() <= 40 && !clean.contains('\n') && !triggers.contains(&clean) {
-                triggers.push(clean);
+                triggers.push(clean.clone());
+                let spaced = clean.replace('-', " ");
+                if spaced != clean && !triggers.contains(&spaced) {
+                    triggers.push(spaced);
+                }
             }
         }
     }
@@ -5233,6 +9450,20 @@ fn infer_domain(name: &str) -> String {
         ("sox", "erp"),
         ("sod", "erp"),
         ("kanban", "erp"),
+        ("analytics", "analytics"),
+        ("warehouse", "warehouse"),
+        ("olap", "olap"),
+        ("dbt", "dbt"),
+        ("statistics", "statistics"),
+        ("experimentation", "experimentation"),
+        ("streaming", "streaming"),
+        ("duckdb", "duckdb"),
+        ("polars", "polars"),
+        ("visualization", "visualization"),
+        ("metrics", "metrics"),
+        ("forecasting", "forecasting"),
+        ("observability", "observability"),
+        ("dataops", "dataops"),
     ];
     for (prefix, dom) in prefixes {
         if lower.starts_with(prefix) {
