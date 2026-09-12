@@ -511,8 +511,60 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         qual_suchman_plans_situated_actions(),
         qual_norman_things_make_us_smart(),
         qual_wiener_cybernetics(),
+        fin_koller_mckinsey_valuation(),
+        fin_damodaran_valuation(),
+        fin_brealey_corporate_finance(),
+        fin_damodaran_dark_side_valuation(),
+        fin_berk_corporate_finance(),
+        fin_penman_financial_statement_analysis(),
+        fin_schilit_financial_shenanigans(),
+        fin_graham_financial_statements(),
+        fin_oglove_quality_of_earnings(),
+        fin_fridson_financial_statement_analysis(),
+        fin_graham_security_analysis(),
+        fin_graham_intelligent_investor(),
+        fin_thorndike_the_outsiders(),
+        fin_klarman_margin_of_safety(),
+        fin_marks_the_most_important_thing(),
+        fin_tzuo_subscribed(),
+        fin_croll_lean_analytics(),
+        fin_parker_platform_revolution(),
+        fin_thiel_zero_to_one(),
+        fin_feld_venture_deals(),
+        fin_hull_options_derivatives(),
+        fin_mcneil_quantitative_risk(),
+        fin_grinold_active_portfolio(),
+        fin_cochrane_asset_pricing(),
+        fin_joshi_mathematical_finance(),
+        fin_lehalle_market_microstructure(),
+        fin_harris_trading_exchanges(),
+        fin_cartea_algorithmic_trading(),
+        fin_lewis_flash_boys(),
+        fin_hasbrouck_empirical_microstructure(),
+        fin_fabozzi_fixed_income_math(),
+        fin_fabozzi_fixed_income_handbook(),
+        fin_servigny_credit_risk(),
+        fin_moyer_distressed_debt(),
+        fin_brigo_interest_rate_models(),
+        fin_trigeorgis_real_options(),
+        fin_gaughan_mergers_acquisitions(),
+        fin_rosenbaum_investment_banking(),
+        fin_damodaran_applied_corporate_finance(),
+        fin_rappaport_creating_shareholder_value(),
+        fin_shleifer_inefficient_markets(),
+        fin_kindleberger_manias_panics_crashes(),
+        fin_shiller_irrational_exuberance(),
+        fin_montier_behavioral_finance(),
+        fin_bernstein_against_the_gods(),
+        fin_voshmgir_token_economy(),
+        fin_antonopoulos_mastering_bitcoin(),
+        fin_antonopoulos_mastering_ethereum(),
+        fin_harvey_defi_future_finance(),
+        fin_lyuu_financial_engineering(),
     ]
 }
+
+static BUILT_IN_SKILLS_CACHE: OnceLock<HashMap<String, EccSkill>> = OnceLock::new();
 
 /// Retrieve a built-in skill by name
 pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
@@ -1334,9 +1386,405 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "norbert-wiener" {
         return find_built_in_skill("qual-wiener-cybernetics");
     }
+    // Financial & Valuation Analysis Aliases (Top 50)
+    if lower == "mckinsey-valuation" {
+        return find_built_in_skill("fin-koller-mckinsey-valuation");
+    }
+    if lower == "koller" {
+        return find_built_in_skill("fin-koller-mckinsey-valuation");
+    }
+    if lower == "roic" {
+        return find_built_in_skill("fin-koller-mckinsey-valuation");
+    }
+    if lower == "damodaran" {
+        return find_built_in_skill("fin-damodaran-valuation");
+    }
+    if lower == "damodaran-valuation" {
+        return find_built_in_skill("fin-damodaran-valuation");
+    }
+    if lower == "fcff" {
+        return find_built_in_skill("fin-damodaran-valuation");
+    }
+    if lower == "fcfe" {
+        return find_built_in_skill("fin-damodaran-valuation");
+    }
+    if lower == "brealey-myers" {
+        return find_built_in_skill("fin-brealey-corporate-finance");
+    }
+    if lower == "corporate-finance" {
+        return find_built_in_skill("fin-brealey-corporate-finance");
+    }
+    if lower == "npv-rule" {
+        return find_built_in_skill("fin-brealey-corporate-finance");
+    }
+    if lower == "dark-side-valuation" {
+        return find_built_in_skill("fin-damodaran-dark-side-valuation");
+    }
+    if lower == "startup-valuation" {
+        return find_built_in_skill("fin-damodaran-dark-side-valuation");
+    }
+    if lower == "law-of-one-price" {
+        return find_built_in_skill("fin-berk-corporate-finance");
+    }
+    if lower == "berk-demarzo" {
+        return find_built_in_skill("fin-berk-corporate-finance");
+    }
+    if lower == "penman" {
+        return find_built_in_skill("fin-penman-financial-statement-analysis");
+    }
+    if lower == "clean-surplus" {
+        return find_built_in_skill("fin-penman-financial-statement-analysis");
+    }
+    if lower == "residual-earnings" {
+        return find_built_in_skill("fin-penman-financial-statement-analysis");
+    }
+    if lower == "financial-shenanigans" {
+        return find_built_in_skill("fin-schilit-financial-shenanigans");
+    }
+    if lower == "schilit" {
+        return find_built_in_skill("fin-schilit-financial-shenanigans");
+    }
+    if lower == "accounting-fraud" {
+        return find_built_in_skill("fin-schilit-financial-shenanigans");
+    }
+    if lower == "interpretation-financial-statements" {
+        return find_built_in_skill("fin-graham-financial-statements");
+    }
+    if lower == "ncav" {
+        return find_built_in_skill("fin-graham-financial-statements");
+    }
+    if lower == "quality-of-earnings" {
+        return find_built_in_skill("fin-oglove-quality-of-earnings");
+    }
+    if lower == "oglove" {
+        return find_built_in_skill("fin-oglove-quality-of-earnings");
+    }
+    if lower == "fridson" {
+        return find_built_in_skill("fin-fridson-financial-statement-analysis");
+    }
+    if lower == "dscr" {
+        return find_built_in_skill("fin-fridson-financial-statement-analysis");
+    }
+    if lower == "ebitda-flaws" {
+        return find_built_in_skill("fin-fridson-financial-statement-analysis");
+    }
+    if lower == "security-analysis" {
+        return find_built_in_skill("fin-graham-security-analysis");
+    }
+    if lower == "margin-of-safety" {
+        return find_built_in_skill("fin-graham-security-analysis");
+    }
+    if lower == "intelligent-investor" {
+        return find_built_in_skill("fin-graham-intelligent-investor");
+    }
+    if lower == "benjamin-graham" {
+        return find_built_in_skill("fin-graham-intelligent-investor");
+    }
+    if lower == "mr-market" {
+        return find_built_in_skill("fin-graham-intelligent-investor");
+    }
+    if lower == "the-outsiders" {
+        return find_built_in_skill("fin-thorndike-the-outsiders");
+    }
+    if lower == "thorndike" {
+        return find_built_in_skill("fin-thorndike-the-outsiders");
+    }
+    if lower == "capital-allocation" {
+        return find_built_in_skill("fin-thorndike-the-outsiders");
+    }
+    if lower == "seth-klarman" {
+        return find_built_in_skill("fin-klarman-margin-of-safety");
+    }
+    if lower == "howard-marks" {
+        return find_built_in_skill("fin-marks-the-most-important-thing");
+    }
+    if lower == "second-level-thinking" {
+        return find_built_in_skill("fin-marks-the-most-important-thing");
+    }
+    if lower == "subscribed" {
+        return find_built_in_skill("fin-tzuo-subscribed");
+    }
+    if lower == "tien-tzuo" {
+        return find_built_in_skill("fin-tzuo-subscribed");
+    }
+    if lower == "arr" {
+        return find_built_in_skill("fin-tzuo-subscribed");
+    }
+    if lower == "nrr" {
+        return find_built_in_skill("fin-tzuo-subscribed");
+    }
+    if lower == "lean-analytics" {
+        return find_built_in_skill("fin-croll-lean-analytics");
+    }
+    if lower == "ltv-cac" {
+        return find_built_in_skill("fin-croll-lean-analytics");
+    }
+    if lower == "cac-payback" {
+        return find_built_in_skill("fin-croll-lean-analytics");
+    }
+    if lower == "platform-revolution" {
+        return find_built_in_skill("fin-parker-platform-revolution");
+    }
+    if lower == "gmv" {
+        return find_built_in_skill("fin-parker-platform-revolution");
+    }
+    if lower == "take-rate" {
+        return find_built_in_skill("fin-parker-platform-revolution");
+    }
+    if lower == "zero-to-one" {
+        return find_built_in_skill("fin-thiel-zero-to-one");
+    }
+    if lower == "peter-thiel" {
+        return find_built_in_skill("fin-thiel-zero-to-one");
+    }
+    if lower == "venture-deals" {
+        return find_built_in_skill("fin-feld-venture-deals");
+    }
+    if lower == "brad-feld" {
+        return find_built_in_skill("fin-feld-venture-deals");
+    }
+    if lower == "cap-table" {
+        return find_built_in_skill("fin-feld-venture-deals");
+    }
+    if lower == "liquidation-preference" {
+        return find_built_in_skill("fin-feld-venture-deals");
+    }
+    if lower == "black-scholes" {
+        return find_built_in_skill("fin-hull-options-derivatives");
+    }
+    if lower == "options-futures" {
+        return find_built_in_skill("fin-hull-options-derivatives");
+    }
+    if lower == "john-hull" {
+        return find_built_in_skill("fin-hull-options-derivatives");
+    }
+    if lower == "put-call-parity" {
+        return find_built_in_skill("fin-hull-options-derivatives");
+    }
+    if lower == "greeks" {
+        return find_built_in_skill("fin-hull-options-derivatives");
+    }
+    if lower == "quantitative-risk" {
+        return find_built_in_skill("fin-mcneil-quantitative-risk");
+    }
+    if lower == "var" {
+        return find_built_in_skill("fin-mcneil-quantitative-risk");
+    }
+    if lower == "cvar" {
+        return find_built_in_skill("fin-mcneil-quantitative-risk");
+    }
+    if lower == "expected-shortfall" {
+        return find_built_in_skill("fin-mcneil-quantitative-risk");
+    }
+    if lower == "active-portfolio-management" {
+        return find_built_in_skill("fin-grinold-active-portfolio");
+    }
+    if lower == "information-ratio" {
+        return find_built_in_skill("fin-grinold-active-portfolio");
+    }
+    if lower == "fundamental-law" {
+        return find_built_in_skill("fin-grinold-active-portfolio");
+    }
+    if lower == "asset-pricing" {
+        return find_built_in_skill("fin-cochrane-asset-pricing");
+    }
+    if lower == "cochrane" {
+        return find_built_in_skill("fin-cochrane-asset-pricing");
+    }
+    if lower == "stochastic-discount-factor" {
+        return find_built_in_skill("fin-cochrane-asset-pricing");
+    }
+    if lower == "mathematical-finance" {
+        return find_built_in_skill("fin-joshi-mathematical-finance");
+    }
+    if lower == "mark-joshi" {
+        return find_built_in_skill("fin-joshi-mathematical-finance");
+    }
+    if lower == "monte-carlo-pricing" {
+        return find_built_in_skill("fin-joshi-mathematical-finance");
+    }
+    if lower == "market-microstructure" {
+        return find_built_in_skill("fin-lehalle-market-microstructure");
+    }
+    if lower == "limit-order-book" {
+        return find_built_in_skill("fin-lehalle-market-microstructure");
+    }
+    if lower == "lob" {
+        return find_built_in_skill("fin-lehalle-market-microstructure");
+    }
+    if lower == "trading-and-exchanges" {
+        return find_built_in_skill("fin-harris-trading-exchanges");
+    }
+    if lower == "larry-harris" {
+        return find_built_in_skill("fin-harris-trading-exchanges");
+    }
+    if lower == "adverse-selection" {
+        return find_built_in_skill("fin-harris-trading-exchanges");
+    }
+    if lower == "algorithmic-trading" {
+        return find_built_in_skill("fin-cartea-algorithmic-trading");
+    }
+    if lower == "almgren-chriss" {
+        return find_built_in_skill("fin-cartea-algorithmic-trading");
+    }
+    if lower == "vwap" {
+        return find_built_in_skill("fin-cartea-algorithmic-trading");
+    }
+    if lower == "twap" {
+        return find_built_in_skill("fin-cartea-algorithmic-trading");
+    }
+    if lower == "flash-boys" {
+        return find_built_in_skill("fin-lewis-flash-boys");
+    }
+    if lower == "latency-arbitrage" {
+        return find_built_in_skill("fin-lewis-flash-boys");
+    }
+    if lower == "hft" {
+        return find_built_in_skill("fin-lewis-flash-boys");
+    }
+    if lower == "empirical-microstructure" {
+        return find_built_in_skill("fin-hasbrouck-empirical-microstructure");
+    }
+    if lower == "kyles-lambda" {
+        return find_built_in_skill("fin-hasbrouck-empirical-microstructure");
+    }
+    if lower == "hasbrouck" {
+        return find_built_in_skill("fin-hasbrouck-empirical-microstructure");
+    }
+    if lower == "fixed-income-mathematics" {
+        return find_built_in_skill("fin-fabozzi-fixed-income-math");
+    }
+    if lower == "duration-convexity" {
+        return find_built_in_skill("fin-fabozzi-fixed-income-math");
+    }
+    if lower == "fabozzi" {
+        return find_built_in_skill("fin-fabozzi-fixed-income-handbook");
+    }
+    if lower == "credit-risk" {
+        return find_built_in_skill("fin-servigny-credit-risk");
+    }
+    if lower == "merton-model" {
+        return find_built_in_skill("fin-servigny-credit-risk");
+    }
+    if lower == "distressed-debt" {
+        return find_built_in_skill("fin-moyer-distressed-debt");
+    }
+    if lower == "absolute-priority-rule" {
+        return find_built_in_skill("fin-moyer-distressed-debt");
+    }
+    if lower == "fulcrum-security" {
+        return find_built_in_skill("fin-moyer-distressed-debt");
+    }
+    if lower == "interest-rate-models" {
+        return find_built_in_skill("fin-brigo-interest-rate-models");
+    }
+    if lower == "hull-white" {
+        return find_built_in_skill("fin-brigo-interest-rate-models");
+    }
+    if lower == "real-options" {
+        return find_built_in_skill("fin-trigeorgis-real-options");
+    }
+    if lower == "trigeorgis" {
+        return find_built_in_skill("fin-trigeorgis-real-options");
+    }
+    if lower == "mergers-and-acquisitions" {
+        return find_built_in_skill("fin-gaughan-mergers-acquisitions");
+    }
+    if lower == "m-and-a" {
+        return find_built_in_skill("fin-gaughan-mergers-acquisitions");
+    }
+    if lower == "investment-banking" {
+        return find_built_in_skill("fin-rosenbaum-investment-banking");
+    }
+    if lower == "rosenbaum-pearl" {
+        return find_built_in_skill("fin-rosenbaum-investment-banking");
+    }
+    if lower == "lbo" {
+        return find_built_in_skill("fin-rosenbaum-investment-banking");
+    }
+    if lower == "applied-corporate-finance" {
+        return find_built_in_skill("fin-damodaran-applied-corporate-finance");
+    }
+    if lower == "creating-shareholder-value" {
+        return find_built_in_skill("fin-rappaport-creating-shareholder-value");
+    }
+    if lower == "sva" {
+        return find_built_in_skill("fin-rappaport-creating-shareholder-value");
+    }
+    if lower == "inefficient-markets" {
+        return find_built_in_skill("fin-shleifer-inefficient-markets");
+    }
+    if lower == "limits-of-arbitrage" {
+        return find_built_in_skill("fin-shleifer-inefficient-markets");
+    }
+    if lower == "manias-panics-crashes" {
+        return find_built_in_skill("fin-kindleberger-manias-panics-crashes");
+    }
+    if lower == "kindleberger" {
+        return find_built_in_skill("fin-kindleberger-manias-panics-crashes");
+    }
+    if lower == "irrational-exuberance" {
+        return find_built_in_skill("fin-shiller-irrational-exuberance");
+    }
+    if lower == "cape-ratio" {
+        return find_built_in_skill("fin-shiller-irrational-exuberance");
+    }
+    if lower == "behavioral-finance" {
+        return find_built_in_skill("fin-montier-behavioral-finance");
+    }
+    if lower == "against-the-gods" {
+        return find_built_in_skill("fin-bernstein-against-the-gods");
+    }
+    if lower == "token-economy" {
+        return find_built_in_skill("fin-voshmgir-token-economy");
+    }
+    if lower == "tokenomics" {
+        return find_built_in_skill("fin-voshmgir-token-economy");
+    }
+    if lower == "mastering-bitcoin" {
+        return find_built_in_skill("fin-antonopoulos-mastering-bitcoin");
+    }
+    if lower == "utxo" {
+        return find_built_in_skill("fin-antonopoulos-mastering-bitcoin");
+    }
+    if lower == "mastering-ethereum" {
+        return find_built_in_skill("fin-antonopoulos-mastering-ethereum");
+    }
+    if lower == "evm" {
+        return find_built_in_skill("fin-antonopoulos-mastering-ethereum");
+    }
+    if lower == "eip-1559" {
+        return find_built_in_skill("fin-antonopoulos-mastering-ethereum");
+    }
+    if lower == "defi" {
+        return find_built_in_skill("fin-harvey-defi-future-finance");
+    }
+    if lower == "automated-market-maker" {
+        return find_built_in_skill("fin-harvey-defi-future-finance");
+    }
+    if lower == "amm" {
+        return find_built_in_skill("fin-harvey-defi-future-finance");
+    }
+    if lower == "constant-product" {
+        return find_built_in_skill("fin-harvey-defi-future-finance");
+    }
+    if lower == "financial-engineering" {
+        return find_built_in_skill("fin-lyuu-financial-engineering");
+    }
+    if lower == "bankers-rounding" {
+        return find_built_in_skill("fin-lyuu-financial-engineering");
+    }
 
 
-    all_built_in_skills().into_iter().find(|s| s.name == lower)
+
+    let map = BUILT_IN_SKILLS_CACHE.get_or_init(|| {
+        let mut m = HashMap::new();
+        for s in all_built_in_skills() {
+            m.insert(s.name.clone(), s);
+        }
+        m
+    });
+    map.get(&lower).cloned()
 }
 
 /// 1. TDD Workflow Skill
@@ -9113,7 +9561,7 @@ pub fn estimate_tokens(text: &str) -> usize {
 }
 
 pub const SKILLS_CACHE_MAGIC: u32 = 0x54475331; // "TGS1"
-pub const SKILLS_CACHE_VERSION: u32 = 4;
+pub const SKILLS_CACHE_VERSION: u32 = 5;
 
 /// Binary serialized cache container for fast cold startup (< 2ms)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -10910,6 +11358,8 @@ fn tokenize(text: &str) -> Vec<String> {
 fn infer_domain(name: &str) -> String {
     let lower = name.to_lowercase();
     let prefixes = [
+        ("fin-", "finance"),
+        ("fin", "finance"),
         ("qual-", "behavioral"),
         ("qual", "behavioral"),
         ("beh-", "behavioral"),
@@ -17448,6 +17898,2011 @@ tgs ecc skills -q \"qual-wiener-cybernetics\"
 
 # Execute automated qualitative & behavioral audit
 cargo test --test qual_skills_brutal_tests
+```
+"#,
+    )
+}
+
+
+// =========================================================================
+// Financial & Valuation Analysis Skills Built-in Implementations (Top 50)
+// =========================================================================
+
+/// 321. fin-koller-mckinsey-valuation Skill
+pub fn fin_koller_mckinsey_valuation() -> EccSkill {
+    EccSkill::new(
+        "fin-koller-mckinsey-valuation",
+        "Enterprise discounted cash flow (DCF) valuation: Return on Invested Capital (ROIC), economic profit, WACC derivation, continuing value, and value creation drivers.",
+        r#"---
+name: fin-koller-mckinsey-valuation
+description: \"Enterprise discounted cash flow (DCF) valuation: Return on Invested Capital (ROIC), economic profit, WACC derivation, continuing value, and value creation drivers.\"
+triggers: ["mckinsey-valuation", "tim-koller", "enterprise-dcf", "roic", "economic-profit", "wacc", "continuing-value", "nopat"]
+---
+
+# fin-koller-mckinsey-valuation
+> Based on **Valuation: Measuring and Managing the Value of Companies - McKinsey & Company (Tim Koller, Marc Goedhart, David Wessels)**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Calculate Free Cash Flow to Firm (FCFF) explicitly as: NOPAT + D&A - Delta NWC - CapEx.**\n2. **ALWAYS: Economic value is created only when Return on Invested Capital (ROIC) exceeds Weighted Average Cost of Capital (WACC).**\n3. **NEVER: Use EBITDA or Net Income as a substitute for free cash flow in corporate valuation models.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model enterprise valuation using discounted FCFF at WACC. Validate that economic profit is positive only when ROIC > WACC.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using EBITDA multiples without accounting for CapEx reinvestment.**\n- **Discounting equity cash flows by WACC.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-koller-mckinsey-valuation\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 322. fin-damodaran-valuation Skill
+pub fn fin_damodaran_valuation() -> EccSkill {
+    EccSkill::new(
+        "fin-damodaran-valuation",
+        "Corporate valuation mechanics: Cost of capital, equity risk premiums (ERP), cash flows to firm (FCFF) vs equity (FCFE), and terminal value models.",
+        r#"---
+name: fin-damodaran-valuation
+description: \"Corporate valuation mechanics: Cost of capital, equity risk premiums (ERP), cash flows to firm (FCFF) vs equity (FCFE), and terminal value models.\"
+triggers: ["aswath-damodaran", "damodaran-valuation", "fcff", "fcfe", "cost-of-capital", "cost-of-equity", "beta-unlevering", "equity-risk-premium"]
+---
+
+# fin-damodaran-valuation
+> Based on **Damodaran on Valuation: Security Analysis for Investment and Corporate Finance - Aswath Damodaran**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Match the discount rate strictly to the cash flow: discount FCFF by WACC, and discount FCFE by the Cost of Equity (r_e).**\n2. **ALWAYS: Unlever and relever equity betas using Hamada's equation: Beta_L = Beta_U * (1 + (1 - T) * (D/E)).**\n3. **NEVER: Apply Cost of Equity to firm cash flows or WACC to equity cash flows.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Ensure mathematical consistency in DCF calculations: pair firm cash flows with WACC, and equity cash flows with CAPM Cost of Equity.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Mixing cash flows to firm with cost of equity.**\n- **Using historical betas without debt-unlevering adjustments.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-damodaran-valuation\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 323. fin-brealey-corporate-finance Skill
+pub fn fin_brealey_corporate_finance() -> EccSkill {
+    EccSkill::new(
+        "fin-brealey-corporate-finance",
+        "Foundations of corporate financial theory: Net Present Value (NPV) rule, capital budgeting, Modigliani-Miller theorems, and agency costs.",
+        r#"---
+name: fin-brealey-corporate-finance
+description: \"Foundations of corporate financial theory: Net Present Value (NPV) rule, capital budgeting, Modigliani-Miller theorems, and agency costs.\"
+triggers: ["brealey-myers", "corporate-finance", "npv-rule", "capital-budgeting", "modigliani-miller", "internal-rate-of-return", "hurdle-rate"]
+---
+
+# fin-brealey-corporate-finance
+> Based on **Principles of Corporate Finance - Richard A. Brealey, Stewart C. Myers, Franklin Allen**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Prioritize Net Present Value (NPV) as the primary capital allocation decision rule, rejecting projects with NPV <= 0.**\n2. **ALWAYS: Detect and alert on multiple Internal Rates of Return (IRR) when cash flows exhibit non-conventional sign changes.**\n3. **NEVER: Rely on payback period or unadjusted accounting rate of return for capital budgeting decisions.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement capital budgeting engines using NPV as the primary decision metric. Provide multiple-IRR detection when cash flows flip signs.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Accepting projects based on IRR when IRR exceeds hurdle rate but NPV is negative.**\n- **Ignoring the time value of money with simple payback periods.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-brealey-corporate-finance\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 324. fin-damodaran-dark-side-valuation Skill
+pub fn fin_damodaran_dark_side_valuation() -> EccSkill {
+    EccSkill::new(
+        "fin-damodaran-dark-side-valuation",
+        "Valuing high-uncertainty assets: Pre-revenue tech startups, distressed debt, cyclical firms, and failure probability weighting.",
+        r#"---
+name: fin-damodaran-dark-side-valuation
+description: \"Valuing high-uncertainty assets: Pre-revenue tech startups, distressed debt, cyclical firms, and failure probability weighting.\"
+triggers: ["dark-side-valuation", "startup-valuation", "distressed-valuation", "failure-probability", "reinvestment-rate", "survival-model"]
+---
+
+# fin-damodaran-dark-side-valuation
+> Based on **The Dark Side of Valuation: Valuing Young, Distressed, and Complex Businesses - Aswath Damodaran**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Discount startup valuations by explicit survival probabilities: Value = V_going_concern * p + V_liquidation * (1 - p).**\n2. **ALWAYS: Bound terminal growth rates by the risk-free rate or the long-term risk-free GDP growth rate.**\n3. **NEVER: Extrapolate exponential revenue growth into terminal periods without margin mean-reversion and reinvestment drag.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model startup valuations with dynamic failure probability weighting and realistic reinvestment rates (g = Reinvestment Rate * ROIC).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming 100% startup survival in 10-year forecast models.**\n- **Projecting terminal growth rates higher than GDP growth.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-damodaran-dark-side-valuation\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 325. fin-berk-corporate-finance Skill
+pub fn fin_berk_corporate_finance() -> EccSkill {
+    EccSkill::new(
+        "fin-berk-corporate-finance",
+        "Modern corporate finance: The Law of One Price, no-arbitrage condition, capital structure trade-off theory, and dividend policy.",
+        r#"---
+name: fin-berk-corporate-finance
+description: \"Modern corporate finance: The Law of One Price, no-arbitrage condition, capital structure trade-off theory, and dividend policy.\"
+triggers: ["berk-demarzo", "law-of-one-price", "no-arbitrage", "capital-structure-tradeoff", "dividend-irrelevance", "effective-tax-shield"]
+---
+
+# fin-berk-corporate-finance
+> Based on **Corporate Finance - Jonathan Berk & Peter DeMarzo**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce the Law of One Price across synthetic asset packages; equivalent cash flows must possess identical market valuations.**\n2. **ALWAYS: Value debt tax shields by discounting interest tax savings at the cost of debt (r_d) or unlevered cost of capital.**\n3. **NEVER: Model leverage increases as costless value creation without factoring in financial distress costs.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Verify absence of arbitrage across financial packages: enforce the Law of One Price and calibrate capital structure tradeoffs.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Allowing synthetic options or cash flows to price differently than their component parts.**\n- **Treating debt financing as having zero distress cost.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-berk-corporate-finance\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 326. fin-penman-financial-statement-analysis Skill
+pub fn fin_penman_financial_statement_analysis() -> EccSkill {
+    EccSkill::new(
+        "fin-penman-financial-statement-analysis",
+        "Accounting-based valuation: Clean surplus accounting, residual earnings model, distinguishing operating activities from financing activities.",
+        r#"---
+name: fin-penman-financial-statement-analysis
+description: \"Accounting-based valuation: Clean surplus accounting, residual earnings model, distinguishing operating activities from financing activities.\"
+triggers: ["stephen-penman", "clean-surplus", "residual-earnings", "operating-vs-financing", "book-value-growth", "accrual-accounting"]
+---
+
+# fin-penman-financial-statement-analysis
+> Based on **Financial Statement Analysis and Security Valuation - Stephen H. Penman**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce Clean Surplus Accounting: Book Value_t = Book Value_{t-1} + Net Income_t - Dividends_t.**\n2. **ALWAYS: Strictly separate Operating Assets/Liabilities from Financing Assets/Liabilities on the balance sheet.**\n3. **NEVER: Route transactions through equity adjustments (OCI) without maintaining residual earnings reconciliation.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Enforce clean surplus relation across simulated ledger statements: preserve mathematical identity between balance sheet equity and net income.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Burying financing assets inside operating working capital.**\n- **Ignoring dirty surplus items that bypass the income statement.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-penman-financial-statement-analysis\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 327. fin-schilit-financial-shenanigans Skill
+pub fn fin_schilit_financial_shenanigans() -> EccSkill {
+    EccSkill::new(
+        "fin-schilit-financial-shenanigans",
+        "Forensic accounting: Detecting earnings manipulation, cash flow gimmicks, premature revenue recognition, and hidden liabilities.",
+        r#"---
+name: fin-schilit-financial-shenanigans
+description: \"Forensic accounting: Detecting earnings manipulation, cash flow gimmicks, premature revenue recognition, and hidden liabilities.\"
+triggers: ["howard-schilit", "financial-shenanigans", "accounting-fraud", "earnings-manipulation", "dso-jump", "premature-revenue", "cash-flow-shenanigans"]
+---
+
+# fin-schilit-financial-shenanigans
+> Based on **Financial Shenanigans: How to Detect Accounting Gimmicks & Fraud in Financial Reports - Howard M. Schilit, Jeremy Perler, Yoni Engelhart**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Trigger forensic audit alerts when Accounts Receivable grows significantly faster than Revenue (Delta AR > Delta Revenue).**\n2. **ALWAYS: Reconcile Operating Cash Flow against Net Income; chronic divergence indicates aggressive accruals or artificial boosting.**\n3. **NEVER: Recognize revenue before contract obligations are irrevocably delivered and collection is reasonably assured.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Build forensic audit rules: flag divergence between operating cash flows and net income, sudden jumps in DSO, and off-balance-sheet liabilities.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Booking revenue upon contract signature before service delivery.**\n- **Capitalizing routine operating expenses as intangible software assets.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-schilit-financial-shenanigans\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 328. fin-graham-financial-statements Skill
+pub fn fin_graham_financial_statements() -> EccSkill {
+    EccSkill::new(
+        "fin-graham-financial-statements",
+        "Classic financial ratio analysis: Balance sheet solvency, working capital adequacy, current/quick ratios, and Net Current Asset Value (NCAV).",
+        r#"---
+name: fin-graham-financial-statements
+description: \"Classic financial ratio analysis: Balance sheet solvency, working capital adequacy, current/quick ratios, and Net Current Asset Value (NCAV).\"
+triggers: ["graham-meredith", "interpretation-financial-statements", "ncav", "net-current-asset-value", "working-capital-adequacy", "quick-ratio", "current-ratio"]
+---
+
+# fin-graham-financial-statements
+> Based on **The Interpretation of Financial Statements - Benjamin Graham & Spencer B. Meredith**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Calculate Current Ratio (Current Assets / Current Liabilities >= 2.0) and Quick Ratio (>= 1.0) for solvency verification.**\n2. **ALWAYS: Determine Net Current Asset Value (NCAV) by subtracting total liabilities and preferred stock from current assets.**\n3. **NEVER: Count goodwill or unamortized intangible assets in tangible book value evaluations.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Compute conservative solvency metrics: isolate Net Current Asset Value (NCAV) and strip all intangible assets in downside credit evaluations.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Including goodwill in liquid asset buffers.**\n- **Allowing current liabilities to exceed current assets without liquidity warnings.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-graham-financial-statements\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 329. fin-oglove-quality-of-earnings Skill
+pub fn fin_oglove_quality_of_earnings() -> EccSkill {
+    EccSkill::new(
+        "fin-oglove-quality-of-earnings",
+        "Earnings quality analysis: Operating cash flow vs reported net income, inventory buildup red flags, tax rate distortions, and non-recurring windfalls.",
+        r#"---
+name: fin-oglove-quality-of-earnings
+description: \"Earnings quality analysis: Operating cash flow vs reported net income, inventory buildup red flags, tax rate distortions, and non-recurring windfalls.\"
+triggers: ["thornton-oglove", "quality-of-earnings", "cash-conversion-ratio", "inventory-buildup", "accrual-quality", "non-recurring-gains"]
+---
+
+# fin-oglove-quality-of-earnings
+> Based on **Quality of Earnings - Thornton L. O'Glove**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Calculate the Cash Conversion Quality as CFO / Net Income; a ratio < 1.0 indicates low earnings quality.**\n2. **ALWAYS: Strip non-operating, non-recurring gains (asset sales, legal settlements) from normalized operating earnings.**\n3. **NEVER: Treat deferred tax reversals or one-time tax credits as permanent reductions in the effective tax rate.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Compute earnings quality index: continuously compare operating cash flow to net income and strip non-recurring windfalls from normalized run-rates.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Celebrating record net income when operating cash flow is deeply negative.**\n- **Extrapolating one-time asset sales into future earnings projections.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-oglove-quality-of-earnings\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 330. fin-fridson-financial-statement-analysis Skill
+pub fn fin_fridson_financial_statement_analysis() -> EccSkill {
+    EccSkill::new(
+        "fin-fridson-financial-statement-analysis",
+        "Credit and cash flow analysis: Flaws of EBITDA, debt service coverage ratio (DSCR), capital structure stress testing, and cash flow waterfall modeling.",
+        r#"---
+name: fin-fridson-financial-statement-analysis
+description: \"Credit and cash flow analysis: Flaws of EBITDA, debt service coverage ratio (DSCR), capital structure stress testing, and cash flow waterfall modeling.\"
+triggers: ["martin-fridson", "fridson-alvarez", "ebitda-flaws", "dscr", "debt-service-coverage", "cash-flow-available-debt-service", "cfads"]
+---
+
+# fin-fridson-financial-statement-analysis
+> Based on **Financial Statement Analysis: A Practitioner's Guide - Martin S. Fridson & Fernando Alvarez**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Model debt service capacity using Cash Flow Available for Debt Service (CFADS) after mandatory maintenance CapEx.**\n2. **ALWAYS: Require a minimum Debt Service Coverage Ratio (DSCR) of >= 1.25 for non-speculative debt issuance.**\n3. **NEVER: Underwrite debt lines based solely on adjusted EBITDA without modeling working capital drains.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Construct debt service coverage models using cash available for debt service (CFADS). Restrict credit limits if DSCR < 1.25.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Relying on EBITDA as a cash flow proxy in capital-intensive industries.**\n- **Ignoring working capital absorption during revenue expansion.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-fridson-financial-statement-analysis\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 331. fin-graham-security-analysis Skill
+pub fn fin_graham_security_analysis() -> EccSkill {
+    EccSkill::new(
+        "fin-graham-security-analysis",
+        "The foundational bible of value investing: Intrinsic value, margin of safety, liquidation value (net-nets), bond covenants, and earning power.",
+        r#"---
+name: fin-graham-security-analysis
+description: \"The foundational bible of value investing: Intrinsic value, margin of safety, liquidation value (net-nets), bond covenants, and earning power.\"
+triggers: ["graham-dodd", "security-analysis", "margin-of-safety", "intrinsic-value", "net-net", "earning-power", "liquidation-value"]
+---
+
+# fin-graham-security-analysis
+> Based on **Security Analysis - Benjamin Graham & David L. Dodd**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce a strict Margin of Safety (minimum 30% discount between conservative intrinsic value and entry price).**\n2. **ALWAYS: Calculate Net-Net Working Capital value: Cash + 0.75*AR + 0.5*Inventory - Total Liabilities.**\n3. **NEVER: Treat price momentum or market enthusiasm as a substitute for verifiable asset backing and earning power.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Incorporate mandatory margin of safety thresholds into asset valuation pipelines: execute buy signals only when price is discounted >= 30% below intrinsic floor.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Buying assets at full intrinsic value with zero margin of safety.**\n- **Relying on projected future growth rather than proven historical earning power.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-graham-security-analysis\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 332. fin-graham-intelligent-investor Skill
+pub fn fin_graham_intelligent_investor() -> EccSkill {
+    EccSkill::new(
+        "fin-graham-intelligent-investor",
+        "Defensive vs enterprising investing: Mr. Market allegory, formula investing, mechanical dollar-cost averaging, and price vs value dichotomy.",
+        r#"---
+name: fin-graham-intelligent-investor
+description: \"Defensive vs enterprising investing: Mr. Market allegory, formula investing, mechanical dollar-cost averaging, and price vs value dichotomy.\"
+triggers: ["benjamin-graham", "intelligent-investor", "mr-market", "defensive-investor", "enterprising-investor", "dollar-cost-averaging", "portfolio-rebalancing"]
+---
+
+# fin-graham-intelligent-investor
+> Based on **The Intelligent Investor - Benjamin Graham**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Implement algorithmic portfolio rebalancing driven by fixed allocation bands (e.g. 50/50 stock/bond with rebalance triggers at +/- 5%).**\n2. **ALWAYS: Treat market quotations as offers from 'Mr. Market' to be exploited, never as statements of intrinsic truth.**\n3. **NEVER: Allow automated investment workflows to chase market prices during speculative run-ups.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design disciplined programmatic rebalancing engines: rebalance asset weights based on predetermined mechanical thresholds, neutralizing market sentiment.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Abandoning rebalancing rules during market euphoria.**\n- **Panic selling automated portfolios at the bottom of market drawdowns.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-graham-intelligent-investor\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 333. fin-thorndike-the-outsiders Skill
+pub fn fin_thorndike_the_outsiders() -> EccSkill {
+    EccSkill::new(
+        "fin-thorndike-the-outsiders",
+        "Capital allocation mastery: Per-share cash flow focus, opportunistic share repurchases, debt paydown, decentralized operations, and tax optimization.",
+        r#"---
+name: fin-thorndike-the-outsiders
+description: \"Capital allocation mastery: Per-share cash flow focus, opportunistic share repurchases, debt paydown, decentralized operations, and tax optimization.\"
+triggers: ["william-thorndike", "the-outsiders", "capital-allocation", "per-share-cash-flow", "share-buybacks", "decentralized-capital", "fcf-per-share"]
+---
+
+# fin-thorndike-the-outsiders
+> Based on **The Outsiders: Eight Unconventional CEOs and Their Radically Rational Blueprint for Success - William N. Thorndike Jr.**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Measure corporate performance on a per-share basis: Free Cash Flow Per Share (FCF / Fully Diluted Shares).**\n2. **ALWAYS: Simulate share repurchases only when market stock price is demonstrably discounted below intrinsic business value.**\n3. **NEVER: Reward gross revenue growth that dilutes per-share cash flow.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Track corporate capital allocation KPIs: compute Free Cash Flow Per Share and trigger buyback simulations when market price falls below intrinsic value.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Executing share buybacks at market peak valuations to offset option dilution.**\n- **Prioritizing top-line revenue while per-share cash flow shrinks.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-thorndike-the-outsiders\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 334. fin-klarman-margin-of-safety Skill
+pub fn fin_klarman_margin_of_safety() -> EccSkill {
+    EccSkill::new(
+        "fin-klarman-margin-of-safety",
+        "Risk-averse value investing: Downside protection, complexity arbitrage, forced sellers, illiquidity discounts, and cash as an option.",
+        r#"---
+name: fin-klarman-margin-of-safety
+description: \"Risk-averse value investing: Downside protection, complexity arbitrage, forced sellers, illiquidity discounts, and cash as an option.\"
+triggers: ["seth-klarman", "margin-of-safety-klarman", "forced-sellers", "downside-protection", "complexity-arbitrage", "illiquidity-discount", "cash-optionality"]
+---
+
+# fin-klarman-margin-of-safety
+> Based on **Margin of Safety: Risk-Averse Value Investing Strategies for the Thoughtful Investor - Seth A. Klarman**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Stress-test portfolio valuations against worst-case liquidations with 30-50% illiquidity haircuts and credit freezes.**\n2. **ALWAYS: Maintain a dedicated cash reserve as a perpetual call option on emerging distressed market dislocations.**\n3. **NEVER: Rely on market liquidity or short-term debt refinancing during periods of systemic market distress.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Execute liquidation scenario stress-tests: model portfolio value under 40% illiquidity haircuts and credit freeze constraints.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming 100% portfolio liquidity in thinly traded secondary markets.**\n- **Deploying 100% of capital at market tops with zero liquidity cushion.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-klarman-margin-of-safety\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 335. fin-marks-the-most-important-thing Skill
+pub fn fin_marks_the_most_important_thing() -> EccSkill {
+    EccSkill::new(
+        "fin-marks-the-most-important-thing",
+        "Second-level thinking: Understanding market cycles, the asymmetry of risk, contrarian investing, and combating psychological pendulum swings.",
+        r#"---
+name: fin-marks-the-most-important-thing
+description: \"Second-level thinking: Understanding market cycles, the asymmetry of risk, contrarian investing, and combating psychological pendulum swings.\"
+triggers: ["howard-marks", "the-most-important-thing", "second-level-thinking", "market-cycles", "risk-asymmetry", "permanent-capital-loss", "contrarian-investing"]
+---
+
+# fin-marks-the-most-important-thing
+> Based on **The Most Important Thing: Uncommon Sense for the Thoughtful Investor - Howard Marks**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Measure risk as the probability of permanent capital loss and Maximum Drawdown (MDD), rather than symmetrical volatility (beta).**\n2. **ALWAYS: Employ second-level thinking: ask 'what expectations are baked into current market price, and what if the consensus is wrong?'**\n3. **NEVER: Equate low historical volatility with safety when structural leverage is elevated.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement second-level risk metrics: calculate Sortino ratio, Conditional Value-at-Risk (CVaR), and historical drawdown duration.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Treating standard deviation as the sole measure of investment risk.**\n- **Assuming market trends will continue indefinitely without cyclical reversion.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-marks-the-most-important-thing\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 336. fin-tzuo-subscribed Skill
+pub fn fin_tzuo_subscribed() -> EccSkill {
+    EccSkill::new(
+        "fin-tzuo-subscribed",
+        "The subscription economy: ARR, MRR, churn dynamics, Net Revenue Retention (NRR), expansion revenue, and customer lifetime relationship economics.",
+        r#"---
+name: fin-tzuo-subscribed
+description: \"The subscription economy: ARR, MRR, churn dynamics, Net Revenue Retention (NRR), expansion revenue, and customer lifetime relationship economics.\"
+triggers: ["tien-tzuo", "subscribed", "subscription-economy", "arr", "mrr", "nrr", "net-revenue-retention", "expansion-revenue", "churn-rate"]
+---
+
+# fin-tzuo-subscribed
+> Based on **Subscribed: Why the Subscription Model Will Be Your Company's Future - Tien Tzuo & Gabe Weisert**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Isolate Monthly/Annual Recurring Revenue (MRR/ARR) strictly from one-time professional services or non-recurring setup fees.**\n2. **ALWAYS: Calculate Net Revenue Retention (NRR): (Beginning ARR + Expansion - Contraction - Churn) / Beginning ARR.**\n3. **NEVER: Bundle one-time consulting or custom engineering payments into ARR run-rate multipliers.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Separate recurring subscription billing streams from one-off charges. Calculate Net Revenue Retention (NRR) and cohort expansion dynamics.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Multiplying one-time contract setup fees by 12 to inflate reported ARR.**\n- **Ignoring logo churn when net dollar retention is temporarily high.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-tzuo-subscribed\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 337. fin-croll-lean-analytics Skill
+pub fn fin_croll_lean_analytics() -> EccSkill {
+    EccSkill::new(
+        "fin-croll-lean-analytics",
+        "Startup unit economics: Customer Acquisition Cost (CAC), Lifetime Value (LTV), CAC payback period, cohort analysis, and virality metrics.",
+        r#"---
+name: fin-croll-lean-analytics
+description: \"Startup unit economics: Customer Acquisition Cost (CAC), Lifetime Value (LTV), CAC payback period, cohort analysis, and virality metrics.\"
+triggers: ["alistair-croll", "lean-analytics", "ltv-cac", "cac-payback", "unit-economics", "cohort-analysis", "customer-acquisition-cost", "churn-decay"]
+---
+
+# fin-croll-lean-analytics
+> Based on **Lean Analytics: Use Data to Build a Better Startup Faster - Alistair Croll & Benjamin Yoskovitz**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce healthy unit economics thresholds: LTV / CAC >= 3.0 and CAC Payback Period <= 12 months.**\n2. **ALWAYS: Calculate LTV using gross profit margin: LTV = (ARPU * Gross Margin %) / Churn Rate.**\n3. **NEVER: Calculate LTV using gross top-line revenue without deducting the cost of goods sold (COGS) and cloud hosting fees.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Calculate unit economics using margin-adjusted LTV. Enforce automated budget throttling if CAC payback period exceeds 14 months.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Reporting LTV based on gross revenue instead of gross margin.**\n- **Excluding fully loaded sales and marketing payroll from CAC.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-croll-lean-analytics\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 338. fin-parker-platform-revolution Skill
+pub fn fin_parker_platform_revolution() -> EccSkill {
+    EccSkill::new(
+        "fin-parker-platform-revolution",
+        "Platform economics: Two-sided network effects, platform take rates, Gross Merchandise Value (GMV), transaction velocity, and cross-side subsidies.",
+        r#"---
+name: fin-parker-platform-revolution
+description: \"Platform economics: Two-sided network effects, platform take rates, Gross Merchandise Value (GMV), transaction velocity, and cross-side subsidies.\"
+triggers: ["geoffrey-parker", "platform-revolution", "two-sided-markets", "network-effects", "gmv", "take-rate", "cross-side-subsidies", "marketplace-economics"]
+---
+
+# fin-parker-platform-revolution
+> Based on **Platform Revolution: How Networked Markets Are Transforming the Economy - Geoffrey G. Parker, Marshall W. Van Alstyne, Sangeet Paul Choudary**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Distinguish Gross Merchandise Value (GMV) from Net Platform Revenue: Net Revenue = GMV * Take Rate.**\n2. **ALWAYS: Verify that the marginal lifetime value of subsidized platform participants exceeds the cost of cross-side subsidies.**\n3. **NEVER: Book GMV as corporate revenue; book only the earned platform take-rate commission.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model platform marketplace economics: separate GMV volume from net revenue take-rates, tracking cohort contribution margins per side of the market.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Reporting gross marketplace volume as GAAP revenue.**\n- **Providing unsustainable customer acquisition subsidies with zero long-term retention.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-parker-platform-revolution\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 339. fin-thiel-zero-to-one Skill
+pub fn fin_thiel_zero_to_one() -> EccSkill {
+    EccSkill::new(
+        "fin-thiel-zero-to-one",
+        "Monopoly economics: Power law distributions in venture capital, high-margin defensible moats, and terminal cash flow duration.",
+        r#"---
+name: fin-thiel-zero-to-one
+description: \"Monopoly economics: Power law distributions in venture capital, high-margin defensible moats, and terminal cash flow duration.\"
+triggers: ["peter-thiel", "zero-to-one", "power-law-venture", "monopoly-economics", "terminal-cash-flows", "venture-power-law", "defensible-moat"]
+---
+
+# fin-thiel-zero-to-one
+> Based on **Zero to One: Notes on Startups, or How to Build the Future - Peter Thiel & Blake Masters**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Model early-stage venture returns under power law distributions (the single best investment outperforms all others combined).**\n2. **ALWAYS: Value technology companies based on durable cash flow generation 10 to 15 years in the future, assessing moat defensibility.**\n3. **NEVER: Treat early-stage venture outcomes as normally distributed Gaussian variables.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Construct long-duration venture valuation models with terminal cash flow sensitivity matrices, highlighting power-law portfolio distributions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Diversifying venture portfolios into mediocrity assuming normal distributions.**\n- **Valuing tech companies on near-term multiple arbitrage.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-thiel-zero-to-one\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 340. fin-feld-venture-deals Skill
+pub fn fin_feld_venture_deals() -> EccSkill {
+    EccSkill::new(
+        "fin-feld-venture-deals",
+        "Venture capital financing: Capitalization tables, pre-money vs post-money, liquidation preferences (participating vs non-participating), option pool shuffle, and anti-dilution.",
+        r#"---
+name: fin-feld-venture-deals
+description: \"Venture capital financing: Capitalization tables, pre-money vs post-money, liquidation preferences (participating vs non-participating), option pool shuffle, and anti-dilution.\"
+triggers: ["brad-feld", "jason-mendelson", "venture-deals", "cap-table", "liquidation-preference", "option-pool-shuffle", "anti-dilution", "convertible-notes"]
+---
+
+# fin-feld-venture-deals
+> Based on **Venture Deals: Be Smarter Than Your Lawyer and Venture Capitalist - Brad Feld & Jason Mendelson**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Model capitalization tables with explicit liquidation preference waterfalls (seniority, participation caps, and common conversion thresholds).**\n2. **ALWAYS: Calculate founder ownership dilution accounting for the pre-money unallocated option pool expansion.**\n3. **NEVER: Model post-money ownership without applying broad-based weighted-average anti-dilution adjustments in down-rounds.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Build capitalization table engines with full waterfall simulation: calculate proceeds across multiple exit valuations, accounting for seniority and anti-dilution.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Promising employee equity percentages without specifying the fully diluted denominator.**\n- **Ignoring participating preferred liquidation overhang.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-feld-venture-deals\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 341. fin-hull-options-derivatives Skill
+pub fn fin_hull_options_derivatives() -> EccSkill {
+    EccSkill::new(
+        "fin-hull-options-derivatives",
+        "The derivatives pricing benchmark: Black-Scholes-Merton model, Greeks (Delta, Gamma, Theta, Vega, Rho), put-call parity, binomial trees, and risk-neutral valuation.",
+        r#"---
+name: fin-hull-options-derivatives
+description: \"The derivatives pricing benchmark: Black-Scholes-Merton model, Greeks (Delta, Gamma, Theta, Vega, Rho), put-call parity, binomial trees, and risk-neutral valuation.\"
+triggers: ["john-hull", "black-scholes", "put-call-parity", "options-greeks", "risk-neutral-valuation", "implied-volatility", "binomial-option-pricing"]
+---
+
+# fin-hull-options-derivatives
+> Based on **Options, Futures, and Other Derivatives - John C. Hull**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce Put-Call Parity as a strict invariant across option models: Call + K * exp(-rT) = Put + Spot_0.**\n2. **ALWAYS: Calculate continuous analytical partial derivatives for option Greeks (Delta, Gamma, Theta, Vega, Rho) rather than noisy finite differences.**\n3. **NEVER: Price options using real-world asset drift rates (mu); pricing must occur under the risk-neutral measure (r).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Price financial derivatives using analytical Black-Scholes formulas, verifying put-call parity bounds and computing continuous Greek sensitivities.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using finite difference approximations for simple vanilla Greeks.**\n- **Violating put-call parity bounds in pricing or market-making models.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-hull-options-derivatives\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 342. fin-mcneil-quantitative-risk Skill
+pub fn fin_mcneil_quantitative_risk() -> EccSkill {
+    EccSkill::new(
+        "fin-mcneil-quantitative-risk",
+        "Mathematical risk management: Value at Risk (VaR), Expected Shortfall (CVaR), copulas for tail dependence, and Extreme Value Theory (EVT) for fat tails.",
+        r#"---
+name: fin-mcneil-quantitative-risk
+description: \"Mathematical risk management: Value at Risk (VaR), Expected Shortfall (CVaR), copulas for tail dependence, and Extreme Value Theory (EVT) for fat tails.\"
+triggers: ["alexander-mcneil", "quantitative-risk-management", "var", "cvar", "expected-shortfall", "extreme-value-theory", "copulas", "tail-dependence"]
+---
+
+# fin-mcneil-quantitative-risk
+> Based on **Quantitative Risk Management: Concepts, Techniques and Tools - Alexander J. McNeil, Rüdiger Frey, Paul Embrechts**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Complement Value-at-Risk (VaR) with Expected Shortfall (CVaR) at the 99% confidence level to capture tail losses.**\n2. **ALWAYS: Model multivariate asset distributions using copulas that accommodate tail dependence; financial returns are fat-tailed and non-Gaussian.**\n3. **NEVER: Assume asset return independence or linear correlation structures during systemic market crises.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement multi-asset risk engines using historical simulation and Extreme Value Theory (EVT). Report 99% Expected Shortfall (CVaR) alongside VaR.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Relying solely on Gaussian VaR models that underestimate 5-sigma crash risk.**\n- **Assuming asset correlations remain constant during market sell-offs.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-mcneil-quantitative-risk\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 343. fin-grinold-active-portfolio Skill
+pub fn fin_grinold_active_portfolio() -> EccSkill {
+    EccSkill::new(
+        "fin-grinold-active-portfolio",
+        "Quantitative portfolio management: The Fundamental Law of Active Management (IR = IC * sqrt(Breadth)), information ratio, benchmark tracking error, and factor models.",
+        r#"---
+name: fin-grinold-active-portfolio
+description: \"Quantitative portfolio management: The Fundamental Law of Active Management (IR = IC * sqrt(Breadth)), information ratio, benchmark tracking error, and factor models.\"
+triggers: ["grinold-kahn", "active-portfolio-management", "fundamental-law", "information-ratio", "information-coefficient", "tracking-error", "factor-investing"]
+---
+
+# fin-grinold-active-portfolio
+> Based on **Active Portfolio Management: A Quantitative Approach for Providing Superior Returns and Controlling Risk - Richard C. Grinold & Ronald N. Kahn**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Calibrate quantitative trading strategies to maximize the Information Ratio (IR = Information Coefficient * sqrt(Breadth)).**\n2. **ALWAYS: Measure active portfolio risk strictly against the benchmark using Ex-Ante Tracking Error.**\n3. **NEVER: Concentrate portfolio risk in correlated bets while assuming high statistical breadth.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Audit trading algorithms against the Fundamental Law of Active Management: measure realized Information Coefficient (IC) and calculate portfolio Information Ratio.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Claiming 10,000 independent bets per day when all bets are exposed to a single common risk factor.**\n- **Neglecting benchmark tracking error.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-grinold-active-portfolio\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 344. fin-cochrane-asset-pricing Skill
+pub fn fin_cochrane_asset_pricing() -> EccSkill {
+    EccSkill::new(
+        "fin-cochrane-asset-pricing",
+        "Unified asset pricing theory: Stochastic Discount Factor (SDF: p = E[m * x]), consumption CAPM, factor pricing models, and Generalized Method of Moments (GMM).",
+        r#"---
+name: fin-cochrane-asset-pricing
+description: \"Unified asset pricing theory: Stochastic Discount Factor (SDF: p = E[m * x]), consumption CAPM, factor pricing models, and Generalized Method of Moments (GMM).\"
+triggers: ["john-cochrane", "asset-pricing", "stochastic-discount-factor", "sdf", "consumption-capm", "gmm", "pricing-kernel"]
+---
+
+# fin-cochrane-asset-pricing
+> Based on **Asset Pricing - John H. Cochrane**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Frame multi-asset valuation within a coherent stochastic discount factor framework: Price = E[m * Payoff].**\n2. **ALWAYS: Ensure that the pricing kernel (m) is strictly non-negative across all states of the world to eliminate arbitrage.**\n3. **NEVER: Price assets using ad-hoc multiple heuristics that violate the fundamental theorem of asset pricing.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Validate multi-asset pricing models against the Stochastic Discount Factor (SDF) condition: ensure pricing kernels remain non-negative to guarantee absence of arbitrage.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assigning negative state prices in lattice models.**\n- **Using inconsistent discount factors across assets with identical risk exposures.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-cochrane-asset-pricing\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 345. fin-joshi-mathematical-finance Skill
+pub fn fin_joshi_mathematical_finance() -> EccSkill {
+    EccSkill::new(
+        "fin-joshi-mathematical-finance",
+        "Practical financial engineering: Martingale pricing, change of numeraire, Black-Scholes PDE solutions, and Monte Carlo simulation with variance reduction.",
+        r#"---
+name: fin-joshi-mathematical-finance
+description: \"Practical financial engineering: Martingale pricing, change of numeraire, Black-Scholes PDE solutions, and Monte Carlo simulation with variance reduction.\"
+triggers: ["mark-joshi", "mathematical-finance", "martingale-pricing", "change-of-numeraire", "monte-carlo-pricing", "antithetic-variates", "variance-reduction"]
+---
+
+# fin-joshi-mathematical-finance
+> Based on **The Concepts and Practice of Mathematical Finance - Mark S. Joshi**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Drift-adjust underlying processes to the risk-free rate under the risk-neutral measure in Monte Carlo simulations.**\n2. **ALWAYS: Implement variance reduction techniques (antithetic variates, control variates) to accelerate Monte Carlo convergence.**\n3. **NEVER: Mix real-world drift parameters (mu) into risk-neutral pricing engines.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement Monte Carlo pricing engines with risk-neutral drift calibration, antithetic variates for variance reduction, and exact martingale verification.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Running 10 million raw Monte Carlo paths without variance reduction.**\n- **Using real-world expected returns to price derivative claims.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-joshi-mathematical-finance\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 346. fin-lehalle-market-microstructure Skill
+pub fn fin_lehalle_market_microstructure() -> EccSkill {
+    EccSkill::new(
+        "fin-lehalle-market-microstructure",
+        "Limit order book (LOB) mechanics: Queue position priority, order flow toxicity, bid-ask spread decomposition, and market impact models.",
+        r#"---
+name: fin-lehalle-market-microstructure
+description: \"Limit order book (LOB) mechanics: Queue position priority, order flow toxicity, bid-ask spread decomposition, and market impact models.\"
+triggers: ["charles-lehalle", "market-microstructure", "limit-order-book", "lob", "queue-priority", "order-flow-toxicity", "market-impact", "slippage-model"]
+---
+
+# fin-lehalle-market-microstructure
+> Based on **Market Microstructure in Practice - Charles-Albert Lehalle & Sophie Laruelle**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Model execution latency and queue position priority (Price-Time vs Pro-Rata) in limit order book simulations.**\n2. **ALWAYS: Decompose bid-ask spreads into order processing, inventory holding, and adverse selection components.**\n3. **NEVER: Assume zero market impact for trade orders exceeding 1% of Average Daily Volume (ADV).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Construct LOB matching engines with price-time priority queues and realistic slippage modeling based on order book depth.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming instant execution at the touch without order book depth modeling.**\n- **Simulating backtests with zero execution slippage.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-lehalle-market-microstructure\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 347. fin-harris-trading-exchanges Skill
+pub fn fin_harris_trading_exchanges() -> EccSkill {
+    EccSkill::new(
+        "fin-harris-trading-exchanges",
+        "Market microstructure economics: Informed traders, noise traders, arbitrageurs, dealers, adverse selection, and bid-ask spread dynamics.",
+        r#"---
+name: fin-harris-trading-exchanges
+description: \"Market microstructure economics: Informed traders, noise traders, arbitrageurs, dealers, adverse selection, and bid-ask spread dynamics.\"
+triggers: ["larry-harris", "trading-and-exchanges", "adverse-selection", "informed-traders", "noise-traders", "dealer-inventory", "effective-spread"]
+---
+
+# fin-harris-trading-exchanges
+> Based on **Trading and Exchanges: Market Microstructure for Practitioners - Larry Harris**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Measure adverse selection risk (effective spread vs realized spread) in liquidity provisioning algorithms.**\n2. **ALWAYS: Widen market-making quotes dynamically when order flow toxicity signals the presence of informed traders.**\n3. **NEVER: Quote symmetrical tight bid-ask spreads when inventory imbalances exceed risk limits.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Equip automated market making algorithms with adverse selection protection: widen spreads dynamically when order flow toxicity spikes.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Maintaining narrow quotes against toxic flow, accumulating massive adverse inventory.**\n- **Treating all order flow as uninformed noise.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-harris-trading-exchanges\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 348. fin-cartea-algorithmic-trading Skill
+pub fn fin_cartea_algorithmic_trading() -> EccSkill {
+    EccSkill::new(
+        "fin-cartea-algorithmic-trading",
+        "Optimal trade execution: The Almgren-Chriss framework, balancing market impact risk against inventory timing risk, and optimal liquidation trajectories.",
+        r#"---
+name: fin-cartea-algorithmic-trading
+description: \"Optimal trade execution: The Almgren-Chriss framework, balancing market impact risk against inventory timing risk, and optimal liquidation trajectories.\"
+triggers: ["alvaro-cartea", "algorithmic-trading", "almgren-chriss", "optimal-execution", "vwap", "twap", "liquidation-trajectory", "inventory-penalty"]
+---
+
+# fin-cartea-algorithmic-trading
+> Based on **Algorithmic and High-Frequency Trading - Álvaro Cartea, Sebastian Jaimungal, José Penalva**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Decompose institutional trade execution into TWAP/VWAP schedules using the Almgren-Chriss optimal liquidation framework.**\n2. **ALWAYS: Balance temporary market impact costs against the inventory penalty of holding risky positions over time.**\n3. **NEVER: Dump large orders into single market orders that cause catastrophic temporary price impact.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement optimal liquidation schedules using Almgren-Chriss equations: calculate execution trajectories balancing temporary market impact against inventory risk.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Executing 10% of daily volume in a single market order.**\n- **Ignoring the trade-off between execution speed and market impact.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-cartea-algorithmic-trading\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 349. fin-lewis-flash-boys Skill
+pub fn fin_lewis_flash_boys() -> EccSkill {
+    EccSkill::new(
+        "fin-lewis-flash-boys",
+        "Electronic market plumbing: High-frequency trading (HFT) latency arbitrage, colocation, payment for order flow (PFOF), and dark pool mechanics.",
+        r#"---
+name: fin-lewis-flash-boys
+description: \"Electronic market plumbing: High-frequency trading (HFT) latency arbitrage, colocation, payment for order flow (PFOF), and dark pool mechanics.\"
+triggers: ["michael-lewis", "flash-boys", "latency-arbitrage", "hft", "colocation", "pfof", "dark-pools", "smart-order-router", "speed-bump"]
+---
+
+# fin-lewis-flash-boys
+> Based on **Flash Boys: A Wall Street Revolt - Michael Lewis**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Protect client order routing from front-running and adverse latency arbitrage by using randomized delays or Smart Order Routing (SOR).**\n2. **ALWAYS: Measure and audit execution quality across routing venues (fill rate, price improvement, effective spread).**\n3. **NEVER: Route unhedged limit orders to dark pools without continuous fill-rate monitoring.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design smart order routers (SOR) with multi-venue execution quality checks, slippage benchmarking, and latency arbitrage protections.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Routing orders to venues based on rebate payments rather than client price improvement.**\n- **Ignoring latency arbitrage front-running.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-lewis-flash-boys\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 350. fin-hasbrouck-empirical-microstructure Skill
+pub fn fin_hasbrouck_empirical_microstructure() -> EccSkill {
+    EccSkill::new(
+        "fin-hasbrouck-empirical-microstructure",
+        "Statistical econometric microstructure: Vector Autoregressions (VAR) of trades and quotes, Kyle's lambda price impact, and Hasbrouck information shares.",
+        r#"---
+name: fin-hasbrouck-empirical-microstructure
+description: \"Statistical econometric microstructure: Vector Autoregressions (VAR) of trades and quotes, Kyle's lambda price impact, and Hasbrouck information shares.\"
+triggers: ["joel-hasbrouck", "empirical-microstructure", "kyles-lambda", "price-impact-regression", "var-quotes", "information-share", "tick-econometrics"]
+---
+
+# fin-hasbrouck-empirical-microstructure
+> Based on **Empirical Market Microstructure: The Institutions, Models, and Econometrics of High-Frequency Trading - Joel Hasbrouck**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Quantify permanent price impact using Kyle's Lambda (Delta P_t = lambda * Order_Flow_t + epsilon_t) to calibrate transaction costs.**\n2. **ALWAYS: Estimate cross-venue price discovery using Hasbrouck's information share decomposition.**\n3. **NEVER: Assume linear liquidity scaling across varying order trade sizes.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Measure empirical price impact using Kyle's Lambda regression: calibrate trade execution simulator slippage against tick-level order book dynamics.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using constant slippage percentages regardless of trade size or volume.**\n- **Assuming identical price discovery contribution across fragmented venues.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-hasbrouck-empirical-microstructure\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 351. fin-fabozzi-fixed-income-math Skill
+pub fn fin_fabozzi_fixed_income_math() -> EccSkill {
+    EccSkill::new(
+        "fin-fabozzi-fixed-income-math",
+        "Bond pricing mathematics: Yield to maturity (YTM), spot rate bootstrapping, Macaulay duration, modified duration, and convexity.",
+        r#"---
+name: fin-fabozzi-fixed-income-math
+description: \"Bond pricing mathematics: Yield to maturity (YTM), spot rate bootstrapping, Macaulay duration, modified duration, and convexity.\"
+triggers: ["frank-fabozzi", "fixed-income-math", "yield-to-maturity", "macaulay-duration", "modified-duration", "convexity", "bond-pricing", "spot-curve"]
+---
+
+# fin-fabozzi-fixed-income-math
+> Based on **Fixed Income Mathematics: Analytical and Statistical Techniques - Frank J. Fabozzi**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Calculate both Modified Duration and Convexity for interest rate sensitivity: Delta P / P = -D_mod * Delta y + 0.5 * C * (Delta y)^2.**\n2. **ALWAYS: Bootstrap zero-coupon spot rate yield curves from par coupon bond yields.**\n3. **NEVER: Rely on duration alone for yield shifts exceeding 100 basis points.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Price fixed income instruments using zero-coupon spot rate curve bootstrapping. Compute modified duration and second-order convexity adjustments.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using linear duration approximations for large interest rate shocks.**\n- **Pricing cash flows with a single flat YTM instead of the spot curve.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-fabozzi-fixed-income-math\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 352. fin-fabozzi-fixed-income-handbook Skill
+pub fn fin_fabozzi_fixed_income_handbook() -> EccSkill {
+    EccSkill::new(
+        "fin-fabozzi-fixed-income-handbook",
+        "Institutional debt securities: Corporate bonds, munis, mortgage-backed securities (MBS prepayment risk), credit default swaps, and structured notes.",
+        r#"---
+name: fin-fabozzi-fixed-income-handbook
+description: \"Institutional debt securities: Corporate bonds, munis, mortgage-backed securities (MBS prepayment risk), credit default swaps, and structured notes.\"
+triggers: ["fabozzi-handbook", "fixed-income-securities", "mbs", "prepayment-risk", "option-adjusted-spread", "oas", "negative-convexity", "credit-spreads"]
+---
+
+# fin-fabozzi-fixed-income-handbook
+> Based on **The Handbook of Fixed Income Securities - Frank J. Fabozzi**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Decompose credit spreads using Option-Adjusted Spread (OAS) to isolate embedded option risk from pure credit risk.**\n2. **ALWAYS: Account for negative convexity and prepayment contraction/extension risk in mortgage-backed securities.**\n3. **NEVER: Price callable or prepayable debt securities without option-adjusted modeling.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model fixed income credit spreads: bootstrap option-adjusted spreads (OAS) and simulate prepayment sensitivity on amortizing collateral.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Valuing callable bonds using standard yield to maturity.**\n- **Ignoring prepayment acceleration when interest rates decline.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-fabozzi-fixed-income-handbook\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 353. fin-servigny-credit-risk Skill
+pub fn fin_servigny_credit_risk() -> EccSkill {
+    EccSkill::new(
+        "fin-servigny-credit-risk",
+        "Institutional credit risk: Probability of Default (PD), Loss Given Default (LGD), Exposure at Default (EAD), structural default models (Merton), and rating migrations.",
+        r#"---
+name: fin-servigny-credit-risk
+description: \"Institutional credit risk: Probability of Default (PD), Loss Given Default (LGD), Exposure at Default (EAD), structural default models (Merton), and rating migrations.\"
+triggers: ["arnaud-servigny", "credit-risk", "merton-model", "probability-of-default", "lgd", "ead", "expected-loss", "credit-migration"]
+---
+
+# fin-servigny-credit-risk
+> Based on **Standard & Poor's Guide to Measuring and Managing Credit Risk - Arnaud de Servigny & Olivier Renault**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Calculate Expected Credit Loss explicitly as: Expected Loss = PD * LGD * EAD.**\n2. **ALWAYS: Model corporate credit default probabilities using structural models (Merton model distance-to-default) and credit transition matrices.**\n3. **NEVER: Treat credit risk as a binary static variable; model continuous rating migration probabilities.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Build credit risk engines using the structural Merton model: calculate distance-to-default and expected loss (EL = PD * LGD * EAD).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming zero loss on investment-grade counterparties.**\n- **Ignoring exposure-at-default expansion on committed credit lines.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-servigny-credit-risk\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 354. fin-moyer-distressed-debt Skill
+pub fn fin_moyer_distressed_debt() -> EccSkill {
+    EccSkill::new(
+        "fin-moyer-distressed-debt",
+        "Bankruptcy and restructuring finance: Priority of claims, Chapter 11 reorganization, the Absolute Priority Rule, fulcrum securities, and structural subordination.",
+        r#"---
+name: fin-moyer-distressed-debt
+description: \"Bankruptcy and restructuring finance: Priority of claims, Chapter 11 reorganization, the Absolute Priority Rule, fulcrum securities, and structural subordination.\"
+triggers: ["stephen-moyer", "distressed-debt", "absolute-priority-rule", "fulcrum-security", "structural-subordination", "chapter-11", "reorganization-plan"]
+---
+
+# fin-moyer-distressed-debt
+> Based on **Distressed Debt Analysis: Strategies for Speculative Investors - Stephen G. Moyer**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Model debt liquidation and restructuring waterfalls adhering strictly to the Absolute Priority Rule.**\n2. **ALWAYS: Identify the 'fulcrum security'—the debt tranche that is partially covered by enterprise value and will convert to control equity.**\n3. **NEVER: Assign recovery value to junior equity when senior debt tranches remain impaired and un-reorganized.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Construct distressed debt waterfall models: identify the fulcrum security by simulating asset recovery values across seniority tranches.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assigning positive value to common stock in an insolvent liquidation.**\n- **Overlooking structural subordination between parent and operating company debt.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-moyer-distressed-debt\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 355. fin-brigo-interest-rate-models Skill
+pub fn fin_brigo_interest_rate_models() -> EccSkill {
+    EccSkill::new(
+        "fin-brigo-interest-rate-models",
+        "Advanced interest rate mathematics: Short-rate models (Hull-White, Vasicek), Libor Market Model (LMM), SOFR transition, and swaption volatility smiles.",
+        r#"---
+name: fin-brigo-interest-rate-models
+description: \"Advanced interest rate mathematics: Short-rate models (Hull-White, Vasicek), Libor Market Model (LMM), SOFR transition, and swaption volatility smiles.\"
+triggers: ["damiano-brigo", "fabio-mercurio", "interest-rate-models", "hull-white", "short-rate-model", "swaption-smile", "sofr", "term-structure"]
+---
+
+# fin-brigo-interest-rate-models
+> Based on **Interest Rate Models - Theory and Practice: With Smile, Inflation and Credit - Damiano Brigo & Fabio Mercurio**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Calibrate short-rate interest rate models (e.g. 1-factor Hull-White) to exactly fit the current zero-coupon market yield curve.**\n2. **ALWAYS: Model interest rate volatility smiles and skews when pricing complex swaptions and caps/floors.**\n3. **NEVER: Use uncalibrated random walks for interest rates that permit negative rates without explicit floor mechanics.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Simulate interest rate paths using calibrated 1-factor Hull-White models, ensuring exact fit to current market zero-coupon curves.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using flat interest rate volatility assumptions across tenors.**\n- **Failing to calibrate short-rate models to current market discount factors.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-brigo-interest-rate-models\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 356. fin-trigeorgis-real-options Skill
+pub fn fin_trigeorgis_real_options() -> EccSkill {
+    EccSkill::new(
+        "fin-trigeorgis-real-options",
+        "Strategic real options: Option to expand, abandon, defer, or stage capital investments as Black-Scholes/binomial options.",
+        r#"---
+name: fin-trigeorgis-real-options
+description: \"Strategic real options: Option to expand, abandon, defer, or stage capital investments as Black-Scholes/binomial options.\"
+triggers: ["lenos-trigeorgis", "real-options", "managerial-flexibility", "binomial-lattice", "option-to-expand", "option-to-abandon", "staged-investment"]
+---
+
+# fin-trigeorgis-real-options
+> Based on **Real Options: Managerial Flexibility and Strategy in Resource Allocation - Lenos Trigeorgis**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Value staged capital investments and technical R&D pipelines as compound real options using binomial decision trees.**\n2. **ALWAYS: Recognize that managerial flexibility to expand or abandon adds significant quantifiable economic value over static DCF.**\n3. **NEVER: Reject high-uncertainty staged engineering projects with negative static DCF without evaluating embedded real expansion options.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model staged architectural investments using binomial real options lattices, quantifying managerial flexibility to abandon or scale.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using rigid static DCF models for flexible R&D initiatives.**\n- **Ignoring the abandonment option value in risky project evaluations.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-trigeorgis-real-options\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 357. fin-gaughan-mergers-acquisitions Skill
+pub fn fin_gaughan_mergers_acquisitions() -> EccSkill {
+    EccSkill::new(
+        "fin-gaughan-mergers-acquisitions",
+        "M&A economics: Operational and financial synergies, transaction structures (cash vs stock), accretion/dilution analysis, takeover defenses, and divestitures.",
+        r#"---
+name: fin-gaughan-mergers-acquisitions
+description: \"M&A economics: Operational and financial synergies, transaction structures (cash vs stock), accretion/dilution analysis, takeover defenses, and divestitures.\"
+triggers: ["patrick-gaughan", "mergers-and-acquisitions", "m-and-a", "accretion-dilution", "synergy-valuation", "deal-structuring", "takeover-defense"]
+---
+
+# fin-gaughan-mergers-acquisitions
+> Based on **Mergers, Acquisitions, and Corporate Restructurings - Patrick A. Gaughan**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Calculate M&A EPS accretion/dilution accounting for purchase price, financing mix (cash/debt/stock), foregone interest, and goodwill.**\n2. **ALWAYS: Discount projected operational synergies with a higher discount rate than base business cash flows due to execution risk.**\n3. **NEVER: Justify M&A acquisition premiums with speculative, un-phased synergy projections.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Build M&A accretion/dilution models: simulate cash vs stock financing, cost of debt, and tax-effected operational synergy schedules.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming 100% of projected cost synergies materialize on day one.**\n- **Ignoring the interest cost of debt used to finance cash acquisitions.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-gaughan-mergers-acquisitions\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 358. fin-rosenbaum-investment-banking Skill
+pub fn fin_rosenbaum_investment_banking() -> EccSkill {
+    EccSkill::new(
+        "fin-rosenbaum-investment-banking",
+        "Wall Street financial modeling: Comparable companies analysis (Comps), Precedent transactions, DCF, and Leveraged Buyout (LBO) debt paydown waterfalls.",
+        r#"---
+name: fin-rosenbaum-investment-banking
+description: \"Wall Street financial modeling: Comparable companies analysis (Comps), Precedent transactions, DCF, and Leveraged Buyout (LBO) debt paydown waterfalls.\"
+triggers: ["rosenbaum-pearl", "investment-banking", "lbo", "lbo-model", "comps", "precedent-transactions", "debt-waterfall", "irr-moic"]
+---
+
+# fin-rosenbaum-investment-banking
+> Based on **Investment Banking: Valuation, LBOs, M&A, and IPOs - Joshua Rosenbaum & Joshua Pearl**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Build Leveraged Buyout (LBO) models with explicit debt paydown waterfalls, sponsor returns (IRR >= 20%, MoIC >= 2.5x), and covenants.**\n2. **ALWAYS: Test LBO returns against exit multiple contraction (exit multiple lower than entry multiple).**\n3. **NEVER: Model an LBO without verifying debt covenant compliance (Debt/EBITDA, Interest Coverage) throughout the holding period.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Generate comprehensive LBO model engines: calculate returns (IRR, MoIC) with dynamic debt paydown and revolving credit sweeps.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming exit multiples expand in highly leveraged acquisitions.**\n- **Omitting mandatory revolving credit sweeps in LBO cash cascades.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-rosenbaum-investment-banking\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 359. fin-damodaran-applied-corporate-finance Skill
+pub fn fin_damodaran_applied_corporate_finance() -> EccSkill {
+    EccSkill::new(
+        "fin-damodaran-applied-corporate-finance",
+        "Practical corporate finance: Optimal capital structure determination, hurdle rates, dividend vs buyback policy, and returning cash to shareholders.",
+        r#"---
+name: fin-damodaran-applied-corporate-finance
+description: \"Practical corporate finance: Optimal capital structure determination, hurdle rates, dividend vs buyback policy, and returning cash to shareholders.\"
+triggers: ["damodaran-applied", "applied-corporate-finance", "optimal-capital-structure", "wacc-minimization", "dividend-policy", "hurdle-rate-calibration"]
+---
+
+# fin-damodaran-applied-corporate-finance
+> Based on **Applied Corporate Finance - Aswath Damodaran**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Determine optimal capital structure by minimizing WACC through balancing debt tax shields against expected distress costs.**\n2. **ALWAYS: Return excess cash to shareholders (dividends/buybacks) when corporate ROIC falls below the hurdle rate.**\n3. **NEVER: Hoard excess cash balances when internal investment opportunities fail to earn the cost of capital.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Calculate optimal capital structure: evaluate debt-to-equity ratios that minimize WACC while keeping credit ratings within investment-grade bounds.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Retaining capital to invest in low-return pet projects.**\n- **Taking on debt beyond the WACC-minimizing distress threshold.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-damodaran-applied-corporate-finance\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 360. fin-rappaport-creating-shareholder-value Skill
+pub fn fin_rappaport_creating_shareholder_value() -> EccSkill {
+    EccSkill::new(
+        "fin-rappaport-creating-shareholder-value",
+        "Shareholder Value Added (SVA): Evaluating corporate strategies by cash flows generated rather than accounting earnings (EPS) growth.",
+        r#"---
+name: fin-rappaport-creating-shareholder-value
+description: \"Shareholder Value Added (SVA): Evaluating corporate strategies by cash flows generated rather than accounting earnings (EPS) growth.\"
+triggers: ["alfred-rappaport", "creating-shareholder-value", "sva", "shareholder-value-added", "cash-flow-return-on-investment", "value-growth-duration"]
+---
+
+# fin-rappaport-creating-shareholder-value
+> Based on **Creating Shareholder Value: A Guide for Managers and Investors - Alfred Rappaport**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Measure strategic value creation using Cumulative Operating Cash Flow minus Capital Reinvestment (Cash Flow Return on Investment).**\n2. **ALWAYS: Evaluate business unit strategies by their Value Growth Duration (VGD)—the period over which investments earn returns above cost of capital.**\n3. **NEVER: Align executive or algorithmic incentives with short-term accounting earnings per share.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model Shareholder Value Added (SVA): decouple executive performance metrics from accounting EPS, linking incentives directly to discounted cash value created.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Managing business units to hit quarterly EPS targets at the expense of long-term cash flow.**\n- **Ignoring capital reinvestment costs.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-rappaport-creating-shareholder-value\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 361. fin-shleifer-inefficient-markets Skill
+pub fn fin_shleifer_inefficient_markets() -> EccSkill {
+    EccSkill::new(
+        "fin-shleifer-inefficient-markets",
+        "The limits of arbitrage: Fundamental risk, noise trader risk, implementation costs, and why prices deviate persistently from fundamental value.",
+        r#"---
+name: fin-shleifer-inefficient-markets
+description: \"The limits of arbitrage: Fundamental risk, noise trader risk, implementation costs, and why prices deviate persistently from fundamental value.\"
+triggers: ["andrei-shleifer", "inefficient-markets", "limits-of-arbitrage", "noise-trader-risk", "behavioral-finance", "arbitrage-limits", "sentiment-risk"]
+---
+
+# fin-shleifer-inefficient-markets
+> Based on **Inefficient Markets: An Introduction to Behavioral Finance - Andrei Shleifer**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Model funding liquidity constraints and margin call risks in statistical arbitrage algorithms; prices can stay irrational longer than you can stay solvent.**\n2. **ALWAYS: Account for noise trader risk in market-making and arbitrage strategy risk models.**\n3. **NEVER: Assume infinite balance sheet capacity when arbitraging apparent market mispricings.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Incorporate limits-of-arbitrage constraints in algorithmic trading engines: simulate margin requirements, borrow fees, and noise trader divergence risk.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming arbitrage is risk-free and instantaneous.**\n- **Over-leveraging statistical arbitrage positions without margin buffers.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-shleifer-inefficient-markets\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 362. fin-kindleberger-manias-panics-crashes Skill
+pub fn fin_kindleberger_manias_panics_crashes() -> EccSkill {
+    EccSkill::new(
+        "fin-kindleberger-manias-panics-crashes",
+        "The anatomy of speculative bubbles: The Minsky model (Displacement, Credit Expansion, Euphoria, Distress, Revulsion/Panic), and lender of last resort.",
+        r#"---
+name: fin-kindleberger-manias-panics-crashes
+description: \"The anatomy of speculative bubbles: The Minsky model (Displacement, Credit Expansion, Euphoria, Distress, Revulsion/Panic), and lender of last resort.\"
+triggers: ["charles-kindleberger", "manias-panics-crashes", "minsky-model", "speculative-bubbles", "credit-expansion", "euphoria", "financial-crises"]
+---
+
+# fin-kindleberger-manias-panics-crashes
+> Based on **Manias, Panics, and Crashes: A History of Financial Crises - Charles P. Kindleberger & Robert Z. Aliber**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Monitor credit velocity, system-wide leverage, and asset valuation deviations to flag speculative bubble euphoria stages.**\n2. **ALWAYS: Stress-test financial platform reserves against sudden liquidity revulsion and bank runs.**\n3. **NEVER: Relax collateral requirements or underwriting standards during prolonged market run-ups.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement macro credit stress monitors: track credit expansion velocity, leverage ratios, and liquidity indicators to detect late-stage bubble dynamics.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Lowering margin requirements because 'prices always go up'.**\n- **Treating temporary speculative euphoria as a new economic paradigm.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-kindleberger-manias-panics-crashes\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 363. fin-shiller-irrational-exuberance Skill
+pub fn fin_shiller_irrational_exuberance() -> EccSkill {
+    EccSkill::new(
+        "fin-shiller-irrational-exuberance",
+        "Speculative price feedback loops: The Cyclically Adjusted Price-to-Earnings (CAPE / Shiller P/E) ratio, cultural drivers, and asset bubble contagion.",
+        r#"---
+name: fin-shiller-irrational-exuberance
+description: \"Speculative price feedback loops: The Cyclically Adjusted Price-to-Earnings (CAPE / Shiller P/E) ratio, cultural drivers, and asset bubble contagion.\"
+triggers: ["robert-shiller", "irrational-exuberance", "cape-ratio", "shiller-pe", "cyclically-adjusted-pe", "speculative-feedback", "mean-reverting-valuation"]
+---
+
+# fin-shiller-irrational-exuberance
+> Based on **Irrational Exuberance - Robert J. Shiller**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Evaluate long-term equity valuation multiples using the 10-year inflation-adjusted Cyclically Adjusted P/E (CAPE) ratio.**\n2. **ALWAYS: Incorporate mean-reverting valuation multiples when forecasting long-term 10-year asset returns.**\n3. **NEVER: Project historical trailing equity returns forward when valuation multiples trade at extreme historical percentiles.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Calculate Shiller CAPE ratios across equity indices: calibrate long-term asset return projections to mean-reverting valuation multiples.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Projecting 15% annual equity returns when CAPE is above 35.**\n- **Ignoring historical valuation mean-reversion.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-shiller-irrational-exuberance\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 364. fin-montier-behavioral-finance Skill
+pub fn fin_montier_behavioral_finance() -> EccSkill {
+    EccSkill::new(
+        "fin-montier-behavioral-finance",
+        "Psychological traps in financial analysis: Anchoring, overconfidence, confirmation bias, recency bias, and loss aversion in portfolio sizing.",
+        r#"---
+name: fin-montier-behavioral-finance
+description: \"Psychological traps in financial analysis: Anchoring, overconfidence, confirmation bias, recency bias, and loss aversion in portfolio sizing.\"
+triggers: ["james-montier", "behavioral-finance-montier", "cognitive-traps-finance", "overconfidence-bias", "confirmation-bias-valuation", "debiasing-checklists"]
+---
+
+# fin-montier-behavioral-finance
+> Based on **Behavioral Finance: Insights into Irrational Minds and Markets - James Montier**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce systematic debiasing checklists in automated analysis engines: require explicit searches for disconfirming evidence.**\n2. **ALWAYS: Apply margin mean-reversion dampeners when financial models extrapolate recent peak growth rates.**\n3. **NEVER: Allow investment screening workflows to confirm a thesis without testing an explicit bear-case thesis.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Embed behavioral debiasing protocols into investment screening pipelines: force counter-thesis generation and margin mean-reversion tests.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Falling in love with an investment thesis and ignoring disconfirming data.**\n- **Extrapolating recent 1-year performance into perpetuity.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-montier-behavioral-finance\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 365. fin-bernstein-against-the-gods Skill
+pub fn fin_bernstein_against_the_gods() -> EccSkill {
+    EccSkill::new(
+        "fin-bernstein-against-the-gods",
+        "The historical mastery of risk: Probability theory, regression to the mean, diversification, utility theory, and managing unquantifiable uncertainty.",
+        r#"---
+name: fin-bernstein-against-the-gods
+description: \"The historical mastery of risk: Probability theory, regression to the mean, diversification, utility theory, and managing unquantifiable uncertainty.\"
+triggers: ["peter-bernstein", "against-the-gods", "history-of-risk", "risk-vs-uncertainty", "regression-to-the-mean", "liquidity-buffers", "probabilistic-thinking"]
+---
+
+# fin-bernstein-against-the-gods
+> Based on **Against the Gods: The Remarkable Story of Risk - Peter L. Bernstein**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Distinguish between risk (quantifiable probabilities) and uncertainty (unquantifiable unknowns); hold liquidity reserves for uncertainty.**\n2. **ALWAYS: Anchor probabilistic financial projections in historical regression to the mean.**\n3. **NEVER: Assume that historical quantitative models encompass all possible future real-world states.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design portfolio risk architectures with dedicated liquidity reserves allocated for structural uncertainty outside statistical confidence bands.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Confusing absence of historical volatility with absence of structural risk.**\n- **Zero cash holdings in a fully leveraged portfolio.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-bernstein-against-the-gods\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 366. fin-voshmgir-token-economy Skill
+pub fn fin_voshmgir_token_economy() -> EccSkill {
+    EccSkill::new(
+        "fin-voshmgir-token-economy",
+        "Cryptoeconomics and mechanism design: Token engineering, bonding curves, token velocity (MV = PQ), and staking/burn equilibrium sinks.",
+        r#"---
+name: fin-voshmgir-token-economy
+description: \"Cryptoeconomics and mechanism design: Token engineering, bonding curves, token velocity (MV = PQ), and staking/burn equilibrium sinks.\"
+triggers: ["shermin-voshmgir", "token-economy", "tokenomics", "bonding-curves", "token-velocity", "equation-of-exchange", "staking-sinks", "token-utility"]
+---
+
+# fin-voshmgir-token-economy
+> Based on **Token Economy: How the Web3 Reinvents the Internet - Shermin Voshmgir**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Model token velocity using the equation of exchange (M * V = P * Q); high velocity degrades token price without staking/burn sinks.**\n2. **ALWAYS: Ensure cryptoeconomic mechanism designs align individual participant incentives with network stability.**\n3. **NEVER: Issue utility tokens whose sole function is transactional medium-of-exchange without value-capture sinks.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Analyze tokenomic designs using equation of exchange (MV = PQ): calculate token velocity and verify existence of durable economic sinks.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Launching tokens with 100% circulating velocity and zero staking utility.**\n- **Assuming token price will rise simply because transaction count increases.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-voshmgir-token-economy\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 367. fin-antonopoulos-mastering-bitcoin Skill
+pub fn fin_antonopoulos_mastering_bitcoin() -> EccSkill {
+    EccSkill::new(
+        "fin-antonopoulos-mastering-bitcoin",
+        "Decentralized money architecture: Unspent Transaction Output (UTXO) accounting, proof-of-work difficulty adjustments, script execution, and double-spend protection.",
+        r#"---
+name: fin-antonopoulos-mastering-bitcoin
+description: \"Decentralized money architecture: Unspent Transaction Output (UTXO) accounting, proof-of-work difficulty adjustments, script execution, and double-spend protection.\"
+triggers: ["andreas-antonopoulos", "mastering-bitcoin", "utxo", "unspent-transaction-output", "proof-of-work", "double-spend-prevention", "crypto-accounting"]
+---
+
+# fin-antonopoulos-mastering-bitcoin
+> Based on **Mastering Bitcoin: Programming the Open Blockchain - Andreas M. Antonopoulos**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Maintain strict UTXO balance conservation: Sum(Input Values) = Sum(Output Values) + Miner Fee.**\n2. **ALWAYS: Verify cryptographic transaction signatures before mutating local ledger states.**\n3. **NEVER: Allow state transitions that reference already-spent transaction outputs (double-spending).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement UTXO ledger accounting: enforce invariant that input values strictly equal output values plus miner fees, rejecting double-spends.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Creating unbacked outputs from thin air without input references.**\n- **Ignoring transaction malleability and fee estimation.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-antonopoulos-mastering-bitcoin\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 368. fin-antonopoulos-mastering-ethereum Skill
+pub fn fin_antonopoulos_mastering_ethereum() -> EccSkill {
+    EccSkill::new(
+        "fin-antonopoulos-mastering-ethereum",
+        "EVM state transition economics: Account-based ledger state, gas mechanics, EIP-1559 base fee burning, and re-entrancy attack prevention.",
+        r#"---
+name: fin-antonopoulos-mastering-ethereum
+description: \"EVM state transition economics: Account-based ledger state, gas mechanics, EIP-1559 base fee burning, and re-entrancy attack prevention.\"
+triggers: ["gavin-wood", "mastering-ethereum", "evm", "gas-economics", "eip-1559", "re-entrancy-guard", "checks-effects-interactions", "smart-contract-accounting"]
+---
+
+# fin-antonopoulos-mastering-ethereum
+> Based on **Mastering Ethereum: Building Smart Contracts and DApps - Andreas M. Antonopoulos & Gavin Wood**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce the Checks-Effects-Interactions pattern across smart contracts to prevent re-entrancy drain attacks.**\n2. **ALWAYS: Account for EIP-1559 base fee burning and priority tipping in transaction cost estimation engines.**\n3. **NEVER: Mutate external contract state before finalizing internal ledger balance updates.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Audit smart contract accounting logic against re-entrancy: enforce checks-effects-interactions pattern and account for EIP-1559 gas mechanics.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Transferring ETH/tokens to external addresses before updating internal user balances.**\n- **Ignoring gas limits in loops resulting in bricked contracts.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-antonopoulos-mastering-ethereum\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 369. fin-harvey-defi-future-finance Skill
+pub fn fin_harvey_defi_future_finance() -> EccSkill {
+    EccSkill::new(
+        "fin-harvey-defi-future-finance",
+        "Decentralized financial infrastructure: Automated Market Makers (AMM: x * y = k), constant product liquidity pools, impermanent loss, and flash loans.",
+        r#"---
+name: fin-harvey-defi-future-finance
+description: \"Decentralized financial infrastructure: Automated Market Makers (AMM: x * y = k), constant product liquidity pools, impermanent loss, and flash loans.\"
+triggers: ["campbell-harvey", "defi-future-finance", "automated-market-maker", "amm", "constant-product", "impermanent-loss", "flash-loans", "liquidity-pools"]
+---
+
+# fin-harvey-defi-future-finance
+> Based on **DeFi and the Future of Finance - Campbell R. Harvey, Ashwin Ramachandran, Joey Santoro**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Enforce the Constant Product Invariant (x * y = k) in AMM pool state transitions.**\n2. **ALWAYS: Calculate and disclose Impermanent Loss to liquidity providers: IL = 2 * sqrt(Price_Ratio) / (1 + Price_Ratio) - 1.**\n3. **NEVER: Allow flash-loanable state transitions to manipulate spot oracle prices without Time-Weighted Average Price (TWAP) protections.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Simulate AMM mechanics with constant-product invariants (x * y = k): incorporate concentrated liquidity math and TWAP oracle protections.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using spot AMM reserves as a pricing oracle for lending collateral.**\n- **Failing to deduct swap fees before verifying invariant k.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-harvey-defi-future-finance\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 370. fin-lyuu-financial-engineering Skill
+pub fn fin_lyuu_financial_engineering() -> EccSkill {
+    EccSkill::new(
+        "fin-lyuu-financial-engineering",
+        "Computational financial algorithms: Exact decimal arithmetic, banker's rounding, lattice option pricing, yield solvers, and cash flow schedule generation.",
+        r#"---
+name: fin-lyuu-financial-engineering
+description: \"Computational financial algorithms: Exact decimal arithmetic, banker's rounding, lattice option pricing, yield solvers, and cash flow schedule generation.\"
+triggers: ["yuh-dauh-lyuu", "financial-engineering-computation", "exact-decimal", "bankers-rounding", "yield-solver", "cash-flow-schedule", "fixed-point-arithmetic"]
+---
+
+# fin-lyuu-financial-engineering
+> Based on **Financial Engineering and Computation: Principles, Mathematics, Algorithms - Yuh-Dauh Lyuu**
+
+## 1. Core Financial Foundations & Formal Invariants
+
+1. **ALWAYS: Use arbitrary-precision decimal or 64/128-bit integer cents with Banker's Rounding (Half-Even) for all currency calculations.**\n2. **ALWAYS: Ensure amortization schedules preserve zero-balance conservation at maturity.**\n3. **NEVER: Use floating-point representations (f32/f64, JavaScript number) for currency balances, fees, or interest accruals.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement financial calculations using arbitrary-precision decimal or 128-bit integer cents with banker's rounding (Half-Even), banning IEEE-754 floats.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Storing account balances in IEEE-754 binary floats.**\n- **Accumulating round-off errors across millions of transactions.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q \"fin-lyuu-financial-engineering\"
+
+# Execute automated financial & valuation audit
+cargo test --test fin_skills_brutal_tests
 ```
 "#,
     )
