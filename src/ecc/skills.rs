@@ -230,12 +230,115 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         design_systems_tokens(),
         about_face_interaction_design(),
         designing_for_emotion(),
+        // Quantitative & Financial AI Foundation Model Skills
+        kronos_kline_modeling(),
+        qlib_alpha_engineering(),
+        chronos_moirai_forecasting(),
+        fingpt_multimodal_nlp(),
+        rdagent_factor_mining(),
+        // Mathematics for Vibe Code Developers (Top 20 Foundational Books)
+        math_nature_of_code(),
+        math_linear_algebra_savov(),
+        math_high_dimensional_data(),
+        math_information_inference(),
+        math_causal_inference(),
+        math_category_theory(),
+        math_game_engine_geometry(),
+        math_code_first_calculus(),
+        math_bayesian_reasoning(),
+        math_ml_foundations(),
+        math_networks_crowds_markets(),
+        math_convex_optimization(),
+        math_probability_logic(),
+        math_programmers_discrete(),
+        math_intuitive_calculus(),
+        math_concrete_discrete(),
+        math_visual_topology(),
+        math_chaos_fractals(),
+        math_numerical_methods(),
+        math_algorithmic_game_theory(),
     ]
 }
 
 /// Retrieve a built-in skill by name
 pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     let lower = name.to_lowercase().replace('_', "-");
+    // Math Vibe Skills Aliases
+    if lower == "nature-of-code" || lower == "boids" || lower == "flocking" || lower == "autonomous-steering" {
+        return find_built_in_skill("math-nature-of-code");
+    }
+    if lower == "linear-algebra" || lower == "savov" || lower == "axler" || lower == "matrix-projections" {
+        return find_built_in_skill("math-linear-algebra-savov");
+    }
+    if lower == "high-dimensional-data" || lower == "hopcroft" || lower == "curse-of-dimensionality" {
+        return find_built_in_skill("math-high-dimensional-data");
+    }
+    if lower == "information-theory" || lower == "shannon-entropy" || lower == "mackay" || lower == "token-entropy" {
+        return find_built_in_skill("math-information-inference");
+    }
+    if lower == "causal-inference" || lower == "book-of-why" || lower == "do-calculus" || lower == "pearl-causality" {
+        return find_built_in_skill("math-causal-inference");
+    }
+    if lower == "category-theory" || lower == "milewski" || lower == "monads" || lower == "functors" {
+        return find_built_in_skill("math-category-theory");
+    }
+    if lower == "game-engine-geometry" || lower == "quaternions" || lower == "slerp" || lower == "lengyel" {
+        return find_built_in_skill("math-game-engine-geometry");
+    }
+    if lower == "code-first-calculus" || lower == "paul-orland" || lower == "gradient-descent-math" {
+        return find_built_in_skill("math-code-first-calculus");
+    }
+    if lower == "bayesian-reasoning" || lower == "will-kurt" || lower == "thompson-sampling" || lower == "bayes" {
+        return find_built_in_skill("math-bayesian-reasoning");
+    }
+    if lower == "ml-foundations" || lower == "deisenroth" || lower == "matrix-calculus" {
+        return find_built_in_skill("math-ml-foundations");
+    }
+    if lower == "networks-crowds-markets" || lower == "pagerank" || lower == "kleinberg" || lower == "easley" {
+        return find_built_in_skill("math-networks-crowds-markets");
+    }
+    if lower == "convex-optimization" || lower == "boyd" || lower == "kkt" || lower == "kkt-conditions" {
+        return find_built_in_skill("math-convex-optimization");
+    }
+    if lower == "probability-logic" || lower == "jaynes" || lower == "maximum-entropy" || lower == "maxent" {
+        return find_built_in_skill("math-probability-logic");
+    }
+    if lower == "programmers-discrete" || lower == "jeremy-kun" || lower == "fft" || lower == "graph-laplacian" {
+        return find_built_in_skill("math-programmers-discrete");
+    }
+    if lower == "intuitive-calculus" || lower == "calculus-made-easy" || lower == "pid-controller" {
+        return find_built_in_skill("math-intuitive-calculus");
+    }
+    if lower == "concrete-discrete" || lower == "concrete-math" || lower == "knuth-math" || lower == "recurrences" {
+        return find_built_in_skill("math-concrete-discrete");
+    }
+    if lower == "visual-topology" || lower == "hilbert-geometry" || lower == "gaussian-curvature" {
+        return find_built_in_skill("math-visual-topology");
+    }
+    if lower == "chaos-fractals" || lower == "lorenz-attractor" || lower == "fractals" || lower == "mandelbrot" {
+        return find_built_in_skill("math-chaos-fractals");
+    }
+    if lower == "numerical-methods" || lower == "numerical-recipes" || lower == "rk4" || lower == "runge-kutta" {
+        return find_built_in_skill("math-numerical-methods");
+    }
+    if lower == "algorithmic-game-theory" || lower == "nash-equilibrium" || lower == "shapley-value" || lower == "vcg-auction" {
+        return find_built_in_skill("math-algorithmic-game-theory");
+    }
+    if lower == "kronos" || lower == "kronos-bsq" || lower == "kline-modeling" || lower == "k-line-modeling" {
+        return find_built_in_skill("kronos-kline-modeling");
+    }
+    if lower == "qlib" || lower == "qlib-alpha" || lower == "qlib-factor-neutralization" {
+        return find_built_in_skill("qlib-alpha-engineering");
+    }
+    if lower == "chronos" || lower == "moirai" || lower == "chronos-moirai" || lower == "moirai-forecasting" {
+        return find_built_in_skill("chronos-moirai-forecasting");
+    }
+    if lower == "fingpt" || lower == "finrl" || lower == "fingpt-finrl" || lower == "financial-nlp" {
+        return find_built_in_skill("fingpt-multimodal-nlp");
+    }
+    if lower == "rdagent" || lower == "rd-agent" || lower == "rdagent-mining" || lower == "rdagent-alpha" {
+        return find_built_in_skill("rdagent-factor-mining");
+    }
     if lower == "rust-tokio-concurrency" || lower == "rust-concurrency" || lower == "tokio-concurrency" {
         if let Some(mut s) = find_built_in_skill("tokio-async-tuning") {
             s.name = "rust-tokio-concurrency".to_string();
@@ -1006,6 +1109,377 @@ pub fn designing_for_emotion() -> EccSkill {
 - Creative Empty States: Turn zero-data screens into narrative invitations with clear primary CTAs.
 - Empathetic Errors: Explain clearly without jargon, confirm data safety, and offer 1-click recovery.
 - Celebratory Milestones: Reward user completions with tasteful micro-delight (confetti, achievement badges).
+"#,
+    )
+}
+
+/// 41. Kronos Candlestick K-Line Discrete Tokenization Skill
+pub fn kronos_kline_modeling() -> EccSkill {
+    EccSkill::new(
+        "kronos-kline-modeling",
+        "Financial Candlestick (K-line) discrete tokenization using Binary Spherical Quantization (BSQ), autoregressive Transformer architectures, hierarchical dual decoding (s1 price tokens, s2 volume/residual tokens), and synthetic market generation. Triggers: kronos, k-line, candlestick, bsq, binary spherical quantization, dual decoding, market simulation, synthetic market generation, ohlcv sliding window.",
+        r#"# Kronos Financial Candlestick Modeling Skill
+
+## 1. Architectural Foundations
+- Sliding-Window Invariant Normalization: Anchor OHLC values relative to reference price P_base = C_{t-W}; standardize volume against trailing rolling EMA.
+- Binary Spherical Quantization (BSQ): Project continuous latent embeddings onto unit hypersphere S^{D-1}, followed by sign binarization into discrete codebook tokens: q_b = sign(z_b / ||z||_2).
+- Hierarchical Dual Decoding: Autoregressively decompose interval generation into s1 (macro price direction & trend) and s2 (microstructure volume & residual spread conditioned on s1).
+- Market Physics Invariants: Strictly preserve candlestick boundaries: Low <= min(Open, Close) <= max(Open, Close) <= High, Volume >= 0.
+
+## 2. Quantitative Formulation & Loss
+- Hypersphere projection: z_tilde = z / (||z||_2 + eps).
+- Token ID: k_tau = sum_{b=0}^{B-1} 2^b * I(q_b > 0).
+- Straight-Through Estimator (STE): z_q = z_tilde + stop_gradient(q(z_tilde) - z_tilde).
+- Joint Likelihood: P(S_{1:T}) = prod_{t=1}^T P(s_1^t | s_1^{<t}, s_2^{<t}) * P(s_2^t | s_1^{<=t}, s_2^{<t}).
+"#,
+    )
+}
+
+/// 42. Microsoft Qlib Alpha Engineering Skill
+pub fn qlib_alpha_engineering() -> EccSkill {
+    EccSkill::new(
+        "qlib-alpha-engineering",
+        "Microsoft Qlib AI-driven quantitative investment pipeline, alpha factor engineering, Barra risk factor neutralization (market beta, size, industry, volatility), turnover cost/slippage modeling, and Top-K backtesting with RankIC evaluation. Triggers: qlib, alpha factors, barra risk neutralization, top-k backtesting, rankic, information coefficient, icir, portfolio turnover, slippage modeling.",
+        r#"# Microsoft Qlib Alpha Engineering Skill
+
+## 1. Core Principles
+- Point-in-Time Data Integrity: Strict elimination of look-ahead bias and survivorship bias across cross-sectional universes.
+- Barra Multi-Factor Neutralization: Orthogonalize raw alpha factor predictions against systematic risk exposures (Market Beta, Log Market Cap, Industry Dummies, Volatility).
+- Turnover & Slippage Modeling: Model realistic turnover drag and execution frictions: Cost_t = Turnover_t * (c_fee + c_tax + Slippage(V_t)).
+- Non-Parametric RankIC & ICIR: Evaluate factor predictive performance via cross-sectional Spearman rank correlation.
+
+## 2. Mathematical Rigor
+- OLS Risk Neutralization: f_t = X_t * beta_t + epsilon_t.
+- Regularized Annihilator: M_t = I - X_t * (X_t^T * X_t + lambda * I)^{-1} * X_t^T; neutralized alpha f_tilde = M_t * f_t.
+- RankIC = Corr(rank(f_tilde_t), rank(r_{t+1})).
+- Annualized ICIR = (Mean(RankIC) / Std(RankIC)) * sqrt(252). Target Mean(RankIC) > 0.05, ICIR > 0.8.
+"#,
+    )
+}
+
+/// 43. Amazon Chronos & Salesforce MOIRAI Forecasting Skill
+pub fn chronos_moirai_forecasting() -> EccSkill {
+    EccSkill::new(
+        "chronos-moirai-forecasting",
+        "Universal time series foundation models (Amazon Chronos, Salesforce MOIRAI), zero-shot probabilistic forecasting, patch-based multi-resolution architectures, and quantile Value-at-Risk (VaR / CVaR) estimation. Triggers: chronos, moirai, zero-shot time series, probabilistic forecasting, quantile prediction, value-at-risk, var, cvar, patch forecasting, universal time series.",
+        r#"# Chronos & MOIRAI Time Series Foundation Models Skill
+
+## 1. Architectural Foundations
+- Universal Time Series Modeling: Pre-trained foundation models replacing single-asset statistical fits across diverse financial instruments.
+- Patch-Based Multi-Resolution Tokenization: Decompose real-valued series into multi-scale patches (8, 16, 32, 64) with Any-Variate attention.
+- Zero-Shot Probabilistic Forecasting: Generate full quantile distributions y_hat^{(q)} for q in {0.01, 0.05, 0.10, 0.50, 0.90, 0.95, 0.99}.
+- Quantile Value-at-Risk (VaR) & Expected Shortfall (CVaR): VaR_alpha = -y_hat^{(alpha)}, CVaR_alpha = -(1/alpha) * integral_0^alpha y_hat^{(u)} du.
+
+## 2. Loss & Calibration
+- Pinball Loss (Quantile Loss): L_q(y, y_hat) = max(q * (y - y_hat), (1 - q) * (y_hat - y)).
+- Reversible Instance Normalization (RevIN): Affine de-trending and instance normalization preserving relative percentage volatility.
+- Quantile Monotonicity: Enforce non-crossing quantile invariants: y_hat^{(q1)} <= y_hat^{(q2)} for all q1 < q2.
+"#,
+    )
+}
+
+/// 44. FinGPT & FinRL Multimodal Financial NLP Skill
+pub fn fingpt_multimodal_nlp() -> EccSkill {
+    EccSkill::new(
+        "fingpt-multimodal-nlp",
+        "Multimodal financial NLP (FinGPT) and deep reinforcement learning (FinRL) for SEC 10-K/10-Q filing analysis, sentiment alpha factor extraction, and optimal trade execution (PPO/DDPG). Triggers: fingpt, finrl, financial nlp, sec filing sentiment, 10-k analysis, 10-q filings, sentiment factors, reinforcement learning execution, almgren-chriss, ppo trade execution.",
+        r#"# FinGPT & FinRL Multimodal Financial NLP Skill
+
+## 1. Architectural Foundations
+- Domain-Adapted Financial LLMs: Parameter-efficient fine-tuning (LoRA) on EDGAR SEC filings, financial news, and conference calls.
+- Longitudinal Item Parsing: Differential semantic comparison of Item 1A (Risk Factors), Item 7 (MD&A), and Item 7A (Market Risk).
+- Sentiment Factor Construction: Exponential half-life decay aggregation of sentiment polarity, neutralized against market sentiment beta.
+- Deep RL Execution Optimization (FinRL): MDP formulation of TWAP/VWAP liquidation with Almgren-Chriss market impact penalties.
+
+## 2. Execution MDP & Reward
+- State: s_k = (r_k, Spread_k, Imbalance_k, q_k / Q, k / N).
+- Action: a_k in [0, 1] (fraction of remaining inventory executed).
+- Almgren-Chriss Reward: R_k = (P_k - P_benchmark) * Delta_q_k - eta * (Delta_q_k)^2 - lambda * sigma^2 * q_k^2 * tau.
+- Timestamp Grounding: Always index filings by EDGAR acceptance_datetime, never fiscal period end.
+"#,
+    )
+}
+
+/// 45. Microsoft RD-Agent Autonomous Alpha Mining Skill
+pub fn rdagent_factor_mining() -> EccSkill {
+    EccSkill::new(
+        "rdagent-factor-mining",
+        "Microsoft RD-Agent autonomous quantitative R&D, automated alpha factor mining, market anomaly hypothesis formulation, symbolic factor expression trees, collinearity filtering, and factor half-life decay management. Triggers: rdagent, rd-agent, autonomous alpha mining, rd-agent alpha mining, factor mining, hypothesis generation, factor expression tree, automated quant r&d, factor decay.",
+        r#"# Microsoft RD-Agent Autonomous Alpha Mining Skill
+
+## 1. Autonomous R&D Loop
+- Economic Hypothesis Formulation: Ground factor generation in market microstructure anomalies (liquidity premium, PEAD, idiosyncratic volatility).
+- Symbolic Factor Expression Trees: Represent factors as DAG expression trees over unary time-series operators (Ts_Mean, Ts_Std, Ts_Rank, Ts_DecayLinear) and cross-sectional operators (Cs_Rank, Cs_ZScore, Cs_Neutralize).
+- Factor Collinearity Pruning: Reject candidate factors with cross-sectional correlation rho > 0.60 against existing factor library.
+- Factor Decay & Half-Life Monitoring: Fit RankIC(t) = RankIC_0 * 2^{-t / tau}; auto-retire factors when ICIR < 0.30 or turnover > 40%.
+
+## 2. Evaluation & Overfitting Guardrails
+- Deflated Sharpe Ratio (DSR) & Holm-Bonferroni correction for multiple hypothesis testing.
+- Tree Complexity Penalties: Cap tree depth <= 6 and node count <= 15 to prevent curve fitting.
+- Net-of-Fee Requirement: Candidate alpha must sustain Sharpe > 1.5 after 15 bps two-way friction.
+"#,
+    )
+}
+
+/// 51. math-nature-of-code Skill
+pub fn math_nature_of_code() -> EccSkill {
+    EccSkill::new(
+        "math-nature-of-code",
+        "Physics simulations, vector kinematics, harmonic oscillations, Hooke's spring-damper dynamics, particle systems, and Craig Reynolds autonomous steering (seek, arrive, flocking boids: separation, alignment, cohesion) based on 'The Nature of Code' by Daniel Shiffman. Triggers: nature-of-code, boids, flocking, autonomous-steering, reynolds-steering, hooke-spring, particle-system, physics-simulation, harmonic-oscillator, vector-kinematics.",
+        r#"# The Nature of Code: Physics, Vectors & Autonomous Swarms
+- Semi-implicit Euler integration: v_{t+dt} = v_t + a_t * dt; x_{t+dt} = x_t + v_{t+dt} * dt.
+- Damped harmonic oscillator: F_spring = -k * (x - x_rest) - c * v.
+- Craig Reynolds steering: F_steer = clamp(v_desired - v_current, F_max).
+- Flocking emergence: F_total = w_s * F_sep + w_a * F_ali + w_c * F_coh.
+"#,
+    )
+}
+
+/// 52. math-linear-algebra-savov Skill
+pub fn math_linear_algebra_savov() -> EccSkill {
+    EccSkill::new(
+        "math-linear-algebra-savov",
+        "Intuitive linear algebra, vector spaces, dot products, orthogonal projections, Gram-Schmidt orthogonalization, eigenvalues/eigenvectors, and Singular Value Decomposition (SVD) for low-rank embeddings based on 'No Bullshit Guide to Linear Algebra' by Ivan Savov and Sheldon Axler. Triggers: linear-algebra, vector-spaces, dot-product, orthogonal-projection, svd, singular-value-decomposition, eigenvalues, eigenvectors, gram-schmidt, low-rank-matrix.",
+        r#"# Linear Algebra Done Right: Vector Spaces & Projections
+- Orthogonal projection: P_W = A * (A^T * A)^{-1} * A^T.
+- Cosine similarity: cos(theta) = (u . v) / (||u|| * ||v|| + eps).
+- SVD factorization: A = U * Sigma * V^T.
+- Low-rank approximation: A_k = sum_{i=1}^k sigma_i * u_i * v_i^T.
+"#,
+    )
+}
+
+/// 53. math-high-dimensional-data Skill
+pub fn math_high_dimensional_data() -> EccSkill {
+    EccSkill::new(
+        "math-high-dimensional-data",
+        "High-dimensional geometry, unit ball surface crust concentration, random vector near-orthogonality, Johnson-Lindenstrauss dimension reduction, and Markov chain random walks based on 'Foundations of Data Science' by Blum, Hopcroft, and Kannan. Triggers: high-dimensional-geometry, unit-ball-crust, johnson-lindenstrauss, random-projection, curse-of-dimensionality, random-walks, markov-chains, embedding-geometry.",
+        r#"# Foundations of Data Science: High-Dimensional Geometry
+- Volume concentration: Vol(B_d(1 - eps)) / Vol(B_d(1)) = (1 - eps)^d <= e^{-eps * d}.
+- High-d orthogonality: For random unit vectors u, v, |u . v| <= sqrt((2 * ln(2/delta)) / d).
+- Johnson-Lindenstrauss lemma: Distances preserved within (1 +/- eps) with target dim k = O(eps^{-2} * ln n).
+"#,
+    )
+}
+
+/// 54. math-information-inference Skill
+pub fn math_information_inference() -> EccSkill {
+    EccSkill::new(
+        "math-information-inference",
+        "Information theory, Shannon entropy, mutual information, Kullback-Leibler (KL) divergence, cross-entropy, Bayesian inference, and token entropy for hallucination detection based on David J.C. MacKay. Triggers: information-theory, shannon-entropy, mutual-information, kl-divergence, token-entropy, perplexity, hallucination-detection, bayesian-inference, mcmc, cross-entropy.",
+        r#"# Information Theory, Inference & Learning
+- Shannon entropy: H(X) = -sum p(x) * log2(p(x)).
+- KL divergence: D_{KL}(P || Q) = sum P(x) * log(P(x) / Q(x)).
+- Mutual information: I(X; Y) = H(X) - H(X|Y).
+- Token uncertainty: Hallucination spike when H_token > tau_entropy.
+"#,
+    )
+}
+
+/// 55. math-causal-inference Skill
+pub fn math_causal_inference() -> EccSkill {
+    EccSkill::new(
+        "math-causal-inference",
+        "Causal inference, Structural Causal Models (SCM), Directed Acyclic Graphs (DAGs), d-separation, backdoor criterion, do-calculus, and counterfactual analysis based on 'The Book of Why' by Judea Pearl. Triggers: causal-inference, causal-dag, do-calculus, backdoor-criterion, confounding-bias, counterfactuals, structural-causal-model, d-separation, root-cause-analysis.",
+        r#"# Causal Inference & Do-Calculus
+- Observational vs Interventional: P(Y | X=x) != P(Y | do(X=x)).
+- Backdoor adjustment: P(Y | do(X=x)) = sum_z P(Y | X=x, Z=z) * P(Z=z).
+- Counterfactual: P(Y_{X=x} | X=x', Y=y').
+"#,
+    )
+}
+
+/// 56. math-category-theory Skill
+pub fn math_category_theory() -> EccSkill {
+    EccSkill::new(
+        "math-category-theory",
+        "Category theory for software architecture, functors, monads, natural transformations, Kleisli categories, and Railway-Oriented Programming (Result/Option monads) based on 'Category Theory for Programmers' by Bartosz Milewski. Triggers: category-theory, functors, monads, kleisli-category, natural-transformations, compositionality, railway-oriented-programming, morphisms, monoid.",
+        r#"# Category Theory for Programmers
+- Morphism composition: (g . f)(x) = g(f(x)), associative with identity id_A.
+- Functor F: maps objects A -> F(A) and morphisms f -> F(f).
+- Monad (T, eta, mu): unit eta: I -> T, multiplication mu: T^2 -> T.
+- Kleisli composition for error pipelines: f >=> g = mu . T(g) . f.
+"#,
+    )
+}
+
+/// 57. math-game-engine-geometry Skill
+pub fn math_game_engine_geometry() -> EccSkill {
+    EccSkill::new(
+        "math-game-engine-geometry",
+        "Game engine 3D mathematics, unit quaternions without gimbal lock, Spherical Linear Interpolation (Slerp), 4x4 affine transforms, and ray-AABB intersection tests based on Eric Lengyel. Triggers: game-engine-math, quaternions, slerp, gimbal-lock, affine-transform, ray-intersection, aabb-box, 3d-geometry, perspective-projection.",
+        r#"# Foundations of Game Engine Development: Quaternions & Transforms
+- Unit quaternion: q = [s, v] = cos(theta/2) + sin(theta/2) * (u_x i + u_y j + u_z k).
+- Slerp interpolation: Slerp(q1, q2, t) = (sin((1-t)*theta)*q1 + sin(t*theta)*q2) / sin(theta).
+- Vector rotation: v' = q * [0, v] * q^{-1}.
+"#,
+    )
+}
+
+/// 58. math-code-first-calculus Skill
+pub fn math_code_first_calculus() -> EccSkill {
+    EccSkill::new(
+        "math-code-first-calculus",
+        "Code-first calculus, numerical finite-difference gradients, gradient descent optimization, 2D/3D polygon rasterization, and coordinate transforms in Python based on Paul Orland. Triggers: code-first-calculus, numerical-gradient, gradient-descent, polygon-rasterization, coordinate-transform, finite-difference, math-for-programmers.",
+        r#"# Math for Programmers: Code-First Calculus & Optimization
+- Finite difference gradient: df/dx = (f(x + h) - f(x - h)) / (2 * h).
+- Gradient descent step: theta_{t+1} = theta_t - alpha * grad(J(theta_t)).
+- 2D cross product for polygon orientation: (B_x - A_x)*(C_y - A_y) - (B_y - A_y)*(C_x - A_x).
+"#,
+    )
+}
+
+/// 59. math-bayesian-reasoning Skill
+pub fn math_bayesian_reasoning() -> EccSkill {
+    EccSkill::new(
+        "math-bayesian-reasoning",
+        "Bayesian statistics, prior/posterior distributions, Beta-Binomial conjugate updating, Bayes factors, and Thompson Sampling multi-armed bandit routing based on 'Bayesian Statistics the Fun Way' by Will Kurt. Triggers: bayesian-statistics, bayes-theorem, beta-binomial, posterior-probability, thompson-sampling, multi-armed-bandit, prior-distribution, epistemic-uncertainty.",
+        r#"# Bayesian Statistics: Belief Updating & Multi-Armed Bandits
+- Bayes' rule: P(theta | D) = (P(D | theta) * P(theta)) / P(D).
+- Beta-Binomial update: Beta(alpha + successes, beta + failures).
+- Thompson Sampling: sample theta_i ~ Beta(alpha_i, beta_i), pick arm with max sample.
+"#,
+    )
+}
+
+/// 60. math-ml-foundations Skill
+pub fn math_ml_foundations() -> EccSkill {
+    EccSkill::new(
+        "math-ml-foundations",
+        "Mathematical foundations of machine learning, matrix calculus, Jacobians, Hessians, multivariate Gaussian distributions, PCA eigendecomposition, and continuous optimization based on Deisenroth, Faisal, and Ong. Triggers: machine-learning-math, matrix-calculus, jacobian, hessian, multivariate-gaussian, pca, continuous-optimization, lagrange-multipliers.",
+        r#"# Mathematics for Machine Learning: Optimization & Distributions
+- Multivariate Gaussian: N(x; mu, Sigma) = (2*pi)^{-d/2} * |Sigma|^{-1/2} * exp(-1/2 * (x-mu)^T * Sigma^{-1} * (x-mu)).
+- Principal Component Analysis: Sigma * v_i = lambda_i * v_i.
+- Lagrangian: L(x, lambda) = f(x) + sum lambda_i * g_i(x).
+"#,
+    )
+}
+
+/// 61. math-networks-crowds-markets Skill
+pub fn math_networks_crowds_markets() -> EccSkill {
+    EccSkill::new(
+        "math-networks-crowds-markets",
+        "Graph theory, network centrality, PageRank power iteration, information cascades, small-world networks, and multi-agent swarm topologies based on Easley and Kleinberg. Triggers: network-graph-theory, pagerank, network-centrality, betweenness-centrality, information-cascades, small-world, agent-swarm-topology, graph-laplacian.",
+        r#"# Networks, Crowds & Markets: Graph Topology & Cascades
+- PageRank iteration: r_{t+1} = d * M * r_t + (1 - d) / N * 1.
+- Degree & betweenness centrality: C_B(v) = sum_{s != v != t} (sigma_{st}(v) / sigma_{st}).
+- Small-world Watts-Strogatz: high clustering coefficient C with small characteristic path length L.
+"#,
+    )
+}
+
+/// 62. math-convex-optimization Skill
+pub fn math_convex_optimization() -> EccSkill {
+    EccSkill::new(
+        "math-convex-optimization",
+        "Convex optimization, convex sets and functions, Karush-Kuhn-Tucker (KKT) optimality conditions, Lagrangian duality, and model latency/cost allocation based on Stephen Boyd and Lieven Vandenberghe. Triggers: convex-optimization, kkt-conditions, lagrangian-duality, convex-sets, slaters-condition, quadratic-programming, dual-problem.",
+        r#"# Convex Optimization: Duality & KKT Conditions
+- Convex problem: min f_0(x) s.t. f_i(x) <= 0, h_j(x) = 0.
+- KKT conditions: Stationarity (grad f_0 + sum lambda_i grad f_i + sum nu_j grad h_j = 0), Primal feasibility, Dual feasibility (lambda_i >= 0), Complementary slackness (lambda_i * f_i(x) = 0).
+"#,
+    )
+}
+
+/// 63. math-probability-logic Skill
+pub fn math_probability_logic() -> EccSkill {
+    EccSkill::new(
+        "math-probability-logic",
+        "Probability theory as extended formal logic under incomplete information, Cox's consistency theorems, and the Principle of Maximum Entropy (MaxEnt) based on E.T. Jaynes. Triggers: probability-as-logic, cox-theorems, maximum-entropy, maxent, epistemic-probability, bayesian-logic, inductive-reasoning, uninformative-priors.",
+        r#"# Probability Theory: The Logic of Science
+- Cox's consistency axioms: transitiveness of plausibility, complementary negations, structural uniqueness.
+- Maximum Entropy Principle: max H(p) = -sum p_i ln p_i subject to expectation constraints sum p_i f_k(x_i) = <f_k>.
+- Grounding uncertainty: reject false certainty without sufficient observational evidence.
+"#,
+    )
+}
+
+/// 64. math-programmers-discrete Skill
+pub fn math_programmers_discrete() -> EccSkill {
+    EccSkill::new(
+        "math-programmers-discrete",
+        "Programmer-focused discrete mathematics, Fast Fourier Transform (FFT) for motion/audio signals, Graph Laplacian, and spectral bisection based on Jeremy Kun. Triggers: programmers-discrete-math, fast-fourier-transform, fft, graph-laplacian, spectral-bisection, polynomial-rings, fourier-analysis, signal-processing.",
+        r#"# A Programmer's Introduction to Mathematics: FFT & Graph Laplacians
+- Discrete Fourier Transform: X_k = sum_{n=0}^{N-1} x_n * exp(-i * 2*pi * k * n / N).
+- Cooley-Tukey FFT: divide-and-conquer O(N log N) frequency transformation.
+- Graph Laplacian: L = D - A; Fiedler vector (2nd smallest eigenvalue) partitions graph minimally.
+"#,
+    )
+}
+
+/// 65. math-intuitive-calculus Skill
+pub fn math_intuitive_calculus() -> EccSkill {
+    EccSkill::new(
+        "math-intuitive-calculus",
+        "Intuitive differential and integral calculus, instantaneous velocity, exponential decay, accumulation beneath curves, and PID controllers with anti-windup clamping based on 'Calculus Made Easy' by Thompson and Gardner. Triggers: intuitive-calculus, rates-of-change, velocity-accumulation, exponential-decay, pid-controller, anti-windup, numerical-integration.",
+        r#"# Calculus Made Easy: Intuitive Differentials & PID Dynamics
+- Infinitesimals: dy/dx represents instantaneous rate of change.
+- Chain rule: dy/dx = (dy/du) * (du/dx).
+- PID controller with anti-windup: u(t) = K_p * e(t) + K_i * int_0^t e(tau) dtau + K_d * de/dt clamped to [u_min, u_max].
+"#,
+    )
+}
+
+/// 66. math-concrete-discrete Skill
+pub fn math_concrete_discrete() -> EccSkill {
+    EccSkill::new(
+        "math-concrete-discrete",
+        "Concrete discrete mathematics, recurrence relations, generating functions, discrete sums, binomial coefficients, and asymptotic bounds for agent token recursion based on Graham, Knuth, and Patashnik. Triggers: concrete-mathematics, recurrence-relations, generating-functions, discrete-sums, binomial-coefficients, knuth-math, asymptotic-analysis, token-budget-bound.",
+        r#"# Concrete Mathematics: Discrete Recurrences & Asymptotics
+- Recurrence solution via master theorem: T(n) = a * T(n/b) + f(n).
+- Ordinary generating functions: G(z) = sum_{n=0}^infty a_n * z^n.
+- Bounding recursive agent swarms: ensure branching factor b and depth d satisfy sum b^k <= Token_Budget.
+"#,
+    )
+}
+
+/// 67. math-visual-topology Skill
+pub fn math_visual_topology() -> EccSkill {
+    EccSkill::new(
+        "math-visual-topology",
+        "Visual geometry, Gaussian curvature, Euler characteristic, minimal surfaces, manifold topology, and 2-manifold mesh integrity validation based on David Hilbert and Stephan Cohn-Vossen. Triggers: visual-geometry, gaussian-curvature, euler-characteristic, manifold-topology, minimal-surfaces, mesh-validation, hilbert-geometry.",
+        r#"# Geometry and the Imagination: Curvature & Manifolds
+- Gaussian curvature: K = kappa_1 * kappa_2; Theorema Egregium (intrinsic invariance).
+- Euler-Poincare characteristic: chi = V - E + F = 2 - 2g for closed surface of genus g.
+- 2-manifold invariant: each edge shared by exactly two faces; vertex star homeomorphic to disk.
+"#,
+    )
+}
+
+/// 68. math-chaos-fractals Skill
+pub fn math_chaos_fractals() -> EccSkill {
+    EccSkill::new(
+        "math-chaos-fractals",
+        "Fractal geometry, scale invariance, power laws, Hausdorff dimension, Lorenz strange attractors, and deterministic chaos simulations based on Manfred Schroeder. Triggers: chaos-theory, fractals, strange-attractor, lorenz-attractor, power-laws, lyapunov-exponent, mandelbrot, scale-invariance.",
+        r#"# Fractals, Chaos & Power Laws
+- Hausdorff dimension: D = lim_{eps -> 0} (log N(eps) / log(1/eps)).
+- Lorenz chaotic system: dx/dt = sigma*(y - x), dy/dt = x*(rho - z) - y, dz/dt = x*y - beta*z.
+- Lyapunov sensitivity: delta x(t) approx delta x_0 * exp(lambda * t).
+"#,
+    )
+}
+
+/// 69. math-numerical-methods Skill
+pub fn math_numerical_methods() -> EccSkill {
+    EccSkill::new(
+        "math-numerical-methods",
+        "Scientific numerical computing, IEEE-754 floating-point stability, Runge-Kutta 4th Order (RK4) ODE solvers, Symplectic Velocity Verlet, and spline smoothing based on 'Numerical Recipes'. Triggers: numerical-methods, rk4, runge-kutta, floating-point-stability, velocity-verlet, cubic-spline, numerical-recipes, nan-prevention.",
+        r#"# Numerical Recipes: RK4 & Floating-Point Stability
+- Runge-Kutta 4th order: y_{n+1} = y_n + dt/6 * (k1 + 2*k2 + 2*k3 + k4).
+- Symplectic Velocity Verlet: x(t+dt) = x(t) + v(t)*dt + 1/2*a(t)*dt^2; v(t+dt) = v(t) + 1/2*(a(t) + a(t+dt))*dt.
+- Numerical safety: guard against catastrophic cancellation: sqrt(x + eps) - sqrt(x) = eps / (sqrt(x+eps) + sqrt(x)).
+"#,
+    )
+}
+
+/// 70. math-algorithmic-game-theory Skill
+pub fn math_algorithmic_game_theory() -> EccSkill {
+    EccSkill::new(
+        "math-algorithmic-game-theory",
+        "Algorithmic game theory, Nash equilibria, mechanism design, Vickrey-Clarke-Groves (VCG) truthful auctions, Price of Anarchy (PoA), and Shapley value attribution based on Nisan, Roughgarden, Tardos, and Vazirani. Triggers: algorithmic-game-theory, nash-equilibrium, mechanism-design, vcg-auction, price-of-anarchy, shapley-value, multi-agent-incentives, cooperative-games.",
+        r#"# Algorithmic Game Theory: Multi-Agent Equilibrium & Incentives
+- Nash equilibrium: no agent has incentive to unilaterally deviate u_i(s_i^*, s_{-i}^*) >= u_i(s_i, s_{-i}^*).
+- Price of Anarchy: PoA = (Worst Nash Social Welfare) / (Optimal Social Welfare).
+- Shapley value credit attribution: phi_i(v) = sum_{S subseteq N \ {i}} (|S|! * (|N| - |S| - 1)! / |N|!) * (v(S union {i}) - v(S)).
 "#,
     )
 }
@@ -2222,6 +2696,21 @@ fn infer_domain(name: &str) -> String {
         ("threat", "security"),
         ("audit", "security"),
         ("sandbox", "security"),
+        ("math", "math"),
+        ("vibe-math", "math"),
+        ("boids", "math"),
+        ("quaternion", "math"),
+        ("calculus", "math"),
+        ("geometry", "math"),
+        ("fractal", "math"),
+        ("kronos", "quant"),
+        ("qlib", "quant"),
+        ("chronos", "quant"),
+        ("moirai", "quant"),
+        ("fingpt", "quant"),
+        ("finrl", "quant"),
+        ("rdagent", "quant"),
+        ("quant", "quant"),
         ("refactoring-ui", "ux"),
         ("microinteractions", "ux"),
         ("laws-of-ux", "ux"),
