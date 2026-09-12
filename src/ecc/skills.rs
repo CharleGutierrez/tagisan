@@ -257,6 +257,57 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         math_chaos_fractals(),
         math_numerical_methods(),
         math_algorithmic_game_theory(),
+        // Enterprise Resource Planning & Enterprise Systems Architect (Top 50 Books)
+        erp_silverston_enterprise_patterns(),
+        erp_silverston_industry_patterns(),
+        erp_fowler_analysis_patterns(),
+        erp_evans_ddd_core(),
+        erp_vernon_iddd_enterprise(),
+        erp_scheer_aris_architecture(),
+        erp_double_entry_ledger(),
+        erp_multi_currency_fx(),
+        erp_asc606_revenue_recognition(),
+        erp_cost_accounting_management(),
+        erp_double_entry_history_auditing(),
+        erp_balance_sheet_working_capital(),
+        erp_intercompany_consolidation(),
+        erp_supply_chain_strategy(),
+        erp_inventory_eoq_safety_stock(),
+        erp_landed_cost_allocation(),
+        erp_wms_bin_location_topology(),
+        erp_procurement_vendor_lifecycle(),
+        erp_3way_match_p2p(),
+        erp_reverse_logistics_rma(),
+        erp_mrp_crp_core(),
+        erp_bom_explosion_routing(),
+        erp_theory_of_constraints_dbr(),
+        erp_ddmrp_demand_driven(),
+        erp_lean_toyota_production(),
+        erp_shop_floor_mes(),
+        erp_batch_traceability_genealogy(),
+        erp_bpmn_workflow_patterns(),
+        erp_process_mining_event_logs(),
+        erp_order_to_cash_o2c(),
+        erp_procure_to_pay_p2p(),
+        erp_record_to_report_r2r(),
+        erp_subscription_recurring_billing(),
+        erp_enterprise_integration_patterns(),
+        erp_odoo_technical_architecture(),
+        erp_frappe_erpnext_framework(),
+        erp_sap_s4hana_cleancore(),
+        erp_netsuite_suitecloud_suiteflow(),
+        erp_multi_tenant_data_isolation(),
+        erp_custom_fields_metadata_extensibility(),
+        erp_headless_graphql_rest_api(),
+        erp_distributed_acid_kleppmann(),
+        erp_saga_distributed_transactions(),
+        erp_cqrs_event_sourcing(),
+        erp_optimistic_locking_concurrency(),
+        erp_distributed_idempotency(),
+        erp_segregation_of_duties_sod(),
+        erp_sox_internal_controls_audit(),
+        erp_data_retention_gdpr_compliance(),
+        erp_tax_engine_jurisdiction_rules(),
     ]
 }
 
@@ -344,6 +395,154 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
             s.name = "rust-tokio-concurrency".to_string();
             return Some(s);
         }
+    }
+    // ERP & Enterprise Systems Skills Aliases
+    if lower == "double-entry" || lower == "general-ledger" || lower == "debit-credit" || lower == "trial-balance" {
+        return find_built_in_skill("erp-double-entry-ledger");
+    }
+    if lower == "3-way-match" || lower == "three-way-match" || lower == "po-grn-match" || lower == "gr-ir" {
+        return find_built_in_skill("erp-3way-match-p2p");
+    }
+    if lower == "eoq" || lower == "economic-order-quantity" {
+        return find_built_in_skill("erp-inventory-eoq-safety-stock");
+    }
+    if lower == "safety-stock" || lower == "reorder-point" || lower == "rop" {
+        return find_built_in_skill("erp-inventory-eoq-safety-stock");
+    }
+    if lower == "landed-cost" || lower == "landed-cost-allocation" || lower == "freight-absorption" {
+        return find_built_in_skill("erp-landed-cost-allocation");
+    }
+    if lower == "bom-explosion" || lower == "bill-of-materials" || lower == "low-level-coding" {
+        return find_built_in_skill("erp-bom-explosion-routing");
+    }
+    if lower == "order-to-cash" || lower == "o2c" {
+        return find_built_in_skill("erp-order-to-cash-o2c");
+    }
+    if lower == "procure-to-pay" || lower == "p2p" {
+        return find_built_in_skill("erp-procure-to-pay-p2p");
+    }
+    if lower == "record-to-report" || lower == "r2r" || lower == "fast-close" {
+        return find_built_in_skill("erp-record-to-report-r2r");
+    }
+    if lower == "odoo" || lower == "odoo-orm" {
+        return find_built_in_skill("erp-odoo-technical-architecture");
+    }
+    if lower == "frappe" || lower == "erpnext" {
+        return find_built_in_skill("erp-frappe-erpnext-framework");
+    }
+    if lower == "saga-pattern" || lower == "saga-orchestration" || lower == "distributed-saga" {
+        return find_built_in_skill("erp-saga-distributed-transactions");
+    }
+    if lower == "segregation-of-duties" || lower == "sod" {
+        return find_built_in_skill("erp-segregation-of-duties-sod");
+    }
+    if lower == "sox-compliance" || lower == "sox-audit" || lower == "sox-404" || lower == "itgc" {
+        return find_built_in_skill("erp-sox-internal-controls-audit");
+    }
+    if lower == "silverston" || lower == "party-model" {
+        return find_built_in_skill("erp-silverston-enterprise-patterns");
+    }
+    if lower == "fowler-analysis" || lower == "analysis-patterns" {
+        return find_built_in_skill("erp-fowler-analysis-patterns");
+    }
+    if lower == "evans-ddd" || lower == "domain-driven-design" {
+        return find_built_in_skill("erp-evans-ddd-core");
+    }
+    if lower == "vernon-iddd" || lower == "iddd" {
+        return find_built_in_skill("erp-vernon-iddd-enterprise");
+    }
+    if lower == "aris" || lower == "scheer-aris" || lower == "epc" {
+        return find_built_in_skill("erp-scheer-aris-architecture");
+    }
+    if lower == "multi-currency" || lower == "fx-revaluation" {
+        return find_built_in_skill("erp-multi-currency-fx");
+    }
+    if lower == "asc606" || lower == "revenue-recognition" || lower == "ifrs15" {
+        return find_built_in_skill("erp-asc606-revenue-recognition");
+    }
+    if lower == "cost-accounting" || lower == "standard-costing" || lower == "variance-analysis" {
+        return find_built_in_skill("erp-cost-accounting-management");
+    }
+    if lower == "working-capital" || lower == "cash-conversion-cycle" || lower == "ccc" {
+        return find_built_in_skill("erp-balance-sheet-working-capital");
+    }
+    if lower == "intercompany" || lower == "consolidation" || lower == "financial-consolidation" {
+        return find_built_in_skill("erp-intercompany-consolidation");
+    }
+    if lower == "supply-chain" || lower == "bullwhip-effect" {
+        return find_built_in_skill("erp-supply-chain-strategy");
+    }
+    if lower == "wms" || lower == "warehouse-topology" || lower == "bin-location" {
+        return find_built_in_skill("erp-wms-bin-location-topology");
+    }
+    if lower == "procurement" || lower == "strategic-sourcing" || lower == "otif" {
+        return find_built_in_skill("erp-procurement-vendor-lifecycle");
+    }
+    if lower == "reverse-logistics" || lower == "rma" {
+        return find_built_in_skill("erp-reverse-logistics-rma");
+    }
+    if lower == "mrp" || lower == "crp" || lower == "master-production-schedule" {
+        return find_built_in_skill("erp-mrp-crp-core");
+    }
+    if lower == "theory-of-constraints" || lower == "toc" || lower == "drum-buffer-rope" || lower == "dbr" {
+        return find_built_in_skill("erp-theory-of-constraints-dbr");
+    }
+    if lower == "ddmrp" || lower == "demand-driven-mrp" {
+        return find_built_in_skill("erp-ddmrp-demand-driven");
+    }
+    if lower == "toyota-production-system" || lower == "tps" || lower == "lean-manufacturing" || lower == "kanban" {
+        return find_built_in_skill("erp-lean-toyota-production");
+    }
+    if lower == "mes" || lower == "shop-floor" || lower == "oee" {
+        return find_built_in_skill("erp-shop-floor-mes");
+    }
+    if lower == "traceability" || lower == "lot-genealogy" || lower == "fefo" {
+        return find_built_in_skill("erp-batch-traceability-genealogy");
+    }
+    if lower == "bpmn" || lower == "workflow-patterns" {
+        return find_built_in_skill("erp-bpmn-workflow-patterns");
+    }
+    if lower == "process-mining" || lower == "alpha-miner" || lower == "xes" {
+        return find_built_in_skill("erp-process-mining-event-logs");
+    }
+    if lower == "subscription-billing" || lower == "recurring-billing" || lower == "mrr" {
+        return find_built_in_skill("erp-subscription-recurring-billing");
+    }
+    if lower == "enterprise-integration-patterns" || lower == "eip" || lower == "transactional-outbox" {
+        return find_built_in_skill("erp-enterprise-integration-patterns");
+    }
+    if lower == "sap-cleancore" || lower == "clean-core" || lower == "s4hana" {
+        return find_built_in_skill("erp-sap-s4hana-cleancore");
+    }
+    if lower == "netsuite" || lower == "suitecloud" || lower == "suitescript" {
+        return find_built_in_skill("erp-netsuite-suitecloud-suiteflow");
+    }
+    if lower == "multi-tenant" || lower == "rls" {
+        return find_built_in_skill("erp-multi-tenant-data-isolation");
+    }
+    if lower == "custom-fields" || lower == "eav" {
+        return find_built_in_skill("erp-custom-fields-metadata-extensibility");
+    }
+    if lower == "headless-erp" || lower == "dataloader" {
+        return find_built_in_skill("erp-headless-graphql-rest-api");
+    }
+    if lower == "distributed-acid" || lower == "kleppmann" || lower == "write-skew" {
+        return find_built_in_skill("erp-distributed-acid-kleppmann");
+    }
+    if lower == "cqrs" || lower == "event-sourcing" {
+        return find_built_in_skill("erp-cqrs-event-sourcing");
+    }
+    if lower == "optimistic-locking" || lower == "optimistic-concurrency" {
+        return find_built_in_skill("erp-optimistic-locking-concurrency");
+    }
+    if lower == "idempotency" || lower == "idempotency-key" {
+        return find_built_in_skill("erp-distributed-idempotency");
+    }
+    if lower == "gdpr" || lower == "data-retention" {
+        return find_built_in_skill("erp-data-retention-gdpr-compliance");
+    }
+    if lower == "tax-engine" || lower == "sales-tax" || lower == "vat" || lower == "tax-nexus" {
+        return find_built_in_skill("erp-tax-engine-jurisdiction-rules");
     }
     all_built_in_skills().into_iter().find(|s| s.name == lower)
 }
@@ -1480,6 +1679,2291 @@ pub fn math_algorithmic_game_theory() -> EccSkill {
 - Nash equilibrium: no agent has incentive to unilaterally deviate u_i(s_i^*, s_{-i}^*) >= u_i(s_i, s_{-i}^*).
 - Price of Anarchy: PoA = (Worst Nash Social Welfare) / (Optimal Social Welfare).
 - Shapley value credit attribution: phi_i(v) = sum_{S subseteq N \ {i}} (|S|! * (|N| - |S| - 1)! / |N|!) * (v(S union {i}) - v(S)).
+"#,
+    )
+}
+
+/// 71. erp-silverston-enterprise-patterns Skill
+pub fn erp_silverston_enterprise_patterns() -> EccSkill {
+    EccSkill::new(
+        "erp-silverston-enterprise-patterns",
+        "Universal enterprise data patterns for Party, Role, Relationship, Product, Order, Shipment, Work Effort, and Financial Account hierarchies based on Len Silverston's canonical models. Triggers: silverston-patterns, enterprise-data-model, party-role-relationship, universal-data-model, product-hierarchy, order-shipment-pattern, enterprise-party-model, canonical-erp-schema.",
+        r#"# Canonical Enterprise Data Modeling: Universal Party, Product, Order & Account Patterns
+> Based on **The Data Model Resource Book, Vol 1 & 2 - Len Silverston**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Order Line & Aggregation Invariants
+For any order $O$ with line items $i \in \{1, \dots, n\}$:
+$$\text{LineTotal}_i = Q_i \times P_i - D_i$$
+$$\text{Subtotal}(O) = \sum_{i=1}^n \text{LineTotal}_i$$
+$$\text{TotalAmount}(O) = \text{Subtotal}(O) + \text{TaxAmount}(O) + \text{ShippingFee}(O)$$
+
+### 2.2 Shipment Quantity Conservation
+Let $Q_i^{\text{ordered}}$ be the ordered quantity of line item $i$. The cumulative shipped quantity across all shipments $S_k$ must satisfy:
+$$\sum_{k} Q_{i, k}^{\text{shipped}} \le Q_i^{\text{ordered}}$$
+If $\sum_k Q_{i, k}^{\text{shipped}} = Q_i^{\text{ordered}}$ for all $i$, the order transitions to `COMPLETED`.
+
+### 2.3 Party Hierarchy Directed Acyclic Graph (DAG) Invariant
+Let $G = (V, E)$ be the graph formed by party relationships where $V$ are `parties` and $E$ are `SUBSIDIARY_OF` relationships.
+$$\forall v \in V, \quad v \notin \text{Ancestors}(v) \iff \text{Cycles}(G) = \emptyset$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Order Lifecycle FSM
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT
+    DRAFT --> PLACED: place_order()
+    DRAFT --> CANCELLED: cancel()
+    PLACED --> APPROVED: approve_credit()
+    PLACED --> CANCELLED: reject()
+    APPROVED --> PARTIALLY_SHIPPED: dispatch_first_shipment()
+    APPROVED --> COMPLETED: dispatch_full_shipment()
+    PARTIALLY_SHIPPED --> COMPLETED: dispatch_final_shipment()
+    PARTIALLY_SHIPPED --> CANCELLED: cancel_remaining()
+    COMPLETED --> [*]
+    CANCELLED --> [*]
+```
+
+### 3.2 Invariant Enforcement Rules
+- **Rule 1**: A `CANCELLED` order cannot receive shipments or accept further modifications.
+- **Rule 2**: Transition from `DRAFT` to `PLACED` requires at least 1 line item with positive quantity.
+- **Rule 3**: `COMPLETED` is an immutable terminal state.
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Enforce Party-Role-Relationship decoupling: Never put 'is_customer' boolean on party table; use party_roles with date ranges.
+- Validate Order Line Total invariant: line_total = quantity * unit_price - discount.
+- Enforce cumulative shipment check: sum(shipped_quantity) <= ordered_quantity.
+- Prevent cyclical party hierarchies with recursive CTE validation before insert.
+- Ensure terminal states (COMPLETED, CANCELLED) reject any subsequent update mutations.
+```
+"#,
+    )
+}
+
+/// 72. erp-silverston-industry-patterns Skill
+pub fn erp_silverston_industry_patterns() -> EccSkill {
+    EccSkill::new(
+        "erp-silverston-industry-patterns",
+        "Specialized enterprise data models across Manufacturing, Telecommunications, Healthcare, Financial Services, and Professional Services based on Len Silverston and Paul Agnew's industry blueprints. Triggers: industry-data-models, silverston-industry, telecom-cdr-model, healthcare-clinical-encounter, financial-services-deposit-loan, professional-services-timesheet, specialized-erp-patterns, vertical-erp-schemas.",
+        r#"# Industry-Specific Enterprise Data Models: Manufacturing, Telecom, Healthcare & Financial Services
+> Based on **The Data Model Resource Book, Vol 3 - Len Silverston & Paul Agnew**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Loan Principal Amortization
+For a loan with principal $P$, monthly interest rate $r = \frac{R_{\text{annual}}}{12}$, and term $n$ months:
+$$\text{Monthly Payment } M = P \cdot \frac{r(1+r)^n}{(1+r)^n - 1}$$
+At month $k$:
+$$\text{Interest Payment } I_k = B_{k-1} \cdot r$$
+$$\text{Principal Payment } P_k = M - I_k$$
+$$\text{Remaining Balance } B_k = B_{k-1} - P_k$$
+
+### 2.2 Telecom Usage Rating Invariant
+For a CDR with duration $t$ seconds and rating increment $\Delta t = 60\text{s}$ with rate $R_{\text{minute}}$:
+$$\text{Billable Minutes} = \left\lceil \frac{t}{60} \right\rceil$$
+$$\text{Rated Amount} = \text{Billable Minutes} \times R_{\text{minute}}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Loan Account Lifecycle FSM
+```mermaid
+stateDiagram-v2
+    [*] --> APPLICATION
+    APPLICATION --> UNDERWRITING: submit_documents()
+    APPLICATION --> CANCELLED: withdraw()
+    UNDERWRITING --> APPROVED: credit_score_pass()
+    UNDERWRITING --> DEFAULTED: reject()
+    APPROVED --> DISBURSED: wire_funds()
+    DISBURSED --> ACTIVE: first_payment_due()
+    ACTIVE --> PAID_OFF: balance_zero()
+    ACTIVE --> DEFAULTED: dunning_exceeded()
+    PAID_OFF --> [*]
+    DEFAULTED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never calculate billing amounts client-side; use STORED generated columns or database triggers.
+- Enforce positive CDR duration and data bytes (duration >= 0, data_bytes >= 0).
+- Loan balance invariant: balance_k = balance_{k-1} - principal_repayment.
+- Guard against zero-rate division in amortization equations.
+- Healthcare encounter admit_time must precede or equal discharge_time.
+```
+"#,
+    )
+}
+
+/// 73. erp-fowler-analysis-patterns Skill
+pub fn erp_fowler_analysis_patterns() -> EccSkill {
+    EccSkill::new(
+        "erp-fowler-analysis-patterns",
+        "Enterprise structural patterns for Accountability graphs, Observation and Measurement protocols, Tiered Pricing, and Accounting Execution Posting Rules based on Martin Fowler's Analysis Patterns. Triggers: fowler-analysis-patterns, accountability-pattern, observation-measurement, tiered-pricing-pattern, posting-rules, enterprise-object-models, operational-vs-knowledge-level, fowler-accounting.",
+        r#"# Fowler Analysis Patterns: Accountability, Observation, Tiered Pricing & Accounting Rules
+> Based on **Analysis Patterns: Reusable Object Models - Martin Fowler**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Unit of Measure Conversion Invariant
+Let $Q_A$ be a quantity in unit $A$ and $Q_B$ in unit $B$ with conversion factors $C_A, C_B$ to the canonical dimension base unit:
+$$Q_{\text{base}} = Q_A \times C_A$$
+$$Q_B = \frac{Q_{\text{base}}}{C_B} = Q_A \times \frac{C_A}{C_B}$$
+
+### 2.2 Tiered Pricing Function
+For an order quantity $q$, pricing under tiered bands $[L_k, U_k)$ with rates $P_k$:
+$$\text{TotalPrice}(q) = \sum_{k=1}^m \max(0, \min(q, U_k) - L_k) \times P_k$$
+Ensuring monotonicity: $q_1 < q_2 \implies \text{TotalPrice}(q_1) \le \text{TotalPrice}(q_2)$.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Posting Rule Execution FSM
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING_EVALUATION
+    PENDING_EVALUATION --> MATCHED: evaluate_event()
+    PENDING_EVALUATION --> UNMATCHED: no_applicable_rule()
+    MATCHED --> POSTED: generate_balanced_journal_entry()
+    MATCHED --> REJECTED: balance_mismatch()
+    POSTED --> [*]
+    UNMATCHED --> ESCALATED: notify_accountant()
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Differentiate Knowledge Level (AccountabilityType, PhenomenonType) from Operational Level (Accountability, Observation).
+- Never mix dimension types in conversions (e.g. converting MASS to TIME must fail).
+- Verify tiered pricing monotonicity: higher volume must not produce lower total invoice amount.
+- Ensure all posting rules generate debits strictly equal to credits.
+```
+"#,
+    )
+}
+
+/// 74. erp-evans-ddd-core Skill
+pub fn erp_evans_ddd_core() -> EccSkill {
+    EccSkill::new(
+        "erp-evans-ddd-core",
+        "Tactical and strategic Domain-Driven Design for enterprise systems, establishing Ubiquitous Language, Bounded Contexts, Aggregate Roots, Invariant Boundaries, and Anti-Corruption Layers (ACL) based on Eric Evans. Triggers: evans-ddd, domain-driven-design, bounded-context, aggregate-root, ubiquitous-language, anti-corruption-layer, context-mapping, domain-events-core, ddd-invariants.",
+        r#"# Domain-Driven Design in ERP: Ubiquitous Language, Aggregates & Anti-Corruption Layers
+> Based on **Domain-Driven Design: Tackling Complexity in the Heart of Software - Eric Evans**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Aggregate Invariant Preservation
+Let an Aggregate Root state be $S$, satisfying domain invariant predicate $\Phi(S) = \text{true}$.
+A command $C$ produces state $S'$ and domain events $E$:
+$$(S', E) = f(S, C)$$
+$$\Phi(S') = \text{true} \quad \forall C \in \text{ValidCommands}$$
+If $\Phi(S') = \text{false}$, command $C$ is rejected and transaction rolls back.
+
+### 2.2 Optimistic Versioning Invariant
+Let $V_t$ be the aggregate version at time of read:
+$$\text{UPDATE} \iff V_{\text{current}} = V_t \implies V_{\text{new}} = V_t + 1$$
+If $V_{\text{current}} \ne V_t$, throw `ConcurrencyException` to guarantee serializable consistency.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Aggregate Lifecycle State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> INITIALIZING
+    INITIALIZING --> ACTIVE: apply(CreatedEvent)
+    ACTIVE --> MODIFIED: apply(UpdatedEvent)
+    MODIFIED --> ACTIVE: commit_transaction()
+    ACTIVE --> CLOSED: apply(ArchivedEvent)
+    CLOSED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never reference entities across Aggregate Root boundaries by object reference; use IDs only.
+- Ensure transactions update only a single Aggregate Root per request.
+- Use Outbox Pattern table within the same database transaction to publish Domain Events.
+- Prevent domain logic contamination from external legacy schemas via an Anti-Corruption Layer (ACL).
+- Invariants must be enforced inside the Aggregate Root boundary, never in external UI controllers.
+```
+"#,
+    )
+}
+
+/// 75. erp-vernon-iddd-enterprise Skill
+pub fn erp_vernon_iddd_enterprise() -> EccSkill {
+    EccSkill::new(
+        "erp-vernon-iddd-enterprise",
+        "Production implementation of Domain-Driven Design, covering Event Sourcing append-only streams, CQRS read/write projections, Saga orchestration, and idempotent messaging based on Vaughn Vernon. Triggers: vernon-iddd, event-sourcing-core, cqrs-architecture, saga-orchestrator, aggregate-invariants, event-store-schema, idempotent-domain-events, enterprise-ddd-implementation.",
+        r#"# Implementing DDD: Event Sourcing, Sagas & CQRS Enterprise Patterns
+> Based on **Implementing Domain-Driven Design - Vaughn Vernon**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Event Fold Invariant
+An aggregate state at version $n$ is a deterministic left-fold over its historic event stream:
+$$S_n = \text{foldl}(\text{apply}, S_0, [e_1, e_2, \dots, e_n])$$
+Given snapshot $S_k$ at version $k < n$:
+$$S_n = \text{foldl}(\text{apply}, S_k, [e_{k+1}, \dots, e_n])$$
+
+### 2.2 Strict Monotonicity of Event Stream
+$$\text{Version}(e_{i}) = \text{Version}(e_{i-1}) + 1$$
+Any gap or duplicate aborts append with `ConcurrencyConflictException`.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Saga Orchestration State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> STARTED
+    STARTED --> PAYMENT_RESERVED: process_payment()
+    PAYMENT_RESERVED --> INVENTORY_ALLOCATED: allocate_stock()
+    PAYMENT_RESERVED --> PAYMENT_FAILED: insufficient_funds()
+    PAYMENT_FAILED --> COMPENSATING_PAYMENT: refund()
+    INVENTORY_ALLOCATED --> ORDER_COMPLETED: dispatch()
+    INVENTORY_ALLOCATED --> COMPENSATING_INVENTORY: stockout()
+    COMPENSATING_INVENTORY --> COMPENSATING_PAYMENT: rollback_stock()
+    COMPENSATING_PAYMENT --> SAGA_ABORTED: refund_finished()
+    ORDER_COMPLETED --> [*]
+    SAGA_ABORTED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never execute UPDATE or DELETE statements against the event_store; it is strictly append-only.
+- Verify unique constraint on (stream_id, stream_version) to prevent concurrent write collisions.
+- Reconstruct aggregate state using left-fold over ordered events.
+- Compensating transactions in Sagas must be strictly idempotent.
+```
+"#,
+    )
+}
+
+/// 76. erp-scheer-aris-architecture Skill
+pub fn erp_scheer_aris_architecture() -> EccSkill {
+    EccSkill::new(
+        "erp-scheer-aris-architecture",
+        "Enterprise business process engineering using Scheer's ARIS framework, Event-Driven Process Chains (EPC), Function-Data-Organization alignment, and process-to-data integration. Triggers: scheer-aris, aris-architecture, event-driven-process-chains, epc-workflows, business-process-engineering, aris-house, process-to-data, sap-reference-model.",
+        r#"# ARIS Architecture of Integrated Information Systems: EPC Workflows & Process-to-Data Alignment
+> Based on **ARIS - Business Process Modeling - August-Wilhelm Scheer**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 EPC Grammar & Syntax Invariants
+Let an EPC graph be $G = (V, E)$ where $V = V_{\text{Event}} \cup V_{\text{Function}} \cup V_{\text{Connector}}$:
+1. **Alternation Principle**: An Event must not be immediately followed by another Event:
+   $$(u, v) \in E \land u \in V_{\text{Event}} \implies v \notin V_{\text{Event}}$$
+2. **Decision Authority**: An Event cannot make decisions; XOR/OR connectors cannot immediately follow an Event:
+   $$(u, v) \in E \land u \in V_{\text{Event}} \implies v \notin \{ \text{XOR\_SPLIT}, \text{OR\_SPLIT} \}$$
+   Only a `FUNCTION` possesses organizational agency to route decisions.
+
+### 2.2 Token Game Net Soundness
+A workflow net is sound iff:
+- **Option to Complete**: $\forall M \in [M_0\rangle, \exists M' \in [M\rangle \text{ s.t. } M' \ge M_{\text{final}}$.
+- **Proper Completion**: $M \ge M_{\text{final}} \implies M = M_{\text{final}}$.
+- **No Dead Transitions**: $\forall t \in T, \exists M \in [M_0\rangle \text{ s.t. } M \xrightarrow{t}$.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 EPC Process Execution Flow
+```mermaid
+graph TD
+    E1([Event: Customer Order Received]) --> F1[Function: Check Credit Limit]
+    F1 --> C1{XOR Split}
+    C1 -->|Credit OK| E2([Event: Credit Approved])
+    C1 -->|Credit Bad| E3([Event: Credit Denied])
+    E2 --> F2[Function: Release Order to Warehouse]
+    E3 --> F3[Function: Notify Account Manager]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Enforce Scheer's EPC grammar: Never allow an Event to directly connect to an Event.
+- Prevent XOR splits immediately after an Event; decisions require a Function.
+- Map every EPC Function to responsible Organizational Unit and CRUD Data Objects.
+- Enforce Petri net soundness (no deadlocks, no dangling execution tokens).
+```
+"#,
+    )
+}
+
+/// 77. erp-double-entry-ledger Skill
+pub fn erp_double_entry_ledger() -> EccSkill {
+    EccSkill::new(
+        "erp-double-entry-ledger",
+        "Fundamental double-entry accounting mechanics, Chart of Accounts, General Ledger posting, Trial Balance generation, and the fundamental invariant sum(debits) == sum(credits) based on Mike Piper. Triggers: double-entry-ledger, general-ledger, accounting-equation, debit-credit-invariant, chart-of-accounts, trial-balance, journal-entry, accounting-made-simple, debits-equal-credits.",
+        r#"# Double-Entry Bookkeeping & General Ledger: Mathematical Accounting Invariants
+> Based on **Accounting Made Simple - Mike Piper**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Fundamental Accounting Invariant
+The foundational equation of double-entry bookkeeping:
+$$\text{Assets} = \text{Liabilities} + \text{Equity}$$
+Expanded with nominal accounts (income statement):
+$$\text{Assets} = \text{Liabilities} + \text{Equity} + (\text{Revenue} - \text{Expenses}) - \text{Dividends}$$
+Rearranging into pure debit/credit parity:
+$$\underbrace{\text{Assets} + \text{Expenses} + \text{Dividends}}_{\text{Normal Debit Balance}} = \underbrace{\text{Liabilities} + \text{Equity} + \text{Revenue}}_{\text{Normal Credit Balance}}$$
+
+### 2.2 Strict Balance Invariant
+For every posted journal entry $J$:
+$$\sum_{l \in \text{Lines}(J)} \text{debit}_l - \sum_{l \in \text{Lines}(J)} \text{credit}_l = 0.0000$$
+Any journal entry where $|\sum \text{debit} - \sum \text{credit}| > 10^{-4}$ MUST be rejected.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Journal Entry State Lifecycle
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT
+    DRAFT --> POSTED: post_entry() [assert debits == credits]
+    DRAFT --> VOIDED: void()
+    POSTED --> REVERSED: reverse_entry() [generates inverse entry]
+    POSTED --> [*]
+    REVERSED --> [*]
+    VOIDED --> [*]
+```
+- **Invariant**: Once `POSTED`, a journal entry CANNOT be edited or deleted. Correction requires generating a compensating `REVERSED` entry.
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Enforce strict debit == credit invariant before saving any journal entry.
+- Disallow single-line entries: minimum 2 lines required per journal voucher.
+- Never update or delete a POSTED entry; issue a reversing debit/credit voucher instead.
+- Require positive amounts: debit >= 0 and credit >= 0, mutually exclusive per line.
+```
+"#,
+    )
+}
+
+/// 78. erp-multi-currency-fx Skill
+pub fn erp_multi_currency_fx() -> EccSkill {
+    EccSkill::new(
+        "erp-multi-currency-fx",
+        "Multi-currency ERP mechanics, base vs functional vs transaction currencies, Realized FX gains/losses upon settlement, Unrealized FX balance sheet revaluations under IAS 21 / ASC 830. Triggers: multi-currency-fx, foreign-exchange-accounting, realized-gain-loss, unrealized-fx-revaluation, ias21-fx, asc830-currency, fx-triangulation, functional-currency.",
+        r#"# Multi-Currency Accounting: Functional Currency, Triangulation & FX Revaluation
+> Based on **Financial Accounting: An Integrated Approach - Kenneth Trotman**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Currency Triangulation Invariant
+If a direct exchange rate between currency $A$ and currency $B$ is not published, it must be triangulated via base currency $C$:
+$$R_{A \to B} = \frac{R_{A \to C}}{R_{B \to C}}$$
+
+### 2.2 Realized FX Gain/Loss Calculation
+When an invoice booked at rate $R_{\text{orig}}$ is settled at payment rate $R_{\text{settle}}$:
+$$\text{Base Amount}_{\text{orig}} = \text{Amount}_{\text{txn}} \times R_{\text{orig}}$$
+$$\text{Base Amount}_{\text{settle}} = \text{Amount}_{\text{txn}} \times R_{\text{settle}}$$
+$$\text{Realized FX Gain/Loss} = \text{Base Amount}_{\text{settle}} - \text{Base Amount}_{\text{orig}}$$
+For AR: positive is Gain, negative is Loss. For AP: positive is Loss, negative is Gain.
+
+### 2.3 Unrealized FX Balance Sheet Revaluation (IAS 21 / ASC 830)
+At accounting period close date $T$:
+$$\text{Unrealized Gain/Loss} = B_{\text{foreign}} \times R_{\text{closing}} - B_{\text{book, base}}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 FX Month-End Revaluation FSM
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT_PERIOD
+    DRAFT_PERIOD --> RATES_FROZEN: lock_closing_rates()
+    RATES_FROZEN --> COMPUTING: calculate_unrealized_diffs()
+    COMPUTING --> VOUCHER_POSTED: post_revaluation_journal()
+    VOUCHER_POSTED --> REVERSED_NEXT_PERIOD: auto_reverse_day1()
+    REVERSED_NEXT_PERIOD --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never mix transaction currency amounts with base currency amounts in the same column.
+- Always record exchange rate alongside both foreign amount and converted base amount.
+- Auto-reverse month-end unrealized FX revaluation entries on day 1 of the subsequent period.
+- Handle triangular cross-rate calculations cleanly via base currency anchor.
+```
+"#,
+    )
+}
+
+/// 79. erp-asc606-revenue-recognition Skill
+pub fn erp_asc606_revenue_recognition() -> EccSkill {
+    EccSkill::new(
+        "erp-asc606-revenue-recognition",
+        "5-Step Revenue Recognition model under ASC 606 / IFRS 15, Standalone Selling Price (SSP) allocation, performance obligations (POBs), deferred revenue waterfalls, and contract asset/liability management. Triggers: asc606-revenue-recognition, ifrs15-revenue, 5-step-revenue-model, performance-obligation, ssp-allocation, deferred-revenue-schedule, contract-asset-liability, unearned-revenue-waterfall.",
+        r#"# ASC 606 / IFRS 15 Revenue Recognition: 5-Step Model, SSP Allocation & Deferred Schedules
+> Based on **Revenue Recognition: ASC 606 / IFRS 15 - AICPA / Frank Sellitti**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Relative Standalone Selling Price (SSP) Allocation Invariant
+For contract $C$ with total transaction price $T$ and $m$ distinct performance obligations:
+$$\text{Allocation Factor}_k = \frac{\text{SSP}_k}{\sum_{j=1}^m \text{SSP}_j}$$
+$$\text{Allocated Price}_k = T \times \text{Allocation Factor}_k$$
+$$\text{Conservation Invariant: } \sum_{k=1}^m \text{Allocated Price}_k = T$$
+
+### 2.2 Balance Sheet Revenue Identity
+At all times across all periods $t$:
+$$\text{Billed To Date} = \text{Cumulative Recognized Revenue} + \text{Deferred Revenue Balance}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Performance Obligation Lifecycle FSM
+```mermaid
+stateDiagram-v2
+    [*] --> UNSATISFIED
+    UNSATISFIED --> PARTIALLY_SATISFIED: milestone_completed()
+    UNSATISFIED --> FULLY_SATISFIED: goods_delivered() [Point-in-Time]
+    PARTIALLY_SATISFIED --> FULLY_SATISFIED: final_period_amortized()
+    FULLY_SATISFIED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Implement ASC 606 5-Step process: Contract -> Obligations -> Price -> Allocation -> Recognition.
+- Always plug rounding discrepancies on the final obligation to ensure sum(allocations) == total_price.
+- Deferred Revenue must be treated as a Balance Sheet Liability until performance obligations are satisfied.
+- Point-in-time revenue recognized upon delivery; Over-time revenue recognized via straight-line or milestone completion.
+```
+"#,
+    )
+}
+
+/// 80. erp-cost-accounting-management Skill
+pub fn erp_cost_accounting_management() -> EccSkill {
+    EccSkill::new(
+        "erp-cost-accounting-management",
+        "Standard costing systems, Manufacturing Overhead (MOH) absorption, Activity-Based Costing (ABC) pools/drivers, and comprehensive variance analysis (Price, Efficiency, Volume, Spending) based on Horngren. Triggers: cost-accounting-management, standard-costing, variance-analysis, activity-based-costing, direct-labor-variance, material-price-variance, overhead-absorption, cost-pools-drivers.",
+        r#"# Cost Accounting & Managerial Control: Standard Costing, ABC & Variance Analysis
+> Based on **Cost Accounting: A Managerial Emphasis - Horngren, Datar, Rajan**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Standard Cost Variance Formulas
+1. **Direct Material Price Variance (MPV)**:
+   $$\text{MPV} = (\text{Actual Price} - \text{Standard Price}) \times \text{Actual Quantity Purchased}$$
+   $(\text{AP} > \text{SP} \implies \text{Unfavorable}; \text{AP} < \text{SP} \implies \text{Favorable})$
+
+2. **Direct Material Efficiency/Quantity Variance (MQV)**:
+   $$\text{MQV} = (\text{Actual Quantity Used} - \text{Standard Quantity Allowed}) \times \text{Standard Price}$$
+
+3. **Direct Labor Rate Variance (LRV)**:
+   $$\text{LRV} = (\text{Actual Wage Rate} - \text{Standard Wage Rate}) \times \text{Actual Hours Worked}$$
+
+4. **Direct Labor Efficiency Variance (LEV)**:
+   $$\text{LEV} = (\text{Actual Hours Worked} - \text{Standard Hours Allowed}) \times \text{Standard Wage Rate}$$
+
+### 2.2 Total Cost Reconciliation
+$$\text{Total Actual Cost} = \text{Standard Cost of Output} + \sum \text{Unfavorable Variances} - \sum \text{Favorable Variances}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Cost Accounting Period-End FSM
+```mermaid
+stateDiagram-v2
+    [*] --> OPEN
+    OPEN --> ACCUMULATING_ACTUALS: end_of_month()
+    ACCUMULATING_ACTUALS --> VARIANCE_COMPUTED: run_variance_engine()
+    VARIANCE_COMPUTED --> VARIANCE_PRORATED: write_to_cogs_and_inventory()
+    VARIANCE_PRORATED --> CLOSED: lock_period()
+    CLOSED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Differentiate favorable (credit balance / negative cost) from unfavorable (debit balance / positive cost) variances.
+- Use predetermined overhead rates: PredeterminedRate = BudgetedCost / BudgetedDriverUnits.
+- Material price variance is recognized upon purchase; material quantity variance is recognized upon consumption.
+- Variance accounts must be cleared at period-end by disposition to COGS and Ending WIP/Inventory.
+```
+"#,
+    )
+}
+
+/// 81. erp-double-entry-history-auditing Skill
+pub fn erp_double_entry_history_auditing() -> EccSkill {
+    EccSkill::new(
+        "erp-double-entry-history-auditing",
+        "Historical principles of Venetian double-entry bookkeeping, modern continuous auditing trails, tamper-evident cryptographic hash chains (Merkle/Blake3), and strict zero-edit ledger immutability based on Jane Gleeson-White. Triggers: double-entry-history-auditing, venetian-bookkeeping, immutable-ledger-audit, tamper-evident-chain, pacioli-principles, hash-chained-journals, continuous-audit-trail, zero-edit-ledger.",
+        r#"# Continuous Ledger Auditing: Tamper-Evident Hash Chains & Pacioli Audit Discipline
+> Based on **Double Entry: How the Merchants of Venice Created Modern Capitalism - Jane Gleeson-White**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Cryptographic Hash Chain Invariant
+For entry sequence $n$:
+$$H_0 = \text{GenesisHash} = \text{SHA256}(\text{"GENESIS\_LEDGER\_START"})$$
+$$H_n = \text{SHA256}(H_{n-1} \parallel \text{Seq}_n \parallel \text{Timestamp}_n \parallel \text{CanonicalJSON}_n)$$
+
+### 2.2 Immutability Proof
+If any historical record $k < n$ is altered ($P_k \to P'_k$):
+$$H_k' \ne H_k \implies H_{k+1}' \ne H_{k+1} \implies \dots \implies H_n' \ne H_n$$
+Any single-bit perturbation invalidates the entire subsequent chain.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Audit Verification State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> CONTINUOUS_VERIFICATION
+    CONTINUOUS_VERIFICATION --> VERIFIED: all_hashes_match()
+    CONTINUOUS_VERIFICATION --> TAMPER_DETECTED: hash_mismatch()
+    TAMPER_DETECTED --> SYSTEM_QUARANTINE: alert_cfo_and_auditor()
+    SYSTEM_QUARANTINE --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never allow SQL UPDATE or DELETE on ledger tables; enforce append-only policies.
+- Cryptographically chain each journal entry to its immediate predecessor via SHA-256 / Blake3.
+- Discard floating-point representations when hashing: use canonical integer or decimal strings.
+- Voided entries must be appended as explicitly signed reversing entries, never deleted.
+```
+"#,
+    )
+}
+
+/// 82. erp-balance-sheet-working-capital Skill
+pub fn erp_balance_sheet_working_capital() -> EccSkill {
+    EccSkill::new(
+        "erp-balance-sheet-working-capital",
+        "Financial statement analysis, Working Capital management, Cash Conversion Cycle (CCC = DSO + DIO - DPO), liquidity ratios (Current, Quick, Cash), and Free Cash Flow modeling based on Stephen Penman. Triggers: balance-sheet-working-capital, cash-conversion-cycle, working-capital-optimization, days-sales-outstanding, dso-dio-dpo, liquidity-ratios, free-cash-flow-model, penman-financial-analysis.",
+        r#"# Working Capital Optimization: Cash Conversion Cycle, Current Ratio & Liquidity Analysis
+> Based on **Financial Statement Analysis and Security Valuation - Stephen Penman**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Cash Conversion Cycle (CCC) Formulation
+The Cash Conversion Cycle measures the time (in days) required to convert resource inputs into cash flows:
+$$\text{CCC} = \text{DSO} + \text{DIO} - \text{DPO}$$
+Where:
+1. **Days Sales Outstanding (DSO)**:
+   $$\text{DSO} = \frac{\text{Accounts Receivable}}{\text{Total Credit Sales}} \times 365$$
+2. **Days Inventory Outstanding (DIO)**:
+   $$\text{DIO} = \frac{\text{Average Inventory}}{\text{Cost of Goods Sold (COGS)}} \times 365$$
+3. **Days Payable Outstanding (DPO)**:
+   $$\text{DPO} = \frac{\text{Accounts Payable}}{\text{Cost of Goods Sold / Purchases}} \times 365$$
+
+### 2.2 Liquidity Ratios
+$$\text{Current Ratio} = \frac{\text{Current Assets}}{\text{Current Liabilities}}$$
+$$\text{Quick Ratio} = \frac{\text{Cash} + \text{Marketable Securities} + \text{Accounts Receivable}}{\text{Current Liabilities}}$$
+$$\text{Cash Ratio} = \frac{\text{Cash and Equivalents}}{\text{Current Liabilities}}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Financial Statement Analysis Workflow
+```mermaid
+graph TD
+    A[Subledger Balances Locked] --> B[Generate Trial Balance]
+    B --> C[Compute Balance Sheet & Income Statement]
+    C --> D[Calculate Working Capital & Liquidity Ratios]
+    D --> E{Current Ratio < 1.0 or CCC Spike?}
+    E -->|Yes| F[Trigger Working Capital Early Warning]
+    E -->|No| G[Approve Period Financial Report]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Enforce Cash Conversion Cycle identity: CCC = DSO + DIO - DPO.
+- Net Working Capital = Current Assets - Current Liabilities.
+- Alert when Current Ratio drops below 1.2 or CCC expands by > 15 days in consecutive quarters.
+- Ensure denominator checks guard against zero-revenue or zero-cogs division.
+```
+"#,
+    )
+}
+
+/// 83. erp-intercompany-consolidation Skill
+pub fn erp_intercompany_consolidation() -> EccSkill {
+    EccSkill::new(
+        "erp-intercompany-consolidation",
+        "Multi-entity enterprise consolidation, Intercompany (IC) transactions, elimination journal entries (IC AR/AP, IC Sales/COGS, Unrealized Inventory Profit), Non-Controlling Interest (NCI), and Cumulative Translation Adjustments (CTA) based on Hoyle. Triggers: intercompany-consolidation, financial-consolidation, elimination-journal-entries, intercompany-elimination, non-controlling-interest, cumulative-translation-adjustment, multi-entity-erp, advanced-accounting.",
+        r#"# Intercompany Accounting & Financial Consolidation: Eliminations, NCI & CTA
+> Based on **Advanced Accounting - Hoyle, Schaefer, Doupnik**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Intercompany Balance Elimination Invariant
+For legal entities $A$ and $B$:
+$$\text{Receivable}_{A \to B} - \text{Payable}_{B \to A} = 0$$
+Elimination Entry:
+$$\text{Debit: Accounts Payable } (\text{Entity } B) \quad \text{Credit: Accounts Receivable } (\text{Entity } A)$$
+
+### 2.2 Unrealized Intercompany Inventory Profit Elimination
+If entity $A$ sells goods to entity $B$ at markup $M = \frac{\text{Profit}}{\text{Price}}$, and fraction $F$ remains unsold in $B$'s inventory at period-end:
+$$\text{Unrealized Profit} = F \times \text{IC Sales Amount} \times M$$
+Elimination Entry:
+$$\text{Debit: Consolidated COGS} \quad \text{Credit: Consolidated Inventory (Asset)}$$
+
+### 2.3 Non-Controlling Interest (NCI)
+For subsidiary $S$ with ownership fraction $\alpha \in (0, 1)$:
+$$\text{NCI Share of Net Income} = (1 - \alpha) \times \text{Net Income}_S$$
+$$\text{NCI Share of Equity} = (1 - \alpha) \times \text{Ending Equity}_S$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Financial Consolidation Run FSM
+```mermaid
+stateDiagram-v2
+    [*] --> ENTITY_CLOSE
+    ENTITY_CLOSE --> FX_TRANSLATION: all_subsidiaries_submitted()
+    FX_TRANSLATION --> IC_MATCHING: translate_to_group_currency()
+    IC_MATCHING --> DISCREPANCY: mismatch_found()
+    IC_MATCHING --> ELIMINATIONS_POSTED: all_ic_matched()
+    ELIMINATIONS_POSTED --> CONSOLIDATED_STATEMENT: post_elimination_journals()
+    CONSOLIDATED_STATEMENT --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never report consolidated financials without netting intercompany receivables against payables.
+- Eliminate intercompany sales and cost of goods sold in full.
+- Remove unrealized markup from ending inventory balances for goods remaining within the group.
+- Allocate minority share of subsidiary net income to Non-Controlling Interest (NCI).
+```
+"#,
+    )
+}
+
+/// 84. erp-supply-chain-strategy Skill
+pub fn erp_supply_chain_strategy() -> EccSkill {
+    EccSkill::new(
+        "erp-supply-chain-strategy",
+        "Supply chain network design, SCOR framework metrics, Bullwhip Effect quantification, Push-Pull boundaries, and aggregate planning optimization based on Chopra and Meindl. Triggers: supply-chain-strategy, bullwhip-effect, scor-framework, push-pull-boundary, network-design, aggregate-planning, safety-inventory-cycle, supply-chain-optimization.",
+        r#"# Supply Chain Strategy & Network Design: SCOR Framework, Bullwhip & Safety Buffers
+> Based on **Supply Chain Management: Strategy, Planning, and Operation - Sunil Chopra & Peter Meindl**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Bullwhip Effect Quantification Invariant
+The Bullwhip Measure $B$ measures demand variance amplification across tier $k$ to tier $k+1$:
+$$B = \frac{\sigma_{\text{orders}}^2 / \mu_{\text{orders}}}{\sigma_{\text{demand}}^2 / \mu_{\text{demand}}}$$
+If $B > 1.0$, information distortion and phantom demand amplification are present.
+
+### 2.2 Centralized Inventory Pooling Benefit (Square Root Law)
+Consolidating inventory from $N$ decentralized distribution centers into 1 central warehouse reduces aggregate safety stock:
+$$\text{Safety Stock}_{\text{centralized}} = \frac{1}{\sqrt{N}} \sum_{i=1}^N \text{Safety Stock}_i$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 S&OP (Sales and Operations Planning) State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> DEMAND_FORECASTING
+    DEMAND_FORECASTING --> CAPACITY_ANALYSIS: finalize_unconstrained_demand()
+    CAPACITY_ANALYSIS --> S_AND_OP_MEETING: identify_bottlenecks()
+    S_AND_OP_MEETING --> MASTER_SCHEDULE_COMMITTED: resolve_tradeoffs()
+    MASTER_SCHEDULE_COMMITTED --> PRODUCTION_EXECUTION: release_orders()
+    PRODUCTION_EXECUTION --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Measure Bullwhip Effect: Ratio of variance of orders to variance of end-customer demand.
+- Apply the Square Root Law when evaluating warehouse consolidation.
+- Set Push-Pull Decoupling points based on lead times versus customer order tolerance.
+- Track SCOR metrics: Perfect Order Fulfillment, Order Cycle Time, Cash-to-Cash.
+```
+"#,
+    )
+}
+
+/// 85. erp-inventory-eoq-safety-stock Skill
+pub fn erp_inventory_eoq_safety_stock() -> EccSkill {
+    EccSkill::new(
+        "erp-inventory-eoq-safety-stock",
+        "Deterministic and stochastic inventory optimization, Economic Order Quantity (EOQ), Safety Stock under lead-time and demand variance, Reorder Point (ROP), (s, S) policies, and ABC/XYZ classification based on Silver, Pyke, and Peterson. Triggers: inventory-eoq-safety-stock, economic-order-quantity, safety-stock-formula, reorder-point-rop, abc-xyz-inventory, cycle-service-level, holding-cost-optimization, inventory-math.",
+        r#"# Inventory Math & Replenishment: EOQ, Safety Stock, Reorder Point & ABC/XYZ Classification
+> Based on **Inventory Management and Production Planning and Scheduling - Silver, Pyke, Peterson**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Economic Order Quantity (EOQ) Formula
+For annual demand $D$, fixed order setup cost $S$, and annual holding cost per unit $H$:
+$$\text{Total Annual Cost } C(Q) = \frac{D}{Q} S + \frac{Q}{2} H$$
+Taking $\frac{dC}{dQ} = 0$:
+$$\text{EOQ} = Q^* = \sqrt{\frac{2 D S}{H}}$$
+At EOQ: $\text{Annual Ordering Cost} = \text{Annual Holding Cost}$.
+
+### 2.2 Safety Stock with Variable Demand and Variable Lead Time
+For daily demand mean $d$ and standard deviation $\sigma_d$, lead time mean $L$ and standard deviation $\sigma_L$, and normal inverse service level $Z$:
+$$\sigma_{\text{lead time demand}} = \sqrt{L \cdot \sigma_d^2 + d^2 \cdot \sigma_L^2}$$
+$$\text{Safety Stock (SS)} = Z \times \sigma_{\text{lead time demand}} = Z \sqrt{L \sigma_d^2 + d^2 \sigma_L^2}$$
+$$\text{Reorder Point (ROP)} = (d \times L) + \text{SS}$$
+
+### 2.3 ABC/XYZ Classification
+- **ABC (Revenue/Value Volume)**: A = Top 80% value (~20% items), B = Next 15% value (~30% items), C = Bottom 5% value (~50% items).
+- **XYZ (Demand Predictability)**: Coefficient of Variation $CV = \frac{\sigma_d}{\mu_d}$:
+  - X: $CV \le 0.5$ (constant, highly predictable).
+  - Y: $0.5 < CV \le 1.0$ (variable demand, trend/seasonality).
+  - Z: $CV > 1.0$ (sporadic, erratic demand).
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Continuous Inventory Replenishment (s, Q) FSM
+```mermaid
+stateDiagram-v2
+    [*] --> SUFFICIENT_STOCK
+    SUFFICIENT_STOCK --> REORDER_TRIGGERED: on_hand - allocated + on_order <= ROP
+    REORDER_TRIGGERED --> PO_GENERATED: emit_purchase_order(qty = EOQ)
+    PO_GENERATED --> IN_TRANSIT: vendor_confirmed()
+    IN_TRANSIT --> SUFFICIENT_STOCK: goods_received_and_shelved()
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- EOQ formula: sqrt(2 * D * S / H).
+- Safety Stock accounts for both demand variance and lead time variance: Z * sqrt(L * sigma_D^2 + D^2 * sigma_L^2).
+- Reorder Point formula: ROP = (daily_demand * lead_time) + safety_stock.
+- Net Available Stock = On-Hand - Allocated + On-Order.
+- Trigger purchase order generation when Net Available Stock falls to or below ROP.
+```
+"#,
+    )
+}
+
+/// 86. erp-landed-cost-allocation Skill
+pub fn erp_landed_cost_allocation() -> EccSkill {
+    EccSkill::new(
+        "erp-landed-cost-allocation",
+        "Landed cost voucher processing, absorption of freight, customs tariffs, marine insurance, and port handling into perpetual inventory cost layers based on Gwynne Richards. Triggers: landed-cost-allocation, landed-cost-voucher, freight-absorption, customs-tariffs-allocation, perpetual-inventory-costing, inventory-valuation-fifo, landed-cost-conservation, landed-cost.",
+        r#"# Landed Cost Allocation: Absorption of Freight, Tariffs & Demurrage into Inventory Valuation
+> Based on **Warehouse Management: A Complete Guide to Improving Efficiency and Minimizing Costs - Gwynne Richards**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Landed Cost Allocation Invariant (Conservation of Cost)
+Let $C_{\text{total}}$ be the additional landed expense (e.g. shipping invoice total) and $n$ receipt lines:
+$$\sum_{i=1}^n \text{AllocatedCost}_i = C_{\text{total}}$$
+Where for allocation basis metric $M_i \in \{\text{Value}_i, \text{Weight}_i, \text{Volume}_i, \text{Qty}_i\}$:
+$$\text{AllocatedCost}_i = C_{\text{total}} \times \frac{M_i}{\sum_{j=1}^n M_j}$$
+
+### 2.2 Inventory Cost Layer Absorption
+The new unit inventory valuation layer $U_i$ absorbed into perpetual inventory (FIFO / Moving Average):
+$$U_i = U_i^{\text{original}} + \frac{\text{AllocatedCost}_i}{Q_i}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Landed Cost Voucher Lifecycle FSM
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT
+    DRAFT --> ALLOCATED: execute_allocation(basis)
+    ALLOCATED --> DRAFT: recompute()
+    ALLOCATED --> POSTED: post_to_gl_and_inventory()
+    POSTED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never discard landed cost fractions; allocate exactly 100% of freight and customs expenses.
+- Support allocation bases: By Value, By Net Weight, By Volume, By Quantity.
+- Use the final line item as a plug to ensure sum(allocated_costs) == total_landed_invoice.
+- Absorb allocated costs into inventory balance if stock is unsold; expense to COGS if already sold.
+```
+"#,
+    )
+}
+
+/// 87. erp-wms-bin-location-topology Skill
+pub fn erp_wms_bin_location_topology() -> EccSkill {
+    EccSkill::new(
+        "erp-wms-bin-location-topology",
+        "Warehouse physical topology modeling (Zone, Aisle, Bay, Level, Bin), directed putaway, wave/batch picking routes, Cube-Per-Order Index (COI) slotting, and License Plate Numbers (LPN) based on Edward Frazelle. Triggers: wms-bin-location-topology, warehouse-topology, directed-putaway, wave-picking, coi-slotting-optimization, license-plate-numbers, warehouse-management-system, wms-bin-routing.",
+        r#"# Warehouse Management Topology: Directed Putaway, Wave Picking & Slotting Optimization
+> Based on **World Class Warehousing and Material Handling - Edward Frazelle**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Cube-Per-Order Index (COI) Slotting Invariant
+To minimize travel distance, items are slotted into forward pick locations based on the Cube-Per-Order Index:
+$$\text{COI}_i = \frac{\text{Required Storage Space (Cube)}_i}{\text{Order Frequency (Picks)}_i}$$
+**Slotting Invariant**: Items with the lowest COI MUST be assigned to bins closest to the packing/shipping dock.
+
+### 2.2 Bin Volumetric & Weight Capacity Invariant
+For any bin $B$ containing LPNs $k$:
+$$\sum_k \text{Weight}(\text{LPN}_k) \le B_{\text{max\_weight}}$$
+$$\sum_k \text{Volume}(\text{LPN}_k) \le B_{\text{max\_volume}}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Putaway Task Lifecycle FSM
+```mermaid
+stateDiagram-v2
+    [*] --> ASSIGNED
+    ASSIGNED --> EN_ROUTE: scan_forklift()
+    EN_ROUTE --> ARRIVED_AT_BIN: scan_bin_barcode()
+    ARRIVED_AT_BIN --> CONFIRMED_STORED: scan_lpn_and_confirm_qty()
+    CONFIRMED_STORED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Structure bin hierarchy: Warehouse -> Zone -> Aisle -> Bay -> Level -> Position.
+- Enforce strict bin capacity checks on both weight (kg) and volume (cbm) before putaway.
+- Track warehouse inventory via unique License Plate Numbers (LPN).
+- Order pick lists using S-shape or optimal traveling salesman routing through aisles.
+```
+"#,
+    )
+}
+
+/// 88. erp-procurement-vendor-lifecycle Skill
+pub fn erp_procurement_vendor_lifecycle() -> EccSkill {
+    EccSkill::new(
+        "erp-procurement-vendor-lifecycle",
+        "Strategic purchasing, vendor onboarding and compliance qualification, Request for Quotation (RFQ), Purchase Requisition (PR) to Purchase Order (PO) approval matrices, and OTIF vendor scorecards based on Monczka. Triggers: procurement-vendor-lifecycle, strategic-sourcing, pr-to-po-workflow, vendor-scorecard-otif, rfq-management, supplier-qualification, purchasing-approval-matrix, vendor-management.",
+        r#"# Procurement & Vendor Lifecycle: Strategic Sourcing, RFQ, PR-to-PO & Scorecards
+> Based on **Purchasing and Supply Chain Management - Robert Monczka**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 On-Time In-Full (OTIF) Quality Metric
+A shipment is successful under OTIF iff it meets both delivery window and quantity criteria:
+$$\text{OTIF} = \frac{\sum_{i=1}^N \mathbf{1}_{\{\text{OnTime}_i \land \text{InFull}_i\}}}{N} \times 100\%$$
+Where:
+- $\text{OnTime}_i \iff \text{ActualDate}_i \le \text{PromisedDate}_i$
+- $\text{InFull}_i \iff \text{ReceivedQuantity}_i \ge \text{OrderedQuantity}_i$
+
+### 2.2 Composite Vendor Rating Invariant
+$$\text{Score} = w_1 \cdot \text{OTIF} + w_2 \cdot \left(100 - \frac{\text{PPM}}{100}\right) + w_3 \cdot \text{PriceScore}$$
+With weights $\sum w_i = 1.0$.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Purchase Requisition to PO State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> PR_DRAFT
+    PR_DRAFT --> PR_SUBMITTED: submit_for_approval()
+    PR_SUBMITTED --> PR_APPROVED: manager_signoff()
+    PR_SUBMITTED --> PR_REJECTED: over_budget()
+    PR_APPROVED --> PO_ISSUED: convert_to_po()
+    PO_ISSUED --> PO_ACKNOWLEDGED: vendor_confirms()
+    PO_ACKNOWLEDGED --> PARTIALLY_RECEIVED: dock_receives_first_batch()
+    PARTIALLY_RECEIVED --> PO_CLOSED: all_lines_received()
+    PO_CLOSED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never issue a Purchase Order without an approved Purchase Requisition.
+- Calculate OTIF: Only deliveries that are BOTH On-Time AND In-Full count toward the numerator.
+- Suspend vendors whose quarterly OTIF score drops below threshold (e.g. 90%).
+- Enforce segregation of duties: Requester cannot approve their own Purchase Requisition.
+```
+"#,
+    )
+}
+
+/// 89. erp-3way-match-p2p Skill
+pub fn erp_3way_match_p2p() -> EccSkill {
+    EccSkill::new(
+        "erp-3way-match-p2p",
+        "3-Way Match controls in Procure-to-Pay, reconciling Purchase Order (PO) vs Goods Receipt Note (GRN) vs Vendor Invoice, price and quantity tolerance thresholds, and GR/IR clearing mechanics based on Mary Schaeffer. Triggers: 3way-match-p2p, three-way-match, po-grn-invoice-matching, gr-ir-clearing, ap-invoice-tolerances, accounts-payable-controls, invoice-exception-management, p2p-matching.",
+        r#"# 3-Way Matching & Accounts Payable: PO, Goods Receipt & Vendor Invoice Reconciliation
+> Based on **Accounts Payable Best Practices - Mary Schaeffer**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 3-Way Match Verification Invariant
+Let $Q_{\text{inv}}$ be the invoice quantity, $Q_{\text{received}}$ be the cumulative GRN received quantity, $P_{\text{inv}}$ be the invoice unit price, and $P_{\text{po}}$ be the authorized PO unit price.
+With allowable tolerance thresholds $\tau_{\text{qty}}$ (e.g. 1%) and $\tau_{\text{price}}$ (e.g. 0.5%):
+$$\frac{|Q_{\text{inv}} - Q_{\text{received}}|}{Q_{\text{received}}} \le \tau_{\text{qty}}$$
+$$\frac{|P_{\text{inv}} - P_{\text{po}}|}{P_{\text{po}}} \le \tau_{\text{price}}$$
+If both conditions hold, the match passes and the invoice is released for payment.
+
+### 2.2 GR/IR Clearing Account Mechanics
+Upon Goods Receipt:
+$$\text{Debit: Raw Materials Inventory} \quad \text{Credit: GR/IR Clearing Account}$$
+Upon Invoice Receipt (3-Way Match Pass):
+$$\text{Debit: GR/IR Clearing Account} \quad \text{Credit: Accounts Payable Liability}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 AP Invoice 3-Way Match FSM
+```mermaid
+stateDiagram-v2
+    [*] --> ENTERED
+    ENTERED --> MATCH_PASS: run_match() [discrepancy <= tolerance]
+    ENTERED --> EXCEPTION_HOLD: run_match() [discrepancy > tolerance]
+    EXCEPTION_HOLD --> MATCH_PASS: buyer_tolerance_override()
+    EXCEPTION_HOLD --> DISPUTED: vendor_credit_memo_requested()
+    MATCH_PASS --> APPROVED: schedule_payment()
+    APPROVED --> PAID: execute_payment_run()
+    PAID --> [*]
+    DISPUTED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Reconcile Purchase Order (PO), Goods Receipt (GRN), and Vendor Invoice before paying.
+- Match Invoice Quantity against Received Quantity (NOT PO quantity).
+- Match Invoice Price against Authorized PO Price.
+- Never clear GR/IR accounts manually; clear them via verified 3-way match transactions.
+```
+"#,
+    )
+}
+
+/// 90. erp-reverse-logistics-rma Skill
+pub fn erp_reverse_logistics_rma() -> EccSkill {
+    EccSkill::new(
+        "erp-reverse-logistics-rma",
+        "Return Merchandise Authorization (RMA) workflows, reverse logistics disposition routing (Restock, Rework, Scrap, Return-to-Vendor), customer credit memos, and restocking fee accounting based on Rogers and Lembke. Triggers: reverse-logistics-rma, rma-workflows, return-merchandise-authorization, disposition-routing, restocking-fee, customer-credit-memos, salvage-accounting, returns-management.",
+        r#"# Reverse Logistics & Returns: RMA Workflows, Disposition Routing & Salvage Accounting
+> Based on **Going Backwards: Reverse Logistics Trends and Practices - Dale Rogers & Ronald Lembke**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Customer Credit Memo Calculation Invariant
+For RMA with accepted items $i$, unit price $P_i$, received quantity $Q_i$, and restocking fee percentage $R$:
+$$\text{Gross Refund} = \sum_{i} (Q_i \times P_i)$$
+$$\text{Restocking Fee} = \text{Gross Refund} \times \frac{R}{100}$$
+$$\text{Net Credit Amount} = \text{Gross Refund} - \text{Restocking Fee}$$
+
+### 2.2 Quantity Return Limit Invariant
+$$\sum \text{AuthorizedQuantity}_{\text{RMA}} \le Q_{\text{Shipped}}(\text{Original Order})$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 RMA Lifecycle State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> REQUESTED
+    REQUESTED --> AUTHORIZED: validate_within_return_window()
+    REQUESTED --> REJECTED: outside_policy()
+    AUTHORIZED --> RECEIVED: dock_receives_parcel()
+    RECEIVED --> INSPECTED: quality_grade()
+    INSPECTED --> COMPLETED: issue_credit_memo_and_route()
+    COMPLETED --> [*]
+    REJECTED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never issue a refund without an approved RMA and inspection receipt.
+- Restocking fee must be deducted from gross refund: Net Credit = Gross - Fee.
+- Verify return quantity never exceeds originally shipped order quantity.
+- Route inspected returns strictly by disposition: Restock, Refurbish, Scrap, or Return-to-Vendor.
+```
+"#,
+    )
+}
+
+/// 91. erp-mrp-crp-core Skill
+pub fn erp_mrp_crp_core() -> EccSkill {
+    EccSkill::new(
+        "erp-mrp-crp-core",
+        "Master Production Scheduling (MPS), Material Requirements Planning (MRP I), Capacity Requirements Planning (CRP), work center loading, and finite vs infinite scheduling based on Jacobs, Berry, Whybark, and Vollmann. Triggers: mrp-crp-core, manufacturing-planning-control, master-production-schedule, mps-mrp, capacity-requirements-planning, work-center-loading, finite-capacity-scheduling, rough-cut-capacity.",
+        r#"# Manufacturing Planning & Control: MPS, MRP I & Capacity Requirements Planning (CRP)
+> Based on **Manufacturing Planning and Control for Supply Chain Management - Jacobs, Berry, Whybark, Vollmann**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Net Requirements Formulation
+For product $i$ in planning period $t$:
+$$\text{Net Requirements}_t = \max\left(0, \text{Gross Requirements}_t - \text{Projected Available}_{t-1} - \text{Scheduled Receipts}_t + \text{Safety Stock}\right)$$
+$$\text{Projected Available}_t = \text{Projected Available}_{t-1} + \text{Scheduled Receipts}_t + \text{Planned Order Receipts}_t - \text{Gross Requirements}_t$$
+
+### 2.2 Capacity Requirements Planning (CRP) Loading Invariant
+For work center $W$ on day $t$ with operations $j \in \text{ScheduledOps}(W, t)$:
+$$\text{Required Load Hours}(W, t) = \sum_{j} \left(\text{SetupTime}_j + \text{RunTimePerUnit}_j \times \text{BatchSize}_j\right)$$
+**Finite Capacity Constraint**:
+$$\text{Required Load Hours}(W, t) \le \text{Rated Capacity Hours}(W, t)$$
+If load exceeds rated capacity, work must be shifted forward or backward.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 MRP Order Status Lifecycle FSM
+```mermaid
+stateDiagram-v2
+    [*] --> PLANNED
+    PLANNED --> FIRM: planner_locks_horizon()
+    FIRM --> RELEASED: material_availability_verified()
+    RELEASED --> WORK_ORDER_ACTIVE: shop_floor_dispatch()
+    WORK_ORDER_ACTIVE --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Calculate net requirements: Net = max(0, Gross - OnHand - SchedReceipts + SafetyStock).
+- Work center capacity: RatedCapacity = AvailableHours * Efficiency * Utilization.
+- Reject infinite capacity overloads when operating under finite scheduling constraints.
+- Offset planned order release date from due date using manufacturing lead time.
+```
+"#,
+    )
+}
+
+/// 92. erp-bom-explosion-routing Skill
+pub fn erp_bom_explosion_routing() -> EccSkill {
+    EccSkill::new(
+        "erp-bom-explosion-routing",
+        "Multi-level Bill of Materials (BOM), Directed Acyclic Graph (DAG) acyclicity verification, Low-Level Coding (LLC) algorithms, recursive gross-to-net BOM explosion, scrap factors, and routing operations based on Orlicky. Triggers: bom-explosion-routing, bill-of-materials, multi-level-bom, low-level-coding, orlicky-mrp, bom-scrap-factor, routing-operations, bom-explosion.",
+        r#"# Bill of Materials & Routing: Low-Level Coding, Multi-Level Explosion & Scrap Factors
+> Based on **Orlicky's Material Requirements Planning - Joseph Orlicky / Carol Ptak & Chad Smith**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 BOM Directed Acyclic Graph (DAG) Invariant
+Let $G = (V, E)$ be the BOM graph where vertices $V$ are products and directed edges $(u, v) \in E$ represent component $v$ contained in parent assembly $u$:
+$$\forall v \in V, \quad v \notin \text{Descendants}(v) \iff \text{Cycles}(G) = \emptyset$$
+Any circular component reference (e.g. $A \to B \to C \to A$) is structurally illegal.
+
+### 2.2 Low-Level Code (LLC) Definition
+The Low-Level Code of an item $i$ is the maximum depth at which it appears in any BOM tree:
+$$\text{LLC}(i) = \begin{cases} 0 & \text{if } i \text{ is an end-item (never a component)} \\ 1 + \max_{(p, i) \in E} \text{LLC}(p) & \text{otherwise} \end{cases}$$
+**MRP Explosion Invariant**: Requirements for an item with LLC $k$ MUST NOT be processed until all items with LLC $< k$ have completed processing.
+
+### 2.3 Scrap Factor Requirement Inflation
+For parent requirement $Q_{\text{parent}}$, quantity per assembly $q$, and scrap rate $s \in [0, 1)$:
+$$\text{Gross Component Requirement} = \frac{Q_{\text{parent}} \times q}{1 - s}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Engineering Change Order (ECO) BOM Lifecycle
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT
+    DRAFT --> UNDER_REVIEW: submit_eco()
+    UNDER_REVIEW --> ACTIVE: approve_engineering_change()
+    UNDER_REVIEW --> REJECTED: reject_revision()
+    ACTIVE --> OBSOLETE: superseded_by_new_revision()
+    OBSOLETE --> [*]
+    REJECTED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never allow circular parent-child relationships in BOMs: verify acyclic DAG property.
+- Assign Low-Level Codes (LLC) to every part; process MRP level by level (level 0 first).
+- Inflate gross requirements by scrap rate: Gross = (ParentQty * QtyPer) / (1 - ScrapRate).
+- Routing operations must have unique, strictly increasing sequence numbers (10, 20, 30).
+```
+"#,
+    )
+}
+
+/// 93. erp-theory-of-constraints-dbr Skill
+pub fn erp_theory_of_constraints_dbr() -> EccSkill {
+    EccSkill::new(
+        "erp-theory-of-constraints-dbr",
+        "Theory of Constraints (TOC), the 5 Focusing Steps, Drum-Buffer-Rope (DBR) shop floor scheduling, and Throughput Accounting (T, I, OE) based on Eliyahu Goldratt. Triggers: theory-of-constraints-dbr, goldratt-toc, drum-buffer-rope, throughput-accounting, bottleneck-scheduling, five-focusing-steps, dbr-buffer-management, inventory-operating-expense.",
+        r#"# Theory of Constraints & Drum-Buffer-Rope: Bottleneck Scheduling & Throughput Accounting
+> Based on **The Goal: A Process of Ongoing Improvement - Eliyahu Goldratt & Jeff Cox**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Goldratt's Throughput Accounting Definitions
+1. **Throughput ($T$)**: The rate at which the system generates money through sales:
+   $$T = \text{Revenue} - \text{Truly Variable Costs (TVC)}$$
+   *(Direct labor is generally considered part of Operating Expense, NOT TVC)*.
+2. **Investment/Inventory ($I$)**: All the money tied up in the system (raw materials, WIP, plant assets).
+3. **Operating Expense ($\text{OE}$)**: All the money spent to turn Inventory into Throughput (labor, rent, electricity).
+$$\text{Net Profit (NP)} = T - \text{OE}$$
+$$\text{Return on Investment (ROI)} = \frac{T - \text{OE}}{I}$$
+
+### 2.2 Drum-Buffer-Rope (DBR) Synchronization Invariant
+Let $C_{\text{drum}}$ be the capacity of the bottleneck resource. The rate of material release at the gateway operation (the Rope) must be synchronized strictly to the Drum:
+$$\text{ReleaseRate}_{\text{rope}} \le C_{\text{drum}}$$
+Releasing material faster than $C_{\text{drum}}$ does not increase throughput; it merely swells WIP inventory and elongates lead time.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 DBR Buffer Management Zone FSM
+```mermaid
+stateDiagram-v2
+    [*] --> ZONE_1_GREEN
+    ZONE_1_GREEN --> ZONE_2_YELLOW: job_delayed_into_middle_third()
+    ZONE_2_YELLOW --> ZONE_3_RED: job_delayed_into_final_third()
+    ZONE_3_RED --> EXPEDITE_TRIGGERED: alert_shop_supervisor()
+    ZONE_3_RED --> ZONE_1_GREEN: job_arrives_at_drum()
+    EXPEDITE_TRIGGERED --> ZONE_1_GREEN: expedited_batch_fed_to_drum()
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Throughput = Revenue - Truly Variable Costs (TVC). Direct labor is part of OE.
+- Never run non-bottlenecks at 100% capacity; subordinate non-bottlenecks to the Drum.
+- Choke release of materials at the Rope to match bottleneck consumption rate.
+- Color code DBR buffers: Green (OK), Yellow (Plan), Red (Expedite immediately).
+```
+"#,
+    )
+}
+
+/// 94. erp-ddmrp-demand-driven Skill
+pub fn erp_ddmrp_demand_driven() -> EccSkill {
+    EccSkill::new(
+        "erp-ddmrp-demand-driven",
+        "DDMRP 5-component framework, Strategic Inventory Positioning, Decoupled Lead Time (DLT), Red/Yellow/Green dynamic buffer sizing, and the Net Flow Equation based on Ptak and Smith. Triggers: ddmrp-demand-driven, demand-driven-mrp, decoupled-lead-time, ddmrp-buffer-zones, net-flow-equation, average-daily-usage, demand-driven-planning, ddmrp.",
+        r#"# Demand Driven MRP (DDMRP): Decoupled Lead Time, Dynamic Buffers & Net Flow Equation
+> Based on **Demand Driven Material Requirements Planning (DDMRP) - Carol Ptak & Chad Smith**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 DDMRP 3-Color Buffer Zone Sizing Formulas
+For item with Average Daily Usage (ADU), Decoupled Lead Time (DLT), Lead Time Factor (LTF), and Variability Factor (VF):
+1. **Yellow Zone**:
+   $$\text{Yellow Zone} = \text{ADU} \times \text{DLT}$$
+2. **Red Zone**:
+   $$\text{Red Base} = \text{ADU} \times \text{DLT} \times \text{LTF}$$
+   $$\text{Red Safety} = \text{Red Base} \times \text{VF}$$
+   $$\text{Red Zone} = \text{Red Base} + \text{Red Safety}$$
+3. **Green Zone**:
+   $$\text{Green Zone} = \max\left(\text{MinOrderQty}, \text{ADU} \times \text{DLT} \times \text{LTF}\right)$$
+
+### 2.2 The Net Flow Equation & Order Recommendation
+$$\text{Net Flow Position} = \text{On-Hand} + \text{On-Order (Open Supply)} - \text{Qualified Demand Spikes}$$
+*(A Qualified Demand Spike is any sales order due within the spike horizon that exceeds threshold, typically $50\% \text{ of Red Base}$)*.
+**Replenishment Invariant**:
+$$\text{If } \text{Net Flow Position} \le \text{Top of Yellow} \implies \text{Order Recommended}$$
+$$\text{Recommended Order Quantity} = \text{Top of Green} - \text{Net Flow Position}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 DDMRP Execution Priority State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> GREEN_HEALTHY
+    GREEN_HEALTHY --> YELLOW_REORDER: net_flow <= top_of_yellow
+    YELLOW_REORDER --> RED_ALERT: on_hand_drops_into_red
+    RED_ALERT --> DARK_RED_CRITICAL: on_hand <= 50_pct_of_red
+    DARK_RED_CRITICAL --> GREEN_HEALTHY: emergency_supply_received()
+    RED_ALERT --> GREEN_HEALTHY: replenishment_received()
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Net Flow Equation = On-Hand + Open Supply - Qualified Demand Spikes.
+- Replenish whenever Net Flow <= Top of Yellow. Order Quantity = Top of Green - Net Flow.
+- Size Yellow = ADU * DLT; Red = RedBase * (1 + VF); Green = max(MOQ, RedBase).
+- Color-code execution priority by On-Hand percentage of Red Zone.
+```
+"#,
+    )
+}
+
+/// 95. erp-lean-toyota-production Skill
+pub fn erp_lean_toyota_production() -> EccSkill {
+    EccSkill::new(
+        "erp-lean-toyota-production",
+        "Toyota Production System (TPS), Kanban loop mathematics, Heijunka production leveling, Takt Time calculation, Jidoka (autonomation), and elimination of the 7 Mudas based on Taiichi Ohno. Triggers: lean-toyota-production, toyota-production-system, kanban-math, heijunka-leveling, takt-time, jidoka-andon, seven-mudas, pull-production.",
+        r#"# Toyota Production System (TPS): Lean Manufacturing, Kanban Math & Jidoka
+> Based on **Toyota Production System: Beyond Large-Scale Production - Taiichi Ohno**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Kanban Card Calculation Invariant
+To support pull production without overproducing, the total number of circulating kanban containers $K$ is strictly fixed:
+$$K = \left\lceil \frac{D \times L \times (1 + \alpha)}{C} \right\rceil$$
+Where:
+- $D$: Demand rate (units per time unit).
+- $L$: Replenishment lead time (production + conveyance + wait).
+- $\alpha$: Safety factor (typically $0.05 \le \alpha \le 0.20$).
+- $C$: Container standard batch capacity.
+
+### 2.2 Takt Time Invariant
+$$\text{Takt Time} = \frac{\text{Net Available Working Time per Day}}{\text{Customer Daily Demand Quantity}}$$
+If line cycle time $> \text{Takt Time}$, overtime or bottlenecks occur. If cycle time $< \text{Takt Time}$, waste of overproduction occurs.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Kanban Card State Cycle
+```mermaid
+stateDiagram-v2
+    [*] --> IN_BIN_ATTACHED
+    IN_BIN_ATTACHED --> POSTED_BOARD: container_emptied_by_consumer()
+    POSTED_BOARD --> IN_PRODUCTION: producer_pulls_card()
+    IN_PRODUCTION --> IN_TRANSIT: container_filled_and_card_reattached()
+    IN_TRANSIT --> IN_BIN_ATTACHED: delivered_to_consumer_supermarket()
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Kanban formula: K = ceil((Demand * LeadTime * (1 + SafetyFactor)) / ContainerCapacity).
+- Number of Kanban cards in circulation must remain strictly constant.
+- Takt Time = Net Available Operating Time / Daily Customer Demand.
+- Stop-the-line on defect (Jidoka): An Andon event must immediately pause downstream feed.
+```
+"#,
+    )
+}
+
+/// 96. erp-shop-floor-mes Skill
+pub fn erp_shop_floor_mes() -> EccSkill {
+    EccSkill::new(
+        "erp-shop-floor-mes",
+        "Manufacturing Execution Systems (MES), ISA-95 standard, machine telemetry integration, work order dispatching, and Overall Equipment Effectiveness (OEE = Availability * Performance * Quality) based on Jürgen Kletti. Triggers: shop-floor-mes, isa-95-mes, overall-equipment-effectiveness, oee-tracking, shop-floor-dispatching, machine-downtime-logging, manufacturing-execution-systems, oee-calculation.",
+        r#"# Manufacturing Execution Systems (MES): ISA-95 Shop Floor Control & OEE Tracking
+> Based on **MES: Manufacturing Execution Systems - Jürgen Kletti**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Overall Equipment Effectiveness (OEE) Decomposition
+$$\text{OEE} = \text{Availability} \times \text{Performance} \times \text{Quality}$$
+Where:
+1. **Availability ($A$)**:
+   $$A = \frac{\text{Operating Time}}{\text{Planned Production Time}} = \frac{\text{Planned Time} - \text{Downtime}}{\text{Planned Time}}$$
+2. **Performance ($P$)**:
+   $$P = \frac{\text{Ideal Cycle Time} \times \text{Total Parts Produced}}{\text{Operating Time (seconds)}}$$
+3. **Quality ($Q$)**:
+   $$Q = \frac{\text{Good Parts Produced}}{\text{Total Parts Produced}}$$
+**OEE Invariant**: $0.0 \le \text{OEE} \le 1.0$. World class benchmark is $\text{OEE} \ge 85\%$ ($A \ge 90\%, P \ge 95\%, Q \ge 99.9\%$).
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Work Center Machine Operational FSM
+```mermaid
+stateDiagram-v2
+    [*] --> OFFLINE
+    OFFLINE --> SETUP: start_changeover()
+    SETUP --> RUNNING: changeover_complete()
+    RUNNING --> UNPLANNED_STOP: sensor_fault()
+    UNPLANNED_STOP --> RUNNING: technician_clears_jam()
+    RUNNING --> PLANNED_MAINTENANCE: schedule_pms()
+    PLANNED_MAINTENANCE --> OFFLINE: shift_ends()
+    RUNNING --> OFFLINE: shift_ends()
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- OEE formula: Availability * Performance * Quality.
+- Availability = (Planned Time - Downtime) / Planned Time.
+- Performance = (Ideal Cycle Time * Total Count) / Operating Time.
+- Quality = Good Count / Total Count.
+- Target world-class OEE benchmark of 85%.
+```
+"#,
+    )
+}
+
+/// 97. erp-batch-traceability-genealogy Skill
+pub fn erp_batch_traceability_genealogy() -> EccSkill {
+    EccSkill::new(
+        "erp-batch-traceability-genealogy",
+        "Forward and backward lot traceability, bidirectional genealogy DAGs, FEFO shelf-life management, electronic batch records (EBR), and mock recall execution based on GS1 Standards and FDA 21 CFR Part 11. Triggers: batch-traceability-genealogy, lot-traceability, backward-forward-tracing, fefo-expiry-management, fda-21-cfr-part-11, electronic-batch-record, product-recall-mock, gs1-traceability.",
+        r#"# Lot Traceability & Genealogies: Forward/Backward Tracing & FDA 21 CFR Part 11
+> Based on **Traceability in Food and Pharma - GS1 Standard & FDA 21 CFR Part 11**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Bidirectional Genealogy DAG Invariant
+Let the lot genealogy graph be $G = (V, E)$.
+1. **Backward Trace (Root Cause Analysis)**:
+   $$\text{TraceBackward}(L) = \{u \in V \mid \text{path } u \rightsquigarrow L \text{ exists in } G\}$$
+2. **Forward Trace (Blast Radius for Recall)**:
+   $$\text{TraceForward}(L) = \{v \in V \mid \text{path } L \rightsquigarrow v \text{ exists in } G\}$$
+**Acyclicity Constraint**: $\forall v \in V, v \notin \text{TraceForward}(v) \land v \notin \text{TraceBackward}(v)$.
+
+### 2.2 First-Expired, First-Out (FEFO) Dispatch Invariant
+When picking lot $L$ for delivery at time $t$:
+$$\text{ExpiryDate}(L) = \min_{L' \in \text{AvailableLots}(P)} \text{ExpiryDate}(L')$$
+Any issue of lot $L'$ with $\text{ExpiryDate}(L') > \min(\text{ExpiryDate})$ is an unauthorized FEFO breach.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Pharma Lot Quality Quarantine FSM
+```mermaid
+stateDiagram-v2
+    [*] --> QUARANTINE
+    QUARANTINE --> RELEASED: lab_qc_passed() [e-signature required]
+    QUARANTINE --> ON_HOLD: qc_deviation_investigation()
+    ON_HOLD --> RELEASED: deviation_cleared_by_qa()
+    ON_HOLD --> RECALLED: contamination_confirmed()
+    RELEASED --> EXPIRED: current_date > expiry_date
+    RELEASED --> RECALLED: market_incident_reported()
+    RECALLED --> [*]
+    EXPIRED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Enforce FEFO (First-Expired, First-Out): always allocate the lot with earliest expiration date.
+- Bidirectional traceability: Forward (blast radius recall) and Backward (root cause analysis).
+- Never allow consumption of lots in QUARANTINE or ON_HOLD status.
+- Electronic Batch Records must store cryptographic signatures complying with 21 CFR Part 11.
+```
+"#,
+    )
+}
+
+/// 98. erp-bpmn-workflow-patterns Skill
+pub fn erp_bpmn_workflow_patterns() -> EccSkill {
+    EccSkill::new(
+        "erp-bpmn-workflow-patterns",
+        "BPMN 2.0 executable workflow patterns, XOR/AND/OR gateways, boundary interrupting/non-interrupting timer and error events, sub-processes, and workflow net soundness based on Dumas et al. Triggers: bpmn-workflow-patterns, bpmn-orchestration, workflow-soundness, xor-and-or-gateways, boundary-events, van-der-aalst-patterns, bpmn20-engine, process-orchestration.",
+        r#"# BPMN 2.0 Process Orchestration: Gateways, Boundary Events & Workflow Patterns
+> Based on **Fundamentals of Business Process Management - Marlon Dumas, Marcello La Rosa, Jan Mendling, Hajo Reijers**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Workflow Net Soundness Invariant
+A workflow net $W$ is sound iff:
+1. **Safeness (No Token Multiplication)**: No place in the Petri net ever contains more than one token during normal execution.
+2. **Proper Completion**: When the end place is marked with a token, all other places in the net must be empty:
+   $$\forall M \in [M_0\rangle, \quad M \ge M_{\text{end}} \implies M = M_{\text{end}}$$
+3. **Dead Transition Freedom**: No transition in the workflow net can become unreachable from the start place.
+
+### 2.2 Parallel Split (AND-Split) & Synchronization (AND-Join)
+When an AND-Split fires with 1 incoming token, it generates $k$ concurrent tokens on all outgoing branches.
+An AND-Join cannot fire until ALL $k$ incoming branch tokens have arrived at its input ports.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 BPMN Process Instance State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> ACTIVE
+    ACTIVE --> SUSPENDED: suspend_process()
+    SUSPENDED --> ACTIVE: resume_process()
+    ACTIVE --> COMPLETED: reach_none_end_event()
+    ACTIVE --> TERMINATED: reach_terminate_event()
+    COMPLETED --> [*]
+    TERMINATED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Enforce workflow net soundness: no deadlocks, no dangling unconsumed tokens.
+- AND-Join must wait for tokens from all incoming parallel branches before firing.
+- XOR-Split evaluates conditions in order and routes token down exactly one branch.
+- Boundary error events cancel active tasks within the scope unless configured as non-interrupting.
+```
+"#,
+    )
+}
+
+/// 99. erp-process-mining-event-logs Skill
+pub fn erp_process_mining_event_logs() -> EccSkill {
+    EccSkill::new(
+        "erp-process-mining-event-logs",
+        "Process mining algorithms, discovery of process models from event logs (Alpha miner), conformance checking (fitness and precision), and discovery of bottlenecks using IEEE XES event logs based on Wil van der Aalst. Triggers: process-mining-event-logs, van-der-aalst-process-mining, xes-event-logs, alpha-miner, conformance-checking, process-discovery, process-bottleneck-analysis, petri-net-mining.",
+        r#"# Process Mining & Conformance: XES Event Logs, Alpha Miner & Bottleneck Discovery
+> Based on **Process Mining: Data Science in Action - Wil van der Aalst**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Directly-Follows Relation ($\succ$) Invariant
+Let $L$ be an event log. Activity $a$ directly follows $b$ ($b \succ_L a$) iff there exists a trace $\sigma = \langle t_1, t_2, \dots, t_n \rangle \in L$ and index $i$ such that $t_i = b$ and $t_{i+1} = a$.
+1. **Causality ($a \to_L b$)**: $a \succ_L b \land b \not\succ_L a$.
+2. **Parallelism ($a \parallel_L b$)**: $a \succ_L b \land b \succ_L a$.
+3. **Choice/Unrelated ($a \ \#_L\ b$)**: $a \not\succ_L b \land b \not\succ_L a$.
+
+### 2.2 Conformance Checking Fitness Metric
+Fitness ($f$) measures the fraction of event log behavior that can be replayed by the Petri net model without error:
+$$f = \frac{1}{2} \left(1 - \frac{m}{c}\right) + \frac{1}{2} \left(1 - \frac{r}{p}\right)$$
+Where $m$ is missing tokens, $c$ is consumed tokens, $r$ is remaining tokens, and $p$ is produced tokens. Perfect conformance $\implies f = 1.0$.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Process Mining Analytics Pipeline
+```mermaid
+graph TD
+    A[Raw ERP Event Log] --> B[Directly-Follows Graph DFG Extraction]
+    B --> C[Alpha / Inductive Miner Algorithm]
+    C --> D[Discover Petri Net Process Model]
+    D --> E[Token Replay Conformance Checking]
+    E --> F[Highlight Deviations & SoD Violations]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Parse event logs by mandatory fields: Case ID, Activity, and Timestamp.
+- Extract Directly-Follows relations: a -> b iff a occurs immediately before b in trace.
+- Conformance fitness: penalize models for missing tokens during alignment replay.
+- Identify process deviations: highlight traces bypassing mandatory credit or approval steps.
+```
+"#,
+    )
+}
+
+/// 100. erp-order-to-cash-o2c Skill
+pub fn erp_order_to_cash_o2c() -> EccSkill {
+    EccSkill::new(
+        "erp-order-to-cash-o2c",
+        "Order-to-Cash (O2C) comprehensive workflow, customer credit limit validation, warehouse picking/packing/shipping, billing document creation, and cash payment matching based on Magal and Word. Triggers: order-to-cash-o2c, o2c-process, customer-credit-limit, goods-issue-shipment, o2c-invoicing, cash-application-matching, order-fulfillment-workflow, o2c.",
+        r#"# Order-to-Cash (O2C) End-to-End: Quotation, Credit Limits, Shipping & Reconciliation
+> Based on **Essentials of Business Processes and Information Systems - Simha Magal & Jeffrey Word**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Customer Credit Limit Check Invariant
+Before order $O$ can transition from `PLACED` to `APPROVED`:
+$$\text{Total Exposure} = \text{Current AR Balance} + \text{Open Orders Value} + \text{Total}(O)$$
+$$\text{Invariant: } \text{Total Exposure} \le \text{Credit Limit}$$
+If total exposure exceeds credit limit, the order is automatically placed on `CREDIT_HOLD`.
+
+### 2.2 Cash Application Conservation
+$$\text{Payment Amount} = \sum_{k} \text{AppliedToInvoice}_k + \text{Unallocated Cash}$$
+$$\text{Invoice Open Balance} = \text{Total Amount} - \sum \text{Applied Payments} \ge 0.0000$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Order-to-Cash (O2C) State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> QUOTE_DRAFT
+    QUOTE_DRAFT --> ORDER_CREATED: accept_quote()
+    ORDER_CREATED --> CREDIT_HOLD: exposure > limit
+    ORDER_CREATED --> ALLOCATED: credit_check_passed()
+    CREDIT_HOLD --> ALLOCATED: credit_manager_release()
+    ALLOCATED --> PICKED_AND_PACKED: warehouse_process()
+    PICKED_AND_PACKED --> GOODS_ISSUED: carrier_scans_bol()
+    GOODS_ISSUED --> INVOICED: generate_billing_doc()
+    INVOICED --> PAID: cash_payment_reconciled()
+    PAID --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never release an order without automated credit limit verification.
+- Credit check formula: Current AR + Open Orders + New Order <= Credit Limit.
+- Post Goods Issue (PGI) triggers inventory reduction and COGS recognition in General Ledger.
+- Invoice Open Balance = Invoice Total - Payments Applied (must never be negative).
+```
+"#,
+    )
+}
+
+/// 101. erp-procure-to-pay-p2p Skill
+pub fn erp_procure_to_pay_p2p() -> EccSkill {
+    EccSkill::new(
+        "erp-procure-to-pay-p2p",
+        "Procure-to-Pay (P2P) full lifecycle integration, requisition approval workflows, purchase order transmission, goods receipt posting, AP voucher entry, and disbursement runs based on Magal and Word. Triggers: procure-to-pay-p2p, p2p-lifecycle, purchase-requisition-to-po, goods-receipt-posting, ap-voucher-entry, p2p-disbursement, payment-run, p2p.",
+        r#"# Procure-to-Pay (P2P) End-to-End: Requisitions, Purchase Orders, Goods Receipt & AP Vouchers
+> Based on **Integrated Business Processes with ERP Systems - Simha Magal & Jeffrey Word**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Early Payment Cash Discount Invariant (e.g., 2/10 Net 30)
+If payment is disbursed on date $T_{\text{pay}} \le T_{\text{discount\_date}}$:
+$$\text{Discount Amount} = \text{Invoice Amount} \times \frac{\text{DiscountPct}}{100}$$
+$$\text{Net Disbursed Amount} = \text{Invoice Amount} - \text{Discount Amount}$$
+Otherwise:
+$$\text{Net Disbursed Amount} = \text{Invoice Amount}$$
+
+### 2.2 Cost of Forgoing Cash Discount
+$$\text{Effective Annual Rate} = \frac{\text{DiscountPct}}{100 - \text{DiscountPct}} \times \frac{365}{\text{Total Term Days} - \text{Discount Days}}$$
+For 2/10 Net 30: $\frac{2}{98} \times \frac{365}{20} = 37.24\%$ annual cost of capital.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 P2P Lifecycle State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> REQUISITION_APPROVED
+    REQUISITION_APPROVED --> PO_TRANSMITTED: issue_po_to_vendor()
+    PO_TRANSMITTED --> GOODS_RECEIVED: post_grn()
+    GOODS_RECEIVED --> AP_VOUCHER_ENTERED: match_supplier_invoice()
+    AP_VOUCHER_ENTERED --> APPROVED_FOR_PAYMENT: verify_3way_match()
+    APPROVED_FOR_PAYMENT --> PAID: execute_payment_run()
+    PAID --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never pay an AP voucher without 3-Way Match confirmation.
+- Calculate early settlement discounts (e.g. 2/10 net 30) dynamically based on payment execution date.
+- Goods receipt increases inventory asset and credits GR/IR clearing liability.
+- Payment run debits Accounts Payable and credits Cash/Bank account.
+```
+"#,
+    )
+}
+
+/// 102. erp-record-to-report-r2r Skill
+pub fn erp_record_to_report_r2r() -> EccSkill {
+    EccSkill::new(
+        "erp-record-to-report-r2r",
+        "Record-to-Report (R2R) financial closing lifecycle, Fast Close disciplines, subledger posting cutoffs, automated accruals/deferrals, depreciation runs, and management reporting based on Steven Bragg. Triggers: record-to-report-r2r, fast-close-methodology, financial-close-checklist, period-end-cutoff, subledger-closing-lock, accrual-deferral-engine, r2r-workflow, r2r.",
+        r#"# Record-to-Report (R2R) & Fast Close: Closing Cutoffs, Accruals & Consolidation
+> Based on **Fast Close: A Guide to Closing the Books Quickly - Steven Bragg**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Fast Close Critical Path Invariant
+Let the financial close consist of tasks $T_i$ with durations $d_i$ and dependency graph $G$.
+$$\text{Total Close Days} = \max_{\text{paths } P} \sum_{i \in P} d_i$$
+To achieve a "Fast Close" ($T_{\text{close}} \le 3 \text{ days}$), subledger locks must execute concurrently:
+$$\text{Lock}(\text{AP}) \parallel \text{Lock}(\text{AR}) \parallel \text{Lock}(\text{Inventory})$$
+
+### 2.2 Balance Sheet Roll-Forward Invariant
+For Retained Earnings (Equity):
+$$\text{Ending RE}_t = \text{Beginning RE}_t + \text{Net Income}_t - \text{Dividends Declared}_t$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Financial Close Period Lifecycle FSM
+```mermaid
+stateDiagram-v2
+    [*] --> OPEN
+    OPEN --> SUBLEDGER_LOCKED: day_0_cutoff()
+    SUBLEDGER_LOCKED --> ADJUSTMENTS_ONLY: post_accruals_and_depreciation()
+    ADJUSTMENTS_ONLY --> HARD_CLOSED: cfo_signs_financial_statements()
+    HARD_CLOSED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Enforce strict cutoff: lock subledgers (AP, AR, Inventory) before posting GL adjustments.
+- Auto-reverse month-end accruals on Day 1 of the following period.
+- Depreciation and amortization schedules must run prior to financial statement generation.
+- Hard Closed periods reject any subsequent posting transactions without exception.
+```
+"#,
+    )
+}
+
+/// 103. erp-subscription-recurring-billing Skill
+pub fn erp_subscription_recurring_billing() -> EccSkill {
+    EccSkill::new(
+        "erp-subscription-recurring-billing",
+        "Recurring billing engine, subscription state machines, MRR/ARR waterfall metrics, usage-based consumption rating, mid-cycle proration, automated dunning, and churn modeling based on Tien Tzuo. Triggers: subscription-recurring-billing, recurring-billing-engine, mrr-arr-waterfall, usage-metering, subscription-proration, automated-dunning, churn-reduction, tien-tzuo-subscribed.",
+        r#"# Subscription Economy & Recurring Billing: MRR/ARR, Usage Metering & Dunning
+> Based on **Subscribed: Why the Subscription Model Will Be Your Company's Future - Tien Tzuo**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 MRR Waterfall Equation
+For month $t$:
+$$\text{Ending MRR}_t = \text{Beginning MRR}_t + \text{New MRR}_t + \text{Expansion MRR}_t - \text{Contraction MRR}_t - \text{Churned MRR}_t$$
+$$\text{Annual Recurring Revenue (ARR)} = \text{Ending MRR} \times 12$$
+
+### 2.2 Mid-Cycle Plan Upgrade Proration Invariant
+If a customer switches from plan with rate $P_1$ to plan with rate $P_2$ ($P_2 > P_1$) on day $d$ of an $N$-day period:
+$$\text{Unused Credit} = P_1 \times \frac{N - d}{N}$$
+$$\text{New Charge} = P_2 \times \frac{N - d}{N}$$
+$$\text{Prorated Immediate Invoice} = \text{New Charge} - \text{Unused Credit} = (P_2 - P_1) \times \frac{N - d}{N}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Subscription State Machine & Dunning
+```mermaid
+stateDiagram-v2
+    [*] --> TRIAL
+    TRIAL --> ACTIVE: payment_method_entered()
+    ACTIVE --> PAST_DUE: payment_failed()
+    PAST_DUE --> ACTIVE: retry_payment_success()
+    PAST_DUE --> CANCELLED: dunning_max_retries_exhausted()
+    ACTIVE --> CANCELLED: user_cancels()
+    ACTIVE --> PAUSED: user_pauses()
+    PAUSED --> ACTIVE: user_resumes()
+    CANCELLED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Calculate MRR strictly on normalized monthly basis: ARR = MRR * 12.
+- Compute mid-cycle proration using exact active day fractions: (P2 - P1) * (RemainingDays / TotalDays).
+- Smart Dunning: Retry failed recurring card charges on days 1, 3, 5, and 7 before cancelling.
+- Track usage-based consumption with idempotent deduplicated meter events.
+```
+"#,
+    )
+}
+
+/// 104. erp-enterprise-integration-patterns Skill
+pub fn erp_enterprise_integration_patterns() -> EccSkill {
+    EccSkill::new(
+        "erp-enterprise-integration-patterns",
+        "Enterprise Integration Patterns (EIP), Content-Based Routers, Splitter/Aggregator, Claim Check, Transactional Outbox pattern, and Dead Letter Queues (DLQ) based on Hohpe and Woolf. Triggers: enterprise-integration-patterns, eip-messaging, transactional-outbox, content-based-router, splitter-aggregator, claim-check-pattern, dead-letter-queue, enterprise-service-bus.",
+        r#"# Enterprise Integration Patterns: Messaging, Content-Based Routers & Transactional Outbox
+> Based on **Enterprise Integration Patterns - Gregor Hohpe & Bobby Woolf**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Transactional Outbox Atomic Guarantee
+Let state transition be $T_{\text{state}}$ and event publication be $T_{\text{event}}$.
+In distributed databases, writing to the message broker directly risks inconsistency (Dual-Write Problem).
+**Outbox Invariant**:
+$$\text{Transaction} = \{ \text{Mutate Aggregate Table}, \text{Insert into } \text{transactional\_outbox} \}$$
+Atomicity is guaranteed by local relational ACID:
+$$\text{State Mutated} \iff \text{Outbox Row Created}$$
+
+### 2.2 Splitter-Aggregator Cardinality Invariant
+When a composite order with $N$ lines is decomposed by a Splitter:
+$$\text{Tokens Generated} = N$$
+An Aggregator awaiting correlation key $K$ will not emit the consolidated batch until:
+$$\text{Received Tokens}(K) = N$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Outbox Message Publisher FSM
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING
+    PENDING --> SENT: broker_acknowledges_receipt()
+    PENDING --> RETRYING: broker_nack_or_timeout()
+    RETRYING --> SENT: retry_succeeds()
+    RETRYING --> DEAD_LETTER: max_retries_exceeded()
+    SENT --> [*]
+    DEAD_LETTER --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never write to database and message broker independently: use Transactional Outbox.
+- Insert outbox event in the same ACID transaction as the business aggregate update.
+- Use Content-Based Routers to isolate routing rules from payload producers.
+- Move unprocessable messages to Dead Letter Queue (DLQ) after exponential retries.
+```
+"#,
+    )
+}
+
+/// 105. erp-odoo-technical-architecture Skill
+pub fn erp_odoo_technical_architecture() -> EccSkill {
+    EccSkill::new(
+        "erp-odoo-technical-architecture",
+        "Odoo ORM technical architecture, models.Model, classical and prototype inheritance (_inherit, _inherits), relational fields (One2many, Many2many), Record Rules (ir.rule), and automated XML/QWeb views based on Greg Moss and Daniel Reis. Triggers: odoo-technical-architecture, odoo-orm, odoo-inheritance, ir-rule-security, odoo-computed-fields, odoo-module-design, working-with-odoo, odoo-framework.",
+        r#"# Odoo Technical Architecture: ORM Models, Inheritance, Domain Rules & Automated Views
+> Based on **Working with Odoo - Greg Moss / Daniel Reis**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Odoo Domain Polish Notation Invariant
+Odoo evaluates record filtering domains in prefix notation (Polish Notation):
+$$\text{Domain} = [\&, ('\text{stage\_id}', '=', 1), ('\text{user\_id}', '=', \text{uid})]$$
+Unary operator: $!$ (NOT). Binary operators: $\&$ (AND - default), $|$ (OR).
+**Evaluation Invariant**: Every operator of arity $k$ must be followed by exactly $k$ valid operands or sub-expressions.
+
+### 2.2 Computed Fields & Depends Invalidation
+A field $F$ marked with `@api.depends('line_ids.price_subtotal')` must recompute whenever:
+$$\Delta(\text{line\_ids}) \ne \emptyset \lor \Delta(\text{price\_subtotal}) \ne \emptyset$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Odoo Standard Document Workflow State
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT: create()
+    DRAFT --> CONFIRMED: action_confirm()
+    CONFIRMED --> DONE: action_done()
+    CONFIRMED --> CANCEL: action_cancel()
+    DONE --> CANCEL: action_cancel() [if permitted by module]
+    CANCEL --> DRAFT: action_draft()
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Models inherit via _inherit for in-place extension and _inherits for delegation inheritance.
+- Use @api.depends for computed fields; declare all source dependencies to prevent stale cache.
+- Filter multi-company data using Record Rules: [('company_id', 'in', company_ids)].
+- Always call super() in overridden model methods (create, write, unlink).
+```
+"#,
+    )
+}
+
+/// 106. erp-frappe-erpnext-framework Skill
+pub fn erp_frappe_erpnext_framework() -> EccSkill {
+    EccSkill::new(
+        "erp-frappe-erpnext-framework",
+        "Frappe Framework architecture, DocType metadata engine, Submittable Documents (docstatus: Draft -> Submitted -> Cancelled), doc_events hooks, and Server/Client Scripts based on Rushabh Mehta. Triggers: frappe-erpnext-framework, frappe-doctype-engine, submittable-documents, erpnext-architecture, frappe-hooks, frappe-server-scripts, open-source-erpnext, rushabh-mehta.",
+        r#"# Frappe Framework & ERPNext: DocType Engine, Submittable Docs & Hooks
+> Based on **ERPNext: Open Source ERP - Rushabh Mehta**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Submittable Document State (DocStatus) Monotonicity Invariant
+Frappe enforces strict monotonic state progression for accounting and inventory ledger documents:
+$$\text{DocStatus} \in \{0, 1, 2\}$$
+Where:
+- $0$: Draft (Editable, non-posting).
+- $1$: Submitted (Immutable, active General Ledger and Stock Ledger entries).
+- $2$: Cancelled (Voided, creates inverse GL/SL balancing records).
+**State Transition Invariant**:
+$$0 \xrightarrow{\text{submit}} 1 \xrightarrow{\text{cancel}} 2$$
+Transitions $1 \to 0$ or $2 \to 1$ are strictly forbidden. Direct deletion of a document with $\text{docstatus} = 1$ is an illegal operation.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Frappe DocStatus State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT: docstatus = 0
+    DRAFT --> SUBMITTED: on_submit() [docstatus = 1]
+    SUBMITTED --> CANCELLED: on_cancel() [docstatus = 2]
+    CANCELLED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- DocStatus values: 0 = Draft, 1 = Submitted, 2 = Cancelled.
+- Submitted documents (docstatus = 1) are strictly immutable; reverse them by cancelling.
+- Wire business logic via hooks.py doc_events rather than editing core DocTypes.
+- Child tables use fieldtype='Table' linked to sub-DocTypes.
+```
+"#,
+    )
+}
+
+/// 107. erp-sap-s4hana-cleancore Skill
+pub fn erp_sap_s4hana_cleancore() -> EccSkill {
+    EccSkill::new(
+        "erp-sap-s4hana-cleancore",
+        "SAP Clean Core architectural strategy, side-by-side extensibility on SAP BTP, ABAP RESTful Application Programming Model (RAP), Core Data Services (CDS) Views, and zero-modification ERP upgrades based on Thomas Saueressig. Triggers: sap-s4hana-cleancore, clean-core-strategy, sap-btp-extensibility, abap-cloud-rap, core-data-services-cds, zero-modification-erp, s4hana-architecture, sap-clean-core.",
+        r#"# SAP S/4HANA Clean Core: Side-by-Side Extensibility, BTP & ABAP Cloud (RAP)
+> Based on **SAP S/4HANA Architecture - Thomas Saueressig**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Clean Core Compliance Ratio Invariant
+For an enterprise SAP landscape with extensions $E$:
+$$\text{Clean Core Index} = \frac{\sum_{e \in E} \mathbf{1}_{\{e \text{ uses released public APIs}\}}}{|E|} \times 100\%$$
+**Clean Core Rule**: Upgradeability invariant requires $\text{Clean Core Index} = 100\%$. Any modification to SAP standard core objects (SSCR key hacks) violates the Clean Core contract.
+
+### 2.2 CDS View Association Join Minimization
+CDS Views with associations execute deferred (lazy) on-demand SQL joins:
+$$Q(V) = \text{Base Projection} \cup (\text{Association} \iff \text{Field Accessed})$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 ABAP RAP Draft-Enabled Business Object Lifecycle
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT_ACTIVE
+    DRAFT_ACTIVE --> DRAFT_SAVED: user_edits_field()
+    DRAFT_SAVED --> VALIDATED: activate()
+    VALIDATED --> ACTIVE_PERSISTENCE: save() [writes to active DB table]
+    VALIDATED --> DRAFT_SAVED: validation_failed()
+    ACTIVE_PERSISTENCE --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never modify standard core tables or programs: keep core clean.
+- Build extensions side-by-side on SAP BTP or using on-stack ABAP Cloud (RAP).
+- Consume only released SAP APIs with C1 release contract.
+- Use draft-enabled Core Data Services (CDS) views for stateful Fiori UX.
+```
+"#,
+    )
+}
+
+/// 108. erp-netsuite-suitecloud-suiteflow Skill
+pub fn erp_netsuite_suitecloud_suiteflow() -> EccSkill {
+    EccSkill::new(
+        "erp-netsuite-suitecloud-suiteflow",
+        "NetSuite SuiteCloud technical platform, SuiteScript 2.1 triggers (UserEvent, ClientScript, MapReduce, RESTlet), SuiteFlow visual state machines, and SuiteScript governance limits based on David Geilhufe. Triggers: netsuite-suitecloud-suiteflow, suitescript-21, suiteflow-state-machine, netsuite-custom-records, suitescript-governance-units, user-event-script, netsuite-erp-architecture, mapreduce-script.",
+        r#"# NetSuite SuiteCloud & SuiteScript 2.1: Custom Records, SuiteFlow & Governance
+> Based on **NetSuite ERP Architecture - David Geilhufe**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 NetSuite Governance Budget Invariant
+Every SuiteScript execution context has a strict governance usage budget $B$:
+$$\sum_{k=1}^m U(\text{API\_Operation}_k) \le B$$
+Where operations consume units (e.g., `record.load`: 5 units, `record.save`: 20 units, `search.run`: 10 units).
+**Governance Invariant**: If cumulative units exceed $B$, the engine immediately aborts with `SSS_USAGE_LIMIT_EXCEEDED`.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 SuiteScript UserEvent Pipeline
+```mermaid
+stateDiagram-v2
+    [*] --> BEFORE_LOAD
+    BEFORE_LOAD --> USER_EDITS: render_ui()
+    USER_EDITS --> BEFORE_SUBMIT: client_clicks_save()
+    BEFORE_SUBMIT --> AFTER_SUBMIT: commit_to_database()
+    AFTER_SUBMIT --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Monitor governance usage: UserEvent scripts have strict 1,000 unit limits; MapReduce has 10,000 units.
+- UserEvent lifecycle: beforeLoad (UI customization) -> beforeSubmit (validation) -> afterSubmit (cascade updates).
+- Offload long-running mass updates from UserEvent to MapReduce scripts.
+- Structure custom records to maintain parent-child relationships using custom record links.
+```
+"#,
+    )
+}
+
+/// 109. erp-multi-tenant-data-isolation Skill
+pub fn erp_multi_tenant_data_isolation() -> EccSkill {
+    EccSkill::new(
+        "erp-multi-tenant-data-isolation",
+        "Multi-tenant data isolation patterns, shared-database shared-schema with PostgreSQL Row-Level Security (RLS), schema-per-tenant isolation, and cross-tenant leakage prevention based on Guy Harrison. Triggers: multi-tenant-data-isolation, row-level-security-rls, schema-per-tenant, tenant-isolation-patterns, cross-tenant-leakage-prevention, saas-erp-multitenancy, tenant-routing.",
+        r#"# Multi-Tenant Data Architecture: Row-Level Security, Schema-per-Tenant & Cross-Tenant Isolation
+> Based on **Multi-Tenant Architecture - Guy Harrison**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Multi-Tenant Separation Invariant
+Let $T_A$ and $T_B$ be distinct tenants ($T_A \ne T_B$).
+For any query $Q$ executed in context of $T_A$, the result set $R(Q, T_A)$ must satisfy:
+$$\forall r \in R(Q, T_A), \quad \text{tenant\_id}(r) = T_A$$
+$$\text{Probability of cross-tenant data leak } P(r \in R \mid \text{tenant\_id}(r) = T_B) = 0$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Tenant Lifecycle State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> PROVISIONING
+    PROVISIONING --> ACTIVE: complete_setup()
+    ACTIVE --> SUSPENDED: payment_failure()
+    SUSPENDED --> ACTIVE: invoice_paid()
+    SUSPENDED --> DEPROVISIONED: data_retention_period_expired()
+    ACTIVE --> DEPROVISIONED: customer_churn_requested()
+    DEPROVISIONED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Every table in a shared-schema architecture MUST contain a tenant_id column.
+- Enable PostgreSQL Row-Level Security (RLS) on all tenant-specific tables.
+- Set session variable before executing queries: SET LOCAL app.current_tenant_id = '...'.
+- Prevent SQL injection into tenant routing logic via parameterized prepared statements.
+```
+"#,
+    )
+}
+
+/// 110. erp-custom-fields-metadata-extensibility Skill
+pub fn erp_custom_fields_metadata_extensibility() -> EccSkill {
+    EccSkill::new(
+        "erp-custom-fields-metadata-extensibility",
+        "Metadata-driven dynamic architecture, Entity-Attribute-Value (EAV) vs PostgreSQL JSONB document extensions, schema validation, GIN index acceleration, and zero-downtime field extensions. Triggers: custom-fields-metadata-extensibility, metadata-driven-architecture, eav-pattern, postgres-jsonb-custom-fields, dynamic-virtual-fields, schema-extensibility, zero-downtime-schema, enterprise-extensibility.",
+        r#"# Metadata-Driven Extensibility: EAV, JSONB Schemas & Dynamic Virtual Fields
+> Based on **Enterprise Software Architecture: Extensibility & Custom Fields**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Metadata Schema Validation Invariant
+For entity $E$ with custom payload $D = \{k_1: v_1, \dots, k_n: v_n\}$:
+$$\forall (k, v) \in D, \quad \exists \text{Def} \in \text{Fields}(E) \text{ s.t. } \text{Type}(v) = \text{Def.Type} \land (\text{Regex}(v) = \text{True})$$
+If any field violates its defined metadata specification, the insert/update transaction must abort.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Custom Field Definition Lifecycle
+```mermaid
+stateDiagram-v2
+    [*] --> DRAFT_FIELD
+    DRAFT_FIELD --> ACTIVE_FIELD: publish_field()
+    ACTIVE_FIELD --> DEPRECATED_FIELD: deprecate()
+    DEPRECATED_FIELD --> ARCHIVED_FIELD: purge_field_values()
+    ARCHIVED_FIELD --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Avoid traditional EAV join complexity: prefer PostgreSQL JSONB with GIN indexing.
+- Validate custom field types against metadata definitions before writing to JSONB.
+- Create functional B-tree indexes for high-frequency custom query filters: (custom_fields->>'tax_code').
+- Manage custom field deprecation without dropping historic data.
+```
+"#,
+    )
+}
+
+/// 111. erp-headless-graphql-rest-api Skill
+pub fn erp_headless_graphql_rest_api() -> EccSkill {
+    EccSkill::new(
+        "erp-headless-graphql-rest-api",
+        "Headless ERP API design, RESTful resource endpoints, GraphQL schemas, DataLoader batching patterns to prevent N+1 query exhaustion, and HMAC-signed webhook delivery based on Jin, Sahni, and Shevat. Triggers: headless-graphql-rest-api, headless-erp, enterprise-graphql-schema, dataloader-n-plus-1, webhook-hmac-signatures, restful-erp-endpoints, api-rate-limiting, api-design.",
+        r#"# Headless ERP Architecture: GraphQL, REST APIs, Webhooks & N+1 DataLoader Defense
+> Based on **Designing Web APIs - Brenda Jin, Saurabh Sahni, Amir Shevat**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 DataLoader Batching Complexity Reduction
+Without DataLoader, resolving child elements for $N$ parent objects results in:
+$$\text{Queries} = 1 + N \implies O(N)$$
+With DataLoader key batching:
+$$\text{Queries} = 1 + 1 = 2 \implies O(1)$$
+
+### 2.2 Webhook HMAC-SHA256 Signature Verification
+To prevent spoofing and replay attacks:
+$$\text{Signature} = \text{HMAC-SHA256}(\text{SecretToken}, \text{Timestamp} \parallel \text{"."} \parallel \text{PayloadBody})$$
+The receiver must reject any webhook where computed signature $\ne$ header signature or where $|t_{\text{current}} - t_{\text{header}}| > 300\text{s}$.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Webhook Dispatcher State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING
+    PENDING --> DELIVERED: http_200_ok()
+    PENDING --> RETRYING: http_5xx_or_timeout()
+    RETRYING --> DELIVERED: retry_success()
+    RETRYING --> FAILED: max_retries_exceeded()
+    DELIVERED --> [*]
+    FAILED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never write GraphQL resolvers that fetch children in a loop; always use DataLoader.
+- Sign all outbound webhook payloads using HMAC-SHA256 with timestamp protection.
+- Support Idempotency-Key headers on all POST/PUT endpoints.
+- Enforce token bucket rate limiting on API keys.
+```
+"#,
+    )
+}
+
+/// 112. erp-distributed-acid-kleppmann Skill
+pub fn erp_distributed_acid_kleppmann() -> EccSkill {
+    EccSkill::new(
+        "erp-distributed-acid-kleppmann",
+        "Distributed data systems, ACID vs BASE, transaction isolation levels, Snapshot Isolation (SSI), write skew anomaly prevention, Two-Phase Commit (2PC), and consensus mechanisms based on Martin Kleppmann. Triggers: distributed-acid-kleppmann, data-intensive-applications, serializable-snapshot-isolation, write-skew-prevention, two-phase-commit-2pc, distributed-transactions, acid-guarantees, consensus-raft.",
+        r#"# Distributed ACID & Consensus: Serializability, 2PC & Kleppmann Enterprise Invariants
+> Based on **Designing Data-Intensive Applications - Martin Kleppmann**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Write Skew Invariant & Anti-Dependency Cycle
+Write skew occurs under Snapshot Isolation when two concurrent transactions read overlapping datasets, verify invariant $P$, and update disjoint records such that $P$ is violated.
+**Prevention Rule**:
+$$\text{To prevent write skew: Use } \text{SELECT ... FOR UPDATE} \lor \text{SERIALIZABLE isolation}$$
+Example (On-Call Shift Invariant): At least 1 doctor must be on call:
+$$\sum_{d \in \text{Doctors}} \mathbf{1}_{\{\text{on\_call}(d)\}} \ge 1$$
+If both active doctors concurrently check the sum ($= 2$) and each sets their own `on_call = false`, both commit under Snapshot Isolation, leaving 0 doctors on call (Write Skew!).
+
+### 2.2 Two-Phase Commit (2PC) Unanimity Invariant
+Let $P_1, \dots, P_k$ be the resource managers:
+$$\text{Commit Decision} = \begin{cases} \text{COMMIT} & \text{iff } \bigwedge_{i=1}^k \text{Vote}(P_i) = \text{"YES"} \\ \text{ABORT} & \text{if } \exists i \text{ s.t. } \text{Vote}(P_i) = \text{"NO"} \lor \text{Timeout} \end{cases}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Two-Phase Commit (2PC) Coordinator FSM
+```mermaid
+stateDiagram-v2
+    [*] --> PREPARING
+    PREPARING --> COMMITTED: all_participants_vote_yes()
+    PREPARING --> ABORTED: any_vote_no_or_timeout()
+    COMMITTED --> [*]
+    ABORTED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Prevent Write Skew: Use SELECT ... FOR UPDATE or SERIALIZABLE isolation when checking aggregate invariants.
+- 2PC rule: All participants must vote YES to commit; a single NO or timeout aborts.
+- Differentiate Read Committed, Repeatable Read, and Serializable levels.
+- Beware of clock drift: do not rely on local wall-clock timestamps for total order.
+```
+"#,
+    )
+}
+
+/// 113. erp-saga-distributed-transactions Skill
+pub fn erp_saga_distributed_transactions() -> EccSkill {
+    EccSkill::new(
+        "erp-saga-distributed-transactions",
+        "Saga pattern for distributed enterprise microservices, Orchestration vs Choreography, Compensating Transactions (semantic rollbacks), pivot transactions, and idempotent event listeners based on Chris Richardson. Triggers: saga-distributed-transactions, saga-orchestrator, compensating-transactions, semantic-rollback, choreography-vs-orchestration, microservices-patterns, outbox-cdc-saga, saga-pattern.",
+        r#"# Saga Distributed Transactions: Orchestration, Compensation & Semantic Rollbacks
+> Based on **Microservices Patterns: With Examples in Java - Chris Richardson**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Saga Forward & Backward Recovery Invariant
+A Saga consists of $n$ steps: $T_1, T_2, \dots, T_n$ with corresponding compensations $C_1, C_2, \dots, C_{n-1}$.
+If step $T_k$ fails ($k \le n$):
+$$\text{Execution Sequence} = [T_1, T_2, \dots, T_{k-1}, T_k (\text{Fail}), C_{k-1}, C_{k-2}, \dots, C_1]$$
+**Compensation Invariant**:
+Compensating transactions MUST be idempotent and guaranteed to succeed (or alert human operations for manual intervention).
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Saga Orchestration State Machine
+```mermaid
+stateDiagram-v2
+    [*] --> IN_PROGRESS
+    IN_PROGRESS --> COMPLETED: all_forward_steps_ok()
+    IN_PROGRESS --> COMPENSATING: step_fails()
+    COMPENSATING --> COMPENSATED: all_compensations_succeed()
+    COMPENSATING --> FAILED_CRITICAL: compensation_fails()
+    COMPLETED --> [*]
+    COMPENSATED --> [*]
+    FAILED_CRITICAL --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Compensating transactions must be idempotent: C(C(x)) == C(x).
+- Execute compensations in reverse order of forward operations (LIFO).
+- Identify the Pivot Transaction: Once the pivot commits, subsequent steps must be retriable and cannot fail.
+- Store saga state in persistent storage to survive coordinator crashes.
+```
+"#,
+    )
+}
+
+/// 114. erp-cqrs-event-sourcing Skill
+pub fn erp_cqrs_event_sourcing() -> EccSkill {
+    EccSkill::new(
+        "erp-cqrs-event-sourcing",
+        "Command Query Responsibility Segregation (CQRS) and Event Sourcing (ES), append-only event stores, deterministic aggregate reconstruction, asynchronous read-model projections, and eventual consistency management based on Adam Bellemare. Triggers: cqrs-event-sourcing, event-driven-microservices, command-query-segregation, read-model-projections, aggregate-hydration, eventual-consistency, event-store-append-only, cqrs-es.",
+        r#"# CQRS & Event Sourcing: Write-Model Event Stores & Read-Model Projections
+> Based on **Building Event-Driven Microservices - Adam Bellemare**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 State as a Pure Function of Events (Fold Invariant)
+The current state $S$ of an aggregate is computed by folding historic events:
+$$S_t = \text{foldl}(\text{apply}, S_0, E_{1..t})$$
+**Deterministic Replay Invariant**:
+Replaying identical events on an uninitialized state MUST always yield identical aggregate state:
+$$\text{Replay}(E) = \text{Replay}(E)$$
+
+### 2.2 Projection Checkpoint Monotonicity
+For any asynchronous projection reader $P$:
+$$\text{Offset}_t(P) \ge \text{Offset}_{t-1}(P)$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 CQRS Command-to-Projection Pipeline
+```mermaid
+graph LR
+    Command[Client Command] --> Aggregate[Aggregate Root Domain]
+    Aggregate -->|Emit Event| EventStore[(Append-Only Event Store)]
+    EventStore -->|Tail Log| Projector[Async Projector Worker]
+    Projector -->|Update| ReadDB[(Read-Model DB)]
+    Query[Client Query] --> ReadDB
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Separate write models (Commands) from read models (Queries).
+- Event Store is append-only: never UPDATE or DELETE event records.
+- Hydrate aggregate by left-folding events starting from snapshot or initial state.
+- Keep read projections idempotent so they can be rebuilt from scratch at any time.
+```
+"#,
+    )
+}
+
+/// 115. erp-optimistic-locking-concurrency Skill
+pub fn erp_optimistic_locking_concurrency() -> EccSkill {
+    EccSkill::new(
+        "erp-optimistic-locking-concurrency",
+        "Enterprise concurrency control patterns, Optimistic Offline Lock using version numbers, Pessimistic Offline Lock, lost update anomaly elimination, and high-contention inventory balance decrements based on Martin Fowler. Triggers: optimistic-locking-concurrency, optimistic-offline-lock, pessimistic-locking, lost-update-anomaly, inventory-concurrency-control, row-versioning, fowler-enterprise-patterns, optimistic-concurrency.",
+        r#"# Concurrency Control in ERP: Optimistic Offline Lock, Pessimistic Locking & Lost Updates
+> Based on **Patterns of Enterprise Application Architecture - Martin Fowler**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Optimistic Offline Lock SQL Invariant
+To prevent the Lost Update anomaly without holding long-lived database locks:
+$$\text{UPDATE table SET col} = v, \text{version} = \text{version} + 1 \quad \text{WHERE id} = \text{target\_id} \land \text{version} = v_{\text{expected}}$$
+**Rows Affected Invariant**:
+$$\text{RowsAffected} = \begin{cases} 1 & \text{Update Succeeded} \\ 0 & \text{OptimisticLockConflictException (Abort / Retry)} \end{cases}$$
+
+### 2.2 High-Contention Atomic Decrement
+For high-frequency inventory reservations, avoid select-then-update:
+$$\text{UPDATE inventory SET qty} = \text{qty} - \Delta \quad \text{WHERE product\_id} = P \land \text{qty} \ge \Delta$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Optimistic Concurrency Retry Loop
+```mermaid
+stateDiagram-v2
+    [*] --> READ_ENTITY: fetch_state_and_version()
+    READ_ENTITY --> MUTATE_MEMORY: user_or_agent_edits()
+    MUTATE_MEMORY --> ATTEMPT_COMMIT: execute_versioned_update()
+    ATTEMPT_COMMIT --> SUCCESS: rows_affected == 1
+    ATTEMPT_COMMIT --> RETRY_EXPONENTIAL: rows_affected == 0
+    RETRY_EXPONENTIAL --> READ_ENTITY: retry_count < max
+    RETRY_EXPONENTIAL --> ABORT_CONFLICT: retry_count >= max
+    SUCCESS --> [*]
+    ABORT_CONFLICT --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Add a version BIGINT NOT NULL DEFAULT 1 column to all mutable enterprise entities.
+- Execute updates checking WHERE id = :id AND version = :expected_version.
+- If rows affected == 0, throw OptimisticLockConflictException and retry with jittered exponential backoff.
+- Use atomic conditional updates (WHERE qty >= :requested) for inventory deductions.
+```
+"#,
+    )
+}
+
+/// 116. erp-distributed-idempotency Skill
+pub fn erp_distributed_idempotency() -> EccSkill {
+    EccSkill::new(
+        "erp-distributed-idempotency",
+        "Distributed idempotency keys, IETF Idempotency-Key specification, request payload fingerprinting, atomic state transitions (PROCESSING -> COMPLETED), and cached response replaying. Triggers: distributed-idempotency, idempotency-keys, request-deduplication, ietf-idempotency-key, atomic-idempotency, payment-deduplication, safe-api-retries, idempotency-pattern.",
+        r#"# Distributed Idempotency: Idempotency Keys, Deduplication & Atomic Execution
+> Based on **Enterprise Integration Patterns / Distributed Systems Standards**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Mathematical Idempotency Invariant
+A function or operation $f$ is idempotent iff applying it multiple times yields the same result as a single invocation:
+$$f(f(x)) = f(x) \quad \forall x$$
+In API terms:
+$$\text{Exec}(K, P) = \text{Exec}(K, P) \implies \text{SideEffects}(K, P) \text{ execute exactly once}$$
+
+### 2.2 Payload Consistency Invariant
+If a client sends the same idempotency key $K$ with conflicting payload $P' \ne P$:
+$$\text{Hash}(P') \ne \text{Hash}(P) \implies \text{Throw 422 Unprocessable Entity ("Idempotency key payload mismatch")}$$
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Idempotency Key Processing Lifecycle
+```mermaid
+stateDiagram-v2
+    [*] --> INSERT_PROCESSING: insert_key_if_not_exists()
+    INSERT_PROCESSING --> ALREADY_COMPLETED: key_exists_and_status_completed()
+    INSERT_PROCESSING --> CONCURRENT_COLLISION: key_exists_and_locked()
+    INSERT_PROCESSING --> EXECUTE_BUSINESS_LOGIC: newly_inserted()
+    EXECUTE_BUSINESS_LOGIC --> COMPLETED: save_response_payload()
+    EXECUTE_BUSINESS_LOGIC --> FAILED: business_logic_throws()
+    ALREADY_COMPLETED --> RETURN_CACHED_RESPONSE
+    RETURN_CACHED_RESPONSE --> [*]
+    COMPLETED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Accept Idempotency-Key header on all state-mutating HTTP requests (POST, PUT).
+- Atomically insert key with status 'PROCESSING' before executing business logic.
+- Return cached response immediately on duplicate requests with matching payload hash.
+- Reject requests using the same idempotency key with modified payloads (HTTP 422).
+```
+"#,
+    )
+}
+
+/// 117. erp-segregation-of-duties-sod Skill
+pub fn erp_segregation_of_duties_sod() -> EccSkill {
+    EccSkill::new(
+        "erp-segregation-of-duties-sod",
+        "Segregation of Duties (SoD), separation of Authorization, Custody, Recording, and Reconciliation (ACRR), conflicting role matrices, toxic combinations, and compensating controls based on Romney and Steinbart. Triggers: segregation-of-duties-sod, sod-matrix, incompatible-roles, acrr-framework, fraud-prevention-controls, toxic-role-combinations, internal-accounting-controls, sod-conflict.",
+        r#"# Segregation of Duties (SoD): Incompatible Role Matrices & Fraud Prevention
+> Based on **Accounting Information Systems - Marshall Romney & Paul Steinbart**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 The ACRR Segregation Invariant
+In any internal control system, the four primary responsibilities must be segregated:
+$$\text{Func}(A) \cap \text{Func}(C) \cap \text{Func}(R) \cap \text{Func}(\text{Rec}) = \emptyset$$
+Where:
+- $A$: Authorization (e.g. approving a purchase order or disbursement).
+- $C$: Custody (e.g. physical handling of cash, checks, or warehouse inventory).
+- $R$: Recording (e.g. posting general ledger entries or creating invoices).
+- $\text{Rec}$: Reconciliation (e.g. performing bank or inventory reconciliations).
+
+### 2.2 Toxic Role Combination Rule
+Let user $u$ have active function set $F(u)$.
+$$\forall (f_1, f_2) \in \text{ConflictingRules}, \quad \{f_1, f_2\} \subseteq F(u) \implies \text{SoD Violation!}$$
+Example: Cannot both `CREATE_VENDOR` and `DISBURSE_PAYMENT`.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 SoD Exception Waiver Lifecycle
+```mermaid
+stateDiagram-v2
+    [*] --> VIOLATION_DETECTED
+    VIOLATION_DETECTED --> WAIVER_REQUESTED: submit_business_justification()
+    WAIVER_REQUESTED --> APPROVED_WITH_COMPENSATING_CONTROL: internal_audit_signoff()
+    WAIVER_REQUESTED --> REVOKED: role_removed_from_user()
+    APPROVED_WITH_COMPENSATING_CONTROL --> EXPIRED: 90_day_waiver_ends()
+    EXPIRED --> REVOKED
+    REVOKED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Enforce ACRR: Authorization, Custody, Recording, and Reconciliation must be segregated.
+- Prevent toxic combinations: User who creates vendor cannot authorize vendor payments.
+- User who counts inventory cannot authorize inventory write-off adjustments.
+- Require dual-authorization (four-eyes principle) for all transactions exceeding authority limits.
+```
+"#,
+    )
+}
+
+/// 118. erp-sox-internal-controls-audit Skill
+pub fn erp_sox_internal_controls_audit() -> EccSkill {
+    EccSkill::new(
+        "erp-sox-internal-controls-audit",
+        "Sarbanes-Oxley (SOX) Section 404 compliance, COSO internal control framework, IT General Controls (ITGC), Delegation of Authority (DoA) approval tiers, and tamper-resistant audit logs based on Robert Moeller. Triggers: sox-internal-controls-audit, sox-404-compliance, itgc-controls, coso-framework, delegation-of-authority-doa, approval-hierarchy-matrix, internal-controls-audit, sox-compliance.",
+        r#"# SOX 404 Internal Controls & Audit Trails: ITGC, COSO Framework & Delegation of Authority
+> Based on **Executive's Guide to IT Governance: Improving Systems Processes with COSO, COBIT, and Sarbanes-Oxley - Robert Moeller**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Delegation of Authority (DoA) Approval Threshold Invariant
+For expenditure request $R$ with amount $A$:
+$$\text{Required Approval Role} = \min \{ \text{Role} \mid \text{MaxLimit}(\text{Role}) \ge A \}$$
+**Compliance Invariant**:
+Any transaction where:
+$$\text{ApproverLimit} < A$$
+MUST be rejected as a SOX deficiency.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 DoA Tiered Approval Escalation Workflow
+```mermaid
+stateDiagram-v2
+    [*] --> SUBMITTED: amount_requested
+    SUBMITTED --> MANAGER_APPROVED: amount <= 10k
+    SUBMITTED --> ESCALATED_DIRECTOR: amount > 10k
+    ESCALATED_DIRECTOR --> DIRECTOR_APPROVED: amount <= 50k
+    ESCALATED_DIRECTOR --> ESCALATED_CFO: amount > 50k
+    ESCALATED_CFO --> CFO_APPROVED: amount <= 1M
+    ESCALATED_CFO --> BOARD_APPROVED: amount > 1M [board vote]
+    MANAGER_APPROVED --> [*]
+    DIRECTOR_APPROVED --> [*]
+    CFO_APPROVED --> [*]
+    BOARD_APPROVED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never allow approval of transactions exceeding the user's Delegation of Authority limit.
+- Audit trail entries must capture: Who, What, When, Why, Old State, and New State.
+- Disallow hard deletions of financial documents; require auditable soft-delete / status updates.
+- ITGC rule: Separate production deployment access from development privileges.
+```
+"#,
+    )
+}
+
+/// 119. erp-data-retention-gdpr-compliance Skill
+pub fn erp_data_retention_gdpr_compliance() -> EccSkill {
+    EccSkill::new(
+        "erp-data-retention-gdpr-compliance",
+        "Balancing GDPR Right to Erasure (Article 17) against statutory tax/accounting retention mandates (e.g. 7-10 years), legal holds, cryptographic PII anonymization, and audit log preservation. Triggers: data-retention-gdpr-compliance, gdpr-vs-statutory-retention, right-to-be-forgotten-erp, legal-hold-management, pii-anonymization-accounting, tax-retention-period, gdpr-compliance, data-privacy.",
+        r#"# Data Privacy vs Statutory Retention: GDPR Article 17, Legal Holds & PII Anonymization
+> Based on **Data Privacy and GDPR: A Practical Guide for Enterprise Architects**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 GDPR Art. 17(3)(b) vs Statutory Retention Invariant
+Under GDPR Article 17, a data subject's Right to Erasure does NOT apply when processing is necessary for compliance with a legal obligation (e.g. tax/accounting retention mandates).
+$$\text{Can Purge}(D) \iff \text{Age}(D) > \text{StatutoryPeriod}(D) \land \neg \text{LegalHold}(D)$$
+
+### 2.2 Pseudonymization Invariant (Preserving Financial Integrity)
+When an erasure request is executed on an active ledger participant:
+$$\text{Anonymize}(\text{Name, Email, Address, Phone}) \to \text{HMAC}(\text{PII}, K_{\text{salt}})$$
+**Invariant**: Debit and credit balances, transaction timestamps, and financial account numbers MUST remain strictly untouched and mathematically balanced.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 GDPR Erasure Request Lifecycle
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING_REVIEW
+    PENDING_REVIEW --> BLOCKED_BY_LEGAL_HOLD: active_litigation_exists()
+    PENDING_REVIEW --> BLOCKED_BY_STATUTE: transaction_age < 7_years()
+    BLOCKED_BY_STATUTE --> ANONYMIZED_PII_ONLY: redact_pii_preserve_balances()
+    PENDING_REVIEW --> FULLY_PURGED: no_financial_records_and_no_holds()
+    ANONYMIZED_PII_ONLY --> [*]
+    FULLY_PURGED --> [*]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Never delete posted financial ledger rows to comply with GDPR: invoke Art 17(3)(b) exemption.
+- Anonymize PII (replace with cryptographic hash or '[REDACTED]') while preserving monetary balances.
+- Legal holds immediately override all automated deletion or archiving schedules.
+- Maintain a data retention schedule table defining minimum statutory retention per document type.
+```
+"#,
+    )
+}
+
+/// 120. erp-tax-engine-jurisdiction-rules Skill
+pub fn erp_tax_engine_jurisdiction_rules() -> EccSkill {
+    EccSkill::new(
+        "erp-tax-engine-jurisdiction-rules",
+        "Multi-jurisdictional enterprise tax engine, VAT/GST input vs output credits, US State & Local Sales Tax economic nexus (Wayfair), tax-inclusive vs tax-exclusive arithmetic, and B2B reverse charge rules based on Richard Doernberg. Triggers: tax-engine-jurisdiction-rules, international-tax-engine, vat-gst-calculation, us-sales-tax-nexus, economic-nexus-wayfair, reverse-charge-mechanism, tax-inclusive-vs-exclusive, tax-rules.",
+        r#"# International Tax Engine: VAT, GST, US Sales Tax Nexus & Reverse Charge
+> Based on **International Taxation in a Nutshell - Richard Doernberg**
+## 2. Mathematical Foundations & Business Invariants
+
+### 2.1 Tax Inclusive vs Tax Exclusive Arithmetic
+Let $P_{\text{net}}$ be the net unit price, $P_{\text{gross}}$ be the gross price, and $r$ be the tax rate:
+1. **Tax Exclusive (Standard US B2B)**:
+   $$\text{Tax} = P_{\text{net}} \times r$$
+   $$P_{\text{gross}} = P_{\text{net}} + \text{Tax} = P_{\text{net}} \times (1 + r)$$
+2. **Tax Inclusive (EU B2C VAT)**:
+   $$P_{\text{net}} = \frac{P_{\text{gross}}}{1 + r}$$
+   $$\text{Tax} = P_{\text{gross}} - P_{\text{net}} = P_{\text{gross}} \times \left(1 - \frac{1}{1 + r}\right) = P_{\text{gross}} \times \frac{r}{1 + r}$$
+
+### 2.2 VAT Net Payable / Refundable Invariant
+$$\text{Net VAT Payable to Government} = \sum \text{Output VAT (Collected on Sales)} - \sum \text{Input VAT (Paid on Purchases)}$$
+If $\text{Net VAT} < 0$, the enterprise is entitled to a tax refund.
+
+## 3. Finite State Machine (FSM) & Lifecycle Invariants
+
+### 3.1 Tax Determination Workflow
+```mermaid
+graph TD
+    A[Line Item Entered] --> B{Ship-to Jurisdiction Nexus?}
+    B -->|No Nexus| C[Zero Tax Exempt]
+    B -->|Has Nexus| D{Cross-Border B2B with Valid VAT ID?}
+    D -->|Yes| E[Apply Reverse Charge 0%]
+    D -->|No| F[Determine Product Taxability Category]
+    F --> G[Compute Jurisdiction State + County + City Rates]
+    G --> H[Record Tax Breakdown Line]
+```
+
+### 5.1 Local Ollama Cheat Sheet (Actionable Constraints & Invariants)
+```markdown
+- Tax Exclusive: Tax = Net * rate; Gross = Net + Tax.
+- Tax Inclusive: Net = Gross / (1 + rate); Tax = Gross - Net.
+- Check Economic Nexus thresholds (e.g. $100k sales or 200 txns in US state) before charging sales tax.
+- Intra-EU B2B with verified VAT ID triggers Reverse Charge mechanism (0% output tax, buyer accounts for tax).
+```
 "#,
     )
 }
@@ -2727,6 +5211,28 @@ fn infer_domain(name: &str) -> String {
         ("devops", "sre"),
         ("devsecops", "security"),
         ("scrum", "agile"),
+        ("erp", "erp"),
+        ("odoo", "erp"),
+        ("frappe", "erp"),
+        ("erpnext", "erp"),
+        ("mrp", "erp"),
+        ("crp", "erp"),
+        ("ddmrp", "erp"),
+        ("wms", "erp"),
+        ("mes", "erp"),
+        ("bom", "erp"),
+        ("o2c", "erp"),
+        ("p2p", "erp"),
+        ("r2r", "erp"),
+        ("ledger", "erp"),
+        ("accounting", "erp"),
+        ("tax", "erp"),
+        ("supply-chain", "erp"),
+        ("inventory", "erp"),
+        ("procurement", "erp"),
+        ("sox", "erp"),
+        ("sod", "erp"),
+        ("kanban", "erp"),
     ];
     for (prefix, dom) in prefixes {
         if lower.starts_with(prefix) {
