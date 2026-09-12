@@ -1,4 +1,5 @@
 use crate::error::{Result, TagisanError};
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs::{self, File};
 use std::io::Read;
@@ -359,6 +360,57 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         analytics_data_observability_monitors(),
         analytics_dama_data_governance(),
         analytics_dataops_automated_testing(),
+        // Business & Functional Analysis Architect Skills (Top 50 Canonical Books)
+        ba_wiegers_requirements_engineering(),
+        ba_volere_requirements_specification(),
+        ba_cockburn_use_case_modeling(),
+        ba_nfr_quality_attributes(),
+        ba_requirements_traceability_matrix(),
+        ba_adzic_specification_by_example(),
+        ba_cucumber_gherkin_syntax(),
+        ba_bdd_three_amigos_workshop(),
+        ba_atdd_acceptance_criteria(),
+        ba_living_documentation_tooling(),
+        ba_evans_ubiquitous_language(),
+        ba_brandolini_event_storming(),
+        ba_bounded_context_mapping(),
+        ba_domain_storytelling(),
+        ba_subdomain_core_domain_triage(),
+        ba_patton_user_story_mapping(),
+        ba_invest_user_stories(),
+        ba_story_splitting_patterns(),
+        ba_wsjf_backlog_prioritization(),
+        ba_kanban_value_stream_metrics(),
+        ba_bpmn_level2_process_modeling(),
+        ba_bpmn_gateway_soundness(),
+        ba_bpmn_timer_boundary_events(),
+        ba_state_machine_lifecycle_modeling(),
+        ba_process_waste_elimination_vsm(),
+        ba_torres_opportunity_solution_tree(),
+        ba_cagan_four_product_risks(),
+        ba_customer_journey_mapping(),
+        ba_jobs_to_be_done_jtbd(),
+        ba_assumption_mapping_experimentation(),
+        ba_hoberman_data_modeling_resource(),
+        ba_relational_normalization_3nf(),
+        ba_cardinality_erd_relationship_rules(),
+        ba_temporal_bitemporal_data_patterns(),
+        ba_data_dictionary_master_metadata(),
+        ba_ross_business_rule_manifesto(),
+        ba_dmn_decision_table_completeness(),
+        ba_drd_decision_requirements_diagrams(),
+        ba_feel_expression_language(),
+        ba_decision_table_verification_solver(),
+        ba_meadows_systems_thinking_leverage(),
+        ba_causal_loop_diagrams_archetypes(),
+        ba_galls_law_system_evolution(),
+        ba_wardley_mapping_strategic_landscape(),
+        ba_cynefin_framework_decision_making(),
+        ba_cooper_goal_directed_design(),
+        ba_norman_affordance_signifiers(),
+        ba_johnson_gui_bloopers_heuristics(),
+        ba_crud_form_functional_specifications(),
+        ba_information_architecture_wireflow(),
     ]
 }
 
@@ -682,6 +734,158 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
     if lower == "dataops" || lower == "dataops-testing" || lower == "data-pipeline-testing" {
         return find_built_in_skill("analytics-dataops-automated-testing");
+    }
+
+    // Business & Functional Analysis Skills Aliases
+    if lower == "wiegers" || lower == "software-requirements" || lower == "requirements-engineering" {
+        return find_built_in_skill("ba-wiegers-requirements-engineering");
+    }
+    if lower == "volere" || lower == "fit-criteria" || lower == "fit-criterion" {
+        return find_built_in_skill("ba-volere-requirements-specification");
+    }
+    if lower == "use-case" || lower == "use-cases" || lower == "cockburn" {
+        return find_built_in_skill("ba-cockburn-use-case-modeling");
+    }
+    if lower == "nfr" || lower == "quality-attributes" || lower == "iso-25010" {
+        return find_built_in_skill("ba-nfr-quality-attributes");
+    }
+    if lower == "rtm" || lower == "traceability-matrix" {
+        return find_built_in_skill("ba-requirements-traceability-matrix");
+    }
+    if lower == "specification-by-example" || lower == "adzic" || lower == "living-docs" {
+        return find_built_in_skill("ba-adzic-specification-by-example");
+    }
+    if lower == "gherkin" || lower == "cucumber" || lower == "given-when-then" || lower == "bdd-syntax" {
+        return find_built_in_skill("ba-cucumber-gherkin-syntax");
+    }
+    if lower == "three-amigos" || lower == "example-mapping" || lower == "dan-north" {
+        return find_built_in_skill("ba-bdd-three-amigos-workshop");
+    }
+    if lower == "atdd" || lower == "acceptance-test-driven" || lower == "acceptance-criteria" {
+        return find_built_in_skill("ba-atdd-acceptance-criteria");
+    }
+    if lower == "living-documentation" || lower == "martraire" {
+        return find_built_in_skill("ba-living-documentation-tooling");
+    }
+    if lower == "ubiquitous-language" || lower == "domain-lexicon" || lower == "evans-ddd" {
+        return find_built_in_skill("ba-evans-ubiquitous-language");
+    }
+    if lower == "event-storming" || lower == "brandolini" || lower == "eventstorming" {
+        return find_built_in_skill("ba-brandolini-event-storming");
+    }
+    if lower == "context-mapping" || lower == "anti-corruption-layer" || lower == "acl" {
+        return find_built_in_skill("ba-bounded-context-mapping");
+    }
+    if lower == "domain-storytelling" || lower == "hofer" {
+        return find_built_in_skill("ba-domain-storytelling");
+    }
+    if lower == "core-domain" || lower == "subdomain-triage" || lower == "nick-tune" {
+        return find_built_in_skill("ba-subdomain-core-domain-triage");
+    }
+    if lower == "story-mapping" || lower == "user-story-mapping" || lower == "jeff-patton" || lower == "walking-skeleton" {
+        return find_built_in_skill("ba-patton-user-story-mapping");
+    }
+    if lower == "invest" || lower == "user-stories" || lower == "cohn-stories" {
+        return find_built_in_skill("ba-invest-user-stories");
+    }
+    if lower == "story-splitting" || lower == "vertical-slicing" {
+        return find_built_in_skill("ba-story-splitting-patterns");
+    }
+    if lower == "wsjf" || lower == "cost-of-delay" || lower == "reinertsen" {
+        return find_built_in_skill("ba-wsjf-backlog-prioritization");
+    }
+    if lower == "littles-law" || lower == "wip-limits" || lower == "flow-metrics" || lower == "kanban-metrics" {
+        return find_built_in_skill("ba-kanban-value-stream-metrics");
+    }
+    if lower == "bpmn-2" || lower == "process-modeling" || lower == "bruce-silver" || lower == "bpmn-method-and-style" {
+        return find_built_in_skill("ba-bpmn-level2-process-modeling");
+    }
+    if lower == "gateway-soundness" || lower == "deadlock-freedom" || lower == "dumas-bpm" {
+        return find_built_in_skill("ba-bpmn-gateway-soundness");
+    }
+    if lower == "boundary-events" || lower == "timer-boundary" {
+        return find_built_in_skill("ba-bpmn-timer-boundary-events");
+    }
+    if lower == "state-machine" || lower == "fsm" || lower == "statecharts" || lower == "harel" {
+        return find_built_in_skill("ba-state-machine-lifecycle-modeling");
+    }
+    if lower == "vsm" || lower == "value-stream-mapping" || lower == "7-wastes" || lower == "muda" {
+        return find_built_in_skill("ba-process-waste-elimination-vsm");
+    }
+    if lower == "ost" || lower == "opportunity-solution-tree" || lower == "torres" {
+        return find_built_in_skill("ba-torres-opportunity-solution-tree");
+    }
+    if lower == "four-product-risks" || lower == "cagan" || lower == "product-risks" {
+        return find_built_in_skill("ba-cagan-four-product-risks");
+    }
+    if lower == "customer-journey" || lower == "journey-mapping" || lower == "kalbach" {
+        return find_built_in_skill("ba-customer-journey-mapping");
+    }
+    if lower == "jtbd" || lower == "jobs-to-be-done" || lower == "job-story" {
+        return find_built_in_skill("ba-jobs-to-be-done-jtbd");
+    }
+    if lower == "assumption-mapping" || lower == "bland-osterwalder" || lower == "rat" {
+        return find_built_in_skill("ba-assumption-mapping-experimentation");
+    }
+    if lower == "conceptual-data-model" || lower == "hoberman" || lower == "logical-data-model" {
+        return find_built_in_skill("ba-hoberman-data-modeling-resource");
+    }
+    if lower == "normalization" || lower == "3nf" || lower == "bcnf" || lower == "relational-normalization" {
+        return find_built_in_skill("ba-relational-normalization-3nf");
+    }
+    if lower == "crows-foot" || lower == "cardinality" || lower == "barker" || lower == "peter-chen" {
+        return find_built_in_skill("ba-cardinality-erd-relationship-rules");
+    }
+    if lower == "bitemporal" || lower == "snodgrass" || lower == "valid-time" || lower == "transaction-time" {
+        return find_built_in_skill("ba-temporal-bitemporal-data-patterns");
+    }
+    if lower == "data-dictionary" || lower == "iso-11179" || lower == "dmbok" {
+        return find_built_in_skill("ba-data-dictionary-master-metadata");
+    }
+    if lower == "rulespeak" || lower == "business-rule-manifesto" || lower == "ronald-ross" {
+        return find_built_in_skill("ba-ross-business-rule-manifesto");
+    }
+    if lower == "dmn" || lower == "decision-table" || lower == "hit-policy" {
+        return find_built_in_skill("ba-dmn-decision-table-completeness");
+    }
+    if lower == "drd" || lower == "decision-requirements-diagram" || lower == "bkm" {
+        return find_built_in_skill("ba-drd-decision-requirements-diagrams");
+    }
+    if lower == "feel" || lower == "dmn-feel" || lower == "feel-expression" {
+        return find_built_in_skill("ba-feel-expression-language");
+    }
+    if lower == "decision-solver" || lower == "rule-overlap" || lower == "shadowed-rules" {
+        return find_built_in_skill("ba-decision-table-verification-solver");
+    }
+    if lower == "systems-thinking" || lower == "meadows" || lower == "stocks-and-flows" || lower == "leverage-points" {
+        return find_built_in_skill("ba-meadows-systems-thinking-leverage");
+    }
+    if lower == "causal-loop" || lower == "cld" || lower == "senge" || lower == "systems-archetypes" {
+        return find_built_in_skill("ba-causal-loop-diagrams-archetypes");
+    }
+    if lower == "galls-law" || lower == "systemantics" || lower == "john-gall" {
+        return find_built_in_skill("ba-galls-law-system-evolution");
+    }
+    if lower == "wardley-maps" || lower == "wardley" || lower == "value-chain-mapping" {
+        return find_built_in_skill("ba-wardley-mapping-strategic-landscape");
+    }
+    if lower == "cynefin" || lower == "snowden" || lower == "sense-making" {
+        return find_built_in_skill("ba-cynefin-framework-decision-making");
+    }
+    if lower == "goal-directed-design" || lower == "alan-cooper" || lower == "mental-model" {
+        return find_built_in_skill("ba-cooper-goal-directed-design");
+    }
+    if lower == "affordances" || lower == "signifiers" || lower == "don-norman" || lower == "gulf-of-execution" {
+        return find_built_in_skill("ba-norman-affordance-signifiers");
+    }
+    if lower == "gui-bloopers" || lower == "jeff-johnson" || lower == "usability-heuristics" {
+        return find_built_in_skill("ba-johnson-gui-bloopers-heuristics");
+    }
+    if lower == "form-design" || lower == "luke-wroblewski" || lower == "double-submit" {
+        return find_built_in_skill("ba-crud-form-functional-specifications");
+    }
+    if lower == "wireflow" || lower == "jesse-james-garrett" || lower == "5-planes" {
+        return find_built_in_skill("ba-information-architecture-wireflow");
     }
     all_built_in_skills().into_iter().find(|s| s.name == lower)
 }
@@ -8170,41 +8374,64 @@ Build enterprise DataOps continuous integration and automated testing systems:
 
 /// Discover and load all ECC skills from a directory (scanning both `*.md` and `<dir>/SKILL.md`)
 pub fn load_skills_from_dir(dir: impl AsRef<Path>) -> Vec<EccSkill> {
-    let mut skills = Vec::new();
     let dir_ref = dir.as_ref();
-
     if !dir_ref.is_dir() {
-        return skills;
+        return Vec::new();
     }
 
+    let mut candidate_targets = Vec::new();
     if let Ok(entries) = fs::read_dir(dir_ref) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("md") {
-                match EccSkill::from_file(&path) {
-                    Ok(skill) => skills.push(skill),
-                    Err(e) => warn!("Failed to load skill from '{}': {}", path.display(), e),
-                }
+                candidate_targets.push(path);
             } else if path.is_dir() {
                 let skill_md = path.join("SKILL.md");
                 let skill_md_alt = path.join("skill.md");
-                let target = if skill_md.is_file() {
-                    Some(skill_md)
+                if skill_md.is_file() {
+                    candidate_targets.push(skill_md);
                 } else if skill_md_alt.is_file() {
-                    Some(skill_md_alt)
-                } else {
-                    None
-                };
-
-                if let Some(target_file) = target {
-                    match EccSkill::from_file(&target_file) {
-                        Ok(skill) => skills.push(skill),
-                        Err(e) => warn!("Failed to load skill from '{}': {}", target_file.display(), e),
-                    }
+                    candidate_targets.push(skill_md_alt);
                 }
             }
         }
     }
+
+    use rayon::prelude::*;
+    let num_threads = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(2)
+        .min(4);
+
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(num_threads)
+        .thread_name(|i| format!("tgs-skill-loader-{}", i))
+        .build();
+
+    let mut skills: Vec<EccSkill> = match pool {
+        Ok(p) => p.install(|| {
+            candidate_targets
+                .par_iter()
+                .filter_map(|target| match EccSkill::from_file(target) {
+                    Ok(skill) => Some(skill),
+                    Err(e) => {
+                        warn!("Failed to load skill from '{}': {}", target.display(), e);
+                        None
+                    }
+                })
+                .collect()
+        }),
+        Err(_) => candidate_targets
+            .into_iter()
+            .filter_map(|target| match EccSkill::from_file(&target) {
+                Ok(skill) => Some(skill),
+                Err(e) => {
+                    warn!("Failed to load skill from '{}': {}", target.display(), e);
+                    None
+                }
+            })
+            .collect(),
+    };
 
     skills.sort_by(|a, b| a.name.cmp(&b.name));
     skills
@@ -8266,7 +8493,7 @@ pub fn resolve_skill(name: &str, custom_dir: Option<&Path>) -> Option<EccSkill> 
 // =========================================================================
 
 /// Pre-indexed metadata for deterministic sub-millisecond ranking
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SkillMetadata {
     pub id: usize,
     pub name: String,
@@ -8290,6 +8517,228 @@ pub struct DispatchedSkill {
     pub score: f32,
     pub matched_triggers: Vec<String>,
     pub domain: String,
+}
+
+/// Injection representation mode for LLM prompt assembly
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum InjectionMode {
+    /// Token-compressed AST-extracted invariant DSL (ALWAYS, NEVER, STRICT_REJECT, AUDIT)
+    DenseInvariants,
+    /// Full architectural specification with workflows, code samples, templates
+    Comprehensive,
+    /// 3-Tier progressive disclosure: Tier 1 (Capability manifest) + Tier 2 (Top invariants) + Tier 3 (JIT tool hint)
+    Hierarchical,
+    /// Local cheat sheet (top 12 extracted bullet rules)
+    CheatSheet,
+}
+
+/// Token budget and injection constraints for LLM contexts
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct TokenBudget {
+    /// Estimated total context window of the target LLM
+    pub context_window: usize,
+    /// Maximum tokens reserved for skill prompt injection
+    pub max_tokens: usize,
+    /// Formatting / representation mode
+    pub mode: InjectionMode,
+    /// Maximum skills per domain to enforce orthogonal multi-domain coverage
+    pub max_per_domain: usize,
+}
+
+impl TokenBudget {
+    pub fn new(context_window: usize, max_tokens: usize, mode: InjectionMode, max_per_domain: usize) -> Self {
+        Self {
+            context_window,
+            max_tokens,
+            mode,
+            max_per_domain,
+        }
+    }
+
+    /// Auto-calibrate optimal TokenBudget based on provider ID and model name
+    pub fn for_provider_and_model(provider: &str, model: Option<&str>) -> Self {
+        let is_local = SkillDispatcher::is_local_provider(provider);
+        let model_lower = model.unwrap_or("").to_lowercase();
+
+        if is_local {
+            let (ctx, budget, mode) = if model_lower.contains("32k")
+                || model_lower.contains("qwen2.5")
+                || model_lower.contains("mistral")
+                || model_lower.contains("deepseek-r1:14b")
+                || model_lower.contains("deepseek-r1:32b")
+            {
+                (32_768, 3_500, InjectionMode::Hierarchical)
+            } else if model_lower.contains("16k") {
+                (16_384, 2_000, InjectionMode::DenseInvariants)
+            } else {
+                (8_192, 1_200, InjectionMode::DenseInvariants)
+            };
+            Self {
+                context_window: ctx,
+                max_tokens: budget,
+                mode,
+                max_per_domain: 1, // Enforce diversity: max 1 skill per domain on local
+            }
+        } else {
+            let (ctx, budget) = if provider.eq_ignore_ascii_case("gemini") || model_lower.contains("gemini") {
+                (1_000_000, 16_000)
+            } else if provider.eq_ignore_ascii_case("anthropic") || model_lower.contains("claude") {
+                (200_000, 12_000)
+            } else {
+                (128_000, 8_000)
+            };
+            Self {
+                context_window: ctx,
+                max_tokens: budget,
+                mode: InjectionMode::Hierarchical,
+                max_per_domain: 2, // Allow up to 2 skills per domain for cloud
+            }
+        }
+    }
+
+    pub fn local_default() -> Self {
+        Self::for_provider_and_model("ollama", None)
+    }
+
+    pub fn cloud_default() -> Self {
+        Self::for_provider_and_model("anthropic", None)
+    }
+
+    pub fn with_mode(mut self, mode: InjectionMode) -> Self {
+        self.mode = mode;
+        self
+    }
+
+    pub fn with_max_tokens(mut self, max_tokens: usize) -> Self {
+        self.max_tokens = max_tokens;
+        self
+    }
+
+    pub fn with_max_per_domain(mut self, max_per_domain: usize) -> Self {
+        self.max_per_domain = max_per_domain;
+        self
+    }
+}
+
+/// Detailed result of diversified skill dispatching
+#[derive(Debug, Clone, PartialEq)]
+pub struct DiversifiedDispatchResult {
+    /// Primary skills selected to receive deep invariant/specification injection within budget
+    pub primary: Vec<DispatchedSkill>,
+    /// Secondary radar/manifest skills included in the Tier 1 capability registry table
+    pub manifest: Vec<DispatchedSkill>,
+    /// Total estimated tokens consumed by primary skills
+    pub total_estimated_tokens: usize,
+    /// The token budget configuration used for this dispatch
+    pub budget: TokenBudget,
+}
+
+/// Sub-microsecond deterministic token estimator calibrated for code, markdown, and prose
+pub fn estimate_tokens(text: &str) -> usize {
+    if text.is_empty() {
+        return 0;
+    }
+    let bytes = text.as_bytes();
+    let char_len = bytes.len();
+    let mut words = 0;
+    let mut punct = 0;
+    let mut in_word = false;
+
+    for &b in bytes {
+        if b.is_ascii_whitespace() {
+            in_word = false;
+        } else if b.is_ascii_punctuation() {
+            punct += 1;
+            in_word = false;
+        } else if !in_word {
+            words += 1;
+            in_word = true;
+        }
+    }
+
+    let estimated = words + (punct / 2);
+    let min_bound = char_len / 5;
+    let max_bound = (char_len / 3).max(1);
+
+    estimated.clamp(min_bound, max_bound).max(1)
+}
+
+pub const SKILLS_CACHE_MAGIC: u32 = 0x54475331; // "TGS1"
+pub const SKILLS_CACHE_VERSION: u32 = 2;
+
+/// Binary serialized cache container for fast cold startup (< 2ms)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CachedCatalog {
+    pub magic: u32,
+    pub version: u32,
+    pub builtin_count: usize,
+    pub dir_fingerprint: u64,
+    pub skills: Vec<SkillMetadata>,
+    pub inverted_index: HashMap<u32, Vec<usize>>,
+    pub trigger_index: HashMap<String, Vec<usize>>,
+    pub name_index: HashMap<String, usize>,
+    pub vocab: HashMap<String, u32>,
+    pub idf: Vec<f32>,
+}
+
+/// Compute a fast BLAKE3-based fingerprint of a skill directory
+pub fn compute_dir_fingerprint(dir: Option<&Path>) -> u64 {
+    let Some(dir) = dir else { return 0 };
+    if !dir.is_dir() {
+        return 0;
+    }
+
+    let mut hasher = blake3::Hasher::new();
+    if let Ok(meta) = dir.metadata() {
+        if let Ok(mtime) = meta.modified() {
+            if let Ok(dur) = mtime.duration_since(std::time::UNIX_EPOCH) {
+                hasher.update(&dur.as_secs().to_le_bytes());
+                hasher.update(&dur.subsec_nanos().to_le_bytes());
+            }
+        }
+    }
+
+    if let Ok(entries) = fs::read_dir(dir) {
+        let mut count = 0u64;
+        let mut max_secs = 0u64;
+        let mut max_nanos = 0u32;
+        for entry in entries.flatten() {
+            count += 1;
+            let p = entry.path();
+            let target_mtime = if p.is_dir() {
+                let s1 = p.join("SKILL.md");
+                let s2 = p.join("skill.md");
+                if let Ok(m) = s1.metadata() {
+                    m.modified().ok()
+                } else if let Ok(m) = s2.metadata() {
+                    m.modified().ok()
+                } else {
+                    entry.metadata().ok().and_then(|m| m.modified().ok())
+                }
+            } else {
+                entry.metadata().ok().and_then(|m| m.modified().ok())
+            };
+
+            if let Some(t) = target_mtime {
+                if let Ok(dur) = t.duration_since(std::time::UNIX_EPOCH) {
+                    let s = dur.as_secs();
+                    let n = dur.subsec_nanos();
+                    if s > max_secs || (s == max_secs && n > max_nanos) {
+                        max_secs = s;
+                        max_nanos = n;
+                    }
+                }
+            }
+        }
+        hasher.update(&count.to_le_bytes());
+        hasher.update(&max_secs.to_le_bytes());
+        hasher.update(&max_nanos.to_le_bytes());
+    }
+
+    let hash = hasher.finalize();
+    let mut bytes = [0u8; 8];
+    bytes.copy_from_slice(&hash.as_bytes()[0..8]);
+    u64::from_le_bytes(bytes)
 }
 
 /// In-memory hybrid skill dispatcher capable of ranking 3,840+ skills in < 0.5ms
@@ -8317,7 +8766,101 @@ pub fn global_dispatcher() -> &'static SkillDispatcher {
 }
 
 impl SkillDispatcher {
-    /// Initialize dispatcher from the standard locations (.ecc/skills + 20 built-ins)
+    /// Default cache path for skills: .tagisan/skills.cache
+    pub fn default_cache_path() -> PathBuf {
+        PathBuf::from(".tagisan/skills.cache")
+    }
+
+    /// Try loading the compiled skill catalog from binary cache using memory-mapped I/O (< 2ms)
+    pub fn try_load_from_cache(
+        cache_path: &Path,
+        expected_builtin_count: usize,
+        expected_fingerprint: u64,
+    ) -> Option<Self> {
+        let file = File::open(cache_path).ok()?;
+        let mmap = unsafe { memmap2::Mmap::map(&file).ok()? };
+        let catalog: CachedCatalog = bincode::deserialize(&mmap).ok()?;
+
+        if catalog.magic != SKILLS_CACHE_MAGIC
+            || catalog.version != SKILLS_CACHE_VERSION
+            || catalog.builtin_count != expected_builtin_count
+            || catalog.dir_fingerprint != expected_fingerprint
+        {
+            return None;
+        }
+
+        Some(Self {
+            skills: catalog.skills,
+            inverted_index: catalog.inverted_index,
+            trigger_index: catalog.trigger_index,
+            name_index: catalog.name_index,
+            vocab: catalog.vocab,
+            idf: catalog.idf,
+            skill_cache: RwLock::new(HashMap::new()),
+        })
+    }
+
+    /// Serialize and write the skill catalog to binary cache atomically
+    pub fn save_to_cache(&self, cache_path: &Path, dir_fingerprint: u64) -> Result<()> {
+        if let Some(parent) = cache_path.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+        let catalog = CachedCatalog {
+            magic: SKILLS_CACHE_MAGIC,
+            version: SKILLS_CACHE_VERSION,
+            builtin_count: all_built_in_skills().len(),
+            dir_fingerprint,
+            skills: self.skills.clone(),
+            inverted_index: self.inverted_index.clone(),
+            trigger_index: self.trigger_index.clone(),
+            name_index: self.name_index.clone(),
+            vocab: self.vocab.clone(),
+            idf: self.idf.clone(),
+        };
+
+        let encoded = bincode::serialize(&catalog)
+            .map_err(|e| TagisanError::Execution(format!("Failed to serialize skills cache: {}", e)))?;
+
+        let temp_path = cache_path.with_extension(format!("tmp.{}", std::process::id()));
+        fs::write(&temp_path, encoded)
+            .map_err(|e| TagisanError::Execution(format!("Failed to write skills cache temp: {}", e)))?;
+        fs::rename(&temp_path, cache_path)
+            .map_err(|e| TagisanError::Execution(format!("Failed to commit skills cache: {}", e)))?;
+        Ok(())
+    }
+
+    /// Load or build skill dispatcher with optional explicit cache path
+    pub fn load_or_build_with_cache(custom_dir: Option<&Path>, cache_path: Option<&Path>) -> Self {
+        let builtin_count = all_built_in_skills().len();
+        let fingerprint = compute_dir_fingerprint(custom_dir);
+
+        if let Some(cp) = cache_path {
+            if let Some(dispatcher) = Self::try_load_from_cache(cp, builtin_count, fingerprint) {
+                return dispatcher;
+            }
+        }
+
+        let dispatcher = Self::build_from_scratch(custom_dir);
+        if let Some(cp) = cache_path {
+            if let Err(e) = dispatcher.save_to_cache(cp, fingerprint) {
+                eprintln!("\n[TAGISAN CACHE SAVE ERROR]: {}\n", e);
+            }
+        }
+        dispatcher
+    }
+
+    /// Load or build skill dispatcher using default `.tagisan/skills.cache`
+    pub fn load_or_build(custom_dir: Option<&Path>) -> Self {
+        let default_cache = Self::default_cache_path();
+        Self::load_or_build_with_cache(custom_dir, Some(&default_cache))
+    }
+
+    /// Invalidate existing cache file
+    pub fn invalidate_cache(cache_path: &Path) {
+        let _ = fs::remove_file(cache_path);
+    }
+
+    /// Initialize dispatcher from the standard locations (.ecc/skills + built-ins)
     pub fn default_catalog() -> Self {
         let skills_dir = Path::new(".ecc/skills");
         let custom_dir = if skills_dir.exists() {
@@ -8325,11 +8868,16 @@ impl SkillDispatcher {
         } else {
             None
         };
-        Self::new(custom_dir)
+        Self::load_or_build(custom_dir)
     }
 
     /// Initialize dispatcher scanning built-ins and an optional custom skills directory
     pub fn new(custom_dir: Option<&Path>) -> Self {
+        Self::load_or_build(custom_dir)
+    }
+
+    /// Build dispatcher index from scratch using bounded Rayon and O(1) built-in bypass
+    pub fn build_from_scratch(custom_dir: Option<&Path>) -> Self {
         struct RawEntry {
             name: String,
             description: String,
@@ -8339,100 +8887,144 @@ impl SkillDispatcher {
         }
 
         let mut raw_entries: Vec<RawEntry> = Vec::new();
-        let mut initial_cache = HashMap::new();
 
-        // 1. Ingest built-in skills
+        // Collect built-in skill names for O(1) bypass
+        let mut built_in_names = HashSet::new();
+
+        // 1. Ingest built-in skills (lightweight metadata only; JIT body loading!)
         for s in all_built_in_skills() {
-            let trigs = extract_triggers_from_text(&s.name, &s.description, &[]);
-            let id = raw_entries.len();
-            initial_cache.insert(id, s.clone());
+            let raw_trigs = if let Some((_, _, trigs)) = parse_frontmatter_metadata(&s.instructions, Some(&s.name)) {
+                trigs
+            } else {
+                Vec::new()
+            };
+            let trigs = extract_triggers_from_text(&s.name, &s.description, &raw_trigs);
+            built_in_names.insert(s.name.to_lowercase());
             raw_entries.push(RawEntry {
-                name: s.name.clone(),
-                description: s.description.clone(),
+                name: s.name,
+                description: s.description,
                 triggers: trigs,
                 file_path: None,
                 is_builtin: true,
             });
         }
 
-        // 2. Fast scan disk directory frontmatters (reading first 3KB per file)
+        // 2. Scan disk directory with O(1) fast built-in bypass and Bounded Rayon Parallel Scanner
         if let Some(dir) = custom_dir {
             if dir.is_dir() {
+                let mut candidate_targets = Vec::new();
                 if let Ok(entries) = fs::read_dir(dir) {
                     for entry in entries.flatten() {
                         let path = entry.path();
                         if path.is_dir() {
+                            let folder_name = path.file_name().and_then(|f| f.to_str()).unwrap_or("");
+                            // O(1) fast bypass if already built in!
+                            if built_in_names.contains(&folder_name.to_lowercase()) {
+                                continue;
+                            }
                             let skill_md = path.join("SKILL.md");
                             let skill_md_alt = path.join("skill.md");
-                            let target = if skill_md.is_file() {
-                                Some(skill_md)
+                            if skill_md.is_file() {
+                                candidate_targets.push((skill_md, folder_name.to_string()));
                             } else if skill_md_alt.is_file() {
-                                Some(skill_md_alt)
-                            } else {
-                                None
-                            };
+                                candidate_targets.push((skill_md_alt, folder_name.to_string()));
+                            }
+                        } else if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("md") {
+                            let file_stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_string();
+                            if built_in_names.contains(&file_stem.to_lowercase()) {
+                                continue;
+                            }
+                            candidate_targets.push((path, file_stem));
+                        }
+                    }
+                }
 
-                            if let Some(target_file) = target {
+                // Bounded Rayon pool: strictly max 4 threads to protect dual-core Core i3 laptop
+                let num_threads = std::thread::available_parallelism()
+                    .map(|n| n.get())
+                    .unwrap_or(2)
+                    .min(4);
+
+                use rayon::prelude::*;
+                let pool = rayon::ThreadPoolBuilder::new()
+                    .num_threads(num_threads)
+                    .thread_name(|i| format!("tgs-skill-scanner-{}", i))
+                    .build();
+
+                let disk_entries: Vec<RawEntry> = match pool {
+                    Ok(p) => p.install(|| {
+                        candidate_targets
+                            .par_iter()
+                            .filter_map(|(target_file, fallback_name)| {
+                                if let Ok(mut file) = File::open(target_file) {
+                                    let mut buf = [0u8; 8192];
+                                    let read_bytes = file.read(&mut buf).unwrap_or(0);
+                                    let header = String::from_utf8_lossy(&buf[..read_bytes]);
+                                    if let Some((name, desc, raw_trigs)) = parse_frontmatter_metadata(&header, Some(fallback_name)) {
+                                        let trigs = extract_triggers_from_text(&name, &desc, &raw_trigs);
+                                        Some(RawEntry {
+                                            name,
+                                            description: desc,
+                                            triggers: trigs,
+                                            file_path: Some(target_file.clone()),
+                                            is_builtin: false,
+                                        })
+                                    } else {
+                                        let first_line = header.lines().find(|l| !l.trim().is_empty()).unwrap_or(fallback_name);
+                                        let desc = first_line.trim().trim_start_matches('#').trim().to_string();
+                                        let trigs = extract_triggers_from_text(fallback_name, &desc, &[]);
+                                        Some(RawEntry {
+                                            name: fallback_name.clone(),
+                                            description: desc,
+                                            triggers: trigs,
+                                            file_path: Some(target_file.clone()),
+                                            is_builtin: false,
+                                        })
+                                    }
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect()
+                    }),
+                    Err(_) => {
+                        candidate_targets
+                            .into_iter()
+                            .filter_map(|(target_file, fallback_name)| {
                                 if let Ok(mut file) = File::open(&target_file) {
                                     let mut buf = [0u8; 8192];
                                     let read_bytes = file.read(&mut buf).unwrap_or(0);
                                     let header = String::from_utf8_lossy(&buf[..read_bytes]);
-                                    let folder_name = path.file_name().and_then(|f| f.to_str());
-                                    if let Some((name, desc, raw_trigs)) = parse_frontmatter_metadata(&header, folder_name) {
+                                    if let Some((name, desc, raw_trigs)) = parse_frontmatter_metadata(&header, Some(&fallback_name)) {
                                         let trigs = extract_triggers_from_text(&name, &desc, &raw_trigs);
-                                        raw_entries.push(RawEntry {
+                                        Some(RawEntry {
                                             name,
                                             description: desc,
                                             triggers: trigs,
                                             file_path: Some(target_file),
                                             is_builtin: false,
-                                        });
-                                    } else if let Some(fname) = folder_name {
-                                        // Robust fallback for markdown files without standard --- delimiters
-                                        let first_line = header.lines().find(|l| !l.trim().is_empty()).unwrap_or(fname);
+                                        })
+                                    } else {
+                                        let first_line = header.lines().find(|l| !l.trim().is_empty()).unwrap_or(&fallback_name);
                                         let desc = first_line.trim().trim_start_matches('#').trim().to_string();
-                                        let trigs = extract_triggers_from_text(fname, &desc, &[]);
-                                        raw_entries.push(RawEntry {
-                                            name: fname.to_string(),
+                                        let trigs = extract_triggers_from_text(&fallback_name, &desc, &[]);
+                                        Some(RawEntry {
+                                            name: fallback_name,
                                             description: desc,
                                             triggers: trigs,
                                             file_path: Some(target_file),
                                             is_builtin: false,
-                                        });
+                                        })
                                     }
+                                } else {
+                                    None
                                 }
-                            }
-                        } else if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("md") {
-                            if let Ok(mut file) = File::open(&path) {
-                                let mut buf = [0u8; 8192];
-                                let read_bytes = file.read(&mut buf).unwrap_or(0);
-                                let header = String::from_utf8_lossy(&buf[..read_bytes]);
-                                let file_stem = path.file_stem().and_then(|s| s.to_str());
-                                if let Some((name, desc, raw_trigs)) = parse_frontmatter_metadata(&header, file_stem) {
-                                    let trigs = extract_triggers_from_text(&name, &desc, &raw_trigs);
-                                    raw_entries.push(RawEntry {
-                                        name,
-                                        description: desc,
-                                        triggers: trigs,
-                                        file_path: Some(path),
-                                        is_builtin: false,
-                                    });
-                                } else if let Some(sname) = file_stem {
-                                    let first_line = header.lines().find(|l| !l.trim().is_empty()).unwrap_or(sname);
-                                    let desc = first_line.trim().trim_start_matches('#').trim().to_string();
-                                    let trigs = extract_triggers_from_text(sname, &desc, &[]);
-                                    raw_entries.push(RawEntry {
-                                        name: sname.to_string(),
-                                        description: desc,
-                                        triggers: trigs,
-                                        file_path: Some(path),
-                                        is_builtin: false,
-                                    });
-                                }
-                            }
-                        }
+                            })
+                            .collect()
                     }
-                }
+                };
+
+                raw_entries.extend(disk_entries);
             }
         }
 
@@ -8546,7 +9138,7 @@ impl SkillDispatcher {
             name_index,
             vocab,
             idf,
-            skill_cache: RwLock::new(initial_cache),
+            skill_cache: RwLock::new(HashMap::new()),
         }
     }
 
@@ -8764,7 +9356,7 @@ impl SkillDispatcher {
                 let matches = if tr.len() <= 3 {
                     words.contains(&tr.as_str())
                 } else {
-                    lower_query.contains(tr.as_str())
+                    lower_query.contains(tr.as_str()) || (tr.contains('-') && lower_query.contains(&tr.replace('-', " ")))
                 };
                 if tr.len() >= 3 && matches {
                     if trigger_score == 0.0 {
@@ -8985,6 +9577,509 @@ impl SkillDispatcher {
         out.trim().to_string()
     }
 
+    /// Format dispatched skills as a dense invariant DSL (ALWAYS, NEVER, STRICT_REJECT, AUDIT)
+    /// Yields 60-75% token reduction compared to conversational markdown instructions.
+    pub fn format_dense_invariants(skills: &[DispatchedSkill]) -> String {
+        if skills.is_empty() {
+            return String::new();
+        }
+        let mut out = String::from("### [TAGISAN ECC INVARIANT DIRECTIVES: HIGH-DENSITY ENFORCEMENT]\n");
+        for (idx, ds) in skills.iter().enumerate() {
+            out.push_str(&format!(
+                "\n#### Skill {}: {} [{}]\n",
+                idx + 1, ds.skill.name, ds.domain
+            ));
+            out.push_str("INVARIANTS:\n");
+
+            let mut extracted: Vec<String> = Vec::new();
+            let mut in_frontmatter = false;
+            let mut in_code_block = false;
+
+            for line in ds.skill.instructions.lines() {
+                let trimmed = line.trim();
+                if trimmed == "---" {
+                    in_frontmatter = !in_frontmatter;
+                    continue;
+                }
+                if in_frontmatter {
+                    continue;
+                }
+                if trimmed.starts_with("```") {
+                    in_code_block = !in_code_block;
+                    continue;
+                }
+                if in_code_block {
+                    continue;
+                }
+                if trimmed.starts_with('#') || trimmed.starts_with('>') || trimmed.is_empty() {
+                    continue;
+                }
+
+                let clean = trimmed.trim_start_matches(|c: char| c == '-' || c == '*' || c.is_ascii_digit() || c == '.' || c.is_whitespace());
+                if clean.is_empty() {
+                    continue;
+                }
+
+                let lower = clean.to_lowercase();
+                let is_rule = trimmed.starts_with('-')
+                    || trimmed.starts_with('*')
+                    || (trimmed.as_bytes().first().map_or(false, |b| b.is_ascii_digit()) && trimmed.contains('.'))
+                    || lower.contains("always")
+                    || lower.contains("never")
+                    || lower.contains("must")
+                    || lower.contains("reject")
+                    || lower.contains("audit")
+                    || lower.starts_with("rule:")
+                    || lower.starts_with("invariant:")
+                    || lower.starts_with("constraint:");
+
+                if !is_rule {
+                    continue;
+                }
+
+                let tag = if lower.contains("never") || lower.contains("must not") || lower.contains("do not") || lower.contains("disallow") {
+                    "NEVER"
+                } else if lower.contains("always") || lower.contains("must ensure") || lower.contains("mandatory") || lower.contains("guarantee") {
+                    "ALWAYS"
+                } else if lower.contains("reject") || lower.contains("abort") || lower.contains("invalid") || lower.contains("conflict") || lower.contains("409") || lower.contains("400") {
+                    "STRICT_REJECT"
+                } else if lower.contains("audit") || lower.contains("log") || lower.contains("trace") || lower.contains("telemetry") || lower.contains("metric") {
+                    "AUDIT"
+                } else if lower.starts_with("rule:") || lower.starts_with("invariant:") || lower.starts_with("constraint:") {
+                    "INVARIANT"
+                } else {
+                    "DIRECTIVE"
+                };
+
+                let formatted = format!("- {}: {}", tag, clean);
+                if !extracted.contains(&formatted) {
+                    extracted.push(formatted);
+                }
+            }
+
+            if extracted.is_empty() {
+                for line in ds.skill.instructions.lines() {
+                    let trimmed = line.trim();
+                    if !trimmed.is_empty() && !trimmed.starts_with('#') && !trimmed.starts_with("```") && !trimmed.starts_with("---") {
+                        extracted.push(format!("- DIRECTIVE: {}", trimmed));
+                    }
+                }
+            }
+
+            for item in extracted.into_iter().take(4) {
+                out.push_str(&item);
+                out.push('\n');
+            }
+        }
+        out.trim().to_string()
+    }
+
+    /// Format multi-tier progressive disclosure:
+    /// Tier 1: Capability Radar (Table of all relevant indexed skills)
+    /// Tier 2: Operational Directives (Dense Invariants or Full Specs for top primary skills)
+    /// Tier 3: JIT On-Demand Tool Invocation Hint
+    pub fn format_hierarchical(
+        manifest_skills: &[DispatchedSkill],
+        primary_skills: &[DispatchedSkill],
+        primary_mode: InjectionMode,
+    ) -> String {
+        let mut out = String::from("### [TAGISAN ECC MULTI-TIER COGNITIVE ARCHITECTURE]\n\n");
+
+        // TIER 1: Capability Radar Manifest
+        out.push_str("#### TIER 1: ACTIVE CAPABILITY RADAR\n");
+        out.push_str("The following specialized engineering capabilities are activated in this session:\n\n");
+        out.push_str("| # | Skill ID | Domain | Core Focus & Triggers |\n");
+        out.push_str("|---|---|---|---|\n");
+
+        for (idx, ds) in manifest_skills.iter().enumerate() {
+            let triggers_str = if ds.matched_triggers.is_empty() {
+                ds.skill.description.chars().take(80).collect::<String>()
+            } else {
+                ds.matched_triggers.join(", ")
+            };
+            let clean_summary = triggers_str.replace('|', "/").replace('\n', " ");
+            out.push_str(&format!(
+                "| {} | `{}` | {} | {} |\n",
+                idx + 1,
+                ds.skill.name,
+                ds.domain,
+                clean_summary
+            ));
+        }
+        out.push('\n');
+
+        // TIER 2: Primary Directives
+        out.push_str("#### TIER 2: PRIMARY OPERATIONAL INVARIANTS\n");
+        if primary_skills.is_empty() {
+            out.push_str("(No primary invariants required for this prompt)\n");
+        } else {
+            match primary_mode {
+                InjectionMode::Comprehensive => {
+                    out.push_str(&Self::format_cloud_guidelines(primary_skills));
+                }
+                InjectionMode::CheatSheet => {
+                    out.push_str(&Self::format_cheat_sheet(primary_skills));
+                }
+                _ => {
+                    out.push_str(&Self::format_dense_invariants(primary_skills));
+                }
+            }
+        }
+        out.push_str("\n\n");
+
+        // TIER 3: JIT Tool Hint
+        out.push_str("#### TIER 3: ON-DEMAND JIT KNOWLEDGE RETRIEVAL\n");
+        out.push_str("To inspect the complete specification, checklist, or template for any Tier 1 skill above, ");
+        out.push_str("call the native tool `fetch_skill(name: \"<skill_id>\")` or search with `search_skills(query: \"<topic>\")`.\n");
+
+        out.trim().to_string()
+    }
+
+    /// Retrieve full formatted specification of any skill by exact or fuzzy name
+    pub fn get_skill_spec(&self, name: &str) -> Option<String> {
+        self.get_skill(name).map(|s| {
+            let domain = infer_domain(&s.name);
+            format!(
+                "# Skill: {} [Domain: {}]\n\n{}\n\n## Instructions\n{}",
+                s.name, domain, s.description.trim(), s.instructions.trim()
+            )
+        })
+    }
+
+    /// Diversified dispatching using Maximal Marginal Relevance (MMR) and domain quota constraints.
+    /// Sorts output deterministically to ensure optimal prefix stability for LLM prompt caching.
+    pub fn dispatch_diversified(
+        &self,
+        query: &str,
+        budget: TokenBudget,
+        domain_bias: Option<&str>,
+    ) -> DiversifiedDispatchResult {
+        if self.skills.is_empty() || budget.max_tokens == 0 {
+            return DiversifiedDispatchResult {
+                primary: Vec::new(),
+                manifest: Vec::new(),
+                total_estimated_tokens: 0,
+                budget,
+            };
+        }
+
+        let lower_query = query.to_lowercase();
+        let query_tokens = tokenize(query);
+
+        // 1. Gather candidate skills via Inverted Index and Trigger Index
+        let mut candidates = HashSet::new();
+
+        for token in &query_tokens {
+            if let Some(&tid) = self.vocab.get(token) {
+                if let Some(doc_ids) = self.inverted_index.get(&tid) {
+                    candidates.extend(doc_ids.iter().copied());
+                }
+            }
+        }
+
+        let words: Vec<&str> = lower_query.split_whitespace().collect();
+        let max_n = 5.min(words.len());
+        for n in 1..=max_n {
+            for window in words.windows(n) {
+                let phrase = window.join(" ");
+                if let Some(doc_ids) = self.trigger_index.get(&phrase) {
+                    candidates.extend(doc_ids.iter().copied());
+                }
+                if let Some(&doc_id) = self.name_index.get(&phrase) {
+                    candidates.insert(doc_id);
+                }
+                let hyphenated = window.join("-");
+                if let Some(&doc_id) = self.name_index.get(&hyphenated) {
+                    candidates.insert(doc_id);
+                }
+                if let Some(doc_ids) = self.trigger_index.get(&hyphenated) {
+                    candidates.extend(doc_ids.iter().copied());
+                }
+            }
+        }
+
+        if let Some(bias) = domain_bias {
+            for (id, meta) in self.skills.iter().enumerate() {
+                if bias.eq_ignore_ascii_case(&meta.domain) {
+                    candidates.insert(id);
+                }
+            }
+        }
+
+        let candidate_list: Vec<usize> = if candidates.is_empty() {
+            (0..self.skills.len()).collect()
+        } else {
+            candidates.into_iter().collect()
+        };
+
+        // 2. Compute query sparse TF-IDF vector
+        let mut q_counts: HashMap<u32, usize> = HashMap::new();
+        for token in &query_tokens {
+            if let Some(&tid) = self.vocab.get(token) {
+                *q_counts.entry(tid).or_insert(0) += 1;
+            }
+        }
+
+        let mut query_vec: Vec<(u32, f32)> = Vec::new();
+        let mut q_norm_sq = 0.0f32;
+
+        for (tid, count) in q_counts {
+            let tf = 1.0 + (count as f32).ln();
+            let weight = tf * self.idf[tid as usize];
+            query_vec.push((tid, weight));
+            q_norm_sq += weight * weight;
+        }
+
+        query_vec.sort_by_key(|&(tid, _)| tid);
+        let q_norm = q_norm_sq.sqrt();
+        let normalized_q_vec: Vec<(u32, f32)> = if q_norm > 1e-6 {
+            query_vec.into_iter().map(|(tid, w)| (tid, w / q_norm)).collect()
+        } else {
+            query_vec
+        };
+
+        // 3. Multi-factor scoring loop
+        let mut ranked: Vec<(usize, f32, Vec<String>)> = Vec::with_capacity(candidate_list.len());
+
+        for doc_id in candidate_list {
+            let meta = &self.skills[doc_id];
+            let mut score = 0.0f32;
+            let mut matched_triggers = Vec::new();
+
+            // 3a. Exact Name Match (+200.0)
+            let lower_name = meta.name.to_lowercase();
+            let spaced_name = lower_name.replace('-', " ");
+            if lower_query.contains(&lower_name) || lower_query.contains(&spaced_name) {
+                score += 200.0;
+            }
+
+            // 3b. Trigger Matches (+100 for first, +25 subsequent, max +150)
+            let mut trigger_score = 0.0f32;
+            for tr in &meta.triggers {
+                let matches = if tr.len() <= 3 {
+                    words.contains(&tr.as_str())
+                } else {
+                    lower_query.contains(tr.as_str()) || (tr.contains('-') && lower_query.contains(&tr.replace('-', " ")))
+                };
+                if tr.len() >= 3 && matches {
+                    if trigger_score == 0.0 {
+                        trigger_score += 100.0;
+                    } else if trigger_score < 150.0 {
+                        trigger_score = (trigger_score + 25.0).min(150.0);
+                    }
+                    matched_triggers.push(tr.clone());
+                }
+            }
+            score += trigger_score;
+
+            // 3c. Domain Prefix & Stage Bias Boost
+            if let Some(bias) = domain_bias {
+                if bias.eq_ignore_ascii_case(&meta.domain) {
+                    score += 150.0;
+                }
+            }
+            if lower_query.contains(&meta.domain) || query_tokens.iter().any(|t| t == &meta.domain) {
+                score += 35.0;
+            }
+
+            // 3d. Name Token Overlap (+30.0)
+            if !meta.name_tokens.is_empty() {
+                let overlap = meta.name_tokens.iter().filter(|t| query_tokens.contains(t)).count();
+                score += (overlap as f32 / meta.name_tokens.len() as f32) * 30.0;
+            }
+
+            // 3e. Sublinear TF-IDF Cosine Similarity (+40.0)
+            if !normalized_q_vec.is_empty() && !meta.tfidf_vector.is_empty() {
+                let mut dot = 0.0f32;
+                let mut p_q = 0;
+                let mut p_d = 0;
+                while p_q < normalized_q_vec.len() && p_d < meta.tfidf_vector.len() {
+                    let (q_tid, q_val) = normalized_q_vec[p_q];
+                    let (d_tid, d_val) = meta.tfidf_vector[p_d];
+                    if q_tid == d_tid {
+                        dot += q_val * d_val;
+                        p_q += 1;
+                        p_d += 1;
+                    } else if q_tid < d_tid {
+                        p_q += 1;
+                    } else {
+                        p_d += 1;
+                    }
+                }
+                score += dot * 40.0;
+            }
+
+            if score >= 10.0 {
+                ranked.push((doc_id, score, matched_triggers));
+            }
+        }
+
+        // Sort descending by initial score
+        ranked.sort_by(|a, b| {
+            b.1.partial_cmp(&a.1)
+                .unwrap_or(std::cmp::Ordering::Equal)
+                .then_with(|| self.skills[a.0].name.cmp(&self.skills[b.0].name))
+        });
+
+        // 4. Greedy MMR & Domain Diversity Selection Loop
+        let mut primary: Vec<DispatchedSkill> = Vec::new();
+        let mut manifest: Vec<DispatchedSkill> = Vec::new();
+        let mut domain_counts: HashMap<String, usize> = HashMap::new();
+        let mut selected_tokens: HashSet<String> = HashSet::new();
+        let mut total_tokens = 0usize;
+
+        for (doc_id, base_score, matched_triggers) in &ranked {
+            let meta = &self.skills[*doc_id];
+            let domain = &meta.domain;
+            let count = *domain_counts.get(domain).unwrap_or(&0);
+
+            let is_domain_allowed = count < budget.max_per_domain;
+
+            // MMR token overlap penalty against already selected skills
+            let token_overlap_count = meta.name_tokens.iter().filter(|t| selected_tokens.contains(*t)).count();
+            let mmr_penalty = if meta.name_tokens.is_empty() {
+                0.0
+            } else {
+                (token_overlap_count as f32 / meta.name_tokens.len() as f32) * 0.4
+            };
+            let adjusted_score = base_score * (1.0 - mmr_penalty);
+
+            if is_domain_allowed {
+                if let Some(skill) = self.load_skill_by_id(*doc_id) {
+                    let est = match budget.mode {
+                        InjectionMode::DenseInvariants => 150,
+                        InjectionMode::CheatSheet => 250,
+                        InjectionMode::Comprehensive => estimate_tokens(&skill.instructions) + 50,
+                        InjectionMode::Hierarchical => 150,
+                    };
+
+                    if primary.is_empty() || total_tokens + est <= budget.max_tokens {
+                        *domain_counts.entry(domain.clone()).or_insert(0) += 1;
+                        total_tokens += est;
+                        selected_tokens.extend(meta.name_tokens.iter().cloned());
+
+                        primary.push(DispatchedSkill {
+                            domain: domain.clone(),
+                            skill: skill.clone(),
+                            score: adjusted_score,
+                            matched_triggers: matched_triggers.clone(),
+                        });
+                    }
+                }
+            }
+
+            // Populate Tier 1 Manifest (up to 20 distinct relevant skills)
+            if manifest.len() < 20 && !manifest.iter().any(|m| m.skill.name == meta.name) {
+                if let Some(skill) = self.load_skill_by_id(*doc_id) {
+                    manifest.push(DispatchedSkill {
+                        domain: domain.clone(),
+                        skill,
+                        score: *base_score,
+                        matched_triggers: matched_triggers.clone(),
+                    });
+                }
+            }
+        }
+
+        // 5. Deterministic Canonical Ordering for LLM Prompt Caching
+        // Sorts both primary and manifest by domain alphabetically, then by skill name.
+        primary.sort_by(|a, b| a.domain.cmp(&b.domain).then_with(|| a.skill.name.cmp(&b.skill.name)));
+        manifest.sort_by(|a, b| a.domain.cmp(&b.domain).then_with(|| a.skill.name.cmp(&b.skill.name)));
+
+        DiversifiedDispatchResult {
+            primary,
+            manifest,
+            total_estimated_tokens: total_tokens,
+            budget,
+        }
+    }
+
+    /// Master method for maximized provider-aware skill injection
+    pub fn equip_prompt_maximized(
+        &self,
+        base_prompt: &str,
+        query: &str,
+        provider: &str,
+        model: Option<&str>,
+        explicit_skill: Option<&str>,
+        custom_budget: Option<TokenBudget>,
+        domain_bias: Option<&str>,
+    ) -> (String, Vec<DispatchedSkill>, TokenBudget) {
+        let budget = custom_budget.unwrap_or_else(|| TokenBudget::for_provider_and_model(provider, model));
+
+        if let Some(skill_name) = explicit_skill {
+            let clean = skill_name.trim();
+            if !clean.is_empty() {
+                if let Some(skill) = self.get_skill(clean) {
+                    let domain = infer_domain(&skill.name);
+                    let ds = DispatchedSkill {
+                        domain: domain.clone(),
+                        skill,
+                        score: 100.0,
+                        matched_triggers: vec![clean.to_string()],
+                    };
+                    let formatted = match budget.mode {
+                        InjectionMode::DenseInvariants => Self::format_dense_invariants(&[ds.clone()]),
+                        InjectionMode::CheatSheet => Self::format_cheat_sheet(&[ds.clone()]),
+                        InjectionMode::Comprehensive => Self::format_cloud_guidelines(&[ds.clone()]),
+                        InjectionMode::Hierarchical => {
+                            Self::format_hierarchical(&[ds.clone()], &[ds.clone()], InjectionMode::DenseInvariants)
+                        }
+                    };
+                    let equipped = if base_prompt.trim().is_empty() {
+                        formatted
+                    } else {
+                        format!("{}\n\n{}", base_prompt.trim_end(), formatted)
+                    };
+                    return (equipped, vec![ds], budget);
+                }
+            }
+        }
+
+        let result = self.dispatch_diversified(query, budget, domain_bias);
+        if result.primary.is_empty() && result.manifest.is_empty() {
+            return (base_prompt.to_string(), Vec::new(), budget);
+        }
+
+        let section = match budget.mode {
+            InjectionMode::DenseInvariants => Self::format_dense_invariants(&result.primary),
+            InjectionMode::Comprehensive => Self::format_cloud_guidelines(&result.primary),
+            InjectionMode::CheatSheet => Self::format_cheat_sheet(&result.primary),
+            InjectionMode::Hierarchical => {
+                Self::format_hierarchical(&result.manifest, &result.primary, InjectionMode::DenseInvariants)
+            }
+        };
+
+        let equipped = if base_prompt.trim().is_empty() {
+            section
+        } else {
+            format!("{}\n\n{}", base_prompt.trim_end(), section)
+        };
+
+        (equipped, result.primary, budget)
+    }
+
+    /// Synthesizes provider-aware prompts with domain bias
+    pub fn equip_prompt_for_provider_with_bias(
+        &self,
+        base_prompt: &str,
+        query: &str,
+        provider: &str,
+        explicit_skill: Option<&str>,
+        domain_bias: Option<&str>,
+    ) -> (String, Vec<DispatchedSkill>) {
+        let (equipped, skills, _) = self.equip_prompt_maximized(
+            base_prompt,
+            query,
+            provider,
+            None,
+            explicit_skill,
+            None,
+            domain_bias,
+        );
+        (equipped, skills)
+    }
+
     /// Synthesizes provider-aware prompts injecting either condensed Cheat Sheet (for Local) or Comprehensive Guidelines (for Cloud)
     pub fn equip_prompt_for_provider(
         &self,
@@ -8994,45 +10089,40 @@ impl SkillDispatcher {
         explicit_skill: Option<&str>,
     ) -> (String, Vec<DispatchedSkill>) {
         let is_local = Self::is_local_provider(provider);
-        let max_skills = if is_local { 2 } else { 4 };
-
-        let skills: Vec<DispatchedSkill> = if let Some(skill_name) = explicit_skill {
-            let clean = skill_name.trim();
-            if !clean.is_empty() {
-                if let Some(skill) = self.get_skill(clean) {
-                    vec![DispatchedSkill {
-                        domain: infer_domain(&skill.name),
-                        skill,
-                        score: 100.0,
-                        matched_triggers: vec![clean.to_string()],
-                    }]
-                } else {
-                    self.dispatch(clean, max_skills, None)
-                }
+        let limit = if is_local { 2 } else { 4 };
+        let mode = if is_local {
+            InjectionMode::CheatSheet
+        } else {
+            InjectionMode::Comprehensive
+        };
+        let budget = TokenBudget::new(
+            if is_local { 8_192 } else { 128_000 },
+            if is_local { 500 } else { 8_000 },
+            mode,
+            if is_local { 1 } else { 2 },
+        );
+        let (mut prompt, mut skills, _) = self.equip_prompt_maximized(
+            base_prompt,
+            query,
+            provider,
+            None,
+            explicit_skill,
+            Some(budget),
+            None,
+        );
+        if skills.len() > limit {
+            skills.truncate(limit);
+            let section = match mode {
+                InjectionMode::CheatSheet => Self::format_cheat_sheet(&skills),
+                _ => Self::format_cloud_guidelines(&skills),
+            };
+            prompt = if base_prompt.trim().is_empty() {
+                section
             } else {
-                self.dispatch(query, max_skills, None)
-            }
-        } else {
-            self.dispatch(query, max_skills, None)
-        };
-
-        if skills.is_empty() {
-            return (base_prompt.to_string(), Vec::new());
+                format!("{}\n\n{}", base_prompt.trim_end(), section)
+            };
         }
-
-        let section = if is_local {
-            Self::format_cheat_sheet(&skills)
-        } else {
-            Self::format_cloud_guidelines(&skills)
-        };
-
-        let equipped_prompt = if base_prompt.trim().is_empty() {
-            section
-        } else {
-            format!("{}\n\n{}", base_prompt.trim_end(), section)
-        };
-
-        (equipped_prompt, skills)
+        (prompt, skills)
     }
 
     /// Auto-equips skills into a system prompt string
@@ -9353,6 +10443,8 @@ fn tokenize(text: &str) -> Vec<String> {
 fn infer_domain(name: &str) -> String {
     let lower = name.to_lowercase();
     let prefixes = [
+        ("ba-", "ba"),
+        ("ba", "ba"),
         ("azure", "azure"),
         ("aws", "aws"),
         ("amazon", "aws"),
@@ -9471,7 +10563,7 @@ fn infer_domain(name: &str) -> String {
         }
     }
     if let Some((first, _)) = lower.split_once('-') {
-        if first.len() >= 3 {
+        if first == "ba" || first.len() >= 3 {
             return first.to_string();
         }
     }
@@ -9508,6 +10600,20 @@ pub fn format_cheat_sheet(skills: &[DispatchedSkill]) -> String {
 /// Standalone formatter for Comprehensive Architectural Specification format for cloud LLMs
 pub fn format_cloud_guidelines(skills: &[DispatchedSkill]) -> String {
     SkillDispatcher::format_cloud_guidelines(skills)
+}
+
+/// Standalone formatter for dense invariant DSL
+pub fn format_dense_invariants(skills: &[DispatchedSkill]) -> String {
+    SkillDispatcher::format_dense_invariants(skills)
+}
+
+/// Standalone formatter for multi-tier progressive disclosure
+pub fn format_hierarchical(
+    manifest_skills: &[DispatchedSkill],
+    primary_skills: &[DispatchedSkill],
+    primary_mode: InjectionMode,
+) -> String {
+    SkillDispatcher::format_hierarchical(manifest_skills, primary_skills, primary_mode)
 }
 
 #[cfg(test)]
@@ -9607,3 +10713,2109 @@ mod tests {
 }
 
 
+
+// =========================================================================
+// Business & Functional Analysis Skills Built-in Implementations (Top 50)
+// =========================================================================
+
+/// 171. ba-wiegers-requirements-engineering Skill
+pub fn ba_wiegers_requirements_engineering() -> EccSkill {
+    EccSkill::new(
+        "ba-wiegers-requirements-engineering",
+        "Three-tier requirements engineering: Business Requirements (Vision & Scope), User Requirements (Tasks & Use Cases), and Functional Requirements (Invariants, RTM, Planguage quality attributes).",
+        r#"---
+name: ba-wiegers-requirements-engineering
+description: "Three-tier requirements engineering: Business Requirements (Vision & Scope), User Requirements (Tasks & Use Cases), and Functional Requirements (Invariants, RTM, Planguage quality attributes)."
+triggers: ["wiegers-requirements-engineering", "wiegers", "software-requirements", "requirements-traceability", "planguage", "functional-requirements", "requirements-engineering", "prd-specification"]
+---
+
+# ba-wiegers-requirements-engineering
+> Based on **Software Requirements (3rd Edition) - Karl Wiegers & Joy Beatty**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Every functional requirement must trace back to exactly one business requirement and have at least one test case (1:N:M traceability).**
+2. **Prohibit ambiguous linguistic quantifiers in specifications ('user-friendly', 'fast', 'scalable', 'secure', 'appropriate') without quantifiable metrics.**
+3. **Enforce strict RFC 2119 / IEEE 830 modal verbs: SHALL (mandatory), SHOULD (strongly recommended), MAY (optional).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Define three-tier requirements (Business, User, Functional). Assign Planguage benchmarks (Scale, Meter, Target) to all non-functional attributes. Enforce full traceability in the RTM.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Specifying implementation details in business requirements.**
+- **Orphaned functional requirements with no test verification criteria.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "wiegers-requirements-engineering"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 172. ba-volere-requirements-specification Skill
+pub fn ba_volere_requirements_specification() -> EccSkill {
+    EccSkill::new(
+        "ba-volere-requirements-specification",
+        "Volere Requirements Process: Volere Snow Card, quantifiable Fit Criteria, customer satisfaction/dissatisfaction gradients, and event-driven elicitation.",
+        r#"---
+name: ba-volere-requirements-specification
+description: "Volere Requirements Process: Volere Snow Card, quantifiable Fit Criteria, customer satisfaction/dissatisfaction gradients, and event-driven elicitation."
+triggers: ["volere-requirements-specification", "volere", "fit-criteria", "robertson-requirements", "volere-snow-card", "quantifiable-requirements"]
+---
+
+# ba-volere-requirements-specification
+> Based on **Mastering the Requirements Process (3rd Edition) - Suzanne Robertson & James Robertson**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **A requirement is undefined until its Fit Criterion is formulated: Fit Criterion = a concrete, unambiguous measurement test that determines whether a solution satisfies the requirement.**
+2. **Customer Satisfaction (1 to 5) and Customer Dissatisfaction (1 to 5) gradients must be assigned to distinguish delighters from table-stakes.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Every requirement must use the Volere Snow Card: Requirement #, Type, Event, Description, Rationale, Source, Fit Criterion, Customer Satisfaction/Dissatisfaction.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Accepting subjective requirements that cannot be verified by an automated test.**
+- **Conflating product desires with statutory constraints.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "volere-requirements-specification"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 173. ba-cockburn-use-case-modeling Skill
+pub fn ba_cockburn_use_case_modeling() -> EccSkill {
+    EccSkill::new(
+        "ba-cockburn-use-case-modeling",
+        "Goal-oriented use case modeling: Goal levels (Cloud, Sea-Level, Fish), Main Success Scenario, Extension branches, Minimal and Success Guarantees.",
+        r#"---
+name: ba-cockburn-use-case-modeling
+description: "Goal-oriented use case modeling: Goal levels (Cloud, Sea-Level, Fish), Main Success Scenario, Extension branches, Minimal and Success Guarantees."
+triggers: ["cockburn-use-case-modeling", "cockburn", "use-case-modeling", "sea-level-goal", "main-success-scenario", "preconditions-guarantees"]
+---
+
+# ba-cockburn-use-case-modeling
+> Based on **Writing Effective Use Cases - Alistair Cockburn**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Sea-Level Goal Invariant: User task use cases must represent an atomic business interaction delivering immediate value to the primary actor in a single session.**
+2. **Complete Branch Coverage: Every failure or alternate branch must specify an extension step (e.g., 3a, 3b) and define whether it resumes or aborts the Main Success Scenario.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Format use cases with Cockburn standard: Primary Actor, Scope, Level (Sea-level), Preconditions, Minimal Guarantee, Success Guarantee, Main Success Scenario (1-N), Extensions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Writing use cases at the fish/clam level for single button clicks.**
+- **Omitting minimal guarantees for failure scenarios.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "cockburn-use-case-modeling"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 174. ba-nfr-quality-attributes Skill
+pub fn ba_nfr_quality_attributes() -> EccSkill {
+    EccSkill::new(
+        "ba-nfr-quality-attributes",
+        "Non-Functional Requirements & Quality Attribute Scenarios: 6-part scenarios (Source, Stimulus, Artifact, Environment, Response, Response Measure), SLA/SLO metrics.",
+        r#"---
+name: ba-nfr-quality-attributes
+description: "Non-Functional Requirements & Quality Attribute Scenarios: 6-part scenarios (Source, Stimulus, Artifact, Environment, Response, Response Measure), SLA/SLO metrics."
+triggers: ["nfr-quality-attributes", "quality-attribute-scenarios", "iso-25010", "non-functional-requirements", "bass-clements-kazman", "sla-slo"]
+---
+
+# ba-nfr-quality-attributes
+> Based on **Software Architecture in Practice (4th Ed) & ISO 25010 - Bass, Clements, Kazman**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **6-Part Quality Attribute Scenario: Every NFR must define Source of Stimulus, Stimulus, Artifact, Environment, Response, and quantifiable Response Measure.**
+2. **SLO Quantifiability: Performance, Availability, Security, and Scalability must be formulated with objective numerical thresholds.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Specify all NFRs as 6-part scenarios: Source of Stimulus, Stimulus, Artifact, Environment, Response, and quantifiable Response Measure.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Writing vague NFRs like 'System must be high-performance'.**
+- **Ignoring degraded environment modes in NFR specifications.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "nfr-quality-attributes"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 175. ba-requirements-traceability-matrix Skill
+pub fn ba_requirements_traceability_matrix() -> EccSkill {
+    EccSkill::new(
+        "ba-requirements-traceability-matrix",
+        "Bidirectional Requirements Traceability Matrix (RTM): Forward and backward traceability, gap analysis, orphan detection, and verification coverage.",
+        r#"---
+name: ba-requirements-traceability-matrix
+description: "Bidirectional Requirements Traceability Matrix (RTM): Forward and backward traceability, gap analysis, orphan detection, and verification coverage."
+triggers: ["requirements-traceability-matrix", "rtm", "bidirectional-traceability", "orphan-detection", "ieee-29148", "compliance-matrix"]
+---
+
+# ba-requirements-traceability-matrix
+> Based on **IEEE Std 830 / ISO/IEC/IEEE 29148 - Requirements Engineering Standards**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Bidirectional Linkage: Business Need <-> System Requirement <-> Architecture Component <-> Source Code <-> Automated Test Case.**
+2. **Zero Orphan Rule: Every line of application code and every test must trace back to an authorized requirement.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Maintain a bidirectional RTM. Flag any requirement with 0 test cases as an unverified defect. Flag any code feature with 0 requirements as unauthorized scope creep.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Building features that have no upstream business justification.**
+- **Writing unit tests that test implementation details instead of requirement criteria.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "requirements-traceability-matrix"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 176. ba-adzic-specification-by-example Skill
+pub fn ba_adzic_specification_by_example() -> EccSkill {
+    EccSkill::new(
+        "ba-adzic-specification-by-example",
+        "Executable specifications and living documentation: Deriving scope from goals, illustrating requirements using concrete examples, and single-source-of-truth test suites.",
+        r#"---
+name: ba-adzic-specification-by-example
+description: "Executable specifications and living documentation: Deriving scope from goals, illustrating requirements using concrete examples, and single-source-of-truth test suites."
+triggers: ["adzic-specification-by-example", "specification-by-example", "living-documentation", "gojko-adzic", "executable-specifications"]
+---
+
+# ba-adzic-specification-by-example
+> Based on **Specification by Example - Gojko Adzic**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Illustrate rules using concrete data examples rather than abstract formulas.**
+2. **Living Documentation Invariant: The specification and the regression test suite must be the exact same artifact.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Before implementing business logic, construct tabular concrete examples showing exact input vectors and expected output values.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Writing abstract requirements without concrete input/output test vectors.**
+- **Letting documentation drift from test suites.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "adzic-specification-by-example"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 177. ba-cucumber-gherkin-syntax Skill
+pub fn ba_cucumber_gherkin_syntax() -> EccSkill {
+    EccSkill::new(
+        "ba-cucumber-gherkin-syntax",
+        "Behavior-Driven Development & Gherkin AST Grammar: Given/When/Then, Scenario Outlines, declarative steps, and business-focused acceptance criteria.",
+        r#"---
+name: ba-cucumber-gherkin-syntax
+description: "Behavior-Driven Development & Gherkin AST Grammar: Given/When/Then, Scenario Outlines, declarative steps, and business-focused acceptance criteria."
+triggers: ["cucumber-gherkin-syntax", "gherkin", "bdd", "cucumber", "given-when-then", "scenario-outline", "declarative-testing"]
+---
+
+# ba-cucumber-gherkin-syntax
+> Based on **The Cucumber Book - Matt Wynne & Aslak Hellesøy**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Strict Gherkin Grammar: Given (context/setup) -> When (action/event) -> Then (observable outcome).**
+2. **Declarative over Imperative: Never mention UI widgets in Gherkin; express business intent.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Format scenarios in valid Gherkin syntax: Feature, Scenario Outline, Given, When, Then, Examples table. Never mention UI selectors.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Mixing setup and assertions inside When steps.**
+- **Writing UI-driven imperative steps that break on simple CSS refactoring.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "cucumber-gherkin-syntax"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 178. ba-bdd-three-amigos-workshop Skill
+pub fn ba_bdd_three_amigos_workshop() -> EccSkill {
+    EccSkill::new(
+        "ba-bdd-three-amigos-workshop",
+        "Collaborative requirement discovery & Example Mapping: Product, Developer, and Tester alignment using Story, Rule, Example, and Question matrices.",
+        r#"---
+name: ba-bdd-three-amigos-workshop
+description: "Collaborative requirement discovery & Example Mapping: Product, Developer, and Tester alignment using Story, Rule, Example, and Question matrices."
+triggers: ["bdd-three-amigos-workshop", "three-amigos", "example-mapping", "dan-north", "liz-keogh", "discovery-cards"]
+---
+
+# ba-bdd-three-amigos-workshop
+> Based on **Example Mapping - Dan North, Liz Keogh, George Dinwiddie**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Three Amigos Alignment: A story cannot start development without explicit consensus across Business (Why/What), Engineering (How), and QA (What could go wrong).**
+2. **Example Mapping Heuristic: If a story has > 3 unresolved Red Questions or > 5 Blue Rules, split the story before coding.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Decompose stories into 4 elements: Yellow Story, Blue Rules (business logic), Green Examples (concrete truth vectors), Red Questions (unresolved ambiguities).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Starting implementation while Red Questions remain unresolved.**
+- **Writing stories without engineering feasibility or QA boundary input.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "bdd-three-amigos-workshop"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 179. ba-atdd-acceptance-criteria Skill
+pub fn ba_atdd_acceptance_criteria() -> EccSkill {
+    EccSkill::new(
+        "ba-atdd-acceptance-criteria",
+        "Acceptance Test-Driven Development (ATDD): Test-first specification, boundary value analysis, pass/fail gating, and customer acceptance criteria.",
+        r#"---
+name: ba-atdd-acceptance-criteria
+description: "Acceptance Test-Driven Development (ATDD): Test-first specification, boundary value analysis, pass/fail gating, and customer acceptance criteria."
+triggers: ["atdd-acceptance-criteria", "atdd", "acceptance-test-driven-development", "ken-pugh", "acceptance-criteria", "pass-fail-gates"]
+---
+
+# ba-atdd-acceptance-criteria
+> Based on **ATDD by Example - Ken Pugh & Lisa Crispin**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Test-First Verification Gate: Automated acceptance tests must be written, run, and proven failing *before* production code is written.**
+2. **Boundary Value Analysis: Every numeric or range constraint must be tested at minimum, maximum, and outside boundaries (e.g., n-1, n, n+1).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Write automated acceptance tests before writing feature code. Verify tests fail for the right reason, then write minimal code to pass.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Writing tests after the code is finished (confirmation bias).**
+- **Testing only happy-path scenarios and ignoring boundary limits.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "atdd-acceptance-criteria"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 180. ba-living-documentation-tooling Skill
+pub fn ba_living_documentation_tooling() -> EccSkill {
+    EccSkill::new(
+        "ba-living-documentation-tooling",
+        "Living documentation architecture: AST analysis, domain-driven annotations, automated diagram extraction, and synchronizing code with domain knowledge.",
+        r#"---
+name: ba-living-documentation-tooling
+description: "Living documentation architecture: AST analysis, domain-driven annotations, automated diagram extraction, and synchronizing code with domain knowledge."
+triggers: ["living-documentation-tooling", "living-documentation", "cyrille-martraire", "code-as-documentation", "ast-analysis", "domain-annotations"]
+---
+
+# ba-living-documentation-tooling
+> Based on **Living Documentation: Continuous Knowledge Sharing - Cyrille Martraire**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Single Source of Truth: Documentation must be derived directly from verified source code and executable tests, never maintained in disconnected wikis.**
+2. **Executable Invariants: Domain rules documented in comments or markdown must be backed by unit tests or compiler type assertions.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Annotate domain entities with living doc annotations. Extract architecture diagrams and markdown glossaries directly from codebase AST.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Maintaining stale Word documents or wiki pages that drift from codebase reality.**
+- **Writing code comments that contradict executable behavior.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "living-documentation-tooling"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 181. ba-evans-ubiquitous-language Skill
+pub fn ba_evans_ubiquitous_language() -> EccSkill {
+    EccSkill::new(
+        "ba-evans-ubiquitous-language",
+        "Ubiquitous Language & Strategic Modeling: Shared domain lexicon, eliminating translation layers, contextual isomorphism, and bounded linguistic contexts.",
+        r#"---
+name: ba-evans-ubiquitous-language
+description: "Ubiquitous Language & Strategic Modeling: Shared domain lexicon, eliminating translation layers, contextual isomorphism, and bounded linguistic contexts."
+triggers: ["evans-ubiquitous-language", "ubiquitous-language", "eric-evans", "domain-driven-design", "ddd", "domain-lexicon"]
+---
+
+# ba-evans-ubiquitous-language
+> Based on **Domain-Driven Design - Eric Evans**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Ubiquitous Language Invariant: If a term is not used by business domain experts in conversation, it must never appear as a class or table name.**
+2. **Zero Synonym Drift: Prohibit using different terms for the same domain entity across files within the same bounded context.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Maintain a strict GLOSSARY.md for the project. Use domain terms verbatim in code, class names, database tables, and API endpoints.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using technical jargon ('Record', 'DTO', 'Entity') in business conversation.**
+- **Letting developers rename business concepts to suit technical habits.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "evans-ubiquitous-language"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 182. ba-brandolini-event-storming Skill
+pub fn ba_brandolini_event_storming() -> EccSkill {
+    EccSkill::new(
+        "ba-brandolini-event-storming",
+        "EventStorming domain discovery: Domain Events (orange), Commands (blue), Aggregates (yellow), Read Models (green), Policies (pink), and chronological event flows.",
+        r#"---
+name: ba-brandolini-event-storming
+description: "EventStorming domain discovery: Domain Events (orange), Commands (blue), Aggregates (yellow), Read Models (green), Policies (pink), and chronological event flows."
+triggers: ["brandolini-event-storming", "event-storming", "alberto-brandolini", "domain-events", "commands-aggregates", "event-driven-analysis"]
+---
+
+# ba-brandolini-event-storming
+> Based on **Introducing EventStorming - Alberto Brandolini**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Event Past-Tense Invariant: Domain Events must always be written in the past tense (e.g., `OrderPlaced`, `CaseRaffled`, `PaymentDeclined`).**
+2. **Command-Event Causality: Every Domain Event is triggered by a Command, an External Event, or a Business Policy.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Map processes using EventStorming sequence: [COMMAND] -> [AGGREGATE] -> [EVENT] -> [POLICY] -> [NEXT COMMAND].
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using present-tense or imperative verbs for events (e.g., `PlaceOrder`).**
+- **Missing the aggregate consistency boundary where commands are validated.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "brandolini-event-storming"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 183. ba-bounded-context-mapping Skill
+pub fn ba_bounded_context_mapping() -> EccSkill {
+    EccSkill::new(
+        "ba-bounded-context-mapping",
+        "Strategic Context Mapping: Bounded Context boundaries, Anti-Corruption Layers (ACL), Open Host Service (OHS), Shared Kernel, Customer-Supplier, and Conformist patterns.",
+        r#"---
+name: ba-bounded-context-mapping
+description: "Strategic Context Mapping: Bounded Context boundaries, Anti-Corruption Layers (ACL), Open Host Service (OHS), Shared Kernel, Customer-Supplier, and Conformist patterns."
+triggers: ["bounded-context-mapping", "bounded-context", "context-mapping", "anti-corruption-layer", "acl", "vlad-khononov", "strategic-ddd"]
+---
+
+# ba-bounded-context-mapping
+> Based on **Learning Domain-Driven Design - Vlad Khononov & Eric Evans**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Bounded Context Autonomy: A bounded context must own its data schema and be deployable independently of other contexts.**
+2. **Anti-Corruption Layer (ACL): When integrating with legacy systems or third-party APIs, always insert an ACL to translate foreign data models into pure internal domain types.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Explicitly define Bounded Context boundaries and relationship patterns (ACL, Customer-Supplier, Conformist, Open Host Service) in CONTEXT_MAP.md.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Allowing multiple contexts to share read/write access to the same database tables.**
+- **Letting upstream vendor schemas leak directly into internal domain models.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "bounded-context-mapping"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 184. ba-domain-storytelling Skill
+pub fn ba_domain_storytelling() -> EccSkill {
+    EccSkill::new(
+        "ba-domain-storytelling",
+        "Domain Storytelling methodology: Visual, actor-centric storytelling using pictographic notations, work objects, activities, and sequence numbers.",
+        r#"---
+name: ba-domain-storytelling
+description: "Domain Storytelling methodology: Visual, actor-centric storytelling using pictographic notations, work objects, activities, and sequence numbers."
+triggers: ["domain-storytelling", "stefan-hofer", "henning-schwentner", "domain-stories", "work-objects", "actor-activities"]
+---
+
+# ba-domain-storytelling
+> Based on **Domain Storytelling - Stefan Hofer & Henning Schwentner**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Grammar of Domain Stories: Actor -> Activity -> Work Object -> Destination Actor. Every step must have a strict integer sequence number (1, 2, 3...).**
+2. **Concrete People & Real Objects: Use specific real-world examples and work objects, avoiding abstract data structures.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model business conversations as Domain Stories: (1) Actor A sends Work Object to Actor B; (2) Actor B evaluates Work Object; (3) Actor B creates Output.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Abstracting away the actors and turning stories into generic data flow diagrams.**
+- **Skipping sequence numbers and creating ambiguous execution paths.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "domain-storytelling"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 185. ba-subdomain-core-domain-triage Skill
+pub fn ba_subdomain_core_domain_triage() -> EccSkill {
+    EccSkill::new(
+        "ba-subdomain-core-domain-triage",
+        "Strategic Subdomain Triage: Categorizing domains into Core (differentiator), Supporting (custom auxiliary), and Generic (commodity), guiding engineering investment.",
+        r#"---
+name: ba-subdomain-core-domain-triage
+description: "Strategic Subdomain Triage: Categorizing domains into Core (differentiator), Supporting (custom auxiliary), and Generic (commodity), guiding engineering investment."
+triggers: ["subdomain-core-domain-triage", "core-domain", "supporting-subdomain", "generic-subdomain", "nick-tune", "strategic-spend", "buy-vs-build"]
+---
+
+# ba-subdomain-core-domain-triage
+> Based on **Architecture Modernization & Strategic DDD - Eric Evans & Nick Tune**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Strategic Investment Invariant: 80% of custom engineering effort must be directed to the Core Domain. Supporting subdomains should be minimal; Generic subdomains must use off-the-shelf software.**
+2. **Core Domain Isolation: The core domain must be strictly isolated from infrastructure frameworks and third-party libraries.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Audit every feature against Core vs Supporting vs Generic categorization. Prohibit custom vibe-coded implementations for generic subdomains (e.g. auth, payments).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Wasting engineering budget writing custom implementations for generic commodities.**
+- **Treating supporting administrative tools with the same priority as the core engine.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "subdomain-core-domain-triage"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 186. ba-patton-user-story-mapping Skill
+pub fn ba_patton_user_story_mapping() -> EccSkill {
+    EccSkill::new(
+        "ba-patton-user-story-mapping",
+        "User Story Mapping: Dual-backbone 2D grid, user activities and tasks, horizontal slicing, walking skeletons, and incremental release framing.",
+        r#"---
+name: ba-patton-user-story-mapping
+description: "User Story Mapping: Dual-backbone 2D grid, user activities and tasks, horizontal slicing, walking skeletons, and incremental release framing."
+triggers: ["patton-user-story-mapping", "user-story-mapping", "jeff-patton", "story-mapping", "walking-skeleton", "narrative-backbone"]
+---
+
+# ba-patton-user-story-mapping
+> Based on **User Story Mapping - Jeff Patton**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Story Map Topology: Horizontal axis represents narrative time (User Activities -> User Tasks); Vertical axis represents release priority slices (MVP -> Release 2).**
+2. **Walking Skeleton Invariant: The MVP slice must constitute an end-to-end functional path through the entire user journey, even if implemented with bare-bones technology.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Structure project roadmaps as a 2D Story Map: Activities across the top, tasks below, sliced horizontally into Walking Skeleton, MVP, and Future Releases.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Building 100% of Module 1 before building any of Module 2 or 3.**
+- **Writing isolated user stories that have no clear place in the overall narrative journey.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "patton-user-story-mapping"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 187. ba-invest-user-stories Skill
+pub fn ba_invest_user_stories() -> EccSkill {
+    EccSkill::new(
+        "ba-invest-user-stories",
+        "Agile User Stories & INVEST Rubric: Independent, Negotiable, Valuable, Estimable, Small, Testable stories, Card-Conversation-Confirmation (3Cs).",
+        r#"---
+name: ba-invest-user-stories
+description: "Agile User Stories & INVEST Rubric: Independent, Negotiable, Valuable, Estimable, Small, Testable stories, Card-Conversation-Confirmation (3Cs)."
+triggers: ["invest-user-stories", "invest-rubric", "mike-cohn", "bill-wake", "user-stories", "3cs-card-conversation-confirmation"]
+---
+
+# ba-invest-user-stories
+> Based on **User Stories Applied - Bill Wake & Mike Cohn**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **INVEST Verification: Every story must be Independent, Negotiable, Valuable, Estimable, Small (fits in one prompt/sprint), and Testable.**
+2. **Story Syntax: 'As a [specific persona], I want [capability/action] so that [business value/benefit]'.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Validate all backlog items against INVEST checklist before asking AI to code. Ensure every story has concrete Given/When/Then acceptance criteria.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Writing technical tasks disguised as user stories.**
+- **Writing huge epic stories that exceed the AI agent's single-turn context.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "invest-user-stories"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 188. ba-story-splitting-patterns Skill
+pub fn ba_story_splitting_patterns() -> EccSkill {
+    EccSkill::new(
+        "ba-story-splitting-patterns",
+        "User Story Splitting Heuristics: 10 vertical splitting patterns (workflow steps, business rules, happy/unhappy, interface variations, simple/complex).",
+        r#"---
+name: ba-story-splitting-patterns
+description: "User Story Splitting Heuristics: 10 vertical splitting patterns (workflow steps, business rules, happy/unhappy, interface variations, simple/complex)."
+triggers: ["story-splitting-patterns", "story-splitting", "richard-lawrence", "peter-green", "vertical-slicing", "story-decomposition"]
+---
+
+# ba-story-splitting-patterns
+> Based on **Patterns for Splitting User Stories - Richard Lawrence & Peter Green**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Vertical Slicing: When splitting a user story, every split sub-story must cut through all architectural layers (UI, Logic, Storage) and produce usable value.**
+2. **Split Heuristic 1 (Operations): Split CRUD into individual user-driven capabilities (Create vs Search vs Update vs Archive).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Apply vertical story splitting patterns: Workflow steps, Business rule variations, Happy vs Exception paths, Simple vs Complex data variations.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Horizontal slicing (e.g. 'Build backend DB' as Story 1, 'Build React UI' as Story 2).**
+- **Splitting stories so small that individual stories deliver no customer value.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "story-splitting-patterns"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 189. ba-wsjf-backlog-prioritization Skill
+pub fn ba_wsjf_backlog_prioritization() -> EccSkill {
+    EccSkill::new(
+        "ba-wsjf-backlog-prioritization",
+        "Weighted Shortest Job First (WSJF) & Cost of Delay (CoD): User-business value, time criticality, risk reduction/opportunity enablement, and economic job sizing.",
+        r#"---
+name: ba-wsjf-backlog-prioritization
+description: "Weighted Shortest Job First (WSJF) & Cost of Delay (CoD): User-business value, time criticality, risk reduction/opportunity enablement, and economic job sizing."
+triggers: ["wsjf-backlog-prioritization", "wsjf", "reinertsen", "cost-of-delay", "economic-prioritization", "job-duration"]
+---
+
+# ba-wsjf-backlog-prioritization
+> Based on **The Principles of Product Development Flow - Donald G. Reinertsen**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **WSJF Formula: WSJF = Cost of Delay / Job Duration = (User Value + Time Criticality + RR/OE) / Size.**
+2. **Economic Priority: Always schedule items with the highest WSJF score first to maximize economic throughput.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Calculate WSJF for all backlog items: CoD = (User-Business Value + Time Criticality + Risk Reduction) / Job Duration. Sort backlog descending by WSJF.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Prioritizing items based on executive loudness (HiPPO) rather than Cost of Delay.**
+- **Ignoring job size/duration and scheduling large low-value tasks first.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "wsjf-backlog-prioritization"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 190. ba-kanban-value-stream-metrics Skill
+pub fn ba_kanban_value_stream_metrics() -> EccSkill {
+    EccSkill::new(
+        "ba-kanban-value-stream-metrics",
+        "Kanban Value Stream Metrics & Flow Control: Little's Law, Work in Progress (WIP) limits, Cycle Time, Lead Time, and Cumulative Flow Diagrams (CFD).",
+        r#"---
+name: ba-kanban-value-stream-metrics
+description: "Kanban Value Stream Metrics & Flow Control: Little's Law, Work in Progress (WIP) limits, Cycle Time, Lead Time, and Cumulative Flow Diagrams (CFD)."
+triggers: ["kanban-value-stream-metrics", "kanban", "littles-law", "wip-limits", "cycle-time", "lead-time", "cumulative-flow-diagram"]
+---
+
+# ba-kanban-value-stream-metrics
+> Based on **Kanban: Successful Evolutionary Change - David J. Anderson**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Little's Law Invariant: Average Lead Time = Work In Progress (WIP) / Throughput.**
+2. **WIP Restriction: To reduce cycle time and improve delivery predictability, ruthlessly limit active WIP at each stage of the engineering pipeline.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Monitor delivery using Little's Law. Set WIP limits on each state in the development pipeline. Measure and minimize Lead Time and Cycle Time.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Starting 20 tasks in parallel, causing context switching and blowing out lead times.**
+- **Ignoring bottlenecks where tasks pile up indefinitely.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "kanban-value-stream-metrics"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 191. ba-bpmn-level2-process-modeling Skill
+pub fn ba_bpmn_level2_process_modeling() -> EccSkill {
+    EccSkill::new(
+        "ba-bpmn-level2-process-modeling",
+        "Descriptive & Analytic BPMN 2.0: Pools, lanes, event markers, exclusive (XOR), parallel (AND), inclusive (OR) gateways, and token flow semantics.",
+        r#"---
+name: ba-bpmn-level2-process-modeling
+description: "Descriptive & Analytic BPMN 2.0: Pools, lanes, event markers, exclusive (XOR), parallel (AND), inclusive (OR) gateways, and token flow semantics."
+triggers: ["bpmn-level2-process-modeling", "bpmn", "bruce-silver", "bpmn-method-and-style", "workflow-modeling", "token-flow", "gateways"]
+---
+
+# ba-bpmn-level2-process-modeling
+> Based on **BPMN Method and Style (2nd Edition) - Bruce Silver**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Gateway Soundness: An Exclusive Gateway (XOR) must split flow into exactly one branch; a Parallel Gateway (AND) split must be paired with an AND join to avoid deadlocks.**
+2. **Token Conservation: Every token generated at a Start Event must eventually be consumed at an End Event without leaking or being indefinitely trapped.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model business workflows using BPMN 2.0 rules: Clear Pools/Lanes, Start/End events, matched split/join gateways, and message flows across pool boundaries.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using an AND join for paths originating from an XOR split, causing deadlocks.**
+- **Drawing sequence flows across pool boundaries (violating BPMN standard).**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "bpmn-level2-process-modeling"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 192. ba-bpmn-gateway-soundness Skill
+pub fn ba_bpmn_gateway_soundness() -> EccSkill {
+    EccSkill::new(
+        "ba-bpmn-gateway-soundness",
+        "Workflow Soundness & Deadlock Freedom: Van der Aalst soundness criteria, liveness, bounded Petri net validation, and gateway matching.",
+        r#"---
+name: ba-bpmn-gateway-soundness
+description: "Workflow Soundness & Deadlock Freedom: Van der Aalst soundness criteria, liveness, bounded Petri net validation, and gateway matching."
+triggers: ["bpmn-gateway-soundness", "workflow-soundness", "marlon-dumas", "deadlock-freedom", "petri-net", "gateway-matching"]
+---
+
+# ba-bpmn-gateway-soundness
+> Based on **Fundamentals of Business Process Management (2nd Edition) - Dumas, La Rosa, Mendling, Reijers**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Option to Complete: For every reachable state, it is always possible to reach the terminal end state.**
+2. **Proper Completion: When the terminal end state is reached, no tokens remain active in any other branch of the process.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Audit all process flowcharts for Van der Aalst Soundness: (1) Liveness, (2) Proper Completion, (3) Option to complete. Eliminate potential deadlocks or token leaks.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Creating cyclic loops without terminating exit guards.**
+- **Mismatched gateways that cause token accumulation or thread starvation.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "bpmn-gateway-soundness"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 193. ba-bpmn-timer-boundary-events Skill
+pub fn ba_bpmn_timer_boundary_events() -> EccSkill {
+    EccSkill::new(
+        "ba-bpmn-timer-boundary-events",
+        "Boundary Events & Exception Flow: Interrupting vs non-interrupting boundary events, timer escalations, error boundaries, compensation, and cancel events.",
+        r#"---
+name: ba-bpmn-timer-boundary-events
+description: "Boundary Events & Exception Flow: Interrupting vs non-interrupting boundary events, timer escalations, error boundaries, compensation, and cancel events."
+triggers: ["bpmn-timer-boundary-events", "boundary-events", "timer-event", "error-event", "compensation-event", "bpmn-exceptions"]
+---
+
+# ba-bpmn-timer-boundary-events
+> Based on **OMG BPMN 2.0 Executable Specification - Object Management Group**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Boundary Event Semantics: An Interrupting Boundary Event cancels the attached activity and diverts token flow; a Non-Interrupting Event spawns a parallel execution branch.**
+2. **Compensation Invariant: Compensation events can only be triggered after the associated activity has completed successfully.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Specify SLA timeouts using boundary timer events. Route technical errors and business exceptions via explicit boundary error events.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Letting tasks hang indefinitely without a timer boundary event.**
+- **Using interrupting events when a background notification was intended.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "bpmn-timer-boundary-events"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 194. ba-state-machine-lifecycle-modeling Skill
+pub fn ba_state_machine_lifecycle_modeling() -> EccSkill {
+    EccSkill::new(
+        "ba-state-machine-lifecycle-modeling",
+        "Hierarchical State Machines (FSM & Statecharts): Orthogonal regions, guarded transitions, entry/exit actions, deterministic state lifecycles, and transition matrices.",
+        r#"---
+name: ba-state-machine-lifecycle-modeling
+description: "Hierarchical State Machines (FSM & Statecharts): Orthogonal regions, guarded transitions, entry/exit actions, deterministic state lifecycles, and transition matrices."
+triggers: ["state-machine-lifecycle-modeling", "state-machine", "statecharts", "david-harel", "fsm", "transition-matrix", "finite-state-machine"]
+---
+
+# ba-state-machine-lifecycle-modeling
+> Based on **Statecharts: A Visual Formalism - David Harel & Martin Fowler**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **State Machine Determinism: For any state S and event E, at most one transition guard evaluates to true (deterministic next state).**
+2. **Transition Completeness: The state transition matrix must explicitly define behavior for all (State x Event) combinations.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Define entity lifecycles as a formal Finite State Machine (FSM): States, Events, Guards, Actions. Enforce strict transition checks in code.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Mutating entity status without validating whether the current state permits the transition.**
+- **Omitting error/cancelled states in entity lifecycles.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "state-machine-lifecycle-modeling"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 195. ba-process-waste-elimination-vsm Skill
+pub fn ba_process_waste_elimination_vsm() -> EccSkill {
+    EccSkill::new(
+        "ba-process-waste-elimination-vsm",
+        "Lean Value Stream Mapping (VSM): Eliminating the 7 Wastes (Mudas: Waiting, Transit, Overprocessing, Inventory, Defects, Motion, Overproduction), Takt Time, PCE ratio.",
+        r#"---
+name: ba-process-waste-elimination-vsm
+description: "Lean Value Stream Mapping (VSM): Eliminating the 7 Wastes (Mudas: Waiting, Transit, Overprocessing, Inventory, Defects, Motion, Overproduction), Takt Time, PCE ratio."
+triggers: ["process-waste-elimination-vsm", "vsm", "value-stream-mapping", "womack-jones", "7-wastes", "muda", "process-cycle-efficiency"]
+---
+
+# ba-process-waste-elimination-vsm
+> Based on **Lean Thinking - James P. Womack & Daniel T. Jones**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Process Cycle Efficiency (PCE): PCE = (Value-Add Time / Total Lead Time) * 100. Target: Increase PCE by eliminating waiting and transit mudas.**
+2. **Takt Time Pacing: Takt Time = Available Production Time / Customer Demand Rate.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Map process steps as Value-Added (VA), Business-Value-Added (BVA), or Non-Value-Added (NVA/Waste). Formulate redesigns to eliminate 100% of NVA waste.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Automating unnecessary non-value-added steps instead of removing them.**
+- **Measuring local sub-task speed while ignoring massive wait queues.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "process-waste-elimination-vsm"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 196. ba-torres-opportunity-solution-tree Skill
+pub fn ba_torres_opportunity_solution_tree() -> EccSkill {
+    EccSkill::new(
+        "ba-torres-opportunity-solution-tree",
+        "Opportunity Solution Trees (OST): Desired outcomes, opportunity space exploration, multiple solution candidates, and continuous assumption testing.",
+        r#"---
+name: ba-torres-opportunity-solution-tree
+description: "Opportunity Solution Trees (OST): Desired outcomes, opportunity space exploration, multiple solution candidates, and continuous assumption testing."
+triggers: ["torres-opportunity-solution-tree", "opportunity-solution-tree", "ost", "teresa-torres", "continuous-discovery", "assumption-testing"]
+---
+
+# ba-torres-opportunity-solution-tree
+> Based on **Continuous Discovery Habits - Teresa Torres**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **OST Tree Topology: Desired Business Outcome -> Customer Opportunities (Pain Points/Needs) -> Potential Solutions -> Assumption Tests.**
+2. **Never implement a Solution without testing at least 3 distinct Opportunity candidates.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Before writing code, map the Opportunity Solution Tree: Top Outcome -> 2-3 Opportunities -> 2-3 Solutions per Opportunity -> Assumption test cards.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Jumping straight from a metric to code without mapping the customer opportunity space.**
+- **Testing solutions as monolithic wholes instead of testing underlying assumptions.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "torres-opportunity-solution-tree"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 197. ba-cagan-four-product-risks Skill
+pub fn ba_cagan_four_product_risks() -> EccSkill {
+    EccSkill::new(
+        "ba-cagan-four-product-risks",
+        "The Four Big Product Risks: Value Risk (will they choose it?), Usability Risk (can they use it?), Feasibility Risk (can we build it?), and Business Viability Risk (compliance/finance/legal).",
+        r#"---
+name: ba-cagan-four-product-risks
+description: "The Four Big Product Risks: Value Risk (will they choose it?), Usability Risk (can they use it?), Feasibility Risk (can we build it?), and Business Viability Risk (compliance/finance/legal)."
+triggers: ["cagan-four-product-risks", "four-product-risks", "marty-cagan", "inspired", "value-risk", "viability-risk", "feasibility-risk"]
+---
+
+# ba-cagan-four-product-risks
+> Based on **Inspired: How to Create Tech Products Customers Love - Marty Cagan**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Four Big Risks Assessment: Before writing production code, explicitly validate: Value, Usability, Feasibility, and Business Viability.**
+2. **Feasibility vs Viability: AI solves feasibility quickly; the human analyst must rigorously police viability (statutory laws, privacy acts, security).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Audit every major feature against the 4 Risks: Value, Usability, Feasibility, and Business Viability (legal, compliance, financial, privacy).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Starting coding when only feasibility is understood while ignoring statutory viability risks.**
+- **Allowing AI to guess legal compliance rules.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "cagan-four-product-risks"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 198. ba-customer-journey-mapping Skill
+pub fn ba_customer_journey_mapping() -> EccSkill {
+    EccSkill::new(
+        "ba-customer-journey-mapping",
+        "Customer Journey Mapping: User personas, journey phases, touchpoints, emotional curves, pain point heatmaps, and moment-of-truth interventions.",
+        r#"---
+name: ba-customer-journey-mapping
+description: "Customer Journey Mapping: User personas, journey phases, touchpoints, emotional curves, pain point heatmaps, and moment-of-truth interventions."
+triggers: ["customer-journey-mapping", "journey-mapping", "jim-kalbach", "touchpoints", "customer-experience", "emotional-arc"]
+---
+
+# ba-customer-journey-mapping
+> Based on **Mapping Experiences (2nd Edition) - Jim Kalbach**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Touchpoint Completeness: Map all chronological touchpoints across Pre-service, In-service, and Post-service phases.**
+2. **Friction Score Quantifiability: Rate customer friction and emotional sentiment at each touchpoint to highlight critical drop-off cliffs.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Document the end-to-end customer journey: Persona, Phases, User Actions, Touchpoints, Emotional Sentiment (-5 to +5), Pain Points, Opportunities.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Mapping internal organization department handoffs instead of the user's actual external experience.**
+- **Ignoring the post-service follow-up phase.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "customer-journey-mapping"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 199. ba-jobs-to-be-done-jtbd Skill
+pub fn ba_jobs_to_be_done_jtbd() -> EccSkill {
+    EccSkill::new(
+        "ba-jobs-to-be-done-jtbd",
+        "Jobs to Be Done (JTBD) Theory: Customer progress models, Job Statements, Outcome-Driven Innovation, and the Four Forces of Progress (Push, Pull, Habit, Anxiety).",
+        r#"---
+name: ba-jobs-to-be-done-jtbd
+description: "Jobs to Be Done (JTBD) Theory: Customer progress models, Job Statements, Outcome-Driven Innovation, and the Four Forces of Progress (Push, Pull, Habit, Anxiety)."
+triggers: ["jobs-to-be-done-jtbd", "jtbd", "clayton-christensen", "anthony-ulwick", "job-story", "forces-of-progress", "outcome-driven-innovation"]
+---
+
+# ba-jobs-to-be-done-jtbd
+> Based on **Competing Against Chance - Clayton M. Christensen & Anthony Ulwick**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Job Statement Grammar: 'When [struggling situation/context], I want to [motivation/progress], so I can [desired outcome/transformation].'**
+2. **Forces of Progress Balance: A new solution is adopted only when (Push of current situation + Pull of new solution) > (Habit of current solution + Anxiety of new solution).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Format feature specifications as Job Stories: When [context], I want to [action], so I can [expected outcome]. Address Push, Pull, Habit, and Anxiety.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Defining products around user demographics rather than the functional/emotional Job to be Done.**
+- **Ignoring the friction of user Habits when introducing new software.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "jobs-to-be-done-jtbd"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 200. ba-assumption-mapping-experimentation Skill
+pub fn ba_assumption_mapping_experimentation() -> EccSkill {
+    EccSkill::new(
+        "ba-assumption-mapping-experimentation",
+        "Assumption Mapping & Experiment Design: The 2x2 Importance vs Evidence grid, riskiest assumption tests (RAT), prototype fidelity ladders, and experiment loops.",
+        r#"---
+name: ba-assumption-mapping-experimentation
+description: "Assumption Mapping & Experiment Design: The 2x2 Importance vs Evidence grid, riskiest assumption tests (RAT), prototype fidelity ladders, and experiment loops."
+triggers: ["assumption-mapping-experimentation", "assumption-mapping", "david-bland", "alex-osterwalder", "testing-business-ideas", "rat-riskiest-assumption"]
+---
+
+# ba-assumption-mapping-experimentation
+> Based on **Testing Business Ideas - David J. Bland & Alex Osterwalder**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Riskiest Assumption First (RAT): Only invest engineering resources in testing assumptions categorized in the top-right quadrant (High Importance, Low Evidence).**
+2. **Falsifiable Hypotheses: Experiments must define a pass/fail threshold before data collection starts.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Plot assumptions on a 2x2 grid (Importance vs Evidence). Design quick spikes or prototypes for High Importance / Low Evidence assumptions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Testing low-risk assumptions because they are easy to measure.**
+- **Moving forward with development after an experiment fails its pre-set benchmark.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "assumption-mapping-experimentation"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 201. ba-hoberman-data-modeling-resource Skill
+pub fn ba_hoberman_data_modeling_resource() -> EccSkill {
+    EccSkill::new(
+        "ba-hoberman-data-modeling-resource",
+        "Conceptual, Logical & Physical Data Modeling: Entity definitions, cardinalities, relational boundaries, data dictionaries, and ERD verification.",
+        r#"---
+name: ba-hoberman-data-modeling-resource
+description: "Conceptual, Logical & Physical Data Modeling: Entity definitions, cardinalities, relational boundaries, data dictionaries, and ERD verification."
+triggers: ["hoberman-data-modeling-resource", "steve-hoberman", "data-modeling", "conceptual-model", "logical-data-model", "erd-modeling"]
+---
+
+# ba-hoberman-data-modeling-resource
+> Based on **Data Modeling Made Simple (2nd Edition) - Steve Hoberman**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Three-Level Schema Architecture: Conceptual (Business entities) -> Logical (Attributes, normalized, keys) -> Physical (Data types, indexes, partitions).**
+2. **Cardinality Invariant: Every relationship between Entity A and Entity B must specify minimum and maximum cardinality (0..1, 1..1, 0..N, 1..N) on both ends.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model data at Conceptual, Logical, and Physical levels. Document all cardinalities (1:1, 1:N, M:N) and foreign key constraints in ERD diagrams.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Generating physical tables without first modeling conceptual entities and cardinalities.**
+- **Using many-to-many relationships without an explicit junction table.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "hoberman-data-modeling-resource"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 202. ba-relational-normalization-3nf Skill
+pub fn ba_relational_normalization_3nf() -> EccSkill {
+    EccSkill::new(
+        "ba-relational-normalization-3nf",
+        "Relational Normalization & Normal Forms: 1NF atomicity, 2NF partial key dependency elimination, 3NF transitive dependency elimination, and Boyce-Codd Normal Form (BCNF).",
+        r#"---
+name: ba-relational-normalization-3nf
+description: "Relational Normalization & Normal Forms: 1NF atomicity, 2NF partial key dependency elimination, 3NF transitive dependency elimination, and Boyce-Codd Normal Form (BCNF)."
+triggers: ["relational-normalization-3nf", "normalization", "3nf", "bcnf", "codd-date", "functional-dependencies", "database-normalization"]
+---
+
+# ba-relational-normalization-3nf
+> Based on **An Introduction to Database Systems - E.F. Codd & C.J. Date**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **First Normal Form (1NF): All attributes must be atomic; no repeating groups or serialized arrays in single columns.**
+2. **Second Normal Form (2NF): In 1NF and every non-key attribute is fully functionally dependent on the entire primary key.**
+3. **Third Normal Form (3NF): In 2NF and no non-key attribute is transitively dependent on the primary key.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Verify all relational tables comply with 3NF/BCNF. Decompose partial and transitive dependencies into normalized child tables.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Storing comma-separated lists or unstructured JSON in relational columns requiring query filtering.**
+- **Premature denormalization before establishing baseline 3NF.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "relational-normalization-3nf"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 203. ba-cardinality-erd-relationship-rules Skill
+pub fn ba_cardinality_erd_relationship_rules() -> EccSkill {
+    EccSkill::new(
+        "ba-cardinality-erd-relationship-rules",
+        "Entity Relationship Modeling & Crow's Foot Notation: Relationship mandatory vs optional participation, foreign key constraints, and cascading integrity rules.",
+        r#"---
+name: ba-cardinality-erd-relationship-rules
+description: "Entity Relationship Modeling & Crow's Foot Notation: Relationship mandatory vs optional participation, foreign key constraints, and cascading integrity rules."
+triggers: ["cardinality-erd-relationship-rules", "crows-foot", "richard-barker", "peter-chen", "cardinality-rules", "referential-integrity"]
+---
+
+# ba-cardinality-erd-relationship-rules
+> Based on **CASE*Method: Entity Relationship Modelling - Peter Chen & Richard Barker**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Participation Invariant: Explicitly determine whether foreign keys are nullable (optional, 0..1) or NOT NULL (mandatory, 1..1).**
+2. **Referential Integrity Cascades: Every foreign key must specify explicit `ON DELETE` behavior (`RESTRICT`, `CASCADE`, `SET NULL`).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Draw ER diagrams with strict Crow's Foot notation. Explicitly annotate nullability, unique constraints, and foreign key cascade behaviors.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Defaulting foreign keys to nullable without business justification.**
+- **Omitting foreign key indexes, causing slow table-scan joins.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "cardinality-erd-relationship-rules"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 204. ba-temporal-bitemporal-data-patterns Skill
+pub fn ba_temporal_bitemporal_data_patterns() -> EccSkill {
+    EccSkill::new(
+        "ba-temporal-bitemporal-data-patterns",
+        "Bitemporal Data Modeling: Valid Time (business reality) vs Transaction Time (system audit record), immutable append-only ledgers, and point-in-time state reconstruction.",
+        r#"---
+name: ba-temporal-bitemporal-data-patterns
+description: "Bitemporal Data Modeling: Valid Time (business reality) vs Transaction Time (system audit record), immutable append-only ledgers, and point-in-time state reconstruction."
+triggers: ["temporal-bitemporal-data-patterns", "bitemporal", "snodgrass", "valid-time", "transaction-time", "temporal-database", "audit-immutability"]
+---
+
+# ba-temporal-bitemporal-data-patterns
+> Based on **Developing Time-Oriented Database Applications in SQL - Richard T. Snodgrass**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Bitemporal Invariant: Distinguish Valid Time [vt_start, vt_end] (when fact was true in real world) from Transaction Time [tt_start, tt_end] (when recorded in database).**
+2. **Immutability of History: Never execute destructive SQL `UPDATE` or `DELETE` on financial or statutory tables; append new temporal records.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model temporal records with `valid_from`, `valid_to`, `recorded_at`, and `recorded_by`. Use temporal ranges for point-in-time reconstruction.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Overwriting previous historical data, destroying legal audit trails.**
+- **Conflating database system insertion timestamp with the real-world business event date.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "temporal-bitemporal-data-patterns"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 205. ba-data-dictionary-master-metadata Skill
+pub fn ba_data_dictionary_master_metadata() -> EccSkill {
+    EccSkill::new(
+        "ba-data-dictionary-master-metadata",
+        "Data Dictionary & Enterprise Metadata Standards: Data element definitions, ISO 11179 naming conventions, permitted domain values, nullability, and single sources of truth.",
+        r#"---
+name: ba-data-dictionary-master-metadata
+description: "Data Dictionary & Enterprise Metadata Standards: Data element definitions, ISO 11179 naming conventions, permitted domain values, nullability, and single sources of truth."
+triggers: ["data-dictionary-master-metadata", "data-dictionary", "dmbok", "iso-11179", "metadata-standards", "canonical-data-dictionary"]
+---
+
+# ba-data-dictionary-master-metadata
+> Based on **DAMA-DMBOK2 & ISO/IEC 11179 - Data Management Association**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Data Element Standard: Name, Definition, Data Type, Precision, Valid Values Domain, Mandatory/Optional, Source of Record.**
+2. **Canonical Single Definition: Each enterprise business element must have exactly one authoritative data definition shared across all systems.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Maintain a project DATA_DICTIONARY.md defining every column, data type, allowed enum values, nullability, and business rule constraints.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Leaving column names cryptic or undocumented (e.g. `c_stat_cd`).**
+- **Allowing conflicting data types for the same concept across different tables.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "data-dictionary-master-metadata"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 206. ba-ross-business-rule-manifesto Skill
+pub fn ba_ross_business_rule_manifesto() -> EccSkill {
+    EccSkill::new(
+        "ba-ross-business-rule-manifesto",
+        "Declarative Business Rules & RuleSpeak Grammar: Rules as first-class citizens, separating logic from procedural code, structural vs behavioral rules, and atomic invariants.",
+        r#"---
+name: ba-ross-business-rule-manifesto
+description: "Declarative Business Rules & RuleSpeak Grammar: Rules as first-class citizens, separating logic from procedural code, structural vs behavioral rules, and atomic invariants."
+triggers: ["ross-business-rule-manifesto", "rulespeak", "business-rule-manifesto", "ronald-ross", "declarative-rules", "policy-rules"]
+---
+
+# ba-ross-business-rule-manifesto
+> Based on **The Business Rules Manifesto & RuleSpeak - Ronald G. Ross**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Rule Independence: Business rules must be stated declaratively and exist independently of the procedures, screens, or workflows that enforce them.**
+2. **RuleSpeak Grammar: 'It is mandatory that [condition]' or 'It is prohibited that [condition]' or 'A [concept] must [constraint]'.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+State all business rules using RuleSpeak declarative syntax. Separate business policy logic from user interface workflows.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Burying business rules in UI click handlers or database triggers.**
+- **Writing procedural step-by-step rules instead of declarative invariants.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "ross-business-rule-manifesto"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 207. ba-dmn-decision-table-completeness Skill
+pub fn ba_dmn_decision_table_completeness() -> EccSkill {
+    EccSkill::new(
+        "ba-dmn-decision-table-completeness",
+        "Decision Model and Notation (DMN 1.3/1.4): Decision table Hit Policies (Unique, First, Priority, Any, Collect), completeness checking, and non-overlapping input domains.",
+        r#"---
+name: ba-dmn-decision-table-completeness
+description: "Decision Model and Notation (DMN 1.3/1.4): Decision table Hit Policies (Unique, First, Priority, Any, Collect), completeness checking, and non-overlapping input domains."
+triggers: ["dmn-decision-table-completeness", "dmn", "decision-table", "hit-policy", "bruce-silver-dmn", "completeness-checking"]
+---
+
+# ba-dmn-decision-table-completeness
+> Based on **DMN Method and Style (2nd Edition) - Bruce Silver**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Completeness & Non-Overlap (Hit Policy U): For every possible combination of inputs, exactly one rule evaluates to true.**
+2. **Catch-all Fallback: Every decision table must have an explicit default rule to handle edge-case inputs safely.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Structure complex multi-condition logic into DMN Decision Tables: Hit Policy (U/F/C), Input Clauses, Output Clauses, Rule Rows.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Overlapping rule conditions in Hit Policy Unique tables.**
+- **Leaving numerical boundary gaps where inputs match zero rules.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "dmn-decision-table-completeness"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 208. ba-drd-decision-requirements-diagrams Skill
+pub fn ba_drd_decision_requirements_diagrams() -> EccSkill {
+    EccSkill::new(
+        "ba-drd-decision-requirements-diagrams",
+        "Decision Requirements Diagrams (DRD): Decision nodes, Input Data nodes, Business Knowledge Models (BKMs), Knowledge Sources, and decision decomposition.",
+        r#"---
+name: ba-drd-decision-requirements-diagrams
+description: "Decision Requirements Diagrams (DRD): Decision nodes, Input Data nodes, Business Knowledge Models (BKMs), Knowledge Sources, and decision decomposition."
+triggers: ["drd-decision-requirements-diagrams", "drd", "decision-requirements-diagram", "bkm", "business-knowledge-models", "dmn-decomposition"]
+---
+
+# ba-drd-decision-requirements-diagrams
+> Based on **Decision Model and Notation (DMN 1.5) - OMG Standard**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **DRD Hierarchy: High-level decisions decompose into sub-decisions, input data, and reusable Business Knowledge Models (BKMs).**
+2. **Process-Decision Separation: BPMN process tasks invoke DMN decision services via clean input/output interfaces.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model complex decision systems as a DRD: Link Input Data -> Sub-decisions -> Final Decision, externalizing calculations into BKMs.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Writing monolithic 500-line decision scripts without decomposing into sub-decisions.**
+- **Mixing procedural workflow routing with business calculation logic.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "drd-decision-requirements-diagrams"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 209. ba-feel-expression-language Skill
+pub fn ba_feel_expression_language() -> EccSkill {
+    EccSkill::new(
+        "ba-feel-expression-language",
+        "FEEL Expression Language: Strongly-typed expressions, numerical intervals ([a..b], (a..b)), disjunctions, temporal dates/durations, and null-safe navigations.",
+        r#"---
+name: ba-feel-expression-language
+description: "FEEL Expression Language: Strongly-typed expressions, numerical intervals ([a..b], (a..b)), disjunctions, temporal dates/durations, and null-safe navigations."
+triggers: ["feel-expression-language", "feel", "dmn-feel", "friendly-enough-expression-language", "dmn-expressions", "range-syntax"]
+---
+
+# ba-feel-expression-language
+> Based on **Friendly Enough Expression Language (FEEL) - OMG DMN Standard**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **FEEL Type Safety: Strongly typed expressions supporting numbers, strings, booleans, dates, times, durations, and lists.**
+2. **Interval Semantics: `[a..b]` (inclusive), `(a..b)` (exclusive), `[a..b)` (inclusive-exclusive), `> x`, `<= y`.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Use standard FEEL expressions for all rule conditions: Numerical intervals ([100..500]), list memberships, date comparisons.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using language-specific scripting expressions (e.g. JavaScript eval) inside business rules.**
+- **Failing to account for NULL or undefined inputs in FEEL logic.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "feel-expression-language"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 210. ba-decision-table-verification-solver Skill
+pub fn ba_decision_table_verification_solver() -> EccSkill {
+    EccSkill::new(
+        "ba-decision-table-verification-solver",
+        "Automated Decision Table Verification: SAT/SMT solver principles, detecting rule overlap, finding completeness gaps, and shadowed rule elimination.",
+        r#"---
+name: ba-decision-table-verification-solver
+description: "Automated Decision Table Verification: SAT/SMT solver principles, detecting rule overlap, finding completeness gaps, and shadowed rule elimination."
+triggers: ["decision-table-verification-solver", "decision-table-solver", "rule-overlap-detection", "shadowed-rules", "formal-verification", "sat-solver"]
+---
+
+# ba-decision-table-verification-solver
+> Based on **Formal Logic & Automated Decision Verification - Silver, Taylor, Ross**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Overlap Detection: Prohibit any two rules in a Unique hit policy table from both evaluating to true for the same input vector.**
+2. **Shadowed Rule Elimination: Flag and eliminate any rule whose conditions are a strict subset of an earlier rule that takes precedence.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Run automated SAT/solver checks on decision tables: Verify zero rule overlaps, zero completeness gaps, and zero shadowed rules.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Deploying decision tables that contain dead rules shadowed by earlier catch-all rows.**
+- **Manual eyeball review of tables with > 10 input variables.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "decision-table-verification-solver"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 211. ba-meadows-systems-thinking-leverage Skill
+pub fn ba_meadows_systems_thinking_leverage() -> EccSkill {
+    EccSkill::new(
+        "ba-meadows-systems-thinking-leverage",
+        "Systems Thinking & Dynamic Stocks and Flows: Stocks, inflows, outflows, balancing/reinforcing feedback loops, system delays, and the 12 leverage points.",
+        r#"---
+name: ba-meadows-systems-thinking-leverage
+description: "Systems Thinking & Dynamic Stocks and Flows: Stocks, inflows, outflows, balancing/reinforcing feedback loops, system delays, and the 12 leverage points."
+triggers: ["meadows-systems-thinking-leverage", "systems-thinking", "donella-meadows", "stocks-and-flows", "feedback-loops", "leverage-points", "system-delays"]
+---
+
+# ba-meadows-systems-thinking-leverage
+> Based on **Thinking in Systems: A Primer - Donella H. Meadows**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Stock and Flow Conservation: dS/dt = Inflow(t) - Outflow(t). A stock can only change through its inflows and outflows.**
+2. **Leverage Hierarchy: Parameter changes have the lowest leverage; shifting system goals, rules, and mindsets has the highest systemic leverage.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Analyze problem domains as dynamic systems: Define Stocks (accumulations), Inflows, Outflows, Delays, and Feedback Loops.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Treating symptoms by modifying surface parameters while ignoring broken system feedback loops.**
+- **Ignoring delays and over-correcting system controls.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "meadows-systems-thinking-leverage"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 212. ba-causal-loop-diagrams-archetypes Skill
+pub fn ba_causal_loop_diagrams_archetypes() -> EccSkill {
+    EccSkill::new(
+        "ba-causal-loop-diagrams-archetypes",
+        "Causal Loop Diagrams (CLD) & Systems Archetypes: Reinforcing loops (R), Balancing loops (B), delays, and canonical archetypes (Fixes that Fail, Shifting the Burden, Limits to Growth).",
+        r#"---
+name: ba-causal-loop-diagrams-archetypes
+description: "Causal Loop Diagrams (CLD) & Systems Archetypes: Reinforcing loops (R), Balancing loops (B), delays, and canonical archetypes (Fixes that Fail, Shifting the Burden, Limits to Growth)."
+triggers: ["causal-loop-diagrams-archetypes", "causal-loop-diagram", "peter-senge", "systems-archetypes", "fixes-that-fail", "shifting-the-burden"]
+---
+
+# ba-causal-loop-diagrams-archetypes
+> Based on **The Fifth Discipline: The Art & Practice of the Learning Organization - Peter Senge**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Loop Polarity Multiplication: An even number of negative (-) links creates a Reinforcing loop; an odd number of negative (-) links creates a Balancing loop.**
+2. **Archetype Recognition: Identify systemic traps before writing software (e.g. Fixes that Fail: short-term fix worsens underlying problem).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Draw Causal Loop Diagrams (CLD) showing variables, causal links (+/-), delays, and system archetypes (Fixes that Fail, Shifting the Burden).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Implementing quick patches that trigger delayed negative unintended side-effects.**
+- **Confusing correlation with causal feedback polarity.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "causal-loop-diagrams-archetypes"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 213. ba-galls-law-system-evolution Skill
+pub fn ba_galls_law_system_evolution() -> EccSkill {
+    EccSkill::new(
+        "ba-galls-law-system-evolution",
+        "Gall's Law & Complex System Evolution: How complex systems evolve from simple working systems, failure modes of premature complexity, and the functional core.",
+        r#"---
+name: ba-galls-law-system-evolution
+description: "Gall's Law & Complex System Evolution: How complex systems evolve from simple working systems, failure modes of premature complexity, and the functional core."
+triggers: ["galls-law-system-evolution", "galls-law", "john-gall", "systemantics", "evolutionary-architecture", "functional-core"]
+---
+
+# ba-galls-law-system-evolution
+> Based on **The Systems Bible (Systemantics) - John Gall**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Gall's Law: 'A complex system that works is invariably found to have evolved from a simple system that worked. A complex system designed from scratch never works and cannot be made to work.'**
+2. **Incremental Complexity Invariant: Never prompt an AI agent to build a multi-tier distributed system in one step; evolve from a verified simple working core.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Enforce Gall's Law: Phase 1: Build minimal working core in-memory; Phase 2: Add persistence; Phase 3: Add rules/auth; Phase 4: Add distributed scaling.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Scaffolding microservices, queues, and distributed consensus before verifying the core domain logic.**
+- **Trying to fix an unworking complex system with more complexity.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "galls-law-system-evolution"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 214. ba-wardley-mapping-strategic-landscape Skill
+pub fn ba_wardley_mapping_strategic_landscape() -> EccSkill {
+    EccSkill::new(
+        "ba-wardley-mapping-strategic-landscape",
+        "Wardley Mapping & Strategic Value Chains: Anchor customer need, Value Chain positioning, Evolution axis (Genesis -> Custom-Built -> Product/Rental -> Commodity/Utility).",
+        r#"---
+name: ba-wardley-mapping-strategic-landscape
+description: "Wardley Mapping & Strategic Value Chains: Anchor customer need, Value Chain positioning, Evolution axis (Genesis -> Custom-Built -> Product/Rental -> Commodity/Utility)."
+triggers: ["wardley-mapping-strategic-landscape", "wardley-maps", "simon-wardley", "value-chain", "evolution-axis", "strategic-mapping"]
+---
+
+# ba-wardley-mapping-strategic-landscape
+> Based on **Wardley Maps: Topographical Intelligence in Business - Simon Wardley**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Evolution Axis Monotonicity: Components inevitably evolve from Genesis -> Custom -> Product -> Commodity over time under competitive pressure.**
+2. **Value Chain Positioning: Components higher on the Y-axis are visible to the user; components lower down are invisible infrastructure dependencies.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Map system components on a Wardley Map: Y-axis (User Visibility), X-axis (Evolution: Genesis, Custom, Product, Commodity). Outsource commodity layers.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Custom-building components that already exist as commodities.**
+- **Treating custom-built proprietary software as if it were a stable commodity.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "wardley-mapping-strategic-landscape"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 215. ba-cynefin-framework-decision-making Skill
+pub fn ba_cynefin_framework_decision_making() -> EccSkill {
+    EccSkill::new(
+        "ba-cynefin-framework-decision-making",
+        "The Cynefin Sense-Making Framework: Classifying contexts into Clear (Best practice), Complicated (Good practice), Complex (Emergent practice), and Chaotic (Novel practice).",
+        r#"---
+name: ba-cynefin-framework-decision-making
+description: "The Cynefin Sense-Making Framework: Classifying contexts into Clear (Best practice), Complicated (Good practice), Complex (Emergent practice), and Chaotic (Novel practice)."
+triggers: ["cynefin-framework-decision-making", "cynefin", "dave-snowden", "sense-making", "complex-adaptive-systems", "decision-framework"]
+---
+
+# ba-cynefin-framework-decision-making
+> Based on **The Cynefin Framework - Dave Snowden**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Domain Categorization: Clear (Sense-Categorize-Respond), Complicated (Sense-Analyze-Respond), Complex (Probe-Sense-Respond), Chaotic (Act-Sense-Respond).**
+2. **Probe-Sense-Respond in Complex Domains: In complex user spaces, conduct small safe-to-fail experiments rather than over-analyzing.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Classify project requirements into Cynefin domains. Use standard templates for Clear; analysis for Complicated; safe-to-fail probes for Complex.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Applying rigid 'best practices' to complex emergent problems.**
+- **Over-analyzing chaotic situations instead of acting to stabilize flow.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "cynefin-framework-decision-making"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 216. ba-cooper-goal-directed-design Skill
+pub fn ba_cooper_goal_directed_design() -> EccSkill {
+    EccSkill::new(
+        "ba-cooper-goal-directed-design",
+        "Goal-Directed Interaction Design: User mental models vs implementation models, personas, software posture (sovereign, transient, daemonic), flow, and state preservation.",
+        r#"---
+name: ba-cooper-goal-directed-design
+description: "Goal-Directed Interaction Design: User mental models vs implementation models, personas, software posture (sovereign, transient, daemonic), flow, and state preservation."
+triggers: ["cooper-goal-directed-design", "about-face", "alan-cooper", "goal-directed-design", "mental-models", "software-posture", "interaction-design"]
+---
+
+# ba-cooper-goal-directed-design
+> Based on **About Face: The Essentials of Interaction Design (4th Edition) - Alan Cooper et al.**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Mental Model Invariant: The user interface must reflect the user's mental model of their work, NEVER the underlying database implementation model.**
+2. **Posture Alignment: Sovereign applications must maximize screen density, keyboard shortcuts, and flow; Transient applications must prioritize instant comprehension.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design UI flows aligned with user mental models. Never expose database IDs or stack traces. Tailor screen layout to application posture.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Exposing internal database schemas directly as form fields.**
+- **Interrupting user flow with unnecessary modal dialogs.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "cooper-goal-directed-design"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 217. ba-norman-affordance-signifiers Skill
+pub fn ba_norman_affordance_signifiers() -> EccSkill {
+    EccSkill::new(
+        "ba-norman-affordance-signifiers",
+        "Design Psychology & Norman Principles: Affordances, signifiers, constraints (physical, cultural, semantic, logical), mappings, feedback, and bridging Gulf of Execution/Evaluation.",
+        r#"---
+name: ba-norman-affordance-signifiers
+description: "Design Psychology & Norman Principles: Affordances, signifiers, constraints (physical, cultural, semantic, logical), mappings, feedback, and bridging Gulf of Execution/Evaluation."
+triggers: ["norman-affordance-signifiers", "don-norman", "design-of-everyday-things", "affordances", "signifiers", "gulf-of-execution", "immediate-feedback"]
+---
+
+# ba-norman-affordance-signifiers
+> Based on **The Design of Everyday Things - Don Norman**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Signifier Invariant: Interactive elements must have clear visual signifiers indicating where and how to interact.**
+2. **100ms Feedback Rule: The system must provide perceptible feedback for every user action within 100 milliseconds.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Provide visual signifiers for all clickable elements. Deliver state feedback within 100ms. Enforce natural mappings between controls and effects.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Designing clickable buttons that look like static text.**
+- **Performing async operations without giving the user loading indicators.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "norman-affordance-signifiers"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 218. ba-johnson-gui-bloopers-heuristics Skill
+pub fn ba_johnson_gui_bloopers_heuristics() -> EccSkill {
+    EccSkill::new(
+        "ba-johnson-gui-bloopers-heuristics",
+        "Cognitive Usability & GUI Blooper Prevention: Reducing cognitive load, Hick's Law, Fitts's Law, Nielsen's 10 heuristics, and error prevention.",
+        r#"---
+name: ba-johnson-gui-bloopers-heuristics
+description: "Cognitive Usability & GUI Blooper Prevention: Reducing cognitive load, Hick's Law, Fitts's Law, Nielsen's 10 heuristics, and error prevention."
+triggers: ["johnson-gui-bloopers-heuristics", "gui-bloopers", "jeff-johnson", "usability-heuristics", "nielsen-heuristics", "cognitive-load", "hicks-law"]
+---
+
+# ba-johnson-gui-bloopers-heuristics
+> Based on **GUI Bloopers 2.0 & Usability Heuristics - Jeff Johnson & Jakob Nielsen**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Hick's Law: Decision time increases logarithmically with the number and complexity of choices. Group and minimize choices.**
+2. **Error Prevention: Design interfaces to make errors impossible (e.g. disabling invalid options, date pickers) rather than relying on error dialogs.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Audit UI against Nielsen heuristics and Johnson bloopers: Eliminate cognitive clutter, minimize choice counts, and prevent errors through constraints.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Presenting 30 unsorted options in a dropdown.**
+- **Blaming the user with accusatory error messages when validation fails.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "johnson-gui-bloopers-heuristics"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 219. ba-crud-form-functional-specifications Skill
+pub fn ba_crud_form_functional_specifications() -> EccSkill {
+    EccSkill::new(
+        "ba-crud-form-functional-specifications",
+        "Functional Form Specifications & State Machines: Form FSM (Pristine, Dirty, Validating, Submitting, Submitted, Error), optimistic UI, inline validation, dirty tracking.",
+        r#"---
+name: ba-crud-form-functional-specifications
+description: "Functional Form Specifications & State Machines: Form FSM (Pristine, Dirty, Validating, Submitting, Submitted, Error), optimistic UI, inline validation, dirty tracking."
+triggers: ["crud-form-functional-specifications", "form-design", "luke-wroblewski", "form-state-machine", "dirty-tracking", "double-submit-protection"]
+---
+
+# ba-crud-form-functional-specifications
+> Based on **Web Form Design: Filling in the Blanks - Luke Wroblewski**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Double-Submit Protection: While form state is `Submitting`, disable submit buttons and reject duplicate requests.**
+2. **Dirty Navigation Guard: If form state is `Dirty` and user navigates away, prompt confirmation to prevent data loss.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement complete Form FSM: Pristine -> Dirty -> Validating -> Submitting -> Submitted / Error. Provide inline validation and dirty navigation guards.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Allowing double-clicks on submit buttons that fire duplicate API requests.**
+- **Silently discarding user form inputs when navigating away.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "crud-form-functional-specifications"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}
+
+/// 220. ba-information-architecture-wireflow Skill
+pub fn ba_information_architecture_wireflow() -> EccSkill {
+    EccSkill::new(
+        "ba-information-architecture-wireflow",
+        "Information Architecture & Wireflow Modeling: The 5 Planes (Strategy, Scope, Structure, Skeleton, Surface), Wireflows (wireframe + state machine transition diagram).",
+        r#"---
+name: ba-information-architecture-wireflow
+description: "Information Architecture & Wireflow Modeling: The 5 Planes (Strategy, Scope, Structure, Skeleton, Surface), Wireflows (wireframe + state machine transition diagram)."
+triggers: ["information-architecture-wireflow", "wireflow", "information-architecture", "jesse-james-garrett", "5-planes", "screen-state-flow"]
+---
+
+# ba-information-architecture-wireflow
+> Based on **The Elements of User Experience - Jesse James Garrett**
+
+## 1. Core Mathematical Foundations & Formal Analysis Invariants
+
+1. **Wireflow Graph Completeness: Every screen wireframe must define entry transitions, exit transitions, empty states, loading skeletons, and error toasts.**
+2. **Navigational Hierarchy: Users must always know where they are, where they can go, and how to get back to home in <= 3 clicks.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model UI as a Wireflow Graph: Connect screen wireframes with state transition arrows. Specify Empty, Loading, and Error states for every screen.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Designing static wireframes without documenting screen transition triggers.**
+- **Forgetting empty states for screens before data is populated.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "information-architecture-wireflow"
+
+# Execute automated functional audit
+cargo test --test ba_skills_brutal_tests
+```
+"#,
+    )
+}

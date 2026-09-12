@@ -676,6 +676,70 @@ impl ToolHandler for SearchSkillsTool {
 }
 
 // =========================================================================
+// 8b. FetchSkillTool
+// =========================================================================
+
+/// Tool that retrieves full specification, directives, and verification checklists for a specific skill
+#[derive(Clone, Default)]
+pub struct FetchSkillTool {
+    dispatcher: Option<Arc<crate::ecc::skills::SkillDispatcher>>,
+}
+
+impl FetchSkillTool {
+    pub fn new(dispatcher: Arc<crate::ecc::skills::SkillDispatcher>) -> Self {
+        Self {
+            dispatcher: Some(dispatcher),
+        }
+    }
+
+    pub fn with_default() -> Self {
+        Self { dispatcher: None }
+    }
+}
+
+#[async_trait]
+impl ToolHandler for FetchSkillTool {
+    fn name(&self) -> &'static str {
+        "fetch_skill"
+    }
+
+    fn description(&self) -> &'static str {
+        "Retrieve the complete specification, operational directives, invariant rules, and verification checklists for a specific engineering skill from the ECC catalog by exact or partial name."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The exact or partial skill name to fetch (e.g., 'ba-state-machine-lifecycle-modeling', 'security-review', 'tokio-async-tuning')."
+                }
+            },
+            "required": ["name"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let name = arguments
+            .get("name")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'name'".to_string()))?;
+
+        let spec = if let Some(ref disp) = self.dispatcher {
+            disp.get_skill_spec(name)
+        } else {
+            crate::ecc::skills::global_dispatcher().get_skill_spec(name)
+        };
+
+        match spec {
+            Some(content) => Ok(content),
+            None => Ok(format!("Skill '{}' not found in ECC catalog. Use 'search_skills' to discover available skills.", name)),
+        }
+    }
+}
+
+// =========================================================================
 // Math Expression Parser & Evaluator (Pratt / Recursive Descent)
 // =========================================================================
 

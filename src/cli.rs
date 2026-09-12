@@ -5,8 +5,8 @@ use std::env;
 use std::io::Write;
 use std::sync::Arc;
 use crate::{
-    all_ecc_presets, all_ecc_skills, build_ecc_pipeline, load_ecc_agents_from_dir,
-    load_ecc_skills_from_dir, resolve_ecc_agent, resolve_ecc_skill,
+    all_ecc_presets, build_ecc_pipeline, load_ecc_agents_from_dir,
+    resolve_ecc_agent, resolve_ecc_skill,
     AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, CollaborationStrategy,
     CompletionRequest, ContentBlock, DagScheduler, DialecticalDebateStrategy, EccAuditDebate,
     EngineContext, GeminiProvider, LlmProvider, MixtureOfAgentsStrategy, OllamaProvider,
@@ -2021,12 +2021,24 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         return Ok(());
                     }
 
+                    let custom_path = dir
+                        .map(std::path::PathBuf::from)
+                        .unwrap_or_else(|| std::path::PathBuf::from(".ecc/skills"));
+
+                    let custom_dispatcher;
+                    let dispatcher = if custom_path.exists() && custom_path != std::path::Path::new(".ecc/skills") {
+                        custom_dispatcher = crate::ecc::skills::SkillDispatcher::load_or_build(Some(&custom_path));
+                        &custom_dispatcher
+                    } else {
+                        crate::ecc::skills::global_dispatcher()
+                    };
+
                     println!("{}", "=========================================================".cyan());
                     println!("{}", "  📚  ECC (Everything Coding Cloud) Skills Catalog".bold().yellow());
                     println!("{}", "=========================================================".cyan());
                     println!("\n{}", "Built-in Standard ECC Skills:".bold());
 
-                    for skill in all_ecc_skills() {
+                    for skill in dispatcher.skills().iter().filter(|s| s.is_builtin) {
                         println!(
                             "  [•] {:<22} -> {}",
                             skill.name.green().bold(),
@@ -2034,13 +2046,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         );
                     }
 
-                    let custom_path = dir
-                        .map(std::path::PathBuf::from)
-                        .unwrap_or_else(|| std::path::PathBuf::from(".ecc/skills"));
-
                     if custom_path.exists() {
                         println!("\n{}", format!("Discovered Skills in '{}':", custom_path.display()).bold());
-                        let custom_skills = load_ecc_skills_from_dir(&custom_path);
+                        let custom_skills: Vec<_> = dispatcher.skills().iter().filter(|s| !s.is_builtin).collect();
                         if custom_skills.is_empty() {
                             println!("  (No skill files found)");
                         } else {
@@ -3249,15 +3257,17 @@ async fn handle_stream_command(
 
     if should_inject_skills {
         let dispatcher = crate::ecc::skills::global_dispatcher();
-        let (equipped_text, injected_skills) = dispatcher.equip_prompt_for_provider(
+        let (equipped_text, injected_skills, budget) = dispatcher.equip_prompt_maximized(
             "",
             &prompt,
             &provider_id,
+            Some(&model_name),
             skill.as_deref(),
+            None,
+            None,
         );
 
         if !injected_skills.is_empty() {
-            let is_local = crate::ecc::skills::SkillDispatcher::is_local_provider(&provider_id);
             let caps = prov.capabilities(&model_name);
 
             if caps.contains(crate::types::ProviderCapabilities::SYSTEM_PROMPT) {
@@ -3266,20 +3276,23 @@ async fn handle_stream_command(
                 effective_prompt = format!("{}\n\n{}", equipped_text, prompt);
             }
 
-            let mode_badge = if is_local {
-                "Local Cheat-Sheet (<1k tokens)".cyan().bold()
-            } else {
-                "Cloud Comprehensive Specification".magenta().bold()
+            let mode_badge = match budget.mode {
+                crate::ecc::InjectionMode::DenseInvariants => "Dense Invariants DSL (<1.2k tokens)".cyan().bold(),
+                crate::ecc::InjectionMode::Hierarchical => "Hierarchical Multi-Tier Architecture".blue().bold(),
+                crate::ecc::InjectionMode::Comprehensive => "Cloud Comprehensive Specification".magenta().bold(),
+                crate::ecc::InjectionMode::CheatSheet => "Local Cheat-Sheet (<1k tokens)".cyan().bold(),
             };
             let skill_names: Vec<String> = injected_skills
                 .iter()
                 .map(|s| format!("{} ({:.1})", s.skill.name, s.score))
                 .collect();
             println!(
-                "{} [{}] Injected {} skill(s) -> [{}]\n",
+                "{} [{}] Injected {} skill(s) [Budget: ~{} tokens / {}k ctx] -> [{}]\n",
                 "⚡ Dynamic Skills:".bold().yellow(),
                 mode_badge,
                 injected_skills.len(),
+                budget.max_tokens,
+                budget.context_window / 1000,
                 skill_names.join(", ").green()
             );
         }
@@ -3400,15 +3413,17 @@ async fn handle_ask_command(
 
     if should_inject_skills {
         let dispatcher = crate::ecc::skills::global_dispatcher();
-        let (equipped_text, injected_skills) = dispatcher.equip_prompt_for_provider(
+        let (equipped_text, injected_skills, budget) = dispatcher.equip_prompt_maximized(
             "",
             &prompt,
             &provider_id,
+            Some(&model_name),
             skill.as_deref(),
+            None,
+            None,
         );
 
         if !injected_skills.is_empty() {
-            let is_local = crate::ecc::skills::SkillDispatcher::is_local_provider(&provider_id);
             let caps = prov.capabilities(&model_name);
 
             if caps.contains(crate::types::ProviderCapabilities::SYSTEM_PROMPT) {
@@ -3417,20 +3432,23 @@ async fn handle_ask_command(
                 effective_prompt = format!("{}\n\n{}", equipped_text, prompt);
             }
 
-            let mode_badge = if is_local {
-                "Local Cheat-Sheet (<1k tokens)".cyan().bold()
-            } else {
-                "Cloud Comprehensive Specification".magenta().bold()
+            let mode_badge = match budget.mode {
+                crate::ecc::InjectionMode::DenseInvariants => "Dense Invariants DSL (<1.2k tokens)".cyan().bold(),
+                crate::ecc::InjectionMode::Hierarchical => "Hierarchical Multi-Tier Architecture".blue().bold(),
+                crate::ecc::InjectionMode::Comprehensive => "Cloud Comprehensive Specification".magenta().bold(),
+                crate::ecc::InjectionMode::CheatSheet => "Local Cheat-Sheet (<1k tokens)".cyan().bold(),
             };
             let skill_names: Vec<String> = injected_skills
                 .iter()
                 .map(|s| format!("{} ({:.1})", s.skill.name, s.score))
                 .collect();
             println!(
-                "{} [{}] Injected {} skill(s) -> [{}]\n",
+                "{} [{}] Injected {} skill(s) [Budget: ~{} tokens / {}k ctx] -> [{}]\n",
                 "⚡ Dynamic Skills:".bold().yellow(),
                 mode_badge,
                 injected_skills.len(),
+                budget.max_tokens,
+                budget.context_window / 1000,
                 skill_names.join(", ").green()
             );
         }

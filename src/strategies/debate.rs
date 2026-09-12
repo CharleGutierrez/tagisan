@@ -55,11 +55,12 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
         );
 
         let dispatcher = crate::ecc::skills::global_dispatcher();
-        let (thesis_prompt, _) = dispatcher.equip_prompt_for_provider(
+        let (thesis_prompt, _) = dispatcher.equip_prompt_for_provider_with_bias(
             &thesis_prompt,
             &input.prompt,
             p_provider_id,
             None,
+            Some("ba"),
         );
 
         let mut thesis_req = CompletionRequest::new(p_model.clone(), thesis_prompt)
@@ -105,11 +106,12 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
         );
 
         let adversary_query = format!("{} critique verification testing edge cases security", input.prompt);
-        let (antithesis_prompt, _) = dispatcher.equip_prompt_for_provider(
+        let (antithesis_prompt, _) = dispatcher.equip_prompt_for_provider_with_bias(
             &antithesis_prompt,
             &adversary_query,
             a_provider_id,
             None,
+            Some("security"),
         );
 
         let mut antithesis_req = CompletionRequest::new(a_model.clone(), antithesis_prompt)
@@ -158,11 +160,12 @@ impl CollaborationStrategy for DialecticalDebateStrategy {
         );
 
         let synthesis_query = format!("{} software architecture design synthesis reconciliation", input.prompt);
-        let (synthesis_prompt, _) = dispatcher.equip_prompt_for_provider(
+        let (synthesis_prompt, _) = dispatcher.equip_prompt_for_provider_with_bias(
             &synthesis_prompt,
             &synthesis_query,
             adj_provider_id,
             None,
+            Some("standards"),
         );
 
         let mut synthesis_req = CompletionRequest::new(adj_model.clone(), synthesis_prompt)

@@ -11,9 +11,11 @@ pub use audit::EccAuditDebate;
 pub use pipeline::build_ecc_pipeline;
 pub use presets::{all_presets, find_preset};
 pub use skills::{
-    all_built_in_skills, extract_triggers_from_text, find_built_in_skill, format_cheat_sheet,
-    format_cloud_guidelines, global_dispatcher, is_local_provider, load_skills_from_dir,
-    resolve_skill, DispatchedSkill, EccSkill, SkillDispatcher, SkillMetadata,
+    all_built_in_skills, compute_dir_fingerprint, estimate_tokens, extract_triggers_from_text,
+    find_built_in_skill, format_cheat_sheet, format_cloud_guidelines, format_dense_invariants,
+    format_hierarchical, global_dispatcher, is_local_provider, load_skills_from_dir, resolve_skill,
+    CachedCatalog, DispatchedSkill, DiversifiedDispatchResult, EccSkill, InjectionMode,
+    SkillDispatcher, SkillMetadata, TokenBudget, SKILLS_CACHE_MAGIC, SKILLS_CACHE_VERSION,
 };
 
 use std::path::Path;

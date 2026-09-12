@@ -22,7 +22,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub use builtin::{
-    CalculatorTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool,
+    CalculatorTool, FetchSkillTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool,
     SearchSkillsTool, ViewImageTool, WriteFileTool,
 };
 pub use bun::{
@@ -104,6 +104,7 @@ impl ToolRegistry {
         registry.register_tool(perl::PerlInstallTool::new());
         registry.register_tool(perl::PerlAutoResolveTool::new());
         registry.register_tool(builtin::SearchSkillsTool::with_default());
+        registry.register_tool(builtin::FetchSkillTool::with_default());
         // Vella Phase 1 Domain Tools
         registry.register_tool(crate::vella::VellaTradingTool::default());
         registry.register_tool(crate::vella::VellaScadaTool::default());
