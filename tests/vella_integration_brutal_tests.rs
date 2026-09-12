@@ -1,3 +1,5 @@
+#![cfg(feature = "vella")]
+
 //! # Tagisan-Vella Sovereign OS Brutal Integration Tests
 //!
 //! 100% REAL, production-grade integration testing across VellaApp,
@@ -27,7 +29,7 @@ async fn test_real_vella_app_initialization() {
     assert!(mgr.is_initialized().await);
 
     // Verify default schemas
-    let reg_arc = mgr.schema_registry();
+    let reg_arc = mgr.schema_registry.clone();
     let registry_lock = reg_arc.read().await;
     let schemas = registry_lock.all();
     assert!(schemas.len() >= 3, "Expected at least 3 default schemas");
@@ -46,7 +48,7 @@ async fn test_real_vella_app_initialization() {
     drop(registry_lock);
 
     // Test VellaEventBridgeTool direct execution
-    let event_tool = VellaEventBridgeTool::new(mgr.event_bus(), mgr.governor());
+    let event_tool = VellaEventBridgeTool::new(mgr.event_bus.clone(), mgr.governor.clone());
     let pub_args = json!({
         "action": "publish",
         "event_type": "record_created",

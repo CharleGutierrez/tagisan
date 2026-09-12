@@ -348,6 +348,7 @@ async fn test_real_vella_space_astrodynamics_copilot() {
 // =========================================================================
 
 #[tokio::test]
+#[cfg(feature = "vella")]
 async fn test_real_vella_api_scaffolder_self_healing() {
     let app_mgr = VellaAppManager::with_default_schemas();
     let scaffolder = ApiScaffolderEngine::with_registry(app_mgr.schema_registry.clone());
