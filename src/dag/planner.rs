@@ -63,8 +63,8 @@ You MUST respond ONLY with a valid JSON object strictly matching this schema:
       "name": "<Human-readable task name>",
       "prompt_template": "<Task prompt template. Can include {upstream_id.output} placeholders>",
       "system_prompt": "<Specialized persona and instructions for this subagent>",
-      "model": "<recommended model or null>",
-      "provider": "<recommended provider or null>",
+      "model": null,
+      "provider": null,
       "tools": ["read_file", "calculator"],
       "dependencies": ["<upstream_id_1>"],
       "max_retries": 2
@@ -72,6 +72,7 @@ You MUST respond ONLY with a valid JSON object strictly matching this schema:
   ]
 }
 
+NOTE: Use JSON null (not the string "null") for model and provider unless a specific model or provider is strictly required.
 DO NOT output any explanations or text outside the JSON object.
 "#;
 
@@ -160,17 +161,26 @@ impl WorkflowPlanner {
 
         // 1. Add all tasks
         for task in &planned.tasks {
-            let provider = if let Some(ref prov_id) = task.provider {
-                ctx.get_provider(prov_id)
-                    .unwrap_or_else(|_| default_provider.clone().unwrap_or_else(|| self.provider.clone()))
-            } else {
-                default_provider.clone().unwrap_or_else(|| self.provider.clone())
+            let provider = match task.provider.as_deref().map(|s| s.trim()) {
+                Some(p) if !p.is_empty()
+                    && !p.eq_ignore_ascii_case("null")
+                    && !p.eq_ignore_ascii_case("none")
+                    && !p.eq_ignore_ascii_case("default")
+                    && !p.starts_with('<') => {
+                    ctx.get_provider(p)
+                        .unwrap_or_else(|_| default_provider.clone().unwrap_or_else(|| self.provider.clone()))
+                }
+                _ => default_provider.clone().unwrap_or_else(|| self.provider.clone()),
             };
 
-            let model = task
-                .model
-                .clone()
-                .unwrap_or_else(|| self.model.clone());
+            let model = match task.model.as_deref().map(|s| s.trim()) {
+                Some(m) if !m.is_empty()
+                    && !m.eq_ignore_ascii_case("null")
+                    && !m.eq_ignore_ascii_case("none")
+                    && !m.eq_ignore_ascii_case("default")
+                    && !m.starts_with('<') => m.to_string(),
+                _ => self.model.clone(),
+            };
 
             // Build task-specific tool registry
             let mut task_tools = ToolRegistry::new();
@@ -390,5 +400,39 @@ mod tests {
         let graph = planner.parse_plan_json(json, None, &ctx).expect("Should parse and resolve all_subtasks");
         let order = graph.validate().expect("DAG should be valid and acyclic");
         assert_eq!(order.last().unwrap(), "synthesis");
+    }
+
+    #[test]
+    fn test_parse_plan_with_null_and_placeholder_model_and_provider() {
+        let planner = WorkflowPlanner::new(Arc::new(OllamaProvider::default_local()), "test-fallback-model");
+        let ctx = EngineContext::new(5.0);
+
+        let json = r#"{
+            "workflow_name": "Test Workflow",
+            "tasks": [
+                {
+                    "id": "task_a",
+                    "name": "Task A",
+                    "prompt_template": "Do A",
+                    "model": "null",
+                    "provider": "null",
+                    "dependencies": []
+                },
+                {
+                    "id": "task_b",
+                    "name": "Task B",
+                    "prompt_template": "Do B",
+                    "model": "<recommended model or null>",
+                    "provider": "<recommended provider or null>",
+                    "dependencies": []
+                }
+            ]
+        }"#;
+
+        let graph = planner.parse_plan_json(json, None, &ctx).expect("Should parse");
+        let task_a = graph.get_task("task_a").unwrap();
+        assert_eq!(task_a.agent.as_ref().unwrap().model, "test-fallback-model");
+        let task_b = graph.get_task("task_b").unwrap();
+        assert_eq!(task_b.agent.as_ref().unwrap().model, "test-fallback-model");
     }
 }

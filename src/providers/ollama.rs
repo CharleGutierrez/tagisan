@@ -145,6 +145,21 @@ impl OllamaProvider {
         models
     }
 
+    /// Sanitizes model name to prevent sending 'null', 'none', 'default' or placeholders to Ollama
+    pub fn sanitize_model_name<'a>(raw_model: &'a str) -> std::borrow::Cow<'a, str> {
+        let trimmed = raw_model.trim();
+        if trimmed.is_empty()
+            || trimmed.eq_ignore_ascii_case("null")
+            || trimmed.eq_ignore_ascii_case("none")
+            || trimmed.eq_ignore_ascii_case("default")
+            || trimmed.starts_with('<')
+        {
+            std::borrow::Cow::Owned(Self::default_model())
+        } else {
+            std::borrow::Cow::Borrowed(trimmed)
+        }
+    }
+
     fn format_messages(&self, req: &CompletionRequest) -> Vec<OllamaMessage> {
         let mut messages = Vec::new();
         if let Some(sys) = &req.system_prompt {
@@ -415,9 +430,10 @@ impl LlmProvider for OllamaProvider {
 
         let keep_alive = self.get_keep_alive();
         let options = self.build_options(&req);
+        let effective_model = Self::sanitize_model_name(&req.model);
 
         let payload = OllamaChatPayload {
-            model: &req.model,
+            model: &effective_model,
             messages,
             tools,
             stream: false,
@@ -520,7 +536,7 @@ impl LlmProvider for OllamaProvider {
         Ok(CompletionResponse {
             id: format!("ollama_{}", start.elapsed().as_millis()),
             provider: "ollama".to_string(),
-            model: req.model,
+            model: effective_model.into_owned(),
             message: Message {
                 role: Role::Assistant,
                 content: content_blocks,
@@ -558,9 +574,10 @@ impl LlmProvider for OllamaProvider {
 
         let keep_alive = self.get_keep_alive();
         let options = self.build_options(&req);
+        let effective_model = Self::sanitize_model_name(&req.model);
 
         let payload = OllamaChatPayload {
-            model: &req.model,
+            model: &effective_model,
             messages,
             tools,
             stream: true,
@@ -1664,6 +1681,18 @@ mod brutal_stress_tests {
         } else {
             assert_eq!(default_m, "dolphin-phi:latest");
         }
+    }
+
+    #[test]
+    fn test_10_sanitize_model_name_null_fallback() {
+        let fallback = OllamaProvider::default_model();
+        assert_eq!(OllamaProvider::sanitize_model_name("null"), fallback.as_str());
+        assert_eq!(OllamaProvider::sanitize_model_name("NULL"), fallback.as_str());
+        assert_eq!(OllamaProvider::sanitize_model_name("none"), fallback.as_str());
+        assert_eq!(OllamaProvider::sanitize_model_name("default"), fallback.as_str());
+        assert_eq!(OllamaProvider::sanitize_model_name(""), fallback.as_str());
+        assert_eq!(OllamaProvider::sanitize_model_name("<recommended model or null>"), fallback.as_str());
+        assert_eq!(OllamaProvider::sanitize_model_name("llama3.2:latest"), "llama3.2:latest");
     }
 }
 
