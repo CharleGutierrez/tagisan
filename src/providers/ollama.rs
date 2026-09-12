@@ -470,7 +470,15 @@ impl LlmProvider for OllamaProvider {
             options: Some(options),
         };
 
-        let send_future = self.client.post(&url).json(&payload).send();
+        let mut builder = self.client.post(&url)
+            .header("X-Tagisan-Client", "true")
+            .header("X-Tagisan-KeepAlive", "true");
+
+        if crate::ecc::agentshield::AgentShieldScanner::is_unrestricted() {
+            builder = builder.header("X-Tagisan-Unrestricted", "true");
+        }
+
+        let send_future = builder.json(&payload).send();
 
         let response = if let Some(token) = &req.cancellation_token {
             tokio::select! {
@@ -614,7 +622,15 @@ impl LlmProvider for OllamaProvider {
             options: Some(options),
         };
 
-        let send_future = self.client.post(&url).json(&payload).send();
+        let mut builder = self.client.post(&url)
+            .header("X-Tagisan-Client", "true")
+            .header("X-Tagisan-KeepAlive", "true");
+
+        if crate::ecc::agentshield::AgentShieldScanner::is_unrestricted() {
+            builder = builder.header("X-Tagisan-Unrestricted", "true");
+        }
+
+        let send_future = builder.json(&payload).send();
 
         let response = if let Some(token) = &req.cancellation_token {
             tokio::select! {
