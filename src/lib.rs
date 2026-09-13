@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod auth;
 pub mod bun;
 pub mod cli;
 pub mod dag;
@@ -86,6 +87,7 @@ pub use memory::{
     FastHashEmbeddingProvider, GeminiEmbeddingProvider, MemoryStats, OllamaEmbeddingProvider,
     OpenAiEmbeddingProvider, SearchResult, VectorDocument, VectorStore,
 };
+pub use auth::{GeminiOAuthManager, GeminiOAuthTokens};
 pub use providers::anthropic::AnthropicProvider;
 pub use providers::cascade::{CascadeEntry, CascadeProvider};
 pub use providers::colibri::{ColibriConfig, ColibriProvider, StripingMode, StripingValidationReport};

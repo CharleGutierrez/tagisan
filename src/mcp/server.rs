@@ -85,6 +85,8 @@ impl McpServer {
             if !key.trim().is_empty() {
                 ctx.register_provider(Arc::new(crate::providers::gemini::GeminiProvider::new(key)));
             }
+        } else if crate::auth::GeminiOAuthManager::is_authenticated() {
+            ctx.register_provider(Arc::new(crate::providers::gemini::GeminiProvider::with_oauth(crate::auth::GeminiOAuthManager::new())));
         }
         ctx.register_provider(Arc::new(crate::providers::ollama::OllamaProvider::default_local()));
 

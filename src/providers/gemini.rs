@@ -1,3 +1,4 @@
+use crate::auth::GeminiOAuthManager;
 use crate::error::{Result, TagisanError};
 use crate::providers::{BoxEventStream, LlmProvider};
 use crate::types::{
@@ -7,12 +8,20 @@ use crate::types::{
 use async_trait::async_trait;
 use eventsource_stream::Eventsource;
 use futures::StreamExt;
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
+use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use std::time::Instant;
+use tokio::sync::Mutex;
+
+#[derive(Clone)]
+pub enum GeminiAuth {
+    ApiKey(String),
+    OAuth(Arc<Mutex<GeminiOAuthManager>>),
+}
 
 pub struct GeminiProvider {
-    api_key: String,
+    auth: GeminiAuth,
     client: reqwest::Client,
 }
 
@@ -24,8 +33,68 @@ impl GeminiProvider {
             .build()
             .unwrap_or_else(|_| reqwest::Client::new());
         Self {
-            api_key: api_key.into(),
+            auth: GeminiAuth::ApiKey(api_key.into()),
             client,
+        }
+    }
+
+    pub fn with_oauth(oauth_manager: GeminiOAuthManager) -> Self {
+        let client = reqwest::Client::builder()
+            .connect_timeout(std::time::Duration::from_secs(10))
+            .timeout(std::time::Duration::from_secs(180))
+            .build()
+            .unwrap_or_else(|_| reqwest::Client::new());
+        Self {
+            auth: GeminiAuth::OAuth(Arc::new(Mutex::new(oauth_manager))),
+            client,
+        }
+    }
+
+    /// Check if either API key or OAuth session is present and available
+    pub fn is_available() -> bool {
+        if let Ok(key) = std::env::var("GEMINI_API_KEY") {
+            if !key.trim().is_empty() {
+                return true;
+            }
+        }
+        GeminiOAuthManager::is_authenticated()
+    }
+
+    /// Prepare the API URL and authorization headers dynamically based on auth type
+    async fn prepare_request_auth(&self, model: &str, is_stream: bool) -> Result<(String, HeaderMap)> {
+        let model_clean = Self::sanitize_model(model);
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+
+        let stream_param = if is_stream {
+            "streamGenerateContent?alt=sse"
+        } else {
+            "generateContent"
+        };
+
+        match &self.auth {
+            GeminiAuth::ApiKey(key) => {
+                let separator = if is_stream { "&" } else { "?" };
+                let url = format!(
+                    "https://generativelanguage.googleapis.com/v1beta/{}:{}{}key={}",
+                    model_clean, stream_param, separator, key
+                );
+                Ok((url, headers))
+            }
+            GeminiAuth::OAuth(mgr) => {
+                let token = {
+                    let mut lock = mgr.lock().await;
+                    lock.get_valid_access_token().await?
+                };
+                let url = format!(
+                    "https://generativelanguage.googleapis.com/v1beta/{}:{}",
+                    model_clean, stream_param
+                );
+                let auth_val = HeaderValue::from_str(&format!("Bearer {}", token))
+                    .map_err(|e| TagisanError::Authentication("gemini".into(), format!("Invalid auth header: {e}")))?;
+                headers.insert(AUTHORIZATION, auth_val);
+                Ok((url, headers))
+            }
         }
     }
 
@@ -267,14 +336,7 @@ impl LlmProvider for GeminiProvider {
 
     async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse> {
         let start = Instant::now();
-        let model_clean = Self::sanitize_model(&req.model);
-        let url = format!(
-            "https://generativelanguage.googleapis.com/v1beta/{}:generateContent?key={}",
-            model_clean, self.api_key
-        );
-
-        let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+        let (url, headers) = self.prepare_request_auth(&req.model, false).await?;
 
         let contents = self.format_contents(&req);
 
@@ -414,14 +476,7 @@ impl LlmProvider for GeminiProvider {
     }
 
     async fn stream(&self, req: CompletionRequest) -> Result<BoxEventStream> {
-        let model_clean = Self::sanitize_model(&req.model);
-        let url = format!(
-            "https://generativelanguage.googleapis.com/v1beta/{}:streamGenerateContent?alt=sse&key={}",
-            model_clean, self.api_key
-        );
-
-        let mut headers = HeaderMap::new();
-        headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+        let (url, headers) = self.prepare_request_auth(&req.model, true).await?;
 
         let contents = self.format_contents(&req);
 

@@ -229,6 +229,26 @@ enum Commands {
         #[arg(short, long, default_value = "5")]
         limit: usize,
     },
+    /// Manage authentication sessions and web logins (Google Gemini OAuth 2.0)
+    #[command(alias = "login")]
+    Auth {
+        #[command(subcommand)]
+        action: Option<AuthAction>,
+
+        /// Google OAuth 2.0 Client ID (optional, overrides default/env)
+        #[arg(long)]
+        client_id: Option<String>,
+
+        /// Google OAuth 2.0 Client Secret (optional)
+        #[arg(long)]
+        client_secret: Option<String>,
+    },
+    /// Log out from an authenticated provider session (Google Gemini OAuth)
+    Logout {
+        /// Provider to log out from (default: gemini)
+        #[arg(default_value = "gemini")]
+        provider: String,
+    },
     /// Start a Model Context Protocol (MCP) Server over stdio JSON-RPC 2.0 (Milestone 7)
     #[command(name = "serve-mcp")]
     ServeMcp,
@@ -1052,6 +1072,32 @@ enum MemoryAction {
 }
 
 #[derive(Subcommand, Debug)]
+enum AuthAction {
+    /// Start browser-based OAuth 2.0 web authentication (Google Gemini)
+    Login {
+        /// Provider to log in to (default: gemini)
+        #[arg(default_value = "gemini")]
+        provider: String,
+
+        /// Google OAuth 2.0 Client ID (optional, overrides default/env)
+        #[arg(long)]
+        client_id: Option<String>,
+
+        /// Google OAuth 2.0 Client Secret (optional)
+        #[arg(long)]
+        client_secret: Option<String>,
+    },
+    /// Log out and remove stored credentials
+    Logout {
+        /// Provider to log out from (default: gemini)
+        #[arg(default_value = "gemini")]
+        provider: String,
+    },
+    /// Check current authentication status
+    Status,
+}
+
+#[derive(Subcommand, Debug)]
 enum SwarmAction {
     /// Execute task via Lead Agent with dynamic specialist delegation
     Run {
@@ -1316,11 +1362,13 @@ fn build_engine_context(max_budget: f64) -> EngineContext {
         }
     }
 
-    // Register Google Gemini if key exists
+    // Register Google Gemini if key exists or OAuth is authenticated
     if let Ok(key) = env::var("GEMINI_API_KEY") {
         if is_valid_key(&key) {
             ctx.register_provider(Arc::new(GeminiProvider::new(key)));
         }
+    } else if crate::auth::GeminiOAuthManager::is_authenticated() {
+        ctx.register_provider(Arc::new(GeminiProvider::with_oauth(crate::auth::GeminiOAuthManager::new())));
     }
 
     // Register Local Ollama
@@ -1605,6 +1653,31 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     continue;
                 }
 
+                if id == "gemini" {
+                    if let Ok(p) = ctx.get_provider(id) {
+                        let caps = p.capabilities(sample_model);
+                        let auth_info = if let Some(email) = crate::auth::GeminiOAuthManager::get_account_email() {
+                            format!("OAuth Web Login: {}", email.cyan())
+                        } else {
+                            id.to_string()
+                        };
+                        println!(
+                            "  [✓] {:<26} -> Ready ({}) [{}]\n      ↳ Features: {}",
+                            name.green().bold(),
+                            auth_info,
+                            sample_model,
+                            format_capabilities(caps).italic()
+                        );
+                    } else {
+                        println!(
+                            "  [✗] {:<26} -> Missing {} (or run 'tgs auth login gemini')",
+                            name.red(),
+                            var
+                        );
+                    }
+                    continue;
+                }
+
                 if let Ok(p) = ctx.get_provider(id) {
                     let caps = p.capabilities(sample_model);
                     println!(
@@ -1664,6 +1737,84 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 eprintln!("{}: Please specify a search query or a --url to fetch.", "Error".red().bold());
                 eprintln!("Usage: tgs websearch \"your query\" OR tgs websearch --url https://example.com");
+                std::process::exit(1);
+            }
+        }
+
+        Commands::Auth { action, client_id, client_secret } => {
+            let sub_action = action.unwrap_or(AuthAction::Login {
+                provider: "gemini".to_string(),
+                client_id,
+                client_secret,
+            });
+
+            match sub_action {
+                AuthAction::Login { provider, client_id, client_secret } => {
+                    let prov = provider.to_lowercase();
+                    if prov == "gemini" || prov == "google" {
+                        match crate::auth::GeminiOAuthManager::start_web_login(client_id, client_secret).await {
+                            Ok(tokens) => {
+                                let email = tokens.email.as_deref().unwrap_or("Authorized Account");
+                                println!("\n{}", format!("✨ Google Gemini Web Authentication is active for: {}", email).bold().green());
+                                println!("You can now use 'tgs ask', 'tgs stream', and 'tgs agent' with Gemini without an API key!\n");
+                            }
+                            Err(e) => {
+                                eprintln!("\n{}: Web authentication failed: {}\n", "Error".red().bold(), e);
+                                std::process::exit(1);
+                            }
+                        }
+                    } else {
+                        eprintln!("{}: Web authentication is currently supported for 'gemini'.", "Error".red().bold());
+                        std::process::exit(1);
+                    }
+                }
+                AuthAction::Logout { provider } => {
+                    let prov = provider.to_lowercase();
+                    if prov == "gemini" || prov == "google" {
+                        match crate::auth::GeminiOAuthManager::delete_tokens() {
+                            Ok(_) => {
+                                println!("{}", "✔ Successfully logged out from Google Gemini OAuth session.".green().bold());
+                                println!("Removed stored credentials from {:?}", crate::auth::GeminiOAuthManager::token_file_path());
+                            }
+                            Err(e) => {
+                                eprintln!("{}: Failed to log out: {}", "Error".red().bold(), e);
+                                std::process::exit(1);
+                            }
+                        }
+                    } else {
+                        eprintln!("{}: Unknown provider '{}'", "Error".red().bold(), provider);
+                        std::process::exit(1);
+                    }
+                }
+                AuthAction::Status => {
+                    println!("{}", "════════════════ AUTHENTICATION STATUS ════════════════".bold().cyan());
+                    if crate::auth::GeminiOAuthManager::is_authenticated() {
+                        let email = crate::auth::GeminiOAuthManager::get_account_email().unwrap_or_else(|| "Unknown".to_string());
+                        println!("  Google Gemini: {} ({})", "AUTHENTICATED (Web OAuth 2.0)".green().bold(), email.yellow());
+                        println!("  Credential file: {:?}", crate::auth::GeminiOAuthManager::token_file_path());
+                    } else {
+                        println!("  Google Gemini: {}", "NOT AUTHENTICATED (No OAuth session)".yellow());
+                        println!("  Tip: Run 'tgs auth login gemini' to connect your Google Account.");
+                    }
+                    println!();
+                }
+            }
+        }
+
+        Commands::Logout { provider } => {
+            let prov = provider.to_lowercase();
+            if prov == "gemini" || prov == "google" {
+                match crate::auth::GeminiOAuthManager::delete_tokens() {
+                    Ok(_) => {
+                        println!("{}", "✔ Successfully logged out from Google Gemini OAuth session.".green().bold());
+                    }
+                    Err(e) => {
+                        eprintln!("{}: Failed to log out: {}", "Error".red().bold(), e);
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                eprintln!("{}: Unknown provider '{}'", "Error".red().bold(), provider);
                 std::process::exit(1);
             }
         }
