@@ -1374,7 +1374,33 @@ fn resolve_provider_and_model(
 
     if effective_user_provider != "auto" {
         let prov = ctx.get_provider(effective_user_provider)?;
-        let model = user_model.unwrap_or_else(|| default_model_for_provider(effective_user_provider));
+        let model = if effective_user_provider == "ollama" {
+            let installed = OllamaProvider::discover_installed_models();
+            if installed.is_empty() {
+                OllamaProvider::notify_no_models_installed();
+                return Err(TagisanError::NoModelsInstalled);
+            }
+            if let Some(m) = user_model {
+                if let Some(matched) = OllamaProvider::find_matching_model(&m, &installed) {
+                    matched
+                } else {
+                    let fallback = installed[0].clone();
+                    eprintln!(
+                        "{}",
+                        format!(
+                            "⚠️  [Ollama Auto-Recovery] Specified model '{}' is not installed locally. Automatically falling back to '{}'.",
+                            m, fallback
+                        ).yellow().bold()
+                    );
+                    OllamaProvider::auto_heal_env_file(&fallback);
+                    fallback
+                }
+            } else {
+                OllamaProvider::default_model()
+            }
+        } else {
+            user_model.unwrap_or_else(|| default_model_for_provider(effective_user_provider))
+        };
         return Ok((effective_user_provider.to_string(), model, prov));
     }
 
@@ -1404,7 +1430,29 @@ fn resolve_provider_and_model(
 
     // Fallback to local Ollama
     let prov = ctx.get_provider("ollama")?;
-    let model = user_model.unwrap_or_else(default_ollama_model);
+    let installed = OllamaProvider::discover_installed_models();
+    if installed.is_empty() {
+        OllamaProvider::notify_no_models_installed();
+        return Err(TagisanError::NoModelsInstalled);
+    }
+    let model = if let Some(m) = user_model {
+        if let Some(matched) = OllamaProvider::find_matching_model(&m, &installed) {
+            matched
+        } else {
+            let fallback = installed[0].clone();
+            eprintln!(
+                "{}",
+                format!(
+                    "⚠️  [Ollama Auto-Recovery] Specified model '{}' is not installed locally. Automatically falling back to '{}'.",
+                    m, fallback
+                ).yellow().bold()
+            );
+            OllamaProvider::auto_heal_env_file(&fallback);
+            fallback
+        }
+    } else {
+        OllamaProvider::default_model()
+    };
     Ok(("ollama".to_string(), model, prov))
 }
 
@@ -1451,8 +1499,40 @@ async fn load_and_register_mcp_tools(
     Ok(Some(manager))
 }
 
+pub fn load_global_env() {
+    // 1. Try current directory .env
+    if dotenvy::dotenv_override().is_ok() {
+        return;
+    }
+    // 2. Ascend parent directories to find .env (e.g. project root)
+    if let Ok(cwd) = std::env::current_dir() {
+        let mut curr = cwd.as_path();
+        while let Some(parent) = curr.parent() {
+            let candidate = parent.join(".env");
+            if candidate.is_file() {
+                let _ = dotenvy::from_path_override(&candidate);
+                return;
+            }
+            curr = parent;
+        }
+    }
+    // 3. User home directory or config folder
+    if let Ok(home) = std::env::var("HOME") {
+        let candidate = std::path::PathBuf::from(&home).join(".env");
+        if candidate.is_file() {
+            let _ = dotenvy::from_path_override(&candidate);
+            return;
+        }
+        let config_candidate = std::path::PathBuf::from(&home).join(".config/tagisan/.env");
+        if config_candidate.is_file() {
+            let _ = dotenvy::from_path_override(&config_candidate);
+            return;
+        }
+    }
+}
+
 pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
-    dotenvy::dotenv_override().ok();
+    load_global_env();
 
     let cli = Cli::parse();
 
@@ -1464,16 +1544,52 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             println!("{}", "\nChecking Configured LLM Providers & Capabilities:".bold());
             let ctx = build_engine_context(cli.max_budget);
 
-            let provider_specs = [
+            let installed_ollama = OllamaProvider::discover_installed_models();
+            let is_ollama_live = OllamaProvider::fetch_live_tags().is_some();
+            let ollama_active_model = if !installed_ollama.is_empty() {
+                OllamaProvider::default_model()
+            } else {
+                "none".to_string()
+            };
+
+            let provider_specs: [(&str, &str, &str, &str); 6] = [
                 ("anthropic", "Anthropic (Claude 3.5)", "ANTHROPIC_API_KEY", "claude-3-5-sonnet-20241022"),
                 ("xai", "xAI (Grok 2 / Grok 3)", "XAI_API_KEY", "grok-2-latest"),
                 ("openai", "OpenAI (GPT-4o / o1)", "OPENAI_API_KEY", "gpt-4o"),
                 ("gemini", "Google Gemini (2.0 Flash)", "GEMINI_API_KEY", "gemini-2.0-flash"),
                 ("deepseek", "DeepSeek (R1 / V3)", "DEEPSEEK_API_KEY", "deepseek-reasoner"),
-                ("ollama", "Local Ollama (Offline)", "No key required (localhost:11434)", "llama3.2"),
+                ("ollama", "Local Ollama (Offline)", "No key required (localhost:11434)", &ollama_active_model),
             ];
 
             for (id, name, var, sample_model) in provider_specs {
+                if id == "ollama" {
+                    if installed_ollama.is_empty() {
+                        if is_ollama_live {
+                            println!(
+                                "  [!] {:<26} -> Connected ({}) but NO models installed\n      ↳ Notification: All local models were removed or none installed.\n      ↳ Quick Fix: Run 'ollama pull smollm2:1.7b' to download a local model.",
+                                name.yellow().bold(),
+                                "localhost:11434".cyan()
+                            );
+                        } else {
+                            println!(
+                                "  [✗] {:<26} -> Offline ({})\n      ↳ Tip: Start Ollama service with 'ollama serve'",
+                                name.red(),
+                                "localhost:11434"
+                            );
+                        }
+                    } else if let Ok(p) = ctx.get_provider(id) {
+                        let caps = p.capabilities(sample_model);
+                        println!(
+                            "  [✓] {:<26} -> Ready ({}) [{}]\n      ↳ Features: {}",
+                            name.green().bold(),
+                            id.cyan(),
+                            sample_model,
+                            format_capabilities(caps).italic()
+                        );
+                    }
+                    continue;
+                }
+
                 if let Ok(p) = ctx.get_provider(id) {
                     let caps = p.capabilities(sample_model);
                     println!(
@@ -2232,7 +2348,29 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     // Check directory
                     let custom_path = dir
                         .map(std::path::PathBuf::from)
-                        .unwrap_or_else(|| std::path::PathBuf::from(".ecc/agents"));
+                        .unwrap_or_else(|| {
+                            let cwd_path = std::path::PathBuf::from(".ecc/agents");
+                            if cwd_path.exists() {
+                                return cwd_path;
+                            }
+                            if let Ok(cwd) = std::env::current_dir() {
+                                let mut curr = cwd.as_path();
+                                while let Some(parent) = curr.parent() {
+                                    let candidate = parent.join(".ecc/agents");
+                                    if candidate.exists() {
+                                        return candidate;
+                                    }
+                                    curr = parent;
+                                }
+                            }
+                            if let Ok(home) = std::env::var("HOME") {
+                                let home_path = std::path::PathBuf::from(home).join(".ecc/agents");
+                                if home_path.exists() {
+                                    return home_path;
+                                }
+                            }
+                            cwd_path
+                        });
 
                     if custom_path.exists() {
                         println!("\n{}", format!("Discovered Agents in '{}':", custom_path.display()).bold());
@@ -2252,7 +2390,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                     } else {
-                        println!("\nTip: Place custom ECC markdown files in '.ecc/agents/*.md' to discover them automatically.\n");
+                        println!("\nTip: Place custom ECC markdown files in '.ecc/agents/*.md' or '~/.ecc/agents/*.md' to discover them automatically.\n");
                     }
                 }
 
@@ -2291,7 +2429,29 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
                     let custom_path = dir
                         .map(std::path::PathBuf::from)
-                        .unwrap_or_else(|| std::path::PathBuf::from(".ecc/skills"));
+                        .unwrap_or_else(|| {
+                            let cwd_path = std::path::PathBuf::from(".ecc/skills");
+                            if cwd_path.exists() {
+                                return cwd_path;
+                            }
+                            if let Ok(cwd) = std::env::current_dir() {
+                                let mut curr = cwd.as_path();
+                                while let Some(parent) = curr.parent() {
+                                    let candidate = parent.join(".ecc/skills");
+                                    if candidate.exists() {
+                                        return candidate;
+                                    }
+                                    curr = parent;
+                                }
+                            }
+                            if let Ok(home) = std::env::var("HOME") {
+                                let home_path = std::path::PathBuf::from(home).join(".ecc/skills");
+                                if home_path.exists() {
+                                    return home_path;
+                                }
+                            }
+                            cwd_path
+                        });
 
                     let custom_dispatcher;
                     let dispatcher = if custom_path.exists() && custom_path != std::path::Path::new(".ecc/skills") {
@@ -2329,7 +2489,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                     } else {
-                        println!("\nTip: Place custom ECC skills in '.ecc/skills/<skill>/SKILL.md' to discover them automatically.\n");
+                        println!("\nTip: Place custom ECC skills in '.ecc/skills/<skill>/SKILL.md' or '~/.ecc/skills/<skill>/SKILL.md' to discover them automatically.\n");
                     }
                 }
 
@@ -2351,18 +2511,12 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     let mut ecc_agent = match resolve_ecc_agent(&agent, custom_dir) {
                         Some(a) => a,
                         None => {
-                            let default_dir = std::path::Path::new(".ecc/agents");
-                            match resolve_ecc_agent(&agent, Some(default_dir)) {
-                                Some(a) => a,
-                                None => {
-                                    eprintln!(
-                                        "{}: ECC agent '{}' not found. Run 'tagisan ecc list' to see available agents.",
-                                        "Error".red().bold(),
-                                        agent
-                                    );
-                                    std::process::exit(1);
-                                }
-                            }
+                            eprintln!(
+                                "{}: ECC agent '{}' not found. Run 'tagisan ecc list' to see available agents.",
+                                "Error".red().bold(),
+                                agent
+                            );
+                            std::process::exit(1);
                         }
                     };
 

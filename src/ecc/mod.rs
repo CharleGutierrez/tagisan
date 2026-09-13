@@ -53,17 +53,94 @@ pub fn load_agents_from_dir(dir: impl AsRef<Path>) -> Vec<EccAgent> {
     agents
 }
 
-/// Retrieve an ECC agent by name, checking built-in presets first, then an optional disk directory
+/// Retrieve an ECC agent by name, checking built-in presets first, then an optional disk directory,
+/// followed by fallback discovery locations (cwd, parent directories, ~/.ecc/agents, TAGISAN_ECC_DIR).
 pub fn resolve_agent(name: &str, custom_dir: Option<&Path>) -> Option<EccAgent> {
     if let Some(preset) = find_preset(name) {
         return Some(preset);
     }
 
-    if let Some(dir) = custom_dir {
+    let lower = name.to_lowercase().replace('_', "-");
+
+    // Helper to probe a directory for an agent:
+    // 1. Direct file lookup: `<dir>/<lower>.md` or `<dir>/<name>.md`
+    // 2. Scan directory entries
+    let probe_dir = |dir: &Path| -> Option<EccAgent> {
+        if !dir.is_dir() {
+            return None;
+        }
+
+        // Fast O(1) direct file checks
+        let direct_lower = dir.join(format!("{}.md", lower));
+        if direct_lower.is_file() {
+            if let Ok(agent) = EccAgent::from_file(&direct_lower) {
+                return Some(agent);
+            }
+        }
+        let direct_name = dir.join(format!("{}.md", name));
+        if direct_name.is_file() {
+            if let Ok(agent) = EccAgent::from_file(&direct_name) {
+                return Some(agent);
+            }
+        }
+
+        // Full directory scan fallback
         let loaded = load_agents_from_dir(dir);
-        let lower = name.to_lowercase().replace('_', "-");
-        return loaded.into_iter().find(|a| a.name == lower);
+        loaded
+            .into_iter()
+            .find(|a| a.name.to_lowercase().replace('_', "-") == lower)
+    };
+
+    // 1. Check custom_dir if supplied
+    if let Some(dir) = custom_dir {
+        if let Some(agent) = probe_dir(dir) {
+            return Some(agent);
+        }
+    }
+
+    // 2. Check current working directory `.ecc/agents`
+    let cwd_agents = Path::new(".ecc/agents");
+    if let Some(agent) = probe_dir(cwd_agents) {
+        return Some(agent);
+    }
+
+    // 3. Ascend parent directories to locate `.ecc/agents` (workspace / project root)
+    if let Ok(cwd) = std::env::current_dir() {
+        let mut curr = cwd.as_path();
+        while let Some(parent) = curr.parent() {
+            let candidate = parent.join(".ecc/agents");
+            if candidate.is_dir() {
+                if let Some(agent) = probe_dir(&candidate) {
+                    return Some(agent);
+                }
+            }
+            curr = parent;
+        }
+    }
+
+    // 4. Check user home directory `~/.ecc/agents`
+    if let Ok(home) = std::env::var("HOME") {
+        let home_agents = std::path::PathBuf::from(home).join(".ecc/agents");
+        if let Some(agent) = probe_dir(&home_agents) {
+            return Some(agent);
+        }
+    }
+
+    // 5. Check environment variables
+    for env_var in &["TAGISAN_ECC_DIR", "ECC_DIR"] {
+        if let Ok(val) = std::env::var(env_var) {
+            let p = std::path::PathBuf::from(&val);
+            let target = if p.ends_with("agents") {
+                p
+            } else {
+                p.join("agents")
+            };
+            if let Some(agent) = probe_dir(&target) {
+                return Some(agent);
+            }
+        }
     }
 
     None
 }
+

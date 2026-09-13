@@ -9482,9 +9482,12 @@ pub fn resolve_skill(name: &str, custom_dir: Option<&Path>) -> Option<EccSkill> 
         return Some(skill);
     }
 
-    if let Some(dir) = custom_dir {
-        let lower = name.to_lowercase().replace('_', "-");
+    let lower = name.to_lowercase().replace('_', "-");
 
+    let probe_dir = |dir: &Path| -> Option<EccSkill> {
+        if !dir.is_dir() {
+            return None;
+        }
         // 1. Fast O(1) direct path lookup by directory name
         let candidate_dir = dir.join(&lower);
         if candidate_dir.is_dir() {
@@ -9504,16 +9507,50 @@ pub fn resolve_skill(name: &str, custom_dir: Option<&Path>) -> Option<EccSkill> 
             }
         }
 
-        // 2. Scan all loaded skills
+        // 2. Scan all loaded skills in dir
         let loaded = load_skills_from_dir(dir);
-        if let Some(skill) = loaded.iter().find(|s| {
+        if let Some(skill) = loaded.into_iter().find(|s| {
             s.name.eq_ignore_ascii_case(&lower)
                 || s.name.eq_ignore_ascii_case(lower.trim_start_matches("oracle-"))
                 || s.name.eq_ignore_ascii_case(lower.trim_start_matches("oci-"))
                 || format!("oracle-{}", s.name).eq_ignore_ascii_case(&lower)
                 || format!("oci-{}", s.name).eq_ignore_ascii_case(&lower)
         }) {
-            return Some(skill.clone());
+            return Some(skill);
+        }
+        None
+    };
+
+    if let Some(dir) = custom_dir {
+        if let Some(skill) = probe_dir(dir) {
+            return Some(skill);
+        }
+    }
+
+    // Probing cwd
+    if let Some(skill) = probe_dir(Path::new(".ecc/skills")) {
+        return Some(skill);
+    }
+
+    // Probing parent directories
+    if let Ok(cwd) = std::env::current_dir() {
+        let mut curr = cwd.as_path();
+        while let Some(parent) = curr.parent() {
+            let candidate = parent.join(".ecc/skills");
+            if candidate.is_dir() {
+                if let Some(skill) = probe_dir(&candidate) {
+                    return Some(skill);
+                }
+            }
+            curr = parent;
+        }
+    }
+
+    // Probing user home
+    if let Ok(home) = std::env::var("HOME") {
+        let home_skills = std::path::PathBuf::from(home).join(".ecc/skills");
+        if let Some(skill) = probe_dir(&home_skills) {
+            return Some(skill);
         }
     }
 
@@ -9894,13 +9931,42 @@ impl SkillDispatcher {
 
     /// Initialize dispatcher from the standard locations (.ecc/skills + built-ins)
     pub fn default_catalog() -> Self {
-        let skills_dir = Path::new(".ecc/skills");
-        let custom_dir = if skills_dir.exists() {
-            Some(skills_dir)
-        } else {
-            None
-        };
-        Self::load_or_build(custom_dir)
+        let mut target_dir: Option<PathBuf> = None;
+        let cwd_skills = Path::new(".ecc/skills");
+        if cwd_skills.is_dir() {
+            target_dir = Some(cwd_skills.to_path_buf());
+        } else if let Ok(cwd) = std::env::current_dir() {
+            let mut curr = cwd.as_path();
+            while let Some(parent) = curr.parent() {
+                let candidate = parent.join(".ecc/skills");
+                if candidate.is_dir() {
+                    target_dir = Some(candidate);
+                    break;
+                }
+                curr = parent;
+            }
+        }
+        if target_dir.is_none() {
+            if let Ok(home) = std::env::var("HOME") {
+                let home_skills = PathBuf::from(home).join(".ecc/skills");
+                if home_skills.is_dir() {
+                    target_dir = Some(home_skills);
+                }
+            }
+        }
+        if target_dir.is_none() {
+            for env_var in &["TAGISAN_ECC_DIR", "ECC_DIR"] {
+                if let Ok(val) = std::env::var(env_var) {
+                    let p = PathBuf::from(&val);
+                    let candidate = if p.ends_with("skills") { p } else { p.join("skills") };
+                    if candidate.is_dir() {
+                        target_dir = Some(candidate);
+                        break;
+                    }
+                }
+            }
+        }
+        Self::load_or_build(target_dir.as_deref())
     }
 
     /// Initialize dispatcher scanning built-ins and an optional custom skills directory

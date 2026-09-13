@@ -7,6 +7,7 @@ use crate::types::{
 use async_trait::async_trait;
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
+use colored::Colorize;
 use std::time::Instant;
 use tokio::io::AsyncBufReadExt;
 use tokio_util::io::StreamReader;
@@ -67,19 +68,203 @@ impl OllamaProvider {
         Ok(tags.models.unwrap_or_default().into_iter().map(|m| m.name).collect())
     }
 
-    /// Returns the default model for Ollama:
-    /// 1. `OLLAMA_MODEL` environment variable if set.
-    /// 2. Auto-discovered installed model from local Ollama manifests on disk.
-    /// 3. Default fallback: `"dolphin-phi:latest"`.
-    pub fn default_model() -> String {
-        if let Ok(model) = std::env::var("OLLAMA_MODEL") {
-            let m = model.trim();
-            if !m.is_empty() {
-                return m.to_string();
+    /// Queries the live Ollama server for installed models via /api/tags
+    pub fn fetch_live_tags() -> Option<Vec<String>> {
+        use std::net::ToSocketAddrs;
+        use std::io::{Read, Write};
+
+        let raw_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1:11434".to_string());
+        let host_clean = raw_host
+            .trim_start_matches("http://")
+            .trim_start_matches("https://");
+        let (host, port) = if let Some((h, p)) = host_clean.split_once(':') {
+            let h = if h.is_empty() || h == "0.0.0.0" { "127.0.0.1" } else { h };
+            let p: u16 = p.split('/').next()?.parse().ok()?;
+            (h, p)
+        } else {
+            ("127.0.0.1", 11434)
+        };
+
+        let addr_str = format!("{}:{}", host, port);
+        let mut addrs = addr_str.to_socket_addrs().ok()?;
+        let addr = addrs.next()?;
+
+        let socket = std::net::TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(300)).ok()?;
+        socket.set_read_timeout(Some(std::time::Duration::from_millis(500))).ok()?;
+        socket.set_write_timeout(Some(std::time::Duration::from_millis(500))).ok()?;
+
+        let mut stream = socket;
+        let request = format!("GET /api/tags HTTP/1.1\r\nHost: {}:{}\r\nConnection: close\r\n\r\n", host, port);
+        stream.write_all(request.as_bytes()).ok()?;
+
+        let mut response = Vec::new();
+        stream.read_to_end(&mut response).ok()?;
+
+        let resp_str = String::from_utf8_lossy(&response);
+        if let Some(body_idx) = resp_str.find("\r\n\r\n") {
+            let body = &resp_str[body_idx + 4..];
+            #[derive(Deserialize)]
+            struct TagsResp {
+                models: Option<Vec<ModelItem>>,
+            }
+            #[derive(Deserialize)]
+            struct ModelItem {
+                name: String,
+            }
+            if let Ok(parsed) = serde_json::from_str::<TagsResp>(body) {
+                let names: Vec<String> = parsed
+                    .models
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|m| m.name)
+                    .collect();
+                return Some(names);
+            }
+        }
+        None
+    }
+
+    /// Checks if local or remote Ollama server socket is reachable
+    pub fn is_server_reachable() -> bool {
+        use std::net::ToSocketAddrs;
+        let raw_host = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "127.0.0.1:11434".to_string());
+        let host_clean = raw_host
+            .trim_start_matches("http://")
+            .trim_start_matches("https://");
+        let (host, port) = if let Some((h, p)) = host_clean.split_once(':') {
+            let h = if h.is_empty() || h == "0.0.0.0" { "127.0.0.1" } else { h };
+            let p: u16 = p.split('/').next().and_then(|s| s.parse().ok()).unwrap_or(11434);
+            (h, p)
+        } else {
+            ("127.0.0.1", 11434)
+        };
+        let addr_str = format!("{}:{}", host, port);
+        if let Ok(mut addrs) = addr_str.to_socket_addrs() {
+            if let Some(addr) = addrs.next() {
+                return std::net::TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(300)).is_ok();
+            }
+        }
+        false
+    }
+
+    /// Automatically updates .env files in the workspace if OLLAMA_MODEL points to a removed model
+    pub fn auto_heal_env_file(new_model: &str) {
+        std::env::set_var("OLLAMA_MODEL", new_model);
+
+        let mut curr = std::env::current_dir().ok();
+        for _ in 0..4 {
+            if let Some(dir) = curr {
+                let env_path = dir.join(".env");
+                if env_path.is_file() {
+                    if let Ok(content) = std::fs::read_to_string(&env_path) {
+                        let mut modified = false;
+                        let mut new_lines = Vec::new();
+                        for line in content.lines() {
+                            let trimmed = line.trim();
+                            if (trimmed.starts_with("OLLAMA_MODEL=") || trimmed.starts_with("export OLLAMA_MODEL="))
+                                && !line.trim_start().starts_with('#')
+                            {
+                                if trimmed != format!("OLLAMA_MODEL={}", new_model)
+                                    && trimmed != format!("export OLLAMA_MODEL={}", new_model)
+                                {
+                                    new_lines.push(format!("OLLAMA_MODEL={}", new_model));
+                                    modified = true;
+                                } else {
+                                    new_lines.push(line.to_string());
+                                }
+                            } else {
+                                new_lines.push(line.to_string());
+                            }
+                        }
+                        if modified {
+                            let _ = std::fs::write(&env_path, new_lines.join("\n") + "\n");
+                        }
+                    }
+                    break;
+                }
+                curr = dir.parent().map(|p| p.to_path_buf());
+            } else {
+                break;
+            }
+        }
+    }
+
+    /// Checks if a requested model name matches any installed model
+    pub fn find_matching_model(requested: &str, installed: &[String]) -> Option<String> {
+        let req = requested.trim();
+        if req.is_empty() {
+            return None;
+        }
+
+        // 1. Exact match (case-insensitive)
+        for m in installed {
+            if m.eq_ignore_ascii_case(req) {
+                return Some(m.clone());
             }
         }
 
+        // 2. Base name / tag match: e.g. "smollm2" matches "smollm2:1.7b"
+        let req_base = req.split(':').next().unwrap_or(req);
+        let req_base_no_ns = req_base.split('/').last().unwrap_or(req_base);
+
+        for m in installed {
+            let m_base = m.split(':').next().unwrap_or(m);
+            let m_base_no_ns = m_base.split('/').last().unwrap_or(m_base);
+
+            if m.eq_ignore_ascii_case(req_base)
+                || m_base.eq_ignore_ascii_case(req)
+                || m_base.eq_ignore_ascii_case(req_base)
+                || m_base_no_ns.eq_ignore_ascii_case(req_base_no_ns)
+            {
+                return Some(m.clone());
+            }
+        }
+
+        // 3. Substring / partial match
+        for m in installed {
+            let m_lower = m.to_ascii_lowercase();
+            let req_lower = req.to_ascii_lowercase();
+            if m_lower.contains(&req_lower) || req_lower.contains(&m_lower) {
+                return Some(m.clone());
+            }
+        }
+
+        None
+    }
+
+    /// Returns the default model for Ollama:
+    /// 1. `OLLAMA_MODEL` environment variable if set AND verified to be currently installed.
+    /// 2. If `OLLAMA_MODEL` is set but the model was removed/missing, auto-recovers to installed model.
+    /// 3. Auto-discovered installed model from local Ollama tags or manifests on disk.
+    /// 4. Default fallback: `"dolphin-phi:latest"`.
+    pub fn default_model() -> String {
         let installed = Self::discover_installed_models();
+
+        if let Ok(model) = std::env::var("OLLAMA_MODEL") {
+            let m = model.trim();
+            if !m.is_empty() {
+                if !installed.is_empty() {
+                    if let Some(matched) = Self::find_matching_model(m, &installed) {
+                        return matched;
+                    }
+
+                    // Configured model is no longer installed / was removed!
+                    let fallback = installed[0].clone();
+                    eprintln!(
+                        "{}",
+                        format!(
+                            "⚠️  [Ollama Auto-Recovery] Configured model '{}' is not installed or was removed. Automatically switching to installed model '{}'.",
+                            m, fallback
+                        ).yellow().bold()
+                    );
+                    Self::auto_heal_env_file(&fallback);
+                    return fallback;
+                } else {
+                    return m.to_string();
+                }
+            }
+        }
+
         if let Some(first) = installed.first() {
             return first.clone();
         }
@@ -87,56 +272,95 @@ impl OllamaProvider {
         "dolphin-phi:latest".to_string()
     }
 
-    /// Discovers locally installed models by inspecting the Ollama manifests directory on disk
+    /// Checks whether at least one model is installed in Ollama
+    pub fn has_installed_models() -> bool {
+        !Self::discover_installed_models().is_empty()
+    }
+
+    /// Prints a user-friendly notification when no local LLM is installed or all models were removed
+    pub fn notify_no_models_installed() {
+        use colored::Colorize;
+        eprintln!("\n{}", "=========================================================================".yellow());
+        eprintln!("{}", "  ⚠️   TAGISAN NOTIFICATION: NO LOCAL LLM INSTALLED IN OLLAMA".bold().yellow());
+        eprintln!("{}", "=========================================================================".yellow());
+        eprintln!("{}", "A local LLM was removed or no models are currently installed in Ollama.\n".white());
+        eprintln!("{}", "To prevent errors and enable offline autonomous intelligence, please run:".bold());
+        eprintln!("  ▶ {}  {}", "ollama pull smollm2:1.7b".cyan().bold(), "(Recommended: Fast & lightweight ~1GB)".italic());
+        eprintln!("  ▶ {}  {}", "ollama pull llama3.2:3b".cyan().bold(), "(High accuracy general reasoning)".italic());
+        eprintln!("  ▶ {}  {}", "ollama pull qwen2.5-coder:1.5b".cyan().bold(), "(Compact coding specialist)".italic());
+        eprintln!("\n{}", "Once downloaded, Tagisan will automatically discover and use the model.".green());
+        eprintln!("{}\n", "Tip: Or configure an API key in .env (e.g. GEMINI_API_KEY) to use cloud providers.".dimmed());
+    }
+
+    /// Discovers locally installed models by inspecting both the live Ollama daemon and manifests on disk
     pub fn discover_installed_models() -> Vec<String> {
         let mut models = Vec::new();
-        let base_models_dir = std::env::var("OLLAMA_MODELS")
-            .map(std::path::PathBuf::from)
-            .unwrap_or_else(|_| {
-                let home = std::env::var("USERPROFILE")
-                    .or_else(|_| std::env::var("HOME"))
-                    .unwrap_or_default();
-                std::path::PathBuf::from(home).join(".ollama").join("models")
-            });
 
-        let manifests_root = base_models_dir.join("manifests");
-
-        // Recursively inspect all registries in ~/.ollama/models/manifests/ (e.g. registry.ollama.ai)
-        if let Ok(registries) = std::fs::read_dir(&manifests_root) {
-            for reg_entry in registries.flatten() {
-                let reg_path = reg_entry.path();
-                if !reg_path.is_dir() {
-                    continue;
+        // 1. Try querying the live running Ollama instance directly via /api/tags
+        if let Some(live_models) = Self::fetch_live_tags() {
+            for m in live_models {
+                if !models.contains(&m) {
+                    models.push(m);
                 }
+            }
+        }
 
-                // Traverse namespaces (e.g. "library", "huihui_ai", "deepseek", etc.)
-                if let Ok(namespaces) = std::fs::read_dir(&reg_path) {
-                    for ns_entry in namespaces.flatten() {
-                        let ns_path = ns_entry.path();
-                        if !ns_path.is_dir() {
-                            continue;
-                        }
-                        let ns_name = ns_entry.file_name().to_string_lossy().to_string();
+        // 2. Scan disk manifests in candidate directories
+        let mut candidate_dirs = Vec::new();
+        if let Ok(dir) = std::env::var("OLLAMA_MODELS") {
+            candidate_dirs.push(std::path::PathBuf::from(dir));
+        }
 
-                        // Traverse model repositories under this namespace
-                        if let Ok(model_entries) = std::fs::read_dir(&ns_path) {
-                            for model_entry in model_entries.flatten() {
-                                let model_path = model_entry.path();
-                                if !model_path.is_dir() {
-                                    continue;
-                                }
-                                let model_name = model_entry.file_name().to_string_lossy().to_string();
+        let home = std::env::var("USERPROFILE")
+            .or_else(|_| std::env::var("HOME"))
+            .unwrap_or_default();
+        if !home.is_empty() {
+            candidate_dirs.push(std::path::PathBuf::from(home).join(".ollama").join("models"));
+        }
+        candidate_dirs.push(std::path::PathBuf::from("/usr/share/ollama/.ollama/models"));
+        candidate_dirs.push(std::path::PathBuf::from("/var/lib/ollama/.ollama/models"));
 
-                                // Traverse tags (files under model repository)
-                                if let Ok(tag_entries) = std::fs::read_dir(&model_path) {
-                                    for tag_entry in tag_entries.flatten() {
-                                        let tag_name = tag_entry.file_name().to_string_lossy().to_string();
-                                        let full_model_id = if ns_name == "library" {
-                                            format!("{}:{}", model_name, tag_name)
-                                        } else {
-                                            format!("{}/{}:{}", ns_name, model_name, tag_name)
-                                        };
-                                        models.push(full_model_id);
+        for base_models_dir in candidate_dirs {
+            let manifests_root = base_models_dir.join("manifests");
+            if !manifests_root.is_dir() {
+                continue;
+            }
+
+            if let Ok(registries) = std::fs::read_dir(&manifests_root) {
+                for reg_entry in registries.flatten() {
+                    let reg_path = reg_entry.path();
+                    if !reg_path.is_dir() {
+                        continue;
+                    }
+
+                    if let Ok(namespaces) = std::fs::read_dir(&reg_path) {
+                        for ns_entry in namespaces.flatten() {
+                            let ns_path = ns_entry.path();
+                            if !ns_path.is_dir() {
+                                continue;
+                            }
+                            let ns_name = ns_entry.file_name().to_string_lossy().to_string();
+
+                            if let Ok(model_entries) = std::fs::read_dir(&ns_path) {
+                                for model_entry in model_entries.flatten() {
+                                    let model_path = model_entry.path();
+                                    if !model_path.is_dir() {
+                                        continue;
+                                    }
+                                    let model_name = model_entry.file_name().to_string_lossy().to_string();
+
+                                    if let Ok(tag_entries) = std::fs::read_dir(&model_path) {
+                                        for tag_entry in tag_entries.flatten() {
+                                            let tag_name = tag_entry.file_name().to_string_lossy().to_string();
+                                            let full_model_id = if ns_name == "library" {
+                                                format!("{}:{}", model_name, tag_name)
+                                            } else {
+                                                format!("{}/{}:{}", ns_name, model_name, tag_name)
+                                            };
+                                            if !models.contains(&full_model_id) {
+                                                models.push(full_model_id);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -150,7 +374,8 @@ impl OllamaProvider {
         // 0. abliterated / uncensored models (top priority when user has installed them)
         // 1. dolphin-phi:latest (high-performance 3B uncensored instruct/code model, ~1.6GB)
         // 2. qwen2.5:0.5b (ultra-fast 0.5B model, ~397MB)
-        // 3. other installed models
+        // 3. smollm / llama3.2 (fast lightweight instruct models)
+        // 4. other installed models
         models.sort_by(|a, b| {
             let score = |m: &str| {
                 let m_lower = m.to_ascii_lowercase();
@@ -162,6 +387,10 @@ impl OllamaProvider {
                     2
                 } else if m_lower.contains("llama3.2") {
                     3
+                } else if m_lower.contains("smollm") {
+                    4
+                } else if m_lower.contains("mistral") || m_lower.contains("gemma") {
+                    5
                 } else if m_lower.contains("mixtral") {
                     99
                 } else {
@@ -440,83 +669,157 @@ impl LlmProvider for OllamaProvider {
     }
 
     async fn complete(&self, req: CompletionRequest) -> Result<CompletionResponse> {
-        let start = Instant::now();
-        let url = format!("{}/api/chat", self.base_url.trim_end_matches('/'));
+        let mut current_req = req;
+        let mut fallback_attempted = false;
 
-        let messages = self.format_messages(&req);
+        loop {
+            let start = Instant::now();
+            let url = format!("{}/api/chat", self.base_url.trim_end_matches('/'));
 
-        let tools = if !req.tools.is_empty() {
-            Some(
-                req.tools
-                    .iter()
-                    .map(|t| OllamaTool {
-                        tool_type: "function",
-                        function: OllamaFunctionDefinition {
-                            name: &t.name,
-                            description: &t.description,
-                            parameters: &t.parameters,
-                        },
-                    })
-                    .collect(),
-            )
-        } else {
-            None
-        };
-
-        let keep_alive = self.get_keep_alive();
-        let options = self.build_options(&req);
-        let effective_model = Self::sanitize_model_name(&req.model);
-
-        let payload = OllamaChatPayload {
-            model: &effective_model,
-            messages,
-            format: req.format.as_ref(),
-            tools,
-            stream: false,
-            keep_alive: Some(&keep_alive),
-            options: Some(options),
-        };
-
-        let mut builder = self.client.post(&url)
-            .header("X-Tagisan-Client", "true")
-            .header("X-Tagisan-KeepAlive", "true");
-
-        if crate::ecc::agentshield::AgentShieldScanner::is_unrestricted() {
-            builder = builder.header("X-Tagisan-Unrestricted", "true");
-        }
-
-        let send_future = builder.json(&payload).send();
-
-        let response = if let Some(token) = &req.cancellation_token {
-            tokio::select! {
-                _ = token.cancelled() => return Err(TagisanError::Cancelled),
-                res = send_future => res?,
+            let installed = Self::discover_installed_models();
+            if installed.is_empty() {
+                Self::notify_no_models_installed();
+                return Err(TagisanError::NoModelsInstalled);
             }
-        } else {
-            send_future.await?
-        };
 
-        let status = response.status();
-        if !status.is_success() {
-            let err_text = response.text().await.unwrap_or_default();
-            if status.as_u16() == 429 {
-                return Err(TagisanError::RateLimited("ollama".into(), None));
+            let effective_model = Self::sanitize_model_name(&current_req.model).into_owned();
+            let target_model = if let Some(matched) = Self::find_matching_model(&effective_model, &installed) {
+                matched
+            } else {
+                let fb = installed[0].clone();
+                eprintln!(
+                    "{}",
+                    format!(
+                        "⚠️  [Ollama Auto-Recovery] Model '{}' not found in Ollama (it may have been removed). Automatically switching to installed model '{}'...",
+                        effective_model, fb
+                    ).yellow().bold()
+                );
+                Self::auto_heal_env_file(&fb);
+                current_req.model = fb.clone();
+                fb
+            };
+
+            let messages = self.format_messages(&current_req);
+
+            let tools = if !current_req.tools.is_empty() {
+                Some(
+                    current_req.tools
+                        .iter()
+                        .map(|t| OllamaTool {
+                            tool_type: "function",
+                            function: OllamaFunctionDefinition {
+                                name: &t.name,
+                                description: &t.description,
+                                parameters: &t.parameters,
+                            },
+                        })
+                        .collect(),
+                )
+            } else {
+                None
+            };
+
+            let keep_alive = self.get_keep_alive();
+            let options = self.build_options(&current_req);
+
+            let payload = OllamaChatPayload {
+                model: &target_model,
+                messages,
+                format: current_req.format.as_ref(),
+                tools,
+                stream: false,
+                keep_alive: Some(&keep_alive),
+                options: Some(options),
+            };
+
+            let mut builder = self.client.post(&url)
+                .header("X-Tagisan-Client", "true")
+                .header("X-Tagisan-KeepAlive", "true");
+
+            if crate::ecc::agentshield::AgentShieldScanner::is_unrestricted() {
+                builder = builder.header("X-Tagisan-Unrestricted", "true");
             }
-            return Err(TagisanError::BadResponse("ollama".into(), err_text));
-        }
 
-        let api_resp: OllamaApiResponse = if let Some(token) = &req.cancellation_token {
-            tokio::select! {
-                _ = token.cancelled() => return Err(TagisanError::Cancelled),
-                res = response.json::<OllamaApiResponse>() => res?,
+            let send_future = builder.json(&payload).send();
+
+            let response = if let Some(token) = &current_req.cancellation_token {
+                tokio::select! {
+                    _ = token.cancelled() => return Err(TagisanError::Cancelled),
+                    res = send_future => res?,
+                }
+            } else {
+                send_future.await?
+            };
+
+            let status = response.status();
+            if !status.is_success() {
+                let err_text = response.text().await.unwrap_or_default();
+                if status.as_u16() == 429 {
+                    return Err(TagisanError::RateLimited("ollama".into(), None));
+                }
+
+                if !fallback_attempted && (status.as_u16() == 404 || err_text.contains("not found")) {
+                    fallback_attempted = true;
+                    let available = self.list_models().await.unwrap_or_else(|_| Self::discover_installed_models());
+                    if available.is_empty() {
+                        Self::notify_no_models_installed();
+                        return Err(TagisanError::NoModelsInstalled);
+                    }
+                    if let Some(fb) = available.into_iter().find(|m| m != &*target_model) {
+                        eprintln!(
+                            "{}",
+                            format!(
+                                "⚠️  [Ollama Auto-Recovery] Model '{}' not found in Ollama (it may have been removed). Automatically switching to '{}'...",
+                                target_model, fb
+                            ).yellow().bold()
+                        );
+                        Self::auto_heal_env_file(&fb);
+                        current_req.model = fb;
+                        continue;
+                    } else {
+                        Self::notify_no_models_installed();
+                        return Err(TagisanError::NoModelsInstalled);
+                    }
+                }
+
+                return Err(TagisanError::BadResponse("ollama".into(), err_text));
             }
-        } else {
-            response.json().await?
-        };
 
-        if let Some(err) = api_resp.error {
-            return Err(TagisanError::BadResponse("ollama".into(), err));
-        }
+            let api_resp: OllamaApiResponse = if let Some(token) = &current_req.cancellation_token {
+                tokio::select! {
+                    _ = token.cancelled() => return Err(TagisanError::Cancelled),
+                    res = response.json::<OllamaApiResponse>() => res?,
+                }
+            } else {
+                response.json().await?
+            };
+
+            if let Some(err) = api_resp.error {
+                if !fallback_attempted && err.contains("not found") {
+                    fallback_attempted = true;
+                    let available = self.list_models().await.unwrap_or_else(|_| Self::discover_installed_models());
+                    if available.is_empty() {
+                        Self::notify_no_models_installed();
+                        return Err(TagisanError::NoModelsInstalled);
+                    }
+                    if let Some(fb) = available.into_iter().find(|m| m != &*target_model) {
+                        eprintln!(
+                            "{}",
+                            format!(
+                                "⚠️  [Ollama Auto-Recovery] Model '{}' not found in Ollama. Automatically switching to '{}'...",
+                                target_model, fb
+                            ).yellow().bold()
+                        );
+                        Self::auto_heal_env_file(&fb);
+                        current_req.model = fb;
+                        continue;
+                    } else {
+                        Self::notify_no_models_installed();
+                        return Err(TagisanError::NoModelsInstalled);
+                    }
+                }
+                return Err(TagisanError::BadResponse("ollama".into(), err));
+            }
 
         let mut content_blocks = Vec::new();
         let mut has_tool_calls = false;
@@ -577,88 +880,138 @@ impl LlmProvider for OllamaProvider {
             estimated_cost_usd: Some(0.0),
         };
 
-        Ok(CompletionResponse {
-            id: format!("ollama_{}", start.elapsed().as_millis()),
-            provider: "ollama".to_string(),
-            model: effective_model.into_owned(),
-            message: Message {
-                role: Role::Assistant,
-                content: content_blocks,
-                name: None,
-                metadata: std::collections::HashMap::new(),
-            },
-            finish_reason,
-            usage,
-            latency: start.elapsed(),
-        })
+            return Ok(CompletionResponse {
+                id: format!("ollama_{}", start.elapsed().as_millis()),
+                provider: "ollama".to_string(),
+                model: target_model,
+                message: Message {
+                    role: Role::Assistant,
+                    content: content_blocks,
+                    name: None,
+                    metadata: std::collections::HashMap::new(),
+                },
+                finish_reason,
+                usage,
+                latency: start.elapsed(),
+            });
+        }
     }
 
     async fn stream(&self, req: CompletionRequest) -> Result<BoxEventStream> {
-        let url = format!("{}/api/chat", self.base_url.trim_end_matches('/'));
+        let mut current_req = req;
+        let mut fallback_attempted = false;
 
-        let messages = self.format_messages(&req);
+        loop {
+            let url = format!("{}/api/chat", self.base_url.trim_end_matches('/'));
 
-        let tools = if !req.tools.is_empty() {
-            Some(
-                req.tools
-                    .iter()
-                    .map(|t| OllamaTool {
-                        tool_type: "function",
-                        function: OllamaFunctionDefinition {
-                            name: &t.name,
-                            description: &t.description,
-                            parameters: &t.parameters,
-                        },
-                    })
-                    .collect(),
-            )
-        } else {
-            None
-        };
-
-        let keep_alive = self.get_keep_alive();
-        let options = self.build_options(&req);
-        let effective_model = Self::sanitize_model_name(&req.model);
-
-        let payload = OllamaChatPayload {
-            model: &effective_model,
-            messages,
-            format: req.format.as_ref(),
-            tools,
-            stream: true,
-            keep_alive: Some(&keep_alive),
-            options: Some(options),
-        };
-
-        let mut builder = self.client.post(&url)
-            .header("X-Tagisan-Client", "true")
-            .header("X-Tagisan-KeepAlive", "true");
-
-        if crate::ecc::agentshield::AgentShieldScanner::is_unrestricted() {
-            builder = builder.header("X-Tagisan-Unrestricted", "true");
-        }
-
-        let send_future = builder.json(&payload).send();
-
-        let response = if let Some(token) = &req.cancellation_token {
-            tokio::select! {
-                _ = token.cancelled() => return Err(TagisanError::Cancelled),
-                res = send_future => res?,
+            let installed = Self::discover_installed_models();
+            if installed.is_empty() {
+                Self::notify_no_models_installed();
+                return Err(TagisanError::NoModelsInstalled);
             }
-        } else {
-            send_future.await?
-        };
 
-        let status = response.status();
-        if !status.is_success() {
-            let err_text = response.text().await.unwrap_or_default();
-            if status.as_u16() == 429 {
-                return Err(TagisanError::RateLimited("ollama".into(), None));
+            let effective_model = Self::sanitize_model_name(&current_req.model).into_owned();
+            let target_model = if let Some(matched) = Self::find_matching_model(&effective_model, &installed) {
+                matched
+            } else {
+                let fb = installed[0].clone();
+                eprintln!(
+                    "{}",
+                    format!(
+                        "⚠️  [Ollama Auto-Recovery] Model '{}' not found in Ollama (it may have been removed). Automatically switching to installed model '{}'...",
+                        effective_model, fb
+                    ).yellow().bold()
+                );
+                Self::auto_heal_env_file(&fb);
+                current_req.model = fb.clone();
+                fb
+            };
+
+            let messages = self.format_messages(&current_req);
+
+            let tools = if !current_req.tools.is_empty() {
+                Some(
+                    current_req.tools
+                        .iter()
+                        .map(|t| OllamaTool {
+                            tool_type: "function",
+                            function: OllamaFunctionDefinition {
+                                name: &t.name,
+                                description: &t.description,
+                                parameters: &t.parameters,
+                            },
+                        })
+                        .collect(),
+                )
+            } else {
+                None
+            };
+
+            let keep_alive = self.get_keep_alive();
+            let options = self.build_options(&current_req);
+
+            let payload = OllamaChatPayload {
+                model: &target_model,
+                messages,
+                format: current_req.format.as_ref(),
+                tools,
+                stream: true,
+                keep_alive: Some(&keep_alive),
+                options: Some(options),
+            };
+
+            let mut builder = self.client.post(&url)
+                .header("X-Tagisan-Client", "true")
+                .header("X-Tagisan-KeepAlive", "true");
+
+            if crate::ecc::agentshield::AgentShieldScanner::is_unrestricted() {
+                builder = builder.header("X-Tagisan-Unrestricted", "true");
             }
-            return Err(TagisanError::BadResponse("ollama".into(), err_text));
-        }
 
-        let cancellation_token = req.cancellation_token.clone();
+            let send_future = builder.json(&payload).send();
+
+            let response = if let Some(token) = &current_req.cancellation_token {
+                tokio::select! {
+                    _ = token.cancelled() => return Err(TagisanError::Cancelled),
+                    res = send_future => res?,
+                }
+            } else {
+                send_future.await?
+            };
+
+            let status = response.status();
+            if !status.is_success() {
+                let err_text = response.text().await.unwrap_or_default();
+                if status.as_u16() == 429 {
+                    return Err(TagisanError::RateLimited("ollama".into(), None));
+                }
+                if !fallback_attempted && (status.as_u16() == 404 || err_text.contains("not found")) {
+                    fallback_attempted = true;
+                    let available = self.list_models().await.unwrap_or_else(|_| Self::discover_installed_models());
+                    if available.is_empty() {
+                        Self::notify_no_models_installed();
+                        return Err(TagisanError::NoModelsInstalled);
+                    }
+                    if let Some(fb) = available.into_iter().find(|m| m != &*target_model) {
+                        eprintln!(
+                            "{}",
+                            format!(
+                                "⚠️  [Ollama Auto-Recovery] Model '{}' not found in Ollama (it may have been removed). Automatically switching to '{}'...",
+                                target_model, fb
+                            ).yellow().bold()
+                        );
+                        Self::auto_heal_env_file(&fb);
+                        current_req.model = fb;
+                        continue;
+                    } else {
+                        Self::notify_no_models_installed();
+                        return Err(TagisanError::NoModelsInstalled);
+                    }
+                }
+                return Err(TagisanError::BadResponse("ollama".into(), err_text));
+            }
+
+            let cancellation_token = current_req.cancellation_token.clone();
         let stream = response.bytes_stream().map(|item| {
             item.map_err(std::io::Error::other)
         });
@@ -779,7 +1132,8 @@ impl LlmProvider for OllamaProvider {
             }
         };
 
-        Ok(Box::pin(output_stream))
+            return Ok(Box::pin(output_stream));
+        }
     }
 }
 
@@ -1746,6 +2100,41 @@ mod brutal_stress_tests {
         assert_eq!(OllamaProvider::sanitize_model_name(""), fallback.as_str());
         assert_eq!(OllamaProvider::sanitize_model_name("<recommended model or null>"), fallback.as_str());
         assert_eq!(OllamaProvider::sanitize_model_name("llama3.2:latest"), "llama3.2:latest");
+    }
+
+    #[test]
+    fn test_11_model_removal_and_auto_recovery() {
+        let mock_installed = vec![
+            "smollm2:1.7b".to_string(),
+            "qwen2.5:0.5b".to_string(),
+        ];
+
+        // 1. Exact match
+        assert_eq!(
+            OllamaProvider::find_matching_model("smollm2:1.7b", &mock_installed),
+            Some("smollm2:1.7b".to_string())
+        );
+
+        // 2. Base tag-less match
+        assert_eq!(
+            OllamaProvider::find_matching_model("smollm2", &mock_installed),
+            Some("smollm2:1.7b".to_string())
+        );
+
+        // 3. Removed / non-existent model returns None
+        assert_eq!(
+            OllamaProvider::find_matching_model("huihui_ai/llama3.2-abliterate:3b-instruct", &mock_installed),
+            None
+        );
+
+        // 4. Test environment override with a removed model
+        std::env::set_var("OLLAMA_MODEL", "deleted-model-xyz-999");
+        let recovered = OllamaProvider::default_model();
+        assert_ne!(recovered, "deleted-model-xyz-999", "default_model must never return a deleted model if models are installed");
+        let installed = OllamaProvider::discover_installed_models();
+        if !installed.is_empty() {
+            assert!(installed.contains(&recovered));
+        }
     }
 }
 

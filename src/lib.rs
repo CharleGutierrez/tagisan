@@ -118,6 +118,7 @@ pub use tools::bun::{
     BunInstallTool, BunRunTool, BunTestTool,
 };
 pub use tools::bun_compile::BunCompileTool;
+pub use tools::web_search::{WebSearchResult, WebSearchTool};
 pub use tools::bun_serve::{BunServeTool, BunStreamBusTool};
 pub use tools::perl::{
     extract_missing_perl_module, PerlAutoResolveTool, PerlEvalTool, PerlInstallTool, PerlRunTool,

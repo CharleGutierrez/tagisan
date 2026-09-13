@@ -35,6 +35,9 @@ pub enum TagisanError {
     #[error("Execution error: {0}")]
     Execution(String),
 
+    #[error("No local LLM models are installed in Ollama. Run 'ollama pull <model>' to install one (e.g., 'ollama pull smollm2:1.7b').")]
+    NoModelsInstalled,
+
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
 }
@@ -43,6 +46,7 @@ impl TagisanError {
     /// Determines whether the error is transient and safe to retry automatically
     pub fn is_retryable(&self) -> bool {
         match self {
+            Self::NoModelsInstalled => false,
             Self::BudgetExceeded { .. } => false,
             Self::Authentication(..) => false,
             Self::Cancelled => false,

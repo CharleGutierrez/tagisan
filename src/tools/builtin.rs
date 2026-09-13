@@ -10,6 +10,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::process::Command;
 use tokio::time::timeout;
+pub use crate::tools::web_search::WebSearchTool;
 
 // =========================================================================
 // 1. ReadFileTool

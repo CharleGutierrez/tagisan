@@ -5,6 +5,7 @@ pub mod bun_serve;
 pub mod perl;
 pub mod python;
 pub mod wasm;
+pub mod web_search;
 
 #[path = "../python/mod.rs"]
 pub mod python_runtime;
@@ -46,6 +47,7 @@ pub use python::{
     PythonRunTool,
 };
 pub use wasm::{load_wasm_tools, WasmTool};
+pub use web_search::{WebSearchResult, WebSearchTool};
 pub use crate::vella::{
     VellaDefenseDrillTool, VellaDigitalTwinTool, VellaEventBridgeTool, VellaFheShieldTool,
     VellaMedicineTool, VellaRoboticsTool, VellaScadaTool, VellaScaffolderTool,
@@ -156,6 +158,7 @@ impl ToolRegistry {
         registry.register_tool(builtin::RrTimeTravelDebuggerTool::new());
         registry.register_tool(builtin::QemuBaremetalEmulatorTool::new());
         registry.register_tool(builtin::TlaConsensusCheckerTool::new());
+        registry.register_tool(web_search::WebSearchTool::new());
         registry
     }
 
@@ -233,6 +236,7 @@ impl ToolRegistry {
         registry.register_tool(builtin::RrTimeTravelDebuggerTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::QemuBaremetalEmulatorTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::TlaConsensusCheckerTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(web_search::WebSearchTool::new());
         registry
     }
 

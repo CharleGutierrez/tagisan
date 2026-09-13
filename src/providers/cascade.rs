@@ -72,6 +72,7 @@ impl CascadeProvider {
                     false
                 }
             }
+            TagisanError::NoModelsInstalled => true,
             TagisanError::Cancelled => false,
             TagisanError::Serialization(_) => false,
             TagisanError::Execution(_) => false,
@@ -89,6 +90,7 @@ impl CascadeProvider {
             TagisanError::ProviderNotFound(_) => true,
             TagisanError::ContextLengthExceeded(_, _, _) => true,
             TagisanError::BudgetExceeded { .. } => false,
+            TagisanError::NoModelsInstalled => false,
             TagisanError::Cancelled => false,
             TagisanError::Serialization(_) => false,
             TagisanError::Execution(_) => false,
