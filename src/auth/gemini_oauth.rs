@@ -41,9 +41,9 @@ pub fn default_antigravity_client_secret() -> String {
     String::from_utf8(decoded).unwrap_or_default()
 }
 
-/// Scopes matching AntiGravity 2.0 CLI and Gemini Generative Language API
+/// Scopes matching AntiGravity 2.0 CLI and Google Cloud Platform
 pub const GEMINI_OAUTH_SCOPES: &str =
-    "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/generative-language https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile";
+    "https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid";
 
 /// Stored OAuth 2.0 credentials for Google Gemini
 #[derive(Debug, Clone, Serialize, Deserialize)]
