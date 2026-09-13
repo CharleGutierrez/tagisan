@@ -73,7 +73,7 @@
 | 046 | `smack-modular-program-verifier` | [`smackers/smack`](https://github.com/smackers/smack) | Translates LLVM IR into Boogie intermediate verification language to leverage multiple SMT backends. |
 | 047 | `alt-ergo-polymorphic-smt-solver` | [`OCamlPro/alt-ergo`](https://github.com/OCamlPro/alt-ergo) | Automated theorem prover designed specifically for program verification, featuring first-class polymorphism. |
 | 048 | `mona-monadic-second-order-logic` | [`mona-lang/mona`](https://github.com/mona-lang/mona) | Decision procedure for WS1S and WS2S logics, verifying regular tree properties and state transitions. |
-| 049 | `z3-str3-string-constraint-solver` | [`Z3Prover/z3`](https://github.com/Z3Prover/z3) | Specialized string constraint solver within Z3, eliminating regular expression catastrophic backtracking in parsers. |
+| 049 | `ostrich-smt-string-solver` | [`uuverifiers/ostrich`](https://github.com/uuverifiers/ostrich) | Specialized string constraint SMT solver, preventing ReDoS and catastrophic backtracking in parsers. |
 | 050 | `verifpal-cryptographic-protocol-analyzer` | [`verifpal/verifpal`](https://github.com/verifpal/verifpal) | Automated cryptographic protocol verification tool designed for rapid protocol design and formal security modeling. |
 
 ## Section 2: Linux Kernel, eBPF Telemetry, Low-Latency & Hardware Bypass (051 - 100)
@@ -94,14 +94,14 @@
 | 062 | `hugepages-tlb-cache-optimizer` | [`libhugetlbfs/libhugetlbfs`](https://github.com/libhugetlbfs/libhugetlbfs) | Backs high-frequency trading buffers with 2MB/1GB HugeTLB pages to eliminate CPU TLB cache thrashing. |
 | 063 | `solarflare-onload-bypass-networking` | [`Xilinx-CNS/onload`](https://github.com/Xilinx-CNS/onload) | Kernel-bypass network stack for Solarflare NICs; cuts UDP/TCP tick-to-trade latency under 800 nanoseconds. |
 | 064 | `rdma-infiniband-verbs-engine` | [`linux-rdma/rdma-core`](https://github.com/linux-rdma/rdma-core) | Remote Direct Memory Access; reads and writes remote server memory over InfiniBand/RoCE without CPU interruption. |
-| 065 | `turbostat-cpu-jitter-tuner` | [`torvalds/linux`](https://github.com/torvalds/linux) | Audits CPU C-states, turbo frequencies, and core isolations (isolcpus) to eliminate sub-millisecond OS jitter. |
+| 065 | `tuned-adaptive-tuning-daemon` | [`redhat-performance/tuned`](https://github.com/redhat-performance/tuned) | Dynamic adaptive system tuning daemon for low-latency network profiles and CPU isolation. |
 | 066 | `libbpf-c-ebpf-bootstrap` | [`libbpf/libbpf-bootstrap`](https://github.com/libbpf/libbpf-bootstrap) | Scaffolding for compiling BPF CO-RE (Compile Once – Run Everywhere) programs across diverse Linux kernels. |
 | 067 | `bcc-bpf-compiler-collection` | [`iovisor/bcc`](https://github.com/iovisor/bcc) | Toolkit for creating efficient kernel tracing and manipulation programs with Python and Lua frontends. |
 | 068 | `dropwatch-packet-loss-monitor` | [`pavel-odintsov/dropwatch`](https://github.com/pavel-odintsov/dropwatch) | Monitors Linux kernel packet drop locations, pinpointing socket buffer exhaustion in high-throughput links. |
 | 069 | `iproute2-traffic-control-tc` | [`shemminger/iproute2`](https://github.com/shemminger/iproute2) | Configures Linux Traffic Control (tc) qdiscs, token bucket rate limiters, and hierarchical fair-service curves. |
 | 070 | `ethtool-nic-ring-buffer-tuner` | [`mirror/ethtool`](https://github.com/mirror/ethtool) | Tunes network interface hardware ring buffers, interrupt coalescing, and hardware offloads (LRO, GRO, TSO). |
 | 071 | `numactl-numa-memory-pinning` | [`numactl/numactl`](https://github.com/numactl/numactl) | Binds threads and memory allocations to specific NUMA nodes, preventing high-latency cross-interconnect bus hops. |
-| 072 | `cpupower-governor-overdrive` | [`torvalds/linux`](https://github.com/torvalds/linux) | Forces CPU frequency governor to performance mode, disabling sleep states to guarantee deterministic latency. |
+| 072 | `powertop-cpu-jitter-tuner` | [`fenrus75/powertop`](https://github.com/fenrus75/powertop) | Linux diagnostic tool to audit C-states, P-states, and eliminate kernel latency spikes. |
 | 073 | `jemalloc-scalable-memory-allocator` | [`jemalloc/jemalloc`](https://github.com/jemalloc/jemalloc) | General-purpose memory allocator emphasizing fragmentation avoidance and scalable multi-threaded concurrency. |
 | 074 | `snmalloc-message-passing-allocator` | [`microsoft/snmalloc`](https://github.com/microsoft/snmalloc) | Message-passing based allocator; returns freed memory to allocating threads with lock-free single-producer queues. |
 | 075 | `vpp-vector-packet-processing` | [`FDio/vpp`](https://github.com/FDio/vpp) | Vector packet processing platform; processes vectors of packets in CPU cache, achieving 10x kernel routing speeds. |
@@ -111,8 +111,8 @@
 | 079 | `cgroups-v2-resource-enforcer` | [`systemd/systemd`](https://github.com/systemd/systemd) | Enforces strict memory, CPU, and I/O limits on child agent subprocesses using Linux cgroups v2. |
 | 080 | `wireguard-kernel-crypto-vpn` | [`WireGuard/wireguard-linux`](https://github.com/WireGuard/wireguard-linux) | Kernel-embedded modern VPN utilizing Noise protocol, ChaCha20-Poly1305, and Curve25519 for secure agent meshes. |
 | 081 | `netmap-packet-io-framework` | [`luigirizzo/netmap`](https://github.com/luigirizzo/netmap) | High-speed packet I/O architecture; maps NIC rings directly into user memory for ultra-fast software switching. |
-| 082 | `kernel-lockdep-validator` | [`torvalds/linux`](https://github.com/torvalds/linux) | Runtime lock dependency validator detecting potential inversion deadlocks in kernel drivers and modules. |
-| 083 | `linux-kmemleak-detector` | [`torvalds/linux`](https://github.com/torvalds/linux) | Kernel memory leak detector scanning allocated kmalloc pointers for orphaned memory blocks. |
+| 082 | `lttng-kernel-tracer` | [`lttng/lttng-modules`](https://github.com/lttng/lttng-modules) | Low-overhead Linux Trace Toolkit Next Generation kernel modules for deep tracepoint capture. |
+| 083 | `gperftools-tcmalloc-auditor` | [`gperftools/gperftools`](https://github.com/gperftools/gperftools) | Google Performance Tools: tcmalloc memory allocator, heap leak checker, and CPU profiler. |
 | 084 | `sysbench-hardware-stressor` | [`akopytov/sysbench`](https://github.com/akopytov/sysbench) | Modular cross-platform benchmark for evaluating CPU, memory, thread mutexes, and OLTP database performance. |
 | 085 | `stress-ng-system-chaos-loader` | [`ColinIanKing/stress-ng`](https://github.com/ColinIanKing/stress-ng) | Stresses computer systems across 300+ stressor mechanisms: memory pressure, thermal limits, and syscall thrashing. |
 | 086 | `pciutils-pcie-bandwidth-analyzer` | [`pciutils/pciutils`](https://github.com/pciutils/pciutils) | Inspects PCI Express bus topologies, link speeds (Gen 4/5), and PCIe bridge capabilities for accelerator cards. |
@@ -120,16 +120,16 @@
 | 088 | `sysstat-sar-performance-recorder` | [`sysstat/sysstat`](https://github.com/sysstat/sysstat) | Continuous performance monitoring tools (sar, iostat, mpstat) recording long-term hardware utilization baselines. |
 | 089 | `bpftool-bpf-subsystem-inspector` | [`libbpf/bpftool`](https://github.com/libbpf/bpftool) | Inspects, dumps, and manages loaded eBPF programs, maps, links, and BTF (BPF Type Format) debug metadata. |
 | 090 | `kpatch-live-kernel-patcher` | [`dynup/kpatch`](https://github.com/dynup/kpatch) | Applies live security patches and bug fixes to running Linux kernels without requiring system reboots. |
-| 091 | `bcc-sysql-telemetry-engine` | [`iovisor/bcc`](https://github.com/iovisor/bcc) | Executes SQL queries over live operating system telemetry, processes, open ports, and file descriptors. |
+| 091 | `sysdig-system-tracer` | [`draios/sysdig`](https://github.com/draios/sysdig) | Universal system-level state capture and container observability engine capturing system calls. |
 | 092 | `libcap-posix-capabilities-dropper` | [`mirror/libcap`](https://github.com/mirror/libcap) | Drops Linux superuser capabilities, enforcing least-privilege security boundaries for running daemons. |
 | 093 | `nsenter-namespace-joiner` | [`util-linux/util-linux`](https://github.com/util-linux/util-linux) | Enters Linux kernel namespaces (mount, UTS, IPC, net, pid, user) to inspect isolated container processes. |
 | 094 | `strace-syscall-fault-injector` | [`strace/strace`](https://github.com/strace/strace) | Intercepts and modifies system calls, injecting synthetic disk errors (EIO, ENOMEM) to test software resilience. |
 | 095 | `lsof-fd-leak-detector` | [`lsof-org/lsof`](https://github.com/lsof-org/lsof) | Identifies leaked file descriptors, unclosed socket handles, and hidden unlinked open files consuming disk space. |
 | 096 | `rt-tests-cyclictest-latency-profiler` | [`cyclictest/rt-tests`](https://github.com/cyclictest/rt-tests) | Measures deterministic real-time OS latency jitter down to microsecond precision under PREEMPT_RT. |
 | 097 | `irqbalance-interrupt-distributor` | [`Irqbalance/irqbalance`](https://github.com/Irqbalance/irqbalance) | Distributes hardware interrupts across multicore CPUs to prevent single-core interrupt starvation. |
-| 098 | `numastat-numa-memory-auditor` | [`numactl/numactl`](https://github.com/numactl/numactl) | Monitors NUMA hit/miss ratios to detect foreign memory access penalties across dual-socket servers. |
-| 099 | `taskset-cpu-affinity-binder` | [`util-linux/util-linux`](https://github.com/util-linux/util-linux) | Retrieves and sets CPU processor affinity for critical low-latency threads, preventing thread migration overhead. |
-| 100 | `chrt-realtime-scheduler-setter` | [`util-linux/util-linux`](https://github.com/util-linux/util-linux) | Sets real-time scheduling attributes (SCHED_FIFO, SCHED_RR) on high-priority trading and telemetry threads. |
+| 098 | `intel-pcm-numa-monitor` | [`intel/pcm`](https://github.com/intel/pcm) | Intel Processor Counter Monitor for real-time tracking of memory bandwidth, UPI interconnects, and NUMA penalties. |
+| 099 | `ipc-bench-low-latency-tester` | [`rigtorp/ipc-bench`](https://github.com/rigtorp/ipc-bench) | Micro-benchmarks for low-latency inter-process communication: TCP, UNIX domain sockets, and pipes. |
+| 100 | `oomd-userspace-killer` | [`facebookincubator/oomd`](https://github.com/facebookincubator/oomd) | Userspace Out-Of-Memory killer using PSI (Pressure Stall Information) to prevent thrashing. |
 
 ## Section 3: Autonomous SWE, AST Mutation, Patch Synthesis & Self-Healing (101 - 150)
 
@@ -212,7 +212,7 @@
 | 170 | `openllm-production-model-server` | [`bentoml/OpenLLM`](https://github.com/bentoml/OpenLLM) | Production deployment engine for LLMs; generates Docker containers and Kubernetes manifests with BentoML integration. |
 | 171 | `tgi-text-generation-inference` | [`huggingface/text-generation-inference`](https://github.com/huggingface/text-generation-inference) | Hugging Face's Rust/Python production server; implements continuous batching, streaming, and speculative decoding. |
 | 172 | `torch-dynamo-graph-capture` | [`pytorch/pytorch`](https://github.com/pytorch/pytorch) | Python-level JIT compiler using CPython frame evaluation hooks to dynamically trace PyTorch programs into FX graphs. |
-| 173 | `torch-inductor-deep-learning-compiler` | [`pytorch/pytorch`](https://github.com/pytorch/pytorch) | Code generator backend for PyTorch 2.0; emits optimized Triton GPU code and C++ OpenMP CPU code. |
+| 173 | `deepgemm-fp8-kernels` | [`deepseek-ai/DeepGEMM`](https://github.com/deepseek-ai/DeepGEMM) | Clean FP8 GEMM library for deep learning inference and training with Hopper Tensor Cores. |
 | 174 | `xformers-toolbox-for-transformers` | [`facebookresearch/xformers`](https://github.com/facebookresearch/xformers) | Hackable and optimized Transformers building blocks; implements memory-efficient attention and sparse cross-entropy. |
 | 175 | `fastertransformer-hpc-inference` | [`NVIDIA/FasterTransformer`](https://github.com/NVIDIA/FasterTransformer) | Optimized C++ implementation of Transformer layers for ultra-low latency model serving on NVIDIA GPUs. |
 | 176 | `triton-server-inference-platform` | [`triton-inference-server/server`](https://github.com/triton-inference-server/server) | Enterprise multi-model inference server supporting TensorRT, ONNX, PyTorch, and OpenVINO under unified gRPC endpoints. |
@@ -466,7 +466,7 @@
 | # | Skill Identifier | GitHub Project | Superpower Unlocked in `tgs` |
 |---|---|---|---|
 | 401 | `cranelift-jit-codegen-backend` | [`bytecodealliance/wasmtime`](https://github.com/bytecodealliance/wasmtime) | Low-overhead code generator; compiles intermediate representations into native machine code in milliseconds. |
-| 402 | `wasmtime-webassembly-sandboxed-runtime` | [`bytecodealliance/wasmtime`](https://github.com/bytecodealliance/wasmtime) | Fast, secure WebAssembly runtime; executes untrusted plugins with strict memory and CPU instruction quotas. |
+| 402 | `wamr-wasm-micro-runtime` | [`bytecodealliance/wasm-micro-runtime`](https://github.com/bytecodealliance/wasm-micro-runtime) | Lightweight standalone WebAssembly runtime with small footprint, configurable sandbox, and AoT compilation. |
 | 403 | `llvm-project-compiler-infrastructure` | [`llvm/llvm-project`](https://github.com/llvm/llvm-project) | Collection of modular and reusable compiler technologies; performs vectorization, dead-code elimination, and LTO. |
 | 404 | `extism-universal-wasm-plugin-core` | [`extism/extism`](https://github.com/extism/extism) | Universal WebAssembly plugin framework; allows tgs to call external tools written in 16+ languages with zero overhead. |
 | 405 | `swc-rust-speedy-web-compiler` | [`swc-project/swc`](https://github.com/swc-project/swc) | Ultra-fast TypeScript/JavaScript compiler written in Rust; bundles and minifies code 20x faster than Babel. |
@@ -481,8 +481,8 @@
 | 414 | `binaryen-webassembly-optimizer` | [`WebAssembly/binaryen`](https://github.com/WebAssembly/binaryen) | Compiler and toolchain infrastructure for WebAssembly; optimizes WASM binaries to minimize size and execution time. |
 | 415 | `zig-c-cpp-drop-in-toolchain-compiler` | [`ziglang/zig`](https://github.com/ziglang/zig) | Robust systems programming language and drop-in C/C++ cross-compiler; cross-compiles native binaries for any target architecture. |
 | 416 | `mold-high-speed-modern-linker` | [`rui314/mold`](https://github.com/rui314/mold) | High-speed modern linker; links large multi-gigabyte programs several times faster than GNU gold or LLVM lld. |
-| 417 | `lld-llvm-linker` | [`llvm/llvm-project`](https://github.com/llvm/llvm-project) | High-performance linker from the LLVM project, dropping linking times across ELF, COFF, and Mach-O. |
-| 418 | `wabt-webassembly-binary-toolkit-cli` | [`WebAssembly/wabt`](https://github.com/WebAssembly/wabt) | Converts between WebAssembly binary and text formats, validating specifications and producing C source code. |
+| 417 | `chibicc-small-c-compiler` | [`rui314/chibicc`](https://github.com/rui314/chibicc) | Reference C11 compiler implementing robust code generation and AST parsing with minimal overhead. |
+| 418 | `wasm-tools-bytecode-engine` | [`bytecodealliance/wasm-tools`](https://github.com/bytecodealliance/wasm-tools) | Low-level WebAssembly tooling: parser, printer, validator, and component model manipulator. |
 | 419 | `v8-high-performance-javascript-engine` | [`v8/v8`](https://github.com/v8/v8) | Google's open source high-performance JavaScript and WebAssembly engine written in C++. |
 | 420 | `luajit-just-in-time-compiler-for-lua` | [`LuaJIT/LuaJIT`](https://github.com/LuaJIT/LuaJIT) | Just-In-Time Compiler for the Lua programming language, delivering performance rivaling compiled C code. |
 | 421 | `pypy-fast-compliant-python-interpreter` | [`pypy/pypy`](https://github.com/pypy/pypy) | Fast, compliant alternative implementation of Python; uses a tracing JIT compiler for high CPU performance. |
@@ -492,18 +492,18 @@
 | 425 | `esbuild-an-extremely-fast-bundler` | [`evanw/esbuild`](https://github.com/evanw/esbuild) | Extremely fast JavaScript and TypeScript bundler written in Go; links assets 10x-100x faster than webpack. |
 | 426 | `tsc-official-typescript-compiler` | [`microsoft/TypeScript`](https://github.com/microsoft/TypeScript) | Official TypeScript compiler and language service, providing type-checking and ECMAScript emission. |
 | 427 | `gcc-gnu-compiler-collection` | [`gcc-mirror/gcc`](https://github.com/gcc-mirror/gcc) | GNU Compiler Collection supporting C, C++, Objective-C, Fortran, Ada, Go, and D architectures. |
-| 428 | `clang-c-language-frontend-for-llvm` | [`llvm/llvm-project`](https://github.com/llvm/llvm-project) | C, C++, and Objective-C compiler frontend for LLVM, delivering expressive diagnostics and AST tooling. |
+| 428 | `tinycc-fast-c-compiler` | [`TinyCC/tinycc`](https://github.com/TinyCC/tinycc) | Small, fast C99 compiler and JIT engine producing native machine code directly in memory without linking. |
 | 429 | `rustc-rust-compiler-driver` | [`rust-lang/rust`](https://github.com/rust-lang/rust) | The official compiler for the Rust programming language, emitting optimized machine code via LLVM. |
 | 430 | `glslang-khronos-glsl-spirv-compiler` | [`KhronosGroup/glslang`](https://github.com/KhronosGroup/glslang) | Khronos-reference front end for GLSL/ESSL, transforming shader pipelines into binary SPIR-V instructions. |
 | 431 | `spirv-tools-spirv-shader-optimizer` | [`KhronosGroup/SPIRV-Tools`](https://github.com/KhronosGroup/SPIRV-Tools) | API and command-line tools for processing, optimizing, and disassembling SPIR-V intermediate shader modules. |
 | 432 | `nasm-netwide-assembler` | [`netwide-assembler/nasm`](https://github.com/netwide-assembler/nasm) | The Netwide Assembler: an 80x86 and x86-64 assembler designed for portability and modularity. |
 | 433 | `yasm-modular-assembler` | [`yasm/yasm`](https://github.com/yasm/yasm) | Complete rewrite of the NASM assembler supporting multiple syntaxes (NASM, GAS) and object formats. |
 | 434 | `as-gnu-assembler` | [`bminor/binutils-gdb`](https://github.com/bminor/binutils-gdb) | GNU assembler (GAS) portable assembler used across almost all Unix-like operating systems. |
-| 435 | `binutils-binary-utilities` | [`bminor/binutils-gdb`](https://github.com/bminor/binutils-gdb) | Collection of binary tools: objdump, nm, readelf, strip, and ar for manipulating object files. |
+| 435 | `libbacktrace-symbol-unwinder` | [`ianlancetaylor/libbacktrace`](https://github.com/ianlancetaylor/libbacktrace) | C library to extract symbolic stack traces and function names directly from ELF/DWARF binaries. |
 | 436 | `patchelf-elf-binary-modifier` | [`NixOS/patchelf`](https://github.com/NixOS/patchelf) | Small utility to modify the dynamic linker and RPATH/RUNPATH of existing ELF executables. |
 | 437 | `elfutils-elf-dwarf-library` | [`rohitjoshi/elfutils`](https://github.com/rohitjoshi/elfutils) | Collection of utilities and libraries for reading, creating, and modifying ELF binaries and DWARF debug info. |
 | 438 | `dwarf-debugging-information-parser` | [`gimli-rs/gimli`](https://github.com/gimli-rs/gimli) | Fast, standalone Rust library for reading and writing the DWARF debugging format. |
-| 439 | `addr2line-address-to-source-mapper` | [`bminor/binutils-gdb`](https://github.com/bminor/binutils-gdb) | Translates raw memory instruction addresses into file names and line numbers using DWARF symbols. |
+| 439 | `addr2line-dwarf-resolver` | [`gimli-rs/addr2line`](https://github.com/gimli-rs/addr2line) | Fast, zero-allocation DWARF symbolizer in Rust resolving memory addresses to file and line numbers. |
 | 440 | `cxx-safe-interop-between-rust-and-cpp` | [`dtolnay/cxx`](https://github.com/dtolnay/cxx) | Safe interop between Rust and C++; generates language bindings that enforce memory safety across FFI boundaries. |
 | 441 | `bindgen-c-binding-generator-for-rust` | [`rust-lang/rust-bindgen`](https://github.com/rust-lang/rust-bindgen) | Automatically generates Rust FFI bindings to C and C++ libraries from header files. |
 | 442 | `cbindgen-c-binding-generator-from-rust` | [`mozilla/cbindgen`](https://github.com/mozilla/cbindgen) | Creates C/C++11 headers for Rust libraries exposing a C-compatible FFI interface. |
