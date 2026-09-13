@@ -318,7 +318,13 @@ impl McpServer {
 
         let mut list = Vec::new();
         for (id, key_var, def_model) in candidate_keys {
-            if std::env::var(key_var).is_ok() {
+            let has_credentials = if id == "gemini" {
+                crate::GeminiProvider::has_credentials()
+            } else {
+                std::env::var(key_var).is_ok()
+            };
+
+            if has_credentials {
                 if let Ok(prov) = self.ctx.get_provider(id) {
                     list.push((id.to_string(), def_model.to_string(), prov));
                 }

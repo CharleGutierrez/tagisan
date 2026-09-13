@@ -60,6 +60,11 @@ impl GeminiProvider {
         GeminiOAuthManager::is_authenticated()
     }
 
+    /// Alias for is_available()
+    pub fn has_credentials() -> bool {
+        Self::is_available()
+    }
+
     /// Prepare the API URL and authorization headers dynamically based on auth type
     async fn prepare_request_auth(&self, model: &str, is_stream: bool) -> Result<(String, HeaderMap)> {
         let model_clean = Self::sanitize_model(model);

@@ -1468,7 +1468,7 @@ fn resolve_provider_and_model(
     }
 
     // Auto-detection strategy in priority order:
-    // 1. Gemini (100% Free Cloud Tier via Google AI Studio)
+    // 1. Gemini (100% Free Cloud Tier via Google AI Studio or Google OAuth Session)
     // 2. DeepSeek (Ultra-cheap Cloud)
     // 3. Anthropic (Claude 3.5 Sonnet)
     // 4. OpenAI (GPT-4o)
@@ -1483,7 +1483,13 @@ fn resolve_provider_and_model(
     ];
 
     for (id, key_var) in candidate_keys {
-        if std::env::var(key_var).is_ok() {
+        let has_credentials = if id == "gemini" {
+            GeminiProvider::has_credentials()
+        } else {
+            std::env::var(key_var).is_ok()
+        };
+
+        if has_credentials {
             if let Ok(prov) = ctx.get_provider(id) {
                 let model = user_model.unwrap_or_else(|| default_model_for_provider(id));
                 return Ok((id.to_string(), model, prov));
