@@ -107,6 +107,11 @@ pub use tools::builtin::{
     GroundedInferenceTool, ListDirTool, QueryCodeGraphTool, ReadFileTool, ReflexionVaultTool,
     RunCommandTool, SaveMemoryTool, SearchMemoryTool, SearchSkillsTool, ViewImageTool,
     WriteFileTool,
+    SimdVectorizerTool, ApiContractFuzzerTool, ChaosFaultInjectorTool,
+    BinaryProtocolSynthesizerTool, CompilerIrOptimizerTool, ConstantTimeAuditorTool,
+    EbpfTelemetryTracerTool, KaniFormalVerifierTool, TritonKernelFuserTool,
+    FpgaVerilogSynthesizerTool, XdpPacketFilterTool, SpdkNvmeStorageTool,
+    Z3SmtSolverTool, RrTimeTravelDebuggerTool, QemuBaremetalEmulatorTool, TlaConsensusCheckerTool,
 };
 pub use tools::bun::{
     extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,

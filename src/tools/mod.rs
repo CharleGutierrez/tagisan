@@ -26,6 +26,11 @@ pub use builtin::{
     GitWorktreeTool, GroundedInferenceTool, ListDirTool, QueryCodeGraphTool, ReadFileTool,
     ReflexionVaultTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool, SearchSkillsTool,
     ViewImageTool, WriteFileTool,
+    SimdVectorizerTool, ApiContractFuzzerTool, ChaosFaultInjectorTool,
+    BinaryProtocolSynthesizerTool, CompilerIrOptimizerTool, ConstantTimeAuditorTool,
+    EbpfTelemetryTracerTool, KaniFormalVerifierTool, TritonKernelFuserTool,
+    FpgaVerilogSynthesizerTool, XdpPacketFilterTool, SpdkNvmeStorageTool,
+    Z3SmtSolverTool, RrTimeTravelDebuggerTool, QemuBaremetalEmulatorTool, TlaConsensusCheckerTool,
 };
 pub use bun::{
     extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,
@@ -130,6 +135,27 @@ impl ToolRegistry {
         // Systems & Wishlist Capabilities
         registry.register_tool(builtin::GitWorktreeTool::default());
         registry.register_tool(builtin::ReflexionVaultTool::default());
+        // Next-Gen Systems Tools
+        registry.register_tool(builtin::SimdVectorizerTool::new());
+        registry.register_tool(builtin::ApiContractFuzzerTool::new());
+        registry.register_tool(builtin::ChaosFaultInjectorTool::new());
+        // Horizon 4 Systems & Compiler Tools
+        registry.register_tool(builtin::BinaryProtocolSynthesizerTool::new());
+        registry.register_tool(builtin::CompilerIrOptimizerTool::new());
+        registry.register_tool(builtin::ConstantTimeAuditorTool::new());
+        // External Ecosystem Tools
+        registry.register_tool(builtin::EbpfTelemetryTracerTool::new());
+        registry.register_tool(builtin::KaniFormalVerifierTool::new());
+        registry.register_tool(builtin::TritonKernelFuserTool::new());
+        // Wave 6 Frontier Systems Tools
+        registry.register_tool(builtin::FpgaVerilogSynthesizerTool::new());
+        registry.register_tool(builtin::XdpPacketFilterTool::new());
+        registry.register_tool(builtin::SpdkNvmeStorageTool::new());
+        // Wave 7 External Systems & Ecosystem Tools
+        registry.register_tool(builtin::Z3SmtSolverTool::new());
+        registry.register_tool(builtin::RrTimeTravelDebuggerTool::new());
+        registry.register_tool(builtin::QemuBaremetalEmulatorTool::new());
+        registry.register_tool(builtin::TlaConsensusCheckerTool::new());
         registry
     }
 
@@ -186,6 +212,27 @@ impl ToolRegistry {
         // Systems & Wishlist Capabilities
         registry.register_tool(builtin::GitWorktreeTool::default().with_working_dir(dir.clone()));
         registry.register_tool(builtin::ReflexionVaultTool::default().with_working_dir(dir.clone()));
+        // Next-Gen Systems Tools
+        registry.register_tool(builtin::SimdVectorizerTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::ApiContractFuzzerTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::ChaosFaultInjectorTool::new().with_working_dir(dir.clone()));
+        // Horizon 4 Systems & Compiler Tools
+        registry.register_tool(builtin::BinaryProtocolSynthesizerTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::CompilerIrOptimizerTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::ConstantTimeAuditorTool::new().with_working_dir(dir.clone()));
+        // External Ecosystem Tools
+        registry.register_tool(builtin::EbpfTelemetryTracerTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::KaniFormalVerifierTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::TritonKernelFuserTool::new().with_working_dir(dir.clone()));
+        // Wave 6 Frontier Systems Tools
+        registry.register_tool(builtin::FpgaVerilogSynthesizerTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::XdpPacketFilterTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::SpdkNvmeStorageTool::new().with_working_dir(dir.clone()));
+        // Wave 7 External Systems & Ecosystem Tools
+        registry.register_tool(builtin::Z3SmtSolverTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::RrTimeTravelDebuggerTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::QemuBaremetalEmulatorTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::TlaConsensusCheckerTool::new().with_working_dir(dir.clone()));
         registry
     }
 

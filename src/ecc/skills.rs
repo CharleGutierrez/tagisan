@@ -567,6 +567,31 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         git_worktree_merge_arbiter(),
         formal_invariant_prover(),
         database_dba_query_optimizer(),
+        // Next-Gen Production Capabilities
+        simd_compute_auto_vectorizer(),
+        api_contract_fuzz_harvester(),
+        chaos_fault_injector(),
+        canary_rollback_sentinel(),
+        // Horizon 4 Deep Systems & Compiler Capabilities
+        binary_protocol_zero_copy_synthesizer(),
+        compiler_ir_lifter_optimizer(),
+        post_quantum_constant_time_auditor(),
+        legacy_systems_rejuvenator(),
+        // External Ecosystem Capabilities
+        ebpf_kernel_telemetry_tracer(),
+        kani_rust_formal_verifier(),
+        triton_cuda_tensor_kernel_fuser(),
+        kubernetes_operator_crd_sentinel(),
+        // Wave 6 Frontier Systems Capabilities
+        verilog_chisel_fpga_synthesizer(),
+        xdp_dpdk_kernel_bypass_firewall(),
+        spdk_nvme_direct_storage_engine(),
+        ptp_truetime_clock_synchronizer(),
+        // Wave 7 External Systems & Ecosystem Integrations
+        z3_smt_symbolic_constraint_solver(),
+        rr_time_travel_deterministic_debugger(),
+        qemu_baremetal_firmware_emulator(),
+        tla_consensus_formal_model_checker(),
     ]
 }
 
@@ -1786,11 +1811,76 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "git-worktree" || lower == "worktree-merge" || lower == "worktree-arbiter" {
         return find_built_in_skill("git-worktree-merge-arbiter");
     }
-    if lower == "formal-verification" || lower == "proptest" || lower == "kani" || lower == "invariant-prover" {
+    if lower == "proptest" || lower == "invariant-prover" {
         return find_built_in_skill("formal-invariant-prover");
     }
     if lower == "query-optimizer" || lower == "dba-optimizer" || lower == "database-optimizer" {
         return find_built_in_skill("database-dba-query-optimizer");
+    }
+    if lower == "simd" || lower == "auto-vectorizer" || lower == "simd-vectorizer" || lower == "simd-compute" {
+        return find_built_in_skill("simd-compute-auto-vectorizer");
+    }
+    if lower == "api-fuzz" || lower == "contract-fuzzer" || lower == "fuzz-harvester" || lower == "schemathesis" {
+        return find_built_in_skill("api-contract-fuzz-harvester");
+    }
+    if lower == "chaos" || lower == "chaos-injector" || lower == "fault-injector" || lower == "chaos-monkey" {
+        return find_built_in_skill("chaos-fault-injector");
+    }
+    if lower == "canary" || lower == "canary-sentinel" || lower == "rollback-sentinel" || lower == "canary-rollback" {
+        return find_built_in_skill("canary-rollback-sentinel");
+    }
+    // Horizon 4 Systems & Compiler Capabilities Aliases
+    if lower == "zero-copy" || lower == "binary-protocol" || lower == "zerocopy" || lower == "nom-parser" || lower == "zero-copy-synthesizer" {
+        return find_built_in_skill("binary-protocol-zero-copy-synthesizer");
+    }
+    if lower == "compiler-optimizer" || lower == "llvm-ir" || lower == "cranelift" || lower == "assembly-optimization" || lower == "ir-optimizer" {
+        return find_built_in_skill("compiler-ir-lifter-optimizer");
+    }
+    if lower == "constant-time" || lower == "timing-attacks" || lower == "pqc" || lower == "post-quantum" || lower == "constant-time-auditor" {
+        return find_built_in_skill("post-quantum-constant-time-auditor");
+    }
+    if lower == "legacy-rejuvenator" || lower == "c-to-rust" || lower == "cpp-to-rust" || lower == "rejuvenate-codebase" || lower == "systems-rejuvenator" {
+        return find_built_in_skill("legacy-systems-rejuvenator");
+    }
+
+    // External Ecosystem Capabilities Aliases
+    if lower == "ebpf" || lower == "ebpf-tracer" || lower == "kernel-telemetry" || lower == "aya" || lower == "libbpf" || lower == "kprobe-tracer" || lower == "ebpf-telemetry" {
+        return find_built_in_skill("ebpf-kernel-telemetry-tracer");
+    }
+    if lower == "kani" || lower == "kani-verifier" || lower == "formal-verifier" || lower == "smt-verifier" || lower == "bounded-model-checking" || lower == "zero-panic" {
+        return find_built_in_skill("kani-rust-formal-verifier");
+    }
+    if lower == "triton" || lower == "triton-kernel" || lower == "cuda-fuser" || lower == "tensor-kernel" || lower == "flash-attention-fuser" || lower == "ptx-kernel" {
+        return find_built_in_skill("triton-cuda-tensor-kernel-fuser");
+    }
+    if lower == "kubernetes-operator" || lower == "kube-rs" || lower == "crd-sentinel" || lower == "crd-reconciliation" || lower == "k8s-operator" || lower == "kube-operator" {
+        return find_built_in_skill("kubernetes-operator-crd-sentinel");
+    }
+    // Frontier Systems Capabilities Aliases
+    if lower == "fpga" || lower == "verilog" || lower == "chisel" || lower == "hdl" || lower == "rtl-synthesizer" || lower == "fpga-synthesizer" {
+        return find_built_in_skill("verilog-chisel-fpga-synthesizer");
+    }
+    if lower == "xdp" || lower == "dpdk" || lower == "kernel-bypass" || lower == "line-rate-firewall" || lower == "packet-filter" || lower == "xdp-firewall" {
+        return find_built_in_skill("xdp-dpdk-kernel-bypass-firewall");
+    }
+    if lower == "spdk" || lower == "nvme" || lower == "nvme-direct" || lower == "direct-storage" || lower == "polled-mode-storage" || lower == "spdk-storage" {
+        return find_built_in_skill("spdk-nvme-direct-storage-engine");
+    }
+    if lower == "ptp" || lower == "ieee1588" || lower == "truetime" || lower == "clock-sync" || lower == "commit-wait" || lower == "ptp-clock" {
+        return find_built_in_skill("ptp-truetime-clock-synchronizer");
+    }
+    // Wave 7 External Systems & Ecosystem Capabilities Aliases
+    if lower == "z3" || lower == "cvc5" || lower == "smt" || lower == "smt2" || lower == "smt-lib" || lower == "symbolic-solver" || lower == "z3-solver" {
+        return find_built_in_skill("z3-smt-symbolic-constraint-solver");
+    }
+    if lower == "rr" || lower == "time-travel" || lower == "time-travel-debugging" || lower == "reverse-debugger" || lower == "reverse-execution" || lower == "rr-debugger" {
+        return find_built_in_skill("rr-time-travel-deterministic-debugger");
+    }
+    if lower == "qemu" || lower == "renode" || lower == "baremetal" || lower == "firmware-emulator" || lower == "qemu-emulator" || lower == "baremetal-emulator" {
+        return find_built_in_skill("qemu-baremetal-firmware-emulator");
+    }
+    if lower == "tla" || lower == "tla+" || lower == "tlc" || lower == "consensus-checker" || lower == "tla-checker" || lower == "formal-consensus" {
+        return find_built_in_skill("tla-consensus-formal-model-checker");
     }
 
 
@@ -19992,3 +20082,208 @@ pub fn database_dba_query_optimizer() -> EccSkill {
             include_str!("../../assets/skills/database-dba-query-optimizer/SKILL.md"),
         ))
 }
+
+
+/// SIMD Compute Auto-Vectorizer Skill
+pub fn simd_compute_auto_vectorizer() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/simd-compute-auto-vectorizer/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "simd-compute-auto-vectorizer",
+            "Portable SIMD vectorization & tensor loop speedup. Analyzes loop dependencies, eliminates vectorization inhibitors (branching, non-contiguous memory), rewrites scalar loops into portable SIMD / chunked lane arrays, and benchmarks with Criterion.",
+            include_str!("../../assets/skills/simd-compute-auto-vectorizer/SKILL.md"),
+        ))
+}
+
+/// API Contract & Property Fuzz Harvester Skill
+pub fn api_contract_fuzz_harvester() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/api-contract-fuzz-harvester/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "api-contract-fuzz-harvester",
+            "Autonomous API contract & property fuzzing (Schemathesis/OpenAPI/gRPC). Generates boundary integers, null bytes, long buffer payloads, unicode fuzz, captures 500s/panics, and generates reproducible test cases.",
+            include_str!("../../assets/skills/api-contract-fuzz-harvester/SKILL.md"),
+        ))
+}
+
+/// Chaos Fault Injector Skill
+pub fn chaos_fault_injector() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/chaos-fault-injector/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "chaos-fault-injector",
+            "Autonomous chaos engineering. Injects network latency spikes, packet drops, clock drift, process kill, and memory pressure; verifies circuit breakers and fallback recovery.",
+            include_str!("../../assets/skills/chaos-fault-injector/SKILL.md"),
+        ))
+}
+
+/// Canary Rollback Sentinel Skill
+pub fn canary_rollback_sentinel() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/canary-rollback-sentinel/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "canary-rollback-sentinel",
+            "Autonomous canary deployment & rollback. Stepwise canary traffic shifting; continuous p99/error telemetry gating; automated rollback with AST diff blame attribution.",
+            include_str!("../../assets/skills/canary-rollback-sentinel/SKILL.md"),
+        ))
+}
+
+/// Binary Protocol & Zero-Copy Synthesizer Skill
+pub fn binary_protocol_zero_copy_synthesizer() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/binary-protocol-zero-copy-synthesizer/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "binary-protocol-zero-copy-synthesizer",
+            "Zero-copy binary wire protocol synthesis using zerocopy and nom. Enforces strict byte-alignment validation, infallible bounds checks without panicking, buffer overflow elimination, and compile-time layout verification for wire protocol parsers.",
+            include_str!("../../assets/skills/binary-protocol-zero-copy-synthesizer/SKILL.md"),
+        ))
+}
+
+/// Compiler IR Lifter & Assembly Optimizer Skill
+pub fn compiler_ir_lifter_optimizer() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/compiler-ir-lifter-optimizer/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "compiler-ir-lifter-optimizer",
+            "LLVM-IR, Cranelift, and assembly-level optimization. Audits pointer aliasing penalties, eliminates branches, guides hot-loop register allocation to prevent spills, and enforces verified inline assembly safeguards.",
+            include_str!("../../assets/skills/compiler-ir-lifter-optimizer/SKILL.md"),
+        ))
+}
+
+/// Post-Quantum & Constant-Time Cryptographic Auditor Skill
+pub fn post_quantum_constant_time_auditor() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/post-quantum-constant-time-auditor/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "post-quantum-constant-time-auditor",
+            "Post-quantum cryptography and constant-time execution audit. Eliminates timing side-channels, strictly forbids conditional branches or memory lookups on secret data, enforces zeroization of sensitive buffers, and audits PQC algorithms (Kyber/Dilithium).",
+            include_str!("../../assets/skills/post-quantum-constant-time-auditor/SKILL.md"),
+        ))
+}
+
+/// Legacy Systems Rejuvenator Skill
+pub fn legacy_systems_rejuvenator() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/legacy-systems-rejuvenator/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "legacy-systems-rejuvenator",
+            "C/C++ to safe idiomatic Rust rejuvenation. Synthesizes borrow-checker lifetimes, eliminates raw pointers, encapsulates unsafe blocks into zero-cost safe RAII types, and verifies functional equivalence via differential property-based testing.",
+            include_str!("../../assets/skills/legacy-systems-rejuvenator/SKILL.md"),
+        ))
+}
+
+/// Linux Kernel eBPF Telemetry & Tracing Sentinel Skill
+pub fn ebpf_kernel_telemetry_tracer() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/ebpf-kernel-telemetry-tracer/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "ebpf-kernel-telemetry-tracer",
+            "Linux kernel eBPF telemetry, tracing, and observability runtime. Synthesizes Aya and libbpf safe probes (kprobes, tracepoints, uprobes, perf_events), audits BPF verifier invariants (512-byte stack bounds, loop termination, packet bounds), and diagnoses futex lock contention and CPU LLC-cache-miss bottlenecks.",
+            include_str!("../../assets/skills/ebpf-kernel-telemetry-tracer/SKILL.md"),
+        ))
+}
+
+/// AWS Kani Bounded Model Checking & Formal Verification Sentinel Skill
+pub fn kani_rust_formal_verifier() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/kani-rust-formal-verifier/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "kani-rust-formal-verifier",
+            "AWS Kani bounded model checking and CBMC/SMT formal verification for Rust. Proves mathematical panic freedom, verifies inductive loop invariants and pointer validity, audits unwraps and indexing, and synthesizes exhaustive proof harnesses with #[kani::proof] and kani::any().",
+            include_str!("../../assets/skills/kani-rust-formal-verifier/SKILL.md"),
+        ))
+}
+
+/// OpenAI Triton & CUDA Fused GPU Tensor Kernel Engineering Skill
+pub fn triton_cuda_tensor_kernel_fuser() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/triton-cuda-tensor-kernel-fuser/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "triton-cuda-tensor-kernel-fuser",
+            "OpenAI Triton and CUDA/PTX fused GPU tensor kernel engineering. Optimizes 2D/3D block tiling hierarchies, eliminates 32-way shared memory bank conflicts, maximizes tensor core warp shuffle utilization, and synthesizes high-throughput FlashAttention and fused GEMM operators.",
+            include_str!("../../assets/skills/triton-cuda-tensor-kernel-fuser/SKILL.md"),
+        ))
+}
+
+/// Kubernetes Operator & CRD Reconciliation Sentinel Skill
+pub fn kubernetes_operator_crd_sentinel() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/kubernetes-operator-crd-sentinel/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "kubernetes-operator-crd-sentinel",
+            "Autonomous Kubernetes Operator and Custom Resource Definition (CRD) controller engine using kube-rs. Enforces strictly idempotent reconciliation loops, atomic status subresource patching, leak-proof finalizer lifecycles, and resilient lease-based leader election failover.",
+            include_str!("../../assets/skills/kubernetes-operator-crd-sentinel/SKILL.md"),
+        ))
+}
+
+/// Verilog & Chisel FPGA Synthesizer Skill
+pub fn verilog_chisel_fpga_synthesizer() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/verilog-chisel-fpga-synthesizer/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "verilog-chisel-fpga-synthesizer",
+            "Hardware Description Languages (HDL), Verilog/SystemVerilog, and Chisel hardware accelerator synthesis, FPGA timing closure analysis, clock-domain crossing (CDC) verification, and resource budgeting.",
+            include_str!("../../assets/skills/verilog-chisel-fpga-synthesizer/SKILL.md"),
+        ))
+}
+
+/// XDP & DPDK Kernel-Bypass Firewall Skill
+pub fn xdp_dpdk_kernel_bypass_firewall() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/xdp-dpdk-kernel-bypass-firewall/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "xdp-dpdk-kernel-bypass-firewall",
+            "High-performance line-rate packet processing, eXpress Data Path (XDP), DPDK userspace kernel-bypass driver, DDoS mitigation, and zero-allocation packet filtering.",
+            include_str!("../../assets/skills/xdp-dpdk-kernel-bypass-firewall/SKILL.md"),
+        ))
+}
+
+/// SPDK NVMe Direct Storage Engine Skill
+pub fn spdk_nvme_direct_storage_engine() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/spdk-nvme-direct-storage-engine/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "spdk-nvme-direct-storage-engine",
+            "Asynchronous zero-copy user-space NVMe driver, Storage Performance Development Kit (SPDK), hugepages memory DMA, and lockless submission/completion queue engine.",
+            include_str!("../../assets/skills/spdk-nvme-direct-storage-engine/SKILL.md"),
+        ))
+}
+
+/// PTP & TrueTime Clock Synchronizer Skill
+pub fn ptp_truetime_clock_synchronizer() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/ptp-truetime-clock-synchronizer/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "ptp-truetime-clock-synchronizer",
+            "Precision Time Protocol (IEEE 1588 PTP), hardware nanosecond timestamping, Google TrueTime uncertainty intervals, and externally consistent distributed transactions.",
+            include_str!("../../assets/skills/ptp-truetime-clock-synchronizer/SKILL.md"),
+        ))
+}
+
+/// Z3 & CVC5 SMT-LIB2 Symbolic Constraint Solver Skill
+pub fn z3_smt_symbolic_constraint_solver() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/z3-smt-symbolic-constraint-solver/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "z3-smt-symbolic-constraint-solver",
+            "Z3 / CVC5 SMT-LIB2 symbolic execution, constraint solving, bitvector satisfiability, path reachability, and equivalence proofs.",
+            include_str!("../../assets/skills/z3-smt-symbolic-constraint-solver/SKILL.md"),
+        ))
+}
+
+/// rr & Linux perf_event Deterministic Time-Travel Debugger Skill
+pub fn rr_time_travel_deterministic_debugger() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/rr-time-travel-deterministic-debugger/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "rr-time-travel-deterministic-debugger",
+            "rr & Linux perf_event deterministic record/replay debugging, reverse execution, reverse watchpoints, and memory corruption bisection.",
+            include_str!("../../assets/skills/rr-time-travel-deterministic-debugger/SKILL.md"),
+        ))
+}
+
+/// QEMU & Renode Baremetal Firmware Emulator Skill
+pub fn qemu_baremetal_firmware_emulator() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/qemu-baremetal-firmware-emulator/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "qemu-baremetal-firmware-emulator",
+            "QEMU & Renode bare-metal firmware emulation (ARM Cortex-M, RISC-V, UEFI), MMIO verification, linker script memory map validation, and automated UART test harnesses.",
+            include_str!("../../assets/skills/qemu-baremetal-firmware-emulator/SKILL.md"),
+        ))
+}
+
+/// TLA+ & TLC Distributed Consensus Formal Model Checker Skill
+pub fn tla_consensus_formal_model_checker() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/tla-consensus-formal-model-checker/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "tla-consensus-formal-model-checker",
+            "TLA+ & TLC formal model checking for distributed consensus protocols (Raft, Paxos, 2PC, PBFT), state-machine safety and liveness invariants.",
+            include_str!("../../assets/skills/tla-consensus-formal-model-checker/SKILL.md"),
+        ))
+}
+
+
+
+
