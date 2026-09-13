@@ -22,9 +22,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub use builtin::{
-    CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, FetchSkillTool, GroundedInferenceTool, ListDirTool,
-    QueryCodeGraphTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool,
-    SearchSkillsTool, ViewImageTool, WriteFileTool,
+    CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, FetchSkillTool,
+    GitWorktreeTool, GroundedInferenceTool, ListDirTool, QueryCodeGraphTool, ReadFileTool,
+    ReflexionVaultTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool, SearchSkillsTool,
+    ViewImageTool, WriteFileTool,
 };
 pub use bun::{
     extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,
@@ -126,6 +127,9 @@ impl ToolRegistry {
         registry.register_tool(crate::vella::VellaSpaceCopilotTool::default());
         registry.register_tool(crate::vella::VellaScaffolderTool::default());
         registry.register_tool(crate::vella::VellaDefenseDrillTool::default());
+        // Systems & Wishlist Capabilities
+        registry.register_tool(builtin::GitWorktreeTool::default());
+        registry.register_tool(builtin::ReflexionVaultTool::default());
         registry
     }
 
@@ -179,6 +183,9 @@ impl ToolRegistry {
         registry.register_tool(crate::vella::VellaSpaceCopilotTool::default());
         registry.register_tool(crate::vella::VellaScaffolderTool::default());
         registry.register_tool(crate::vella::VellaDefenseDrillTool::default());
+        // Systems & Wishlist Capabilities
+        registry.register_tool(builtin::GitWorktreeTool::default().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::ReflexionVaultTool::default().with_working_dir(dir.clone()));
         registry
     }
 

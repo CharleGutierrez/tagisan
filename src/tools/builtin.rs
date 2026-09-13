@@ -4,7 +4,7 @@ use crate::error::{Result, TagisanError};
 use crate::types::ContentBlock;
 use async_trait::async_trait;
 use serde_json::{json, Value};
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
@@ -2174,4 +2174,542 @@ impl ToolHandler for GroundedInferenceTool {
         .map_err(|e| TagisanError::Execution(format!("GroundedInference panic: {e}")))?
     }
 }
+
+// =========================================================================
+// 12. GitWorktreeTool
+// =========================================================================
+
+/// Tool for managing isolated Git worktrees for safe autonomous execution
+#[derive(Clone, Default)]
+pub struct GitWorktreeTool {
+    pub working_dir: Option<PathBuf>,
+    sandboxes: Arc<std::sync::Mutex<HashMap<String, crate::agent::WorktreeSandbox>>>,
+}
+
+impl GitWorktreeTool {
+    pub fn new() -> Self {
+        Self {
+            working_dir: None,
+            sandboxes: Arc::new(std::sync::Mutex::new(HashMap::new())),
+        }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+
+    fn lookup_sandbox<'a>(
+        map: &'a HashMap<String, crate::agent::WorktreeSandbox>,
+        arguments: &Value,
+    ) -> Option<&'a crate::agent::WorktreeSandbox> {
+        if let Some(id) = arguments.get("worktree_id").and_then(|v| v.as_str()) {
+            if let Some(sb) = map.get(id) {
+                return Some(sb);
+            }
+            for sb in map.values() {
+                if sb.branch() == id {
+                    return Some(sb);
+                }
+            }
+        }
+        if let Some(branch) = arguments.get("branch").and_then(|v| v.as_str()) {
+            if let Some(sb) = map.get(branch) {
+                return Some(sb);
+            }
+            for sb in map.values() {
+                if sb.branch() == branch {
+                    return Some(sb);
+                }
+            }
+        }
+        if map.len() == 1 {
+            return map.values().next();
+        }
+        None
+    }
+
+    fn find_key(
+        map: &HashMap<String, crate::agent::WorktreeSandbox>,
+        arguments: &Value,
+    ) -> Option<String> {
+        if let Some(id) = arguments.get("worktree_id").and_then(|v| v.as_str()) {
+            if map.contains_key(id) {
+                return Some(id.to_string());
+            }
+            for (k, sb) in map {
+                if sb.branch() == id {
+                    return Some(k.clone());
+                }
+            }
+        }
+        if let Some(branch) = arguments.get("branch").and_then(|v| v.as_str()) {
+            if map.contains_key(branch) {
+                return Some(branch.to_string());
+            }
+            for (k, sb) in map {
+                if sb.branch() == branch {
+                    return Some(k.clone());
+                }
+            }
+        }
+        if map.len() == 1 {
+            return map.keys().next().cloned();
+        }
+        None
+    }
+}
+
+#[async_trait]
+impl ToolHandler for GitWorktreeTool {
+    fn name(&self) -> &'static str {
+        "git_worktree"
+    }
+
+    fn description(&self) -> &'static str {
+        "Manage isolated Git worktrees for safe autonomous code execution, diff inspection, automated verification, and atomic commits without dirtying the working directory."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["create", "run", "diff", "commit", "cleanup", "list"],
+                    "description": "The worktree operation: 'create', 'run', 'diff', 'commit', 'cleanup', or 'list'."
+                },
+                "repo_path": {
+                    "type": "string",
+                    "description": "Path to the repository root. Defaults to working_dir or current directory."
+                },
+                "command": {
+                    "type": "string",
+                    "description": "Shell command to execute inside the worktree (required for 'run')."
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Commit message for staging and committing changes (required for 'commit')."
+                },
+                "worktree_id": {
+                    "type": "string",
+                    "description": "Identifier or key for the worktree sandbox."
+                },
+                "branch": {
+                    "type": "string",
+                    "description": "Branch name for creating or referencing the worktree."
+                }
+            },
+            "required": ["action"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let action = arguments
+            .get("action")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'action'".to_string()))?;
+
+        match action {
+            "create" => {
+                let repo_path = arguments
+                    .get("repo_path")
+                    .and_then(|v| v.as_str())
+                    .map(PathBuf::from)
+                    .or_else(|| self.working_dir.clone())
+                    .unwrap_or_else(|| PathBuf::from("."));
+
+                let branch = arguments
+                    .get("branch")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string())
+                    .or_else(|| {
+                        arguments
+                            .get("worktree_id")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.to_string())
+                    })
+                    .unwrap_or_else(|| {
+                        format!(
+                            "tagisan/sandbox-{}",
+                            std::time::SystemTime::now()
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .unwrap_or_default()
+                                .as_millis()
+                        )
+                    });
+
+                let worktree_id = arguments
+                    .get("worktree_id")
+                    .and_then(|v| v.as_str())
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| branch.clone());
+
+                let sb = crate::agent::WorktreeSandbox::create(&repo_path, &branch)?;
+                let worktree_path = sb.path().display().to_string();
+                let base_commit = sb.base_commit().to_string();
+                let branch_name = sb.branch().to_string();
+
+                let mut lock = self.sandboxes.lock().map_err(|e| TagisanError::Execution(format!("Mutex poisoned: {e}")))?;
+                lock.insert(worktree_id.clone(), sb);
+
+                let res = json!({
+                    "status": "created",
+                    "worktree_id": worktree_id,
+                    "branch": branch_name,
+                    "worktree_path": worktree_path,
+                    "base_commit": base_commit
+                });
+                Ok(serde_json::to_string_pretty(&res).unwrap_or_else(|_| res.to_string()))
+            }
+            "run" => {
+                let cmd = arguments
+                    .get("command")
+                    .and_then(|v| v.as_str())
+                    .ok_or_else(|| TagisanError::Execution("Missing required parameter 'command' for action 'run'".to_string()))?;
+
+                let lock = self.sandboxes.lock().map_err(|e| TagisanError::Execution(format!("Mutex poisoned: {e}")))?;
+                if let Some(sb) = Self::lookup_sandbox(&lock, &arguments) {
+                    let (exit_code, stdout, stderr) = sb.run_command(cmd)?;
+                    let res = json!({
+                        "status": if exit_code == 0 { "success" } else { "failed" },
+                        "exit_code": exit_code,
+                        "stdout": stdout,
+                        "stderr": stderr
+                    });
+                    Ok(serde_json::to_string_pretty(&res).unwrap_or_else(|_| res.to_string()))
+                } else {
+                    Err(TagisanError::Execution("No matching active worktree sandbox found for 'run'".to_string()))
+                }
+            }
+            "diff" => {
+                let lock = self.sandboxes.lock().map_err(|e| TagisanError::Execution(format!("Mutex poisoned: {e}")))?;
+                if let Some(sb) = Self::lookup_sandbox(&lock, &arguments) {
+                    let diff_text = sb.diff()?;
+                    let res = json!({
+                        "status": "success",
+                        "diff": diff_text
+                    });
+                    Ok(serde_json::to_string_pretty(&res).unwrap_or_else(|_| res.to_string()))
+                } else {
+                    Err(TagisanError::Execution("No matching active worktree sandbox found for 'diff'".to_string()))
+                }
+            }
+            "commit" => {
+                let msg = arguments
+                    .get("message")
+                    .and_then(|v| v.as_str())
+                    .ok_or_else(|| TagisanError::Execution("Missing required parameter 'message' for action 'commit'".to_string()))?;
+
+                let lock = self.sandboxes.lock().map_err(|e| TagisanError::Execution(format!("Mutex poisoned: {e}")))?;
+                if let Some(sb) = Self::lookup_sandbox(&lock, &arguments) {
+                    let commit_sha = sb.commit_all(msg)?;
+                    let res = json!({
+                        "status": "committed",
+                        "commit": commit_sha,
+                        "message": msg
+                    });
+                    Ok(serde_json::to_string_pretty(&res).unwrap_or_else(|_| res.to_string()))
+                } else {
+                    Err(TagisanError::Execution("No matching active worktree sandbox found for 'commit'".to_string()))
+                }
+            }
+            "cleanup" => {
+                let mut lock = self.sandboxes.lock().map_err(|e| TagisanError::Execution(format!("Mutex poisoned: {e}")))?;
+                let target_key = Self::find_key(&lock, &arguments);
+                if let Some(key) = target_key {
+                    if let Some(mut sb) = lock.remove(&key) {
+                        sb.cleanup()?;
+                    }
+                    let res = json!({
+                        "status": "cleaned_up",
+                        "worktree_id": key
+                    });
+                    Ok(serde_json::to_string_pretty(&res).unwrap_or_else(|_| res.to_string()))
+                } else {
+                    let res = json!({
+                        "status": "cleaned_up",
+                        "note": "No active sandbox matched key, cleaned up idempotently"
+                    });
+                    Ok(serde_json::to_string_pretty(&res).unwrap_or_else(|_| res.to_string()))
+                }
+            }
+            "list" => {
+                let lock = self.sandboxes.lock().map_err(|e| TagisanError::Execution(format!("Mutex poisoned: {e}")))?;
+                let items: Vec<Value> = lock
+                    .iter()
+                    .map(|(k, v)| {
+                        json!({
+                            "worktree_id": k,
+                            "branch": v.branch(),
+                            "worktree_path": v.path().display().to_string(),
+                            "base_commit": v.base_commit()
+                        })
+                    })
+                    .collect();
+                let res = json!({
+                    "status": "success",
+                    "active_worktrees": items
+                });
+                Ok(serde_json::to_string_pretty(&res).unwrap_or_else(|_| res.to_string()))
+            }
+            other => Err(TagisanError::Execution(format!(
+                "Unknown git_worktree action: '{other}'. Expected 'create', 'run', 'diff', 'commit', 'cleanup', or 'list'."
+            ))),
+        }
+    }
+}
+
+// =========================================================================
+// 13. ReflexionVaultTool
+// =========================================================================
+
+/// Record of an episodic engineering reflexion / case-law entry
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ReflexionEntry {
+    pub id: String,
+    pub timestamp: String,
+    pub error_signature: String,
+    pub root_cause: String,
+    pub fix_applied: String,
+    pub preventative_invariant: String,
+    pub tags: Vec<String>,
+}
+
+/// Tool for recording, querying, and listing episodic reflexions (engineering case-law)
+#[derive(Clone)]
+pub struct ReflexionVaultTool {
+    pub working_dir: Option<PathBuf>,
+    pub persistence_path: Option<PathBuf>,
+    lock: Arc<std::sync::Mutex<()>>,
+}
+
+impl Default for ReflexionVaultTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ReflexionVaultTool {
+    pub fn new() -> Self {
+        Self {
+            working_dir: None,
+            persistence_path: None,
+            lock: Arc::new(std::sync::Mutex::new(())),
+        }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+
+    pub fn with_path(mut self, path: impl Into<PathBuf>) -> Self {
+        self.persistence_path = Some(path.into());
+        self
+    }
+
+    pub fn resolved_path(&self) -> PathBuf {
+        if let Some(ref p) = self.persistence_path {
+            return p.clone();
+        }
+        if let Some(ref base) = self.working_dir {
+            base.join(".tagisan").join("reflexions.json")
+        } else {
+            PathBuf::from(".tagisan").join("reflexions.json")
+        }
+    }
+
+    fn read_entries(&self) -> Result<Vec<ReflexionEntry>> {
+        let path = self.resolved_path();
+        if !path.exists() {
+            return Ok(Vec::new());
+        }
+        let content = std::fs::read_to_string(&path)
+            .map_err(|e| TagisanError::Execution(format!("Failed to read reflexions file: {e}")))?;
+        if content.trim().is_empty() {
+            return Ok(Vec::new());
+        }
+        let entries: Vec<ReflexionEntry> = serde_json::from_str(&content).unwrap_or_default();
+        Ok(entries)
+    }
+
+    fn write_entries(&self, entries: &[ReflexionEntry]) -> Result<()> {
+        let path = self.resolved_path();
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        let json_str = serde_json::to_string_pretty(entries)
+            .map_err(|e| TagisanError::Execution(format!("Failed to serialize reflexions: {e}")))?;
+        std::fs::write(&path, json_str)
+            .map_err(|e| TagisanError::Execution(format!("Failed to write reflexions file: {e}")))?;
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl ToolHandler for ReflexionVaultTool {
+    fn name(&self) -> &'static str {
+        "reflexion_vault"
+    }
+
+    fn description(&self) -> &'static str {
+        "Episodic engineering memory vault. Query, record, and list engineering case-law: error signatures, root causes, applied fixes, and preventative invariants to prevent repeated debugging cycles."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["record", "query", "list"],
+                    "description": "The operation to perform: 'record', 'query', or 'list'."
+                },
+                "error_signature": {
+                    "type": "string",
+                    "description": "Exact compiler diagnostic code, panic trace, or failure symptom."
+                },
+                "root_cause": {
+                    "type": "string",
+                    "description": "Detailed explanation of the underlying architectural or logical defect."
+                },
+                "fix_applied": {
+                    "type": "string",
+                    "description": "The exact solution, patch, or structural refactoring that resolved the issue."
+                },
+                "preventative_invariant": {
+                    "type": "string",
+                    "description": "Dense actionable rule (ALWAYS/NEVER) to prevent the bug from recurring."
+                },
+                "tags": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Category tags (e.g. ['rust', 'borrowck', 'lifetimes'])."
+                },
+                "query": {
+                    "type": "string",
+                    "description": "Search string to retrieve relevant past reflexions and case law."
+                }
+            },
+            "required": ["action"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let action = arguments
+            .get("action")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'action'".to_string()))?;
+
+        match action {
+            "record" => {
+                let error_signature = arguments.get("error_signature").and_then(|v| v.as_str()).unwrap_or("");
+                let root_cause = arguments.get("root_cause").and_then(|v| v.as_str()).unwrap_or("");
+                let fix_applied = arguments.get("fix_applied").and_then(|v| v.as_str()).unwrap_or("");
+                let preventative_invariant = arguments.get("preventative_invariant").and_then(|v| v.as_str()).unwrap_or("");
+
+                let tags: Vec<String> = match arguments.get("tags") {
+                    Some(Value::Array(arr)) => arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect(),
+                    Some(Value::String(s)) => s.split(',').map(|t| t.trim().to_string()).filter(|t| !t.is_empty()).collect(),
+                    _ => Vec::new(),
+                };
+
+                let timestamp = chrono::Utc::now().to_rfc3339();
+                let id = format!(
+                    "refl-{}",
+                    std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_millis()
+                );
+
+                let entry = ReflexionEntry {
+                    id: id.clone(),
+                    timestamp: timestamp.clone(),
+                    error_signature: error_signature.to_string(),
+                    root_cause: root_cause.to_string(),
+                    fix_applied: fix_applied.to_string(),
+                    preventative_invariant: preventative_invariant.to_string(),
+                    tags,
+                };
+
+                let _guard = self.lock.lock().map_err(|e| TagisanError::Execution(format!("Mutex poisoned: {e}")))?;
+                let mut entries = self.read_entries()?;
+                entries.push(entry.clone());
+                self.write_entries(&entries)?;
+
+                let res = json!({
+                    "status": "recorded",
+                    "id": id,
+                    "entry": entry
+                });
+                Ok(serde_json::to_string_pretty(&res).unwrap_or_else(|_| res.to_string()))
+            }
+            "query" => {
+                let query_str = arguments.get("query").and_then(|v| v.as_str()).unwrap_or("");
+                let query_lower = query_str.to_lowercase();
+                let terms: Vec<&str> = query_lower.split_whitespace().collect();
+
+                let _guard = self.lock.lock().map_err(|e| TagisanError::Execution(format!("Mutex poisoned: {e}")))?;
+                let entries = self.read_entries()?;
+
+                let mut scored: Vec<(usize, &ReflexionEntry)> = Vec::new();
+                for entry in &entries {
+                    let mut score = 0usize;
+                    let sig = entry.error_signature.to_lowercase();
+                    let root = entry.root_cause.to_lowercase();
+                    let fix = entry.fix_applied.to_lowercase();
+                    let inv = entry.preventative_invariant.to_lowercase();
+
+                    if !query_lower.is_empty() {
+                        if sig.contains(&query_lower) { score += 40; }
+                        if root.contains(&query_lower) { score += 30; }
+                        if fix.contains(&query_lower) { score += 20; }
+                        if inv.contains(&query_lower) { score += 20; }
+                    }
+
+                    for term in &terms {
+                        if sig.contains(term) { score += 10; }
+                        if root.contains(term) { score += 8; }
+                        if fix.contains(term) { score += 6; }
+                        if inv.contains(term) { score += 6; }
+                        for t in &entry.tags {
+                            if t.to_lowercase().contains(term) { score += 15; }
+                        }
+                    }
+
+                    if terms.is_empty() || score > 0 {
+                        scored.push((score, entry));
+                    }
+                }
+
+                scored.sort_by(|a, b| b.0.cmp(&a.0));
+                let results: Vec<ReflexionEntry> = scored.into_iter().map(|(_, e)| e.clone()).collect();
+
+                let res = json!({
+                    "status": "success",
+                    "query": query_str,
+                    "count": results.len(),
+                    "results": results
+                });
+                Ok(serde_json::to_string_pretty(&res).unwrap_or_else(|_| res.to_string()))
+            }
+            "list" => {
+                let _guard = self.lock.lock().map_err(|e| TagisanError::Execution(format!("Mutex poisoned: {e}")))?;
+                let entries = self.read_entries()?;
+                let res = json!({
+                    "status": "success",
+                    "count": entries.len(),
+                    "entries": entries
+                });
+                Ok(serde_json::to_string_pretty(&res).unwrap_or_else(|_| res.to_string()))
+            }
+            other => Err(TagisanError::Execution(format!(
+                "Unknown reflexion_vault action: '{other}'. Expected 'record', 'query', or 'list'."
+            ))),
+        }
+    }
+}
+
 

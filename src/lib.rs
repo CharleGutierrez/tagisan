@@ -103,9 +103,10 @@ pub use mcp::{
     McpToolCallResult, McpToolDefinition, McpToolWrapper, StdioTransport,
 };
 pub use tools::builtin::{
-    CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, GroundedInferenceTool, ListDirTool,
-    QueryCodeGraphTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool,
-    SearchSkillsTool, ViewImageTool, WriteFileTool,
+    CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, GitWorktreeTool,
+    GroundedInferenceTool, ListDirTool, QueryCodeGraphTool, ReadFileTool, ReflexionVaultTool,
+    RunCommandTool, SaveMemoryTool, SearchMemoryTool, SearchSkillsTool, ViewImageTool,
+    WriteFileTool,
 };
 pub use tools::bun::{
     extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,

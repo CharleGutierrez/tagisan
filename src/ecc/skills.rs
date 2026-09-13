@@ -562,6 +562,11 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         fin_antonopoulos_mastering_ethereum(),
         fin_harvey_defi_future_finance(),
         fin_lyuu_financial_engineering(),
+        // Wishlist Production Capabilities
+        episodic_reflexion_vault(),
+        git_worktree_merge_arbiter(),
+        formal_invariant_prover(),
+        database_dba_query_optimizer(),
     ]
 }
 
@@ -1774,6 +1779,18 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
     if lower == "bankers-rounding" {
         return find_built_in_skill("fin-lyuu-financial-engineering");
+    }
+    if lower == "episodic-reflexion" || lower == "reflexion-vault" || lower == "case-law" {
+        return find_built_in_skill("episodic-reflexion-vault");
+    }
+    if lower == "git-worktree" || lower == "worktree-merge" || lower == "worktree-arbiter" {
+        return find_built_in_skill("git-worktree-merge-arbiter");
+    }
+    if lower == "formal-verification" || lower == "proptest" || lower == "kani" || lower == "invariant-prover" {
+        return find_built_in_skill("formal-invariant-prover");
+    }
+    if lower == "query-optimizer" || lower == "dba-optimizer" || lower == "database-optimizer" {
+        return find_built_in_skill("database-dba-query-optimizer");
     }
 
 
@@ -19934,4 +19951,44 @@ cargo test --test fin_skills_brutal_tests
 ```
 "#,
     )
+}
+
+/// Episodic Reflexion Vault Skill
+pub fn episodic_reflexion_vault() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/episodic-reflexion-vault/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "episodic-reflexion-vault",
+            "Self-curating engineering case law and episodic memory vault for autonomous agents.",
+            include_str!("../../assets/skills/episodic-reflexion-vault/SKILL.md"),
+        ))
+}
+
+/// Git Worktree Merge Arbiter Skill
+pub fn git_worktree_merge_arbiter() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/git-worktree-merge-arbiter/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "git-worktree-merge-arbiter",
+            "Autonomous Git worktree isolation and semantic merge arbiter.",
+            include_str!("../../assets/skills/git-worktree-merge-arbiter/SKILL.md"),
+        ))
+}
+
+/// Formal Invariant Prover Skill
+pub fn formal_invariant_prover() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/formal-invariant-prover/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "formal-invariant-prover",
+            "Property-based testing, fuzzing, and formal verification engine utilizing proptest, quickcheck, and Kani.",
+            include_str!("../../assets/skills/formal-invariant-prover/SKILL.md"),
+        ))
+}
+
+/// Database DBA & Query Optimizer Skill
+pub fn database_dba_query_optimizer() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/database-dba-query-optimizer/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "database-dba-query-optimizer",
+            "Production database query plan optimization, indexing strategy, and zero-downtime schema migrations.",
+            include_str!("../../assets/skills/database-dba-query-optimizer/SKILL.md"),
+        ))
 }
