@@ -117,7 +117,7 @@ enum Commands {
         #[arg(short, long)]
         model: Option<String>,
 
-        /// Comma-separated list of tools to enable: read_file, write_file, edit_file, delete_file, list_dir, run_command, calculator, view_image, all
+        /// Comma-separated list of tools to enable: read_file, write_file, edit_file, delete_file, list_dir, run_command, calculator, view_image, web_search, all
         #[arg(short, long, default_value = "all")]
         tools: String,
 
@@ -177,7 +177,7 @@ enum Commands {
         #[arg(short, long)]
         model: Option<String>,
 
-        /// Comma-separated list of tools to enable: read_file, write_file, edit_file, delete_file, list_dir, run_command, calculator, all
+        /// Comma-separated list of tools to enable: read_file, write_file, edit_file, delete_file, list_dir, run_command, calculator, web_search, all
         #[arg(short, long, default_value = "all")]
         tools: String,
 
@@ -214,6 +214,21 @@ enum Commands {
     },
     /// Check configured LLM providers, API keys, and model capability bitflags
     Status,
+    /// Live Web Search and content extraction (DuckDuckGo, Tavily, Brave)
+    #[command(alias = "websearch")]
+    Search {
+        /// Search query keywords
+        #[arg(index = 1)]
+        query: Option<String>,
+
+        /// Direct URL to fetch, clean, and extract readable text from
+        #[arg(short, long)]
+        url: Option<String>,
+
+        /// Maximum number of search results to return (1-10, default: 5)
+        #[arg(short, long, default_value = "5")]
+        limit: usize,
+    },
     /// Start a Model Context Protocol (MCP) Server over stdio JSON-RPC 2.0 (Milestone 7)
     #[command(name = "serve-mcp")]
     ServeMcp,
@@ -1606,6 +1621,53 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             println!("\nTip: Configure API keys in your .env file to enable cloud providers.\n");
         }
 
+        Commands::Search { query, url, limit } => {
+            let search_tool = crate::tools::web_search::WebSearchTool::new();
+
+            if let Some(target_url) = url {
+                println!("{}", format!("🌐 Fetching webpage content from: {}", target_url).bold().cyan());
+                match search_tool.fetch_webpage(&target_url).await {
+                    Ok(content) => {
+                        println!("\n{}\n", "─".repeat(70).dimmed());
+                        println!("{}", content);
+                        println!("{}\n", "─".repeat(70).dimmed());
+                    }
+                    Err(e) => {
+                        eprintln!("{}: Failed to fetch URL '{}': {}", "Error".red().bold(), target_url, e);
+                        std::process::exit(1);
+                    }
+                }
+            } else if let Some(search_query) = query {
+                println!("{}", format!("🔍 Searching the web for: \"{}\"...", search_query).bold().cyan());
+                let capped_limit = limit.clamp(1, 10);
+                match search_tool.search(&search_query, capped_limit).await {
+                    Ok(results) => {
+                        if results.is_empty() {
+                            println!("{}", "No web search results found.".yellow());
+                        } else {
+                            println!("\n{}", format!("Found {} result(s):", results.len()).bold().green());
+                            for (idx, r) in results.iter().enumerate() {
+                                println!("\n{}. {}", (idx + 1).to_string().bold().yellow(), r.title.bold());
+                                println!("   {}", r.url.underline().blue());
+                                if !r.snippet.is_empty() {
+                                    println!("   {}", r.snippet.dimmed());
+                                }
+                            }
+                            println!();
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("{}: Web search failed: {}", "Error".red().bold(), e);
+                        std::process::exit(1);
+                    }
+                }
+            } else {
+                eprintln!("{}: Please specify a search query or a --url to fetch.", "Error".red().bold());
+                eprintln!("Usage: tgs websearch \"your query\" OR tgs websearch --url https://example.com");
+                std::process::exit(1);
+            }
+        }
+
         Commands::Stream {
             provider,
             model,
@@ -1853,6 +1915,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         if enable_all || tool_list.contains(&"grounded_inference") {
                             reg.register_tool(crate::tools::builtin::GroundedInferenceTool::new());
                         }
+                        if enable_all || tool_list.contains(&"web_search") {
+                            reg.register_tool(crate::tools::web_search::WebSearchTool::new());
+                        }
                         reg
                     }
                 }
@@ -1890,6 +1955,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 if enable_all || tool_list.contains(&"grounded_inference") {
                     reg.register_tool(crate::tools::builtin::GroundedInferenceTool::new());
+                }
+                if enable_all || tool_list.contains(&"web_search") {
+                    reg.register_tool(crate::tools::web_search::WebSearchTool::new());
                 }
                 reg
             };
@@ -2058,6 +2126,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
             if enable_all || tool_list.contains(&"calculator") {
                 registry.register_tool(CalculatorTool::new());
+            }
+            if enable_all || tool_list.contains(&"web_search") {
+                registry.register_tool(crate::tools::web_search::WebSearchTool::new());
             }
 
             let _mcp_manager = load_and_register_mcp_tools(mcp, mcp_config.as_deref(), &mut registry).await?;
@@ -2601,6 +2672,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     if enable_all || tool_list.contains(&"search_skills") || ecc_agent.tools.contains(&"search_skills".to_string()) {
                         registry.register_tool(crate::tools::builtin::SearchSkillsTool::with_default());
                     }
+                    if enable_all || tool_list.contains(&"web_search") || ecc_agent.tools.contains(&"web_search".to_string()) {
+                        registry.register_tool(crate::tools::web_search::WebSearchTool::new());
+                    }
 
                     let _mcp_manager = load_and_register_mcp_tools(mcp, mcp_config.as_deref(), &mut registry).await?;
 
@@ -2718,6 +2792,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     }
                     if enable_all || tool_list.contains(&"calculator") {
                         registry.register_tool(CalculatorTool::new());
+                    }
+                    if enable_all || tool_list.contains(&"web_search") {
+                        registry.register_tool(crate::tools::web_search::WebSearchTool::new());
                     }
 
                     let _mcp_manager = load_and_register_mcp_tools(mcp, mcp_config.as_deref(), &mut registry).await?;
