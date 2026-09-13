@@ -44,6 +44,7 @@ toml = "0.8"
 thiserror = "2.0"
 bitflags = { version = "2.8", features = ["serde"] }
 petgraph = { version = "0.7", features = ["serde-1"] }
+regex = "1.11"
 base64 = "0.22"
 
 # CLI, Configuration & UI

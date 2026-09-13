@@ -445,6 +445,65 @@ enum Commands {
         #[arg(long)]
         dry_run: bool,
     },
+    /// AST codebase knowledge graph, symbol navigation, and blast-radius analysis
+    Graph {
+        #[command(subcommand)]
+        action: GraphAction,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum GraphAction {
+    /// Compute and display codebase graph statistics
+    Stats {
+        /// Codebase directory path (default: current directory)
+        #[arg(long, short)]
+        path: Option<String>,
+    },
+    /// Locate symbol definitions and metadata
+    Symbol {
+        /// Symbol name or pattern to locate
+        name: String,
+        /// Codebase directory path (default: current directory)
+        #[arg(long, short)]
+        path: Option<String>,
+    },
+    /// Find incoming callers of a symbol
+    Callers {
+        /// Target symbol name
+        name: String,
+        /// Codebase directory path (default: current directory)
+        #[arg(long, short)]
+        path: Option<String>,
+    },
+    /// Find outgoing callees invoked by a symbol
+    Callees {
+        /// Target symbol name
+        name: String,
+        /// Codebase directory path (default: current directory)
+        #[arg(long, short)]
+        path: Option<String>,
+    },
+    /// Calculate transitive blast radius and refactoring risk
+    BlastRadius {
+        /// Target symbol to evaluate
+        target: String,
+        /// Codebase directory path (default: current directory)
+        #[arg(long, short)]
+        path: Option<String>,
+        /// Maximum transitive traversal depth (default: 3)
+        #[arg(long, default_value = "3")]
+        max_depth: Option<usize>,
+    },
+    /// Export the codebase knowledge graph in DOT or JSON format
+    Export {
+        /// Codebase directory path (default: current directory)
+        #[arg(long, short)]
+        path: Option<String>,
+        /// Output format: "dot" or "json"
+        #[arg(long, default_value = "json")]
+        format: String,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -3483,6 +3542,230 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Autofix { path, test, max_attempts, dry_run } => {
             handle_autofix_command(path, test, max_attempts, dry_run).await?;
+        }
+
+        Commands::Graph { action } => {
+            handle_graph_command(action)?;
+        }
+    }
+
+    Ok(())
+}
+
+fn handle_graph_command(action: GraphAction) -> Result<(), Box<dyn std::error::Error>> {
+    use crate::engine::graph::{BlastRisk, CodebaseGraph};
+    use std::path::Path;
+
+    match action {
+        GraphAction::Stats { path } => {
+            let root_str = path.unwrap_or_else(|| ".".to_string());
+            let root = Path::new(&root_str);
+            println!(
+                "{}",
+                format!("⚡ Indexing AST Codebase Knowledge Graph: {}", root.display()).cyan().bold()
+            );
+
+            let graph = CodebaseGraph::build_from_dir(root, 10_000)?;
+            let stats = graph.stats();
+
+            println!("\n{}", "========================================================".dimmed());
+            println!(
+                "{}",
+                "  Tagisan AST Codebase Knowledge Graph Statistics"
+                    .bold()
+                    .cyan()
+            );
+            println!("{}", "========================================================".dimmed());
+            println!("  {:<24} : {}", "Total AST Nodes".bold(), stats.total_nodes.to_string().green());
+            println!("  {:<24} : {}", "Total Relational Edges".bold(), stats.total_edges.to_string().green());
+            println!("  {:<24} : {}", "Functions & Methods".bold(), stats.functions_count.to_string().yellow());
+            println!("  {:<24} : {}", "Types & Interfaces".bold(), stats.types_count.to_string().yellow());
+            println!("  {:<24} : {}", "Modules & Namespaces".bold(), stats.modules_count.to_string().blue());
+            println!("  {:<24} : {}", "Indexed Source Files".bold(), stats.files_count.to_string().magenta());
+            println!("{}", "--------------------------------------------------------".dimmed());
+
+            if !stats.top_central_symbols.is_empty() {
+                println!("\n{}", "  Top Architectural Hubs (In-Degree Centrality):".bold().underline());
+                for (rank, (sym, count)) in stats.top_central_symbols.iter().enumerate() {
+                    let badge = format!("#{}", rank + 1).dimmed();
+                    let count_str = format!("({} dependents)", count).bright_yellow();
+                    println!("    {:<4} {:<42} {}", badge, sym.cyan().bold(), count_str);
+                }
+            }
+            println!("{}", "========================================================".dimmed());
+        }
+
+        GraphAction::Symbol { name, path } => {
+            let root_str = path.unwrap_or_else(|| ".".to_string());
+            let root = Path::new(&root_str);
+            let graph = CodebaseGraph::build_from_dir(root, 10_000)?;
+            let symbols = graph.find_symbol(&name);
+
+            if symbols.is_empty() {
+                println!("{}", format!("No symbols matching '{}' found in graph.", name).yellow());
+                return Ok(());
+            }
+
+            println!(
+                "\n{}",
+                format!("Found {} matching symbol(s) for '{}':", symbols.len(), name).bold().green()
+            );
+            println!("{}", "--------------------------------------------------------------------------------".dimmed());
+            for sym in symbols {
+                let kind_str = format!("[{}]", sym.kind.as_str()).blue().bold();
+                let vis_str = format!("({})", sym.visibility.as_str()).dimmed();
+                println!("  {} {} {}", kind_str, sym.qualified_name.bold().cyan(), vis_str);
+                println!("    File     : {}:{}", sym.file.display().to_string().bright_white(), sym.line);
+                println!("    Signature: {}", sym.signature.dimmed());
+                if let Some(ref doc) = sym.doc {
+                    println!("    Doc      : {}", doc.bright_black());
+                }
+                println!("{}", "--------------------------------------------------------------------------------".dimmed());
+            }
+        }
+
+        GraphAction::Callers { name, path } => {
+            let root_str = path.unwrap_or_else(|| ".".to_string());
+            let root = Path::new(&root_str);
+            let graph = CodebaseGraph::build_from_dir(root, 10_000)?;
+            let callers = graph.find_callers(&name);
+
+            if callers.is_empty() {
+                println!("{}", format!("No incoming callers found for '{}'.", name).yellow());
+                return Ok(());
+            }
+
+            println!(
+                "\n{}",
+                format!("Incoming callers to '{}' ({} found):", name, callers.len()).bold().green()
+            );
+            println!("{}", "--------------------------------------------------------------------------------".dimmed());
+            for (caller, edge) in callers {
+                let rel_str = format!("[{}]", edge.relation.as_str().to_uppercase()).magenta().bold();
+                let line_str = edge
+                    .call_site_line
+                    .map(|l| format!("call site line {l}"))
+                    .unwrap_or_else(|| format!("defined line {}", caller.line));
+
+                println!(
+                    "  {} {:<36} ({}: {})",
+                    rel_str,
+                    caller.qualified_name.cyan().bold(),
+                    caller.file.display().to_string().dimmed(),
+                    line_str.dimmed()
+                );
+            }
+            println!("{}", "--------------------------------------------------------------------------------".dimmed());
+        }
+
+        GraphAction::Callees { name, path } => {
+            let root_str = path.unwrap_or_else(|| ".".to_string());
+            let root = Path::new(&root_str);
+            let graph = CodebaseGraph::build_from_dir(root, 10_000)?;
+            let callees = graph.find_callees(&name);
+
+            if callees.is_empty() {
+                println!("{}", format!("No outgoing calls found from '{}'.", name).yellow());
+                return Ok(());
+            }
+
+            println!(
+                "\n{}",
+                format!("Outgoing calls from '{}' ({} found):", name, callees.len()).bold().green()
+            );
+            println!("{}", "--------------------------------------------------------------------------------".dimmed());
+            for (callee, edge) in callees {
+                let line_str = edge
+                    .call_site_line
+                    .map(|l| format!("line {l}"))
+                    .unwrap_or_else(|| "-".to_string());
+
+                println!(
+                    "  ↳ {:<36} [{}] ({}: {})",
+                    callee.qualified_name.cyan().bold(),
+                    callee.kind.as_str().yellow(),
+                    callee.file.display().to_string().dimmed(),
+                    line_str.dimmed()
+                );
+            }
+            println!("{}", "--------------------------------------------------------------------------------".dimmed());
+        }
+
+        GraphAction::BlastRadius { target, path, max_depth } => {
+            let root_str = path.unwrap_or_else(|| ".".to_string());
+            let root = Path::new(&root_str);
+            let depth = max_depth.unwrap_or(3);
+            let graph = CodebaseGraph::build_from_dir(root, 10_000)?;
+            let report = graph.calculate_blast_radius(&target, depth)?;
+
+            let risk_banner = match report.risk_level {
+                BlastRisk::Low => "🟢 LOW RISK IMPACT".green().bold(),
+                BlastRisk::Medium => "🟡 MEDIUM RISK IMPACT".yellow().bold(),
+                BlastRisk::High => "🟠 HIGH RISK IMPACT".bright_red().bold(),
+                BlastRisk::Critical => "🔴 CRITICAL RISK IMPACT".red().bold(),
+            };
+
+            println!("\n{}", "========================================================".dimmed());
+            println!("  Tagisan Transitive Blast-Radius Analysis");
+            println!("{}", "========================================================".dimmed());
+            println!("  Target Symbol    : {}", report.target_symbol.bold().cyan());
+            println!("  Target File      : {}", report.target_file.display().to_string().bright_white());
+            println!("  Assessed Risk    : {}", risk_banner);
+            println!("  Total Affected   : {} symbols", report.total_affected_symbols.to_string().yellow().bold());
+            println!("  Affected Files   : {} files", report.affected_files.len().to_string().yellow().bold());
+            println!("{}", "--------------------------------------------------------".dimmed());
+
+            println!("\n{}", "  Direct Callers:".bold().underline());
+            if report.direct_callers.is_empty() {
+                println!("    {}", "(None)".dimmed());
+            } else {
+                for c in &report.direct_callers {
+                    println!("    • {}", c.cyan());
+                }
+            }
+
+            println!("\n{}", "  Transitive Callers:".bold().underline());
+            if report.transitive_callers.is_empty() {
+                println!("    {}", "(None within depth limit)".dimmed());
+            } else {
+                for c in &report.transitive_callers {
+                    println!("    • {}", c.bright_blue());
+                }
+            }
+
+            if !report.implementing_types.is_empty() {
+                println!("\n{}", "  Implementing Types:".bold().underline());
+                for imp in &report.implementing_types {
+                    println!("    • {}", imp.magenta());
+                }
+            }
+
+            println!("\n{}", "  Affected Files:".bold().underline());
+            for f in &report.affected_files {
+                println!("    📁 {}", f.display().to_string().dimmed());
+            }
+
+            println!("\n{}", "  Refactoring Recommendations:".bold().underline());
+            for rec in &report.recommendations {
+                println!("    👉 {}", rec.bright_yellow());
+            }
+            println!("{}\n", "========================================================".dimmed());
+        }
+
+        GraphAction::Export { path, format } => {
+            let root_str = path.unwrap_or_else(|| ".".to_string());
+            let root = Path::new(&root_str);
+            let graph = CodebaseGraph::build_from_dir(root, 10_000)?;
+
+            match format.to_lowercase().as_str() {
+                "dot" => {
+                    println!("{}", graph.export_dot());
+                }
+                _ => {
+                    let json_str = graph.export_json()?;
+                    println!("{}", json_str);
+                }
+            }
         }
     }
 

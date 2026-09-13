@@ -2,7 +2,13 @@ pub mod autofix;
 pub mod budget;
 pub mod embedded;
 pub mod gguf;
+pub mod graph;
 pub mod server;
+
+pub use graph::{
+    BlastRadiusReport, BlastRisk, CodeSymbol, CodebaseGraph, GraphStats, SymbolEdge, SymbolKind,
+    SymbolRelation, SymbolVisibility,
+};
 
 pub use autofix::{
     detect_project_type, parse_cargo_json, parse_python_diagnostics, parse_tsc_output,

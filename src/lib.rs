@@ -66,6 +66,10 @@ pub use engine::{
         AutofixEngine, AutofixOptions, AutofixReport, CompilerDiagnostic, DiagnosticLevel,
         ProjectType,
     },
+    graph::{
+        BlastRadiusReport, BlastRisk, CodeSymbol, CodebaseGraph, GraphStats, SymbolEdge, SymbolKind,
+        SymbolRelation, SymbolVisibility,
+    },
     budget::TokenBudgetTracker, EmbeddedLlmProvider, EngineContext, GgufFile, GgufMetadata,
     GgufTensorInfo, GgufValue, GgufValueType, OllamaBlobResolver, OllamaModelDetails,
     OllamaModelSummary, OllamaServer, DEFAULT_ALIGNMENT, GGUF_MAGIC, GGUF_VERSION_2,
@@ -95,8 +99,9 @@ pub use mcp::{
     McpToolCallResult, McpToolDefinition, McpToolWrapper, StdioTransport,
 };
 pub use tools::builtin::{
-    CalculatorTool, DeleteFileTool, EditFileTool, ListDirTool, ReadFileTool, RunCommandTool,
-    SaveMemoryTool, SearchMemoryTool, SearchSkillsTool, ViewImageTool, WriteFileTool,
+    CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, ListDirTool,
+    QueryCodeGraphTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool,
+    SearchSkillsTool, ViewImageTool, WriteFileTool,
 };
 pub use tools::bun::{
     extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,

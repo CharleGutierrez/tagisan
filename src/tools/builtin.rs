@@ -1,4 +1,5 @@
 use super::ToolHandler;
+use crate::engine::graph::{BlastRisk, CodebaseGraph};
 use crate::error::{Result, TagisanError};
 use crate::types::ContentBlock;
 use async_trait::async_trait;
@@ -1704,4 +1705,321 @@ pub fn eval_math_expression(expr: &str) -> std::result::Result<f64, String> {
         return Err(format!("Unexpected trailing token: {:?}", parser.tokens[parser.pos]));
     }
     Ok(result)
+}
+
+// =========================================================================
+// QueryCodeGraphTool
+// =========================================================================
+
+/// Tool for querying codebase AST knowledge graph for symbols, callers, and callees
+#[derive(Debug, Default, Clone)]
+pub struct QueryCodeGraphTool {
+    pub working_dir: Option<PathBuf>,
+}
+
+impl QueryCodeGraphTool {
+    pub fn new() -> Self {
+        Self { working_dir: None }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for QueryCodeGraphTool {
+    fn name(&self) -> &'static str {
+        "query_code_graph"
+    }
+
+    fn description(&self) -> &'static str {
+        "Query the AST codebase knowledge graph for symbols, callers, or callees across Rust, Python, TypeScript, and Go."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Symbol name or pattern to search for (e.g. 'TokenBudgetTracker', 'build_from_dir', 'execute')."
+                },
+                "direction": {
+                    "type": "string",
+                    "enum": ["definition", "callers", "callees"],
+                    "description": "Query mode: 'definition' to locate symbol, 'callers' for incoming callers, 'callees' for outgoing calls (default: 'definition')."
+                },
+                "path": {
+                    "type": "string",
+                    "description": "Root codebase path to index or search (default: '.')."
+                }
+            },
+            "required": ["query"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let query = arguments
+            .get("query")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'query'".to_string()))?;
+
+        let direction = arguments
+            .get("direction")
+            .and_then(|v| v.as_str())
+            .unwrap_or("definition");
+
+        let path_str = arguments
+            .get("path")
+            .and_then(|v| v.as_str())
+            .unwrap_or(".");
+
+        let root_path = if Path::new(path_str).is_relative() {
+            if let Some(ref base) = self.working_dir {
+                base.join(path_str)
+            } else {
+                PathBuf::from(path_str)
+            }
+        } else {
+            PathBuf::from(path_str)
+        };
+
+        let q = query.to_string();
+        let dir = direction.to_string();
+        tokio::task::spawn_blocking(move || {
+            let graph = CodebaseGraph::build_from_dir(&root_path, 10_000)?;
+
+            match dir.as_str() {
+                "callers" => {
+                    let callers = graph.find_callers(&q);
+                    if callers.is_empty() {
+                        return Ok(format!("No callers found for symbol '{q}'."));
+                    }
+
+                    let mut out = format!("### Incoming Callers of `{q}` (Total: {})\n\n", callers.len());
+                    out.push_str("| Caller Symbol | Kind | File | Line | Relation |\n");
+                    out.push_str("| :--- | :--- | :--- | :--- | :--- |\n");
+
+                    for (caller, edge) in callers {
+                        let line_str = edge
+                            .call_site_line
+                            .map(|l| l.to_string())
+                            .unwrap_or_else(|| caller.line.to_string());
+                        out.push_str(&format!(
+                            "| `{}` | {} | `{}` | {} | {} |\n",
+                            caller.qualified_name,
+                            caller.kind.as_str(),
+                            caller.file.display(),
+                            line_str,
+                            edge.relation.as_str()
+                        ));
+                    }
+
+                    Ok(out)
+                }
+                "callees" => {
+                    let callees = graph.find_callees(&q);
+                    if callees.is_empty() {
+                        return Ok(format!("No outgoing calls found for symbol '{q}'."));
+                    }
+
+                    let mut out = format!("### Outgoing Calls from `{q}` (Total: {})\n\n", callees.len());
+                    out.push_str("| Callee Symbol | Kind | File | Call Site Line |\n");
+                    out.push_str("| :--- | :--- | :--- | :--- |\n");
+
+                    for (callee, edge) in callees {
+                        let line_str = edge
+                            .call_site_line
+                            .map(|l| l.to_string())
+                            .unwrap_or_else(|| "-".to_string());
+                        out.push_str(&format!(
+                            "| `{}` | {} | `{}` | {} |\n",
+                            callee.qualified_name,
+                            callee.kind.as_str(),
+                            callee.file.display(),
+                            line_str
+                        ));
+                    }
+
+                    Ok(out)
+                }
+                _ => {
+                    let symbols = graph.find_symbol(&q);
+                    if symbols.is_empty() {
+                        return Ok(format!("No symbols found matching query '{q}'."));
+                    }
+
+                    let mut out = format!("### Symbol Definitions Matching `{q}` (Total: {})\n\n", symbols.len());
+                    out.push_str("| Symbol Name | Kind | Visibility | File | Line | Signature |\n");
+                    out.push_str("| :--- | :--- | :--- | :--- | :--- | :--- |\n");
+
+                    for sym in symbols {
+                        out.push_str(&format!(
+                            "| `{}` | {} | {} | `{}` | {} | `{}` |\n",
+                            sym.qualified_name,
+                            sym.kind.as_str(),
+                            sym.visibility.as_str(),
+                            sym.file.display(),
+                            sym.line,
+                            sym.signature.replace('|', "\\|")
+                        ));
+                    }
+
+                    Ok(out)
+                }
+            }
+        })
+        .await
+        .map_err(|e| TagisanError::Execution(format!("QueryCodeGraph execution panic: {e}")))?
+    }
+}
+
+// =========================================================================
+// CalculateBlastRadiusTool
+// =========================================================================
+
+/// Tool for calculating transitive blast radius and refactoring risk analysis
+#[derive(Debug, Default, Clone)]
+pub struct CalculateBlastRadiusTool {
+    pub working_dir: Option<PathBuf>,
+}
+
+impl CalculateBlastRadiusTool {
+    pub fn new() -> Self {
+        Self { working_dir: None }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for CalculateBlastRadiusTool {
+    fn name(&self) -> &'static str {
+        "calculate_blast_radius"
+    }
+
+    fn description(&self) -> &'static str {
+        "Calculate the transitive blast radius and impact risk of modifying or refactoring a code symbol."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "target": {
+                    "type": "string",
+                    "description": "Target symbol name or qualified path to evaluate (e.g. 'TokenBudgetTracker', 'execute')."
+                },
+                "max_depth": {
+                    "type": "integer",
+                    "description": "Maximum transitive depth to traverse callers and references (default: 3)."
+                },
+                "path": {
+                    "type": "string",
+                    "description": "Root codebase path to index or search (default: '.')."
+                }
+            },
+            "required": ["target"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let target = arguments
+            .get("target")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'target'".to_string()))?;
+
+        let max_depth = arguments
+            .get("max_depth")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize)
+            .unwrap_or(3);
+
+        let path_str = arguments
+            .get("path")
+            .and_then(|v| v.as_str())
+            .unwrap_or(".");
+
+        let root_path = if Path::new(path_str).is_relative() {
+            if let Some(ref base) = self.working_dir {
+                base.join(path_str)
+            } else {
+                PathBuf::from(path_str)
+            }
+        } else {
+            PathBuf::from(path_str)
+        };
+
+        let t = target.to_string();
+        tokio::task::spawn_blocking(move || {
+            let graph = CodebaseGraph::build_from_dir(&root_path, 10_000)?;
+            let report = graph.calculate_blast_radius(&t, max_depth)?;
+
+            let risk_badge = match report.risk_level {
+                BlastRisk::Low => "🟢 LOW RISK",
+                BlastRisk::Medium => "🟡 MEDIUM RISK",
+                BlastRisk::High => "🟠 HIGH RISK",
+                BlastRisk::Critical => "🔴 CRITICAL RISK",
+            };
+
+            let mut out = format!("# Blast Radius Analysis: `{}`\n\n", report.target_symbol);
+            out.push_str(&format!("- **Target File**: `{}`\n", report.target_file.display()));
+            out.push_str(&format!("- **Assessed Risk Level**: {}\n", risk_badge));
+            out.push_str(&format!("- **Total Affected Symbols**: {}\n", report.total_affected_symbols));
+            out.push_str(&format!("- **Affected Files Count**: {}\n\n", report.affected_files.len()));
+
+            // Direct callers
+            out.push_str(&format!("### Direct Callers ({})\n", report.direct_callers.len()));
+            if report.direct_callers.is_empty() {
+                out.push_str("*None identified*\n\n");
+            } else {
+                for c in &report.direct_callers {
+                    out.push_str(&format!("- `{c}`\n"));
+                }
+                out.push('\n');
+            }
+
+            // Transitive callers
+            out.push_str(&format!("### Transitive Callers ({})\n", report.transitive_callers.len()));
+            if report.transitive_callers.is_empty() {
+                out.push_str("*None (within depth limit)*\n\n");
+            } else {
+                for c in &report.transitive_callers {
+                    out.push_str(&format!("- `{c}`\n"));
+                }
+                out.push('\n');
+            }
+
+            // Implementing types
+            if !report.implementing_types.is_empty() {
+                out.push_str(&format!("### Implementing Types ({})\n", report.implementing_types.len()));
+                for imp in &report.implementing_types {
+                    out.push_str(&format!("- `{imp}`\n"));
+                }
+                out.push('\n');
+            }
+
+            // Affected files
+            out.push_str(&format!("### Affected Files ({})\n", report.affected_files.len()));
+            for f in &report.affected_files {
+                out.push_str(&format!("- `{}`\n", f.display()));
+            }
+            out.push('\n');
+
+            // Recommendations
+            out.push_str("### Refactoring Recommendations\n");
+            for rec in &report.recommendations {
+                out.push_str(&format!("- {rec}\n"));
+            }
+
+            Ok(out)
+        })
+        .await
+        .map_err(|e| TagisanError::Execution(format!("CalculateBlastRadius execution panic: {e}")))?
+    }
 }

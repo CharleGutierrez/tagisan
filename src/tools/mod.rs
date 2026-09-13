@@ -22,8 +22,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub use builtin::{
-    CalculatorTool, DeleteFileTool, EditFileTool, FetchSkillTool, ListDirTool, ReadFileTool,
-    RunCommandTool, SaveMemoryTool, SearchMemoryTool, SearchSkillsTool, ViewImageTool, WriteFileTool,
+    CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, FetchSkillTool, ListDirTool,
+    QueryCodeGraphTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool,
+    SearchSkillsTool, ViewImageTool, WriteFileTool,
 };
 pub use bun::{
     extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,
@@ -83,6 +84,8 @@ impl ToolRegistry {
         registry.register_tool(builtin::EditFileTool::new());
         registry.register_tool(builtin::DeleteFileTool::new());
         registry.register_tool(builtin::ListDirTool::new());
+        registry.register_tool(builtin::QueryCodeGraphTool::new());
+        registry.register_tool(builtin::CalculateBlastRadiusTool::new());
         registry.register_tool(builtin::RunCommandTool::default());
         registry.register_tool(builtin::CalculatorTool::new());
         registry.register_tool(builtin::ViewImageTool::new());
@@ -134,6 +137,8 @@ impl ToolRegistry {
         registry.register_tool(builtin::EditFileTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::DeleteFileTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::ListDirTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::QueryCodeGraphTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::CalculateBlastRadiusTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::RunCommandTool::default().with_working_dir(dir.clone()));
         registry.register_tool(builtin::CalculatorTool::new());
         registry.register_tool(builtin::ViewImageTool::new());

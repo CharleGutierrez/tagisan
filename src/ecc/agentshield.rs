@@ -53,7 +53,7 @@ impl AgentShieldScanner {
 
                 Self::scan_command(cmd)
             }
-            "read_file" | "write_file" | "edit_file" | "delete_file" | "list_dir" | "view_image" => {
+            "read_file" | "write_file" | "edit_file" | "delete_file" | "list_dir" | "view_image" | "query_code_graph" | "calculate_blast_radius" => {
                 let path = arguments
                     .get("path")
                     .or_else(|| arguments.get("file_path"))

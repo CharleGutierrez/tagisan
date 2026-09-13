@@ -7,7 +7,7 @@
 
   ### The `uv` of Multi-Agent AI Swarms & In-Process Tensor Engines in Systems-Grade Rust
 
-  **Tagisan ng Talino:** In-Process GGUF Tensor Engine • Native Ollama HTTP Server • Self-Healing Compiler (`tgs autofix`) • Ultra-Fast Swarms • Dialectical Debate • 5 Colibrì Superpowers • Surgical File CRUD • Computer Vision • Bidirectional MCP
+  **Tagisan ng Talino:** In-Process GGUF Tensor Engine • Native Ollama HTTP Server • Self-Healing Compiler (`tgs autofix`) • AST Codebase Graph (`tgs graph`) • Ultra-Fast Swarms • Dialectical Debate • 5 Colibrì Superpowers • Surgical File CRUD • Computer Vision • Bidirectional MCP
 
   <br />
 
@@ -16,6 +16,7 @@
   [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
   [![Tokio](https://img.shields.io/badge/async-tokio-blue)](https://tokio.rs/)
   [![Autofix](https://img.shields.io/badge/autofix-Self--Healing%20Compiler-brightgreen)](https://github.com/CharleGutierrez/tagisan)
+  [![Graph](https://img.shields.io/badge/graph-AST%20Codebase%20Graph-blueviolet)](https://github.com/CharleGutierrez/tagisan)
   [![GGUF Engine](https://img.shields.io/badge/GGUF-Zero--Copy%20mmap%20(56%C2%B5s)-red)](https://github.com/CharleGutierrez/tagisan)
   [![Ollama](https://img.shields.io/badge/Ollama-Native%20Tokio%20Server-black)](https://ollama.com/)
   [![Polyglot](https://img.shields.io/badge/runtimes-Python%20%7C%20Perl%20%7C%20Bun-yellow)](https://github.com/CharleGutierrez/tagisan)
@@ -50,6 +51,7 @@ cargo install --path .
 | **Native Local Server Daemon** | **Yes (`tgs serve`)** | Yes | No | No | No |
 | **Anti-Timeout Heartbeat** | **Yes (3s Keepalive Pulse)** | No (Prone to 600s drop) | No | No | No |
 | **Self-Healing Compiler** | **Yes (`tgs autofix` Polyglot)** | No | No | No | No |
+| **AST Codebase Knowledge Graph** | **Yes (`tgs graph` Polyglot)** | No | No | No | No |
 | **Adversarial Debate** | **Yes (`Lakandiwa` Engine)** | No | Custom scripts | Chat loops | Custom subgraphs |
 | **Mixture-of-Agents (MoA)** | **Yes (Lock-free Tokio Channels)** | No | No | No | Custom setup |
 | **Skill JIT Paging (PILOT)** | **Yes (L1 Context / L2 RAM / L3 Disk)** | No | No | No | No |
@@ -66,6 +68,7 @@ graph TD
     CLI["CLI Binary (tgs)"] --> Engine["Tagisan Core Engine"]
     Engine --> TensorEngine["Native GGUF Tensor Engine & Server"]
     Engine --> Autofix["Self-Healing Compiler (tgs autofix)"]
+    Engine --> Graph["AST Codebase Graph (tgs graph)"]
     Engine --> Swarm["Autonomous Swarm & Strategies"]
     Engine --> Providers["Provider Hub (Cloud & Local)"]
     Engine --> Tools["Tool Registry & Surgical File CRUD"]
@@ -81,6 +84,10 @@ graph TD
     Autofix --> PolyglotFix["Polyglot Diagnostic Parsers (Rustc JSON, TSC, Pytest, Go)"]
     Autofix --> SurgicalAST["Surgical Byte/Span AST Replacement & .bak Backups"]
     Autofix --> TddLoop["Iterative Re-Diagnosis & TDD Healing Loop"]
+
+    Graph --> PolyglotAST["Polyglot AST Extractors (Rust, Python, TS, Go)"]
+    Graph --> CallGraph["Petgraph Directed In-Memory Call-Graph"]
+    Graph --> BlastRadius["Transitive Blast-Radius Risk Engine"]
 
     Swarm --> Debate["Dialectical Debate (Thesis -> Antithesis -> Synthesis)"]
     Swarm --> MoA["Mixture-of-Agents (Parallel Proposers -> Aggregator)"]
@@ -177,6 +184,14 @@ Tagisan introduces an autonomous, zero-prompt compiler diagnostic healer and tes
 - **Surgical Span & AST Replacement:** Computes precise 1-based character/byte boundary offsets in source files. Directly applies compiler-recommended fixes (`MachineApplicable`), auto-prefixes unused variables/imports with underscores, and repairs missing control flow syntax without modifying surrounding code.
 - **Atomic Safety & Rollback:** Automatically captures `.bak` file snapshots prior to patch application, ensuring zero accidental code degradation.
 - **Iterative TDD Healing Loop:** Continuously loops diagnosis, surgical patch application, and verification passes (up to `--max-attempts N`) until the target codebase or test suite compiles with 0 errors.
+
+### 12. 🌲 Tree-Sitter AST Codebase Knowledge Graph & Blast-Radius Engine (`tgs graph`)
+Tagisan equips autonomous agents and developers with deep structural codebase comprehension (`src/engine/graph.rs`):
+- **Polyglot Syntax Graph Extraction:** Indexes Rust (`.rs`), Python (`.py`), TypeScript/JavaScript (`.ts`, `.tsx`, `.js`, `.jsx`), and Go (`.go`) across the entire repository using parallel Rayon threads.
+- **Node & Relational Edge Topology:** Extracts functions, structs, traits, interfaces, enums, modules, and call sites. Models relationships via `Calls`, `Defines`, `Implements`, `Imports`, and `References` using directed graphs (`petgraph`).
+- **Sub-Millisecond Symbol Navigation:** Instantly locates symbol definitions, documentation, signatures, and incoming/outgoing call hierarchies across thousands of files.
+- **Transitive Blast-Radius Risk Analysis:** Before refactoring or editing a symbol, `calculate_blast_radius` computes the entire ripple effect and classifies risk level (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`), providing proactive refactoring advice.
+- **Autonomous Agent Tooling:** Built-in tools `query_code_graph` and `calculate_blast_radius` allow AI agents to navigate call trees and prevent regressions without relying on blind grep.
 
 ---
 
@@ -298,6 +313,28 @@ tgs autofix /path/to/project --max-attempts 10
 tgs autofix . --test
 ```
 
+### 10. AST Codebase Knowledge Graph & Blast-Radius Analysis (`tgs graph`)
+```bash
+# Display overall AST graph metrics and top architectural hubs (centrality ranking)
+tgs graph stats
+
+# Locate symbol definition, signature, file span, and docstring
+tgs graph symbol TokenBudgetTracker
+
+# Trace all incoming callers and call-site lines across the repository
+tgs graph callers apply_span_replacement
+
+# Trace outgoing function and method calls invoked by a symbol
+tgs graph callees handle_autofix_command
+
+# Calculate transitive blast radius and refactoring risk (up to depth N)
+tgs graph blast-radius AutofixEngine --max-depth 4
+
+# Export the directed knowledge graph in Graphviz DOT or JSON format
+tgs graph export --format dot > codebase_graph.dot
+tgs graph export --format json > codebase_graph.json
+```
+
 ---
 
 ## 🛠️ Configuration & Environment
@@ -344,6 +381,9 @@ Tagisan is verified by automated integration stress tests achieving a **100% pas
 # Run all standard unit and integration tests (21 passed, 0 failed)
 cargo test
 
+# Brutal verification: AST Codebase Graph & Blast Radius (7 Phases)
+python3 scripts/test_codebase_graph_verification.py
+
 # Brutal verification: Self-Healing Compiler & TDD Healer (6 Phases)
 python3 scripts/test_autofix_verification.py
 
@@ -366,6 +406,7 @@ python3 scripts/test_crypto_market_verification.py
 
 ## 🗺️ Architectural Specifications & Roadmaps
 
+- 🌲 **[Codebase AST Graph & Blast Radius Guide](docs/CODEBASE_AST_GRAPH_AND_BLAST_RADIUS_GUIDE.md)** — Architectural guide for multi-language AST extraction, petgraph call topologies, and transitive blast-radius refactoring risk modeling.
 - 🔧 **[Self-Healing Compiler & TDD Healer Guide](docs/SELF_HEALING_COMPILER_AUTODEV_GUIDE.md)** — Architectural guide for AST span replacement, polyglot compiler JSON ingestion, and autonomous test self-repair.
 - 📖 **[Reverse-Engineered Ollama Rust Tensor Engine Guide](docs/REVERSE_ENGINEERED_OLLAMA_RUST_ENGINE_GUIDE.md)** — In-depth architectural guide for zero-copy GGUF v2/v3 parsing, memory mapping, and Tokio HTTP streaming.
 - 📑 **[RFC-001: Universal Protocol & Ecosystem Integrations](ROADMAP_EXTENSIONS.md)** — Pluggable external vector backends, OpenTelemetry tracing, and automated swarm benchmarking.
