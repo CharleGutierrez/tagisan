@@ -7,7 +7,7 @@
 
   ### The `uv` of Multi-Agent AI Swarms & In-Process Tensor Engines in Systems-Grade Rust
 
-  **Tagisan ng Talino:** In-Process GGUF Tensor Engine • Native Ollama HTTP Server • Ultra-Fast Swarms • Dialectical Debate • 5 Colibrì Superpowers • Surgical File CRUD • Computer Vision • Bidirectional MCP
+  **Tagisan ng Talino:** In-Process GGUF Tensor Engine • Native Ollama HTTP Server • Self-Healing Compiler (`tgs autofix`) • Ultra-Fast Swarms • Dialectical Debate • 5 Colibrì Superpowers • Surgical File CRUD • Computer Vision • Bidirectional MCP
 
   <br />
 
@@ -15,6 +15,7 @@
   [![Binary](https://img.shields.io/badge/CLI-tgs-brightgreen.svg)](https://github.com/CharleGutierrez/tagisan)
   [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
   [![Tokio](https://img.shields.io/badge/async-tokio-blue)](https://tokio.rs/)
+  [![Autofix](https://img.shields.io/badge/autofix-Self--Healing%20Compiler-brightgreen)](https://github.com/CharleGutierrez/tagisan)
   [![GGUF Engine](https://img.shields.io/badge/GGUF-Zero--Copy%20mmap%20(56%C2%B5s)-red)](https://github.com/CharleGutierrez/tagisan)
   [![Ollama](https://img.shields.io/badge/Ollama-Native%20Tokio%20Server-black)](https://ollama.com/)
   [![Polyglot](https://img.shields.io/badge/runtimes-Python%20%7C%20Perl%20%7C%20Bun-yellow)](https://github.com/CharleGutierrez/tagisan)
@@ -48,6 +49,7 @@ cargo install --path .
 | **GGUF Mapping Latency** | **0.056 ms (56 µs via `mmap`)** | 100 - 300 ms | N/A | N/A | N/A |
 | **Native Local Server Daemon** | **Yes (`tgs serve`)** | Yes | No | No | No |
 | **Anti-Timeout Heartbeat** | **Yes (3s Keepalive Pulse)** | No (Prone to 600s drop) | No | No | No |
+| **Self-Healing Compiler** | **Yes (`tgs autofix` Polyglot)** | No | No | No | No |
 | **Adversarial Debate** | **Yes (`Lakandiwa` Engine)** | No | Custom scripts | Chat loops | Custom subgraphs |
 | **Mixture-of-Agents (MoA)** | **Yes (Lock-free Tokio Channels)** | No | No | No | Custom setup |
 | **Skill JIT Paging (PILOT)** | **Yes (L1 Context / L2 RAM / L3 Disk)** | No | No | No | No |
@@ -63,6 +65,7 @@ cargo install --path .
 graph TD
     CLI["CLI Binary (tgs)"] --> Engine["Tagisan Core Engine"]
     Engine --> TensorEngine["Native GGUF Tensor Engine & Server"]
+    Engine --> Autofix["Self-Healing Compiler (tgs autofix)"]
     Engine --> Swarm["Autonomous Swarm & Strategies"]
     Engine --> Providers["Provider Hub (Cloud & Local)"]
     Engine --> Tools["Tool Registry & Surgical File CRUD"]
@@ -74,6 +77,10 @@ graph TD
     TensorEngine --> Resolver["OllamaBlobResolver (Direct ~/.ollama Blobs)"]
     TensorEngine --> Server["tgs serve (Tokio HTTP Daemon on :11434)"]
     TensorEngine --> Heartbeat["3s Keepalive Heartbeat Pulse"]
+
+    Autofix --> PolyglotFix["Polyglot Diagnostic Parsers (Rustc JSON, TSC, Pytest, Go)"]
+    Autofix --> SurgicalAST["Surgical Byte/Span AST Replacement & .bak Backups"]
+    Autofix --> TddLoop["Iterative Re-Diagnosis & TDD Healing Loop"]
 
     Swarm --> Debate["Dialectical Debate (Thesis -> Antithesis -> Synthesis)"]
     Swarm --> MoA["Mixture-of-Agents (Parallel Proposers -> Aggregator)"]
@@ -163,6 +170,13 @@ Execute code snippets and automated scripts on the fly with built-in AgentShield
   * 🧠 *Philosophical & Conceptual Analysis* (`philosophical-conceptual-vibe-coder`)
   * 🪙 *Cryptoeconomics & Web3 Market Microstructure* (`crypto-market-analyst`)
 - **Extensible On-Disk System:** Discover and dynamically equip custom skills stored in `.ecc/skills/`.
+
+### 11. 🔧 Self-Healing Compiler & TDD Healer (`tgs autofix`)
+Tagisan introduces an autonomous, zero-prompt compiler diagnostic healer and test repair engine (`src/engine/autofix.rs`):
+- **Polyglot Compiler Diagnostics:** Parses machine-readable JSON compiler streams (`cargo check --message-format=json`), TypeScript compiler output (`tsc`), Python syntax errors and test failures (`py_compile` & `pytest`), and Go compiler diagnostics (`go vet`).
+- **Surgical Span & AST Replacement:** Computes precise 1-based character/byte boundary offsets in source files. Directly applies compiler-recommended fixes (`MachineApplicable`), auto-prefixes unused variables/imports with underscores, and repairs missing control flow syntax without modifying surrounding code.
+- **Atomic Safety & Rollback:** Automatically captures `.bak` file snapshots prior to patch application, ensuring zero accidental code degradation.
+- **Iterative TDD Healing Loop:** Continuously loops diagnosis, surgical patch application, and verification passes (up to `--max-attempts N`) until the target codebase or test suite compiles with 0 errors.
 
 ---
 
@@ -269,6 +283,21 @@ tgs swarm cluster worker --coordinator 192.168.1.100:8765 --worker-id worker-nvm
 tgs swarm cluster status --coordinator 192.168.1.100:8765
 ```
 
+### 9. Self-Healing Compiler & TDD Healer (`tgs autofix`)
+```bash
+# Automatically diagnose and heal compiler issues in current directory
+tgs autofix
+
+# Dry run inspection (shows proposed surgical AST patches without editing disk)
+tgs autofix --dry-run
+
+# Target a specific directory or broken source file with 10 max iterative repair attempts
+tgs autofix /path/to/project --max-attempts 10
+
+# Include full test suites during healing passes (e.g., cargo check --tests, pytest)
+tgs autofix . --test
+```
+
 ---
 
 ## 🛠️ Configuration & Environment
@@ -315,6 +344,9 @@ Tagisan is verified by automated integration stress tests achieving a **100% pas
 # Run all standard unit and integration tests (21 passed, 0 failed)
 cargo test
 
+# Brutal verification: Self-Healing Compiler & TDD Healer (6 Phases)
+python3 scripts/test_autofix_verification.py
+
 # Brutal verification: Reverse-Engineered Ollama Rust Tensor Engine (6 Tiers)
 python3 scripts/test_rust_engine_verification.py
 
@@ -334,6 +366,7 @@ python3 scripts/test_crypto_market_verification.py
 
 ## 🗺️ Architectural Specifications & Roadmaps
 
+- 🔧 **[Self-Healing Compiler & TDD Healer Guide](docs/SELF_HEALING_COMPILER_AUTODEV_GUIDE.md)** — Architectural guide for AST span replacement, polyglot compiler JSON ingestion, and autonomous test self-repair.
 - 📖 **[Reverse-Engineered Ollama Rust Tensor Engine Guide](docs/REVERSE_ENGINEERED_OLLAMA_RUST_ENGINE_GUIDE.md)** — In-depth architectural guide for zero-copy GGUF v2/v3 parsing, memory mapping, and Tokio HTTP streaming.
 - 📑 **[RFC-001: Universal Protocol & Ecosystem Integrations](ROADMAP_EXTENSIONS.md)** — Pluggable external vector backends, OpenTelemetry tracing, and automated swarm benchmarking.
 - 🔌 **[RFC-002: WASM & Native Dynamic Plugins Architecture](ROADMAP_PLUGINS.md)** — Extism WebAssembly sandboxing and native dynamic shared library plugins.

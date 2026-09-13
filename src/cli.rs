@@ -427,6 +427,24 @@ enum Commands {
         #[command(subcommand)]
         action: EngineAction,
     },
+    /// Automatically diagnose and self-heal compiler errors & test failures (Rust, TS, Python, Go)
+    Autofix {
+        /// Target directory or source file to inspect and heal (default: current directory)
+        #[arg(default_value = ".")]
+        path: String,
+
+        /// Include test suites during diagnosis (e.g. cargo check --tests, pytest)
+        #[arg(short, long)]
+        test: bool,
+
+        /// Maximum iterative healing attempts
+        #[arg(short = 'm', long, default_value_t = 5)]
+        max_attempts: usize,
+
+        /// Perform dry run without modifying files on disk
+        #[arg(long)]
+        dry_run: bool,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -3462,7 +3480,69 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Engine { action } => {
             handle_engine_command(action).await?;
         }
+
+        Commands::Autofix { path, test, max_attempts, dry_run } => {
+            handle_autofix_command(path, test, max_attempts, dry_run).await?;
+        }
     }
+
+    Ok(())
+}
+
+async fn handle_autofix_command(
+    path: String,
+    test: bool,
+    max_attempts: usize,
+    dry_run: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!("{}", "=========================================================".cyan());
+    println!("{}", "  🔧  TGS SELF-HEALING COMPILER & TDD HEALER (`tgs autofix`)".bold().yellow());
+    println!("{}", "=========================================================".cyan());
+
+    let target_path = std::path::PathBuf::from(&path);
+    let canonical_target = target_path.canonicalize().unwrap_or_else(|_| target_path.clone());
+    let detected_type = crate::engine::autofix::detect_project_type(&canonical_target);
+
+    println!("  [•] Target Path:   {}", canonical_target.display().to_string().green());
+    println!("  [•] Project Type:  {}", format!("{:?}", detected_type).magenta().bold());
+    println!("  [•] Max Attempts:  {}", max_attempts.to_string().cyan());
+    println!("  [•] Include Tests: {}", if test { "Yes".green() } else { "No".yellow() });
+    println!("  [•] Mode:          {}", if dry_run { "DRY-RUN (Simulated)".yellow().bold() } else { "ACTIVE HEALING".green().bold() });
+    println!();
+
+    let engine = crate::engine::autofix::AutofixEngine::new();
+    let options = crate::engine::autofix::AutofixOptions {
+        max_attempts,
+        include_tests: test,
+        dry_run,
+        backup: true,
+    };
+
+    let report = engine.heal(&canonical_target, &options)?;
+
+    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".cyan());
+    println!("{}", "  📋  HEALING REPORT".bold().yellow());
+    println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".cyan());
+    println!("  Project Type:       {:?}", report.project_type);
+    println!("  Initial Diagnostics: {}", report.total_diagnostics);
+    println!("  Repairs Applied:    {}", report.healed_count);
+    println!("  Attempts Made:      {}/{}", report.attempts_made, options.max_attempts);
+    println!("  Duration:           {}ms", report.duration_ms);
+
+    if !report.fixes_applied.is_empty() {
+        println!("\n{}", "Surgical Patches Applied:".bold());
+        for fix in &report.fixes_applied {
+            println!("    {}", fix.green());
+        }
+    }
+
+    println!();
+    if report.is_clean {
+        println!("{}", "  ✨ SUCCESS: All diagnostics resolved. Codebase is clean!".green().bold());
+    } else {
+        println!("{}", "  ⚠️  ATTENTION: Diagnostics remain after maximum attempts.".yellow().bold());
+    }
+    println!("{}", "=========================================================\n".cyan());
 
     Ok(())
 }

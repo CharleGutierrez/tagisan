@@ -1,7 +1,14 @@
+pub mod autofix;
 pub mod budget;
 pub mod embedded;
 pub mod gguf;
 pub mod server;
+
+pub use autofix::{
+    detect_project_type, parse_cargo_json, parse_python_diagnostics, parse_tsc_output,
+    AutofixEngine, AutofixOptions, AutofixReport, CompilerDiagnostic, DiagnosticLevel,
+    ProjectType,
+};
 
 pub use budget::TokenBudgetTracker;
 pub use embedded::EmbeddedLlmProvider;

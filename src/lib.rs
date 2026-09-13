@@ -61,6 +61,11 @@ pub use dag::{
     WorkflowResult, WorkflowRunner, PLANNER_SYSTEM_PROMPT,
 };
 pub use engine::{
+    autofix::{
+        detect_project_type, parse_cargo_json, parse_python_diagnostics, parse_tsc_output,
+        AutofixEngine, AutofixOptions, AutofixReport, CompilerDiagnostic, DiagnosticLevel,
+        ProjectType,
+    },
     budget::TokenBudgetTracker, EmbeddedLlmProvider, EngineContext, GgufFile, GgufMetadata,
     GgufTensorInfo, GgufValue, GgufValueType, OllamaBlobResolver, OllamaModelDetails,
     OllamaModelSummary, OllamaServer, DEFAULT_ALIGNMENT, GGUF_MAGIC, GGUF_VERSION_2,
