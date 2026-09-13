@@ -22,7 +22,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub use builtin::{
-    CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, FetchSkillTool, ListDirTool,
+    CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, FetchSkillTool, GroundedInferenceTool, ListDirTool,
     QueryCodeGraphTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool,
     SearchSkillsTool, ViewImageTool, WriteFileTool,
 };
@@ -89,6 +89,7 @@ impl ToolRegistry {
         registry.register_tool(builtin::RunCommandTool::default());
         registry.register_tool(builtin::CalculatorTool::new());
         registry.register_tool(builtin::ViewImageTool::new());
+        registry.register_tool(builtin::GroundedInferenceTool::new());
         registry.register_tool(bun::BunEvalTool::new());
         registry.register_tool(bun::BunRunTool::new());
         registry.register_tool(bun::BunTestTool::new());
@@ -142,6 +143,7 @@ impl ToolRegistry {
         registry.register_tool(builtin::RunCommandTool::default().with_working_dir(dir.clone()));
         registry.register_tool(builtin::CalculatorTool::new());
         registry.register_tool(builtin::ViewImageTool::new());
+        registry.register_tool(builtin::GroundedInferenceTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::SearchSkillsTool::with_default());
         registry.register_tool(bun::BunEvalTool::new().with_working_dir(dir.clone()));
         registry.register_tool(bun::BunRunTool::new().with_working_dir(dir.clone()));

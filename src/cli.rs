@@ -450,6 +450,31 @@ enum Commands {
         #[command(subcommand)]
         action: GraphAction,
     },
+    /// Deterministic Closed-Loop Grounding & Verification Engine (tgs ground)
+    Ground {
+        /// Coding or reasoning task prompt to ground and verify
+        task: String,
+
+        /// Target codebase directory or source file for AST invariant extraction
+        #[arg(short, long)]
+        path: Option<String>,
+
+        /// Maximum iterative self-healing verification attempts (default: 3)
+        #[arg(short = 'm', long, default_value_t = 3)]
+        max_iterations: usize,
+
+        /// Disable adversarial dialectical critique audit
+        #[arg(long)]
+        no_critique: bool,
+
+        /// Disable AST codebase graph invariant extraction
+        #[arg(long)]
+        no_ast: bool,
+
+        /// Optional file path to write verified output code
+        #[arg(short, long)]
+        output: Option<String>,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -1709,6 +1734,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         if enable_all || tool_list.contains(&"search_skills") {
                             reg.register_tool(crate::tools::builtin::SearchSkillsTool::with_default());
                         }
+                        if enable_all || tool_list.contains(&"grounded_inference") {
+                            reg.register_tool(crate::tools::builtin::GroundedInferenceTool::new());
+                        }
                         reg
                     }
                 }
@@ -1743,6 +1771,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 if enable_all || tool_list.contains(&"search_skills") {
                     reg.register_tool(crate::tools::builtin::SearchSkillsTool::with_default());
+                }
+                if enable_all || tool_list.contains(&"grounded_inference") {
+                    reg.register_tool(crate::tools::builtin::GroundedInferenceTool::new());
                 }
                 reg
             };
@@ -3547,6 +3578,17 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Graph { action } => {
             handle_graph_command(action)?;
         }
+
+        Commands::Ground {
+            task,
+            path,
+            max_iterations,
+            no_critique,
+            no_ast,
+            output,
+        } => {
+            handle_ground_command(task, path, max_iterations, no_critique, no_ast, output).await?;
+        }
     }
 
     Ok(())
@@ -3826,6 +3868,183 @@ async fn handle_autofix_command(
         println!("{}", "  ⚠️  ATTENTION: Diagnostics remain after maximum attempts.".yellow().bold());
     }
     println!("{}", "=========================================================\n".cyan());
+
+    Ok(())
+}
+
+async fn handle_ground_command(
+    task: String,
+    path: Option<String>,
+    max_iterations: usize,
+    no_critique: bool,
+    no_ast: bool,
+    output: Option<String>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    use colored::Colorize;
+    use crate::engine::grounding::{CritiqueSeverity, GroundingEngine, GroundingOptions};
+    use std::path::PathBuf;
+
+    println!("{}", "================================================================================".cyan());
+    println!("{}", "  🧠  DETERMINISTIC CLOSED-LOOP GROUNDING & VERIFICATION ENGINE (`tgs ground`)".bold().yellow());
+    println!("{}", "================================================================================".cyan());
+    println!("  [•] Task:                 {}", task.bold().white());
+    let target_path = path.as_ref().map(PathBuf::from);
+    if let Some(ref p) = target_path {
+        println!("  [•] Context Target:       {}", p.display().to_string().green());
+    } else {
+        println!("  [•] Context Target:       {}", "Current Workspace".green());
+    }
+    println!("  [•] Max Iterations:       {}", max_iterations.to_string().cyan());
+    println!("  [•] Adversarial Critique: {}", if no_critique { "Disabled".yellow() } else { "Enabled".green() });
+    println!("  [•] AST Grounding:        {}", if no_ast { "Disabled".yellow() } else { "Enabled".green() });
+    println!();
+
+    let engine = GroundingEngine::new();
+    let detected_lang = engine.detect_language(&task, None, target_path.as_deref());
+
+    // 🌲 Phase 1: AST Invariant Extraction
+    println!("{}", "🌲 Phase 1: AST Invariant Extraction".bold().cyan());
+    let ast_context = if !no_ast {
+        let ctx = engine.synthesize_ast_context(&task, target_path.as_deref().or_else(|| Some(std::path::Path::new("."))));
+        let lines = ctx.lines().count();
+        if lines > 0 {
+            println!("   ↳ Querying petgraph knowledge graph...");
+            println!("   ↳ Extracted {} invariant symbol signatures (<400 tokens compressed)", lines.to_string().green().bold());
+        } else {
+            println!("   ↳ No project AST graph found at target; using standard target prelude invariants.");
+        }
+        ctx
+    } else {
+        println!("   ↳ AST Knowledge Graph extraction skipped (--no-ast).");
+        String::new()
+    };
+    println!();
+
+    // 💡 Phase 2: Hypothesis Generation
+    println!("{}", "💡 Phase 2: Hypothesis Generation".bold().cyan());
+    println!("   ↳ Target Ecosystem: {}", format!("{:?}", detected_lang).magenta().bold());
+    println!("   ↳ Synthesizing candidate code adhering strictly to target idioms...");
+    let initial_code = engine.generate_hypothesis(&task, detected_lang, &ast_context);
+    println!("   ↳ Candidate hypothesis generated ({} bytes, {} lines)", initial_code.len().to_string().yellow(), initial_code.lines().count().to_string().yellow());
+    println!();
+
+    // ⚔️ Phase 3: Adversarial Dialectical Audit
+    println!("{}", "⚔️ Phase 3: Adversarial Dialectical Audit".bold().cyan());
+    let _critique_findings = if !no_critique {
+        let findings = engine.audit_critique(&initial_code, detected_lang);
+        let crit_count = findings.iter().filter(|f| f.severity == CritiqueSeverity::Critical).count();
+        let high_count = findings.iter().filter(|f| f.severity == CritiqueSeverity::High).count();
+        let med_count = findings.iter().filter(|f| f.severity == CritiqueSeverity::Medium).count();
+        let low_count = findings.iter().filter(|f| f.severity == CritiqueSeverity::Low).count();
+
+        println!(
+            "   ↳ Invariant Audit: {} total findings ({} Critical, {} High, {} Medium, {} Low)",
+            findings.len().to_string().yellow().bold(),
+            crit_count.to_string().red().bold(),
+            high_count.to_string().yellow(),
+            med_count.to_string().cyan(),
+            low_count.to_string().dimmed(),
+        );
+        for f in findings.iter().take(5) {
+            let badge = match f.severity {
+                CritiqueSeverity::Critical => "CRITICAL".red().bold(),
+                CritiqueSeverity::High => "HIGH".yellow().bold(),
+                CritiqueSeverity::Medium => "MEDIUM".cyan(),
+                CritiqueSeverity::Low => "LOW".dimmed(),
+            };
+            println!("     • [{}] [{:?}] {}", badge, f.category, f.description);
+            println!("       ↳ Suggestion: {}", f.suggestion.italic());
+        }
+        findings
+    } else {
+        println!("   ↳ Adversarial critique skipped (--no-critique).");
+        Vec::new()
+    };
+    println!();
+
+    // 🔬 Phase 4: Deterministic Compiler Verification
+    println!("{}", "🔬 Phase 4: Deterministic Compiler Verification".bold().cyan());
+    println!("   ↳ Ephemeral sandbox initialized.");
+    let (is_compiler_clean, diagnostics) = engine.verify_deterministic(&initial_code, detected_lang, false);
+    if is_compiler_clean {
+        println!("   ↳ {}", "Deterministic compiler syntax & type check PASSED (0 errors)".green().bold());
+    } else {
+        println!("   ↳ {}", format!("Compiler detected {} diagnostics", diagnostics.len()).red().bold());
+        for d in diagnostics.iter().take(3) {
+            println!("     • Line {}:{} [{}] {}", d.line, d.col, d.code.as_deref().unwrap_or("error"), d.message.red());
+        }
+    }
+    println!();
+
+    // Execute full elevate pipeline (includes Phase 5: Closed-Loop Self-Healing & Phase 6: Certification)
+    let options = GroundingOptions {
+        max_iterations,
+        adversarial_critique: !no_critique,
+        ast_grounding: !no_ast,
+        sandbox_exec: false,
+        provider: None,
+        model: None,
+    };
+
+    println!("{}", "🩹 Phase 5: Closed-Loop Self-Healing".bold().cyan());
+    let report = engine.elevate(&task, Some(detected_lang), target_path.as_deref(), &options)?;
+    if report.compiler_healed_count > 0 {
+        println!(
+            "   ↳ Applied {} surgical iterative patch repairs across {} verification passes.",
+            report.compiler_healed_count.to_string().green().bold(),
+            report.total_passes.to_string().cyan()
+        );
+    } else if report.initial_clean {
+        println!("   ↳ {}", "Initial hypothesis clean; zero healing cycles required.".green());
+    } else {
+        println!("   ↳ Ran {} self-healing verification passes.", report.total_passes);
+    }
+    println!();
+
+    // 🏆 Phase 6: Grounded Truth Certification
+    println!("{}", "🏆 Phase 6: Grounded Truth Certification".bold().cyan());
+    println!("{}", "================================================================================".cyan());
+    if report.final_verified {
+        println!(
+            "  {} (Confidence Score: {:.1}%)",
+            "✨ CERTIFIED GROUNDED TRUTH".green().bold(),
+            report.confidence_score * 100.0
+        );
+    } else {
+        println!(
+            "  {} (Confidence Score: {:.1}%)",
+            "⚠️ UNVERIFIED HYPOTHESIS".yellow().bold(),
+            report.confidence_score * 100.0
+        );
+    }
+    println!("{}", "================================================================================".cyan());
+    println!("  • Language:          {:?}", report.language);
+    println!("  • Passes Completed:  {}/{}", report.total_passes, max_iterations);
+    println!("  • Initial Clean:     {}", if report.initial_clean { "Yes".green() } else { "No".yellow() });
+    println!("  • Critique Findings: {}", report.critique_count);
+    println!("  • Patches Healed:    {}", report.compiler_healed_count);
+    println!("  • Verified Clean:    {}", if report.final_verified { "TRUE".green().bold() } else { "FALSE".red().bold() });
+    println!("  • Verification Time: {}ms", report.duration_ms);
+    println!();
+
+    println!("{}", "Grounded & Verified Source Code:".bold().white());
+    println!("{}", "────────────────────────────────────────────────────────────────────────────────".dimmed());
+    for (idx, line) in report.final_code.trim().lines().enumerate() {
+        println!("{:>4} │ {}", (idx + 1).to_string().dimmed(), line);
+    }
+    println!("{}", "────────────────────────────────────────────────────────────────────────────────".dimmed());
+    println!();
+
+    // Output to file if requested
+    if let Some(ref out_path) = output {
+        let p = PathBuf::from(out_path);
+        if let Some(parent) = p.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        std::fs::write(&p, &report.final_code)?;
+        println!("💾 Successfully wrote verified code to: {}", p.display().to_string().green().bold());
+        println!();
+    }
 
     Ok(())
 }

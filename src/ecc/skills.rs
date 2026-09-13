@@ -185,6 +185,7 @@ impl EccSkill {
 /// Return all built-in ECC engineering skills
 pub fn all_built_in_skills() -> Vec<EccSkill> {
     vec![
+        local_llm_supercharger(),
         tdd_workflow(),
         security_review(),
         api_design(),
@@ -1785,6 +1786,33 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
         m
     });
     map.get(&lower).cloned()
+}
+
+/// Local LLM Supercharger Skill
+pub fn local_llm_supercharger() -> EccSkill {
+    EccSkill::new(
+        "local-llm-supercharger",
+        "Autonomous operational discipline for local open-weight LLMs (Llama 3, Qwen 2.5, DeepSeek, Mistral). Enforces CodeAct Python REPL verification for math, dates, calculations, and structured data, structured traceback parsing for self-healing, and pre-emission reflection checklists. Triggers: local llm, python_eval, traceback, reflection, codeact, self-healing, grammar decoding, structured output, zero shot math.",
+        r#"# Local LLM Supercharger: Production CodeAct, Traceback Healing & Self-Critique
+
+## Purpose & Scope
+Local open-weight LLMs (e.g. Llama-3-8B, Qwen-2.5-7B/14B/32B, DeepSeek-R1-Distill, Mistral-7B) possess strong fundamental instruction-following abilities but suffer severe degradations when calculating arithmetic in-weights, manipulating complex JSON, estimating dates, or recovering from execution failures.
+
+This skill equips the local agent with ironclad operational invariants to eliminate hallucinations, enforce verified computational grounding, parse execution tracebacks deterministically, and execute test-time reflection before returning final answers.
+
+## 1. Dense Invariant Rules (CodeAct Protocol)
+- Mandatory Python REPL for math, date math, statistical calculations, and JSON transformations.
+- In-weights arithmetic prohibition: invoke python_eval for any multi-digit computation.
+- Single-fact tool invocations with grounded feedback.
+
+## 2. Systematic Error Recovery & Traceback Self-Healing
+- Deconstruct tracebacks: isolate exception type, file name, and exact line number.
+- No conversational apologies or prose hallucinations.
+- Formulate focused incremental patches and verify via python_eval before concluding.
+
+## 3. Test-Time Self-Critique Checklist
+- Grounding verification, traceback elimination, constraint adherence, edge cases, and conciseness."#,
+    )
 }
 
 /// 1. TDD Workflow Skill

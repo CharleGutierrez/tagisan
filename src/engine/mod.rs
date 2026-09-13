@@ -3,7 +3,13 @@ pub mod budget;
 pub mod embedded;
 pub mod gguf;
 pub mod graph;
+pub mod grounding;
 pub mod server;
+
+pub use grounding::{
+    CritiqueCategory, CritiqueFinding, CritiqueSeverity, GroundingEngine, GroundingOptions,
+    GroundingPass, GroundingReport, GroundingStage,
+};
 
 pub use graph::{
     BlastRadiusReport, BlastRisk, CodeSymbol, CodebaseGraph, GraphStats, SymbolEdge, SymbolKind,

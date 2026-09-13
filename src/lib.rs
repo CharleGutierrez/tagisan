@@ -70,6 +70,10 @@ pub use engine::{
         BlastRadiusReport, BlastRisk, CodeSymbol, CodebaseGraph, GraphStats, SymbolEdge, SymbolKind,
         SymbolRelation, SymbolVisibility,
     },
+    grounding::{
+        CritiqueCategory, CritiqueFinding, CritiqueSeverity, GroundingEngine, GroundingOptions,
+        GroundingPass, GroundingReport, GroundingStage,
+    },
     budget::TokenBudgetTracker, EmbeddedLlmProvider, EngineContext, GgufFile, GgufMetadata,
     GgufTensorInfo, GgufValue, GgufValueType, OllamaBlobResolver, OllamaModelDetails,
     OllamaModelSummary, OllamaServer, DEFAULT_ALIGNMENT, GGUF_MAGIC, GGUF_VERSION_2,
@@ -99,7 +103,7 @@ pub use mcp::{
     McpToolCallResult, McpToolDefinition, McpToolWrapper, StdioTransport,
 };
 pub use tools::builtin::{
-    CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, ListDirTool,
+    CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, GroundedInferenceTool, ListDirTool,
     QueryCodeGraphTool, ReadFileTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool,
     SearchSkillsTool, ViewImageTool, WriteFileTool,
 };

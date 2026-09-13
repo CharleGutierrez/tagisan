@@ -2023,3 +2023,155 @@ impl ToolHandler for CalculateBlastRadiusTool {
         .map_err(|e| TagisanError::Execution(format!("CalculateBlastRadius execution panic: {e}")))?
     }
 }
+
+// =========================================================================
+// GroundedInferenceTool
+// =========================================================================
+
+/// Tool for executing deterministic closed-loop grounding, AST invariant injection,
+/// adversarial dialectical critique, and compiler verification.
+#[derive(Debug, Default, Clone)]
+pub struct GroundedInferenceTool {
+    pub working_dir: Option<PathBuf>,
+}
+
+impl GroundedInferenceTool {
+    pub fn new() -> Self {
+        Self { working_dir: None }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for GroundedInferenceTool {
+    fn name(&self) -> &'static str {
+        "grounded_inference"
+    }
+
+    fn description(&self) -> &'static str {
+        "Execute deterministic closed-loop grounding, AST invariant synthesis, adversarial critique, and compiler verification to produce certified code."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "task": {
+                    "type": "string",
+                    "description": "The coding or reasoning task to ground and verify (e.g. 'Write a thread-safe atomic counter in Rust')."
+                },
+                "language": {
+                    "type": "string",
+                    "description": "Optional target programming language: 'rust', 'python', 'typescript', 'go'."
+                },
+                "path": {
+                    "type": "string",
+                    "description": "Optional codebase directory or file path for AST invariant extraction."
+                },
+                "max_iterations": {
+                    "type": "integer",
+                    "description": "Maximum iterative self-healing verification attempts (default: 3)."
+                }
+            },
+            "required": ["task"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let task = arguments
+            .get("task")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'task'".to_string()))?;
+
+        let lang_opt = arguments
+            .get("language")
+            .and_then(|v| v.as_str())
+            .map(|l| match l.to_lowercase().as_str() {
+                "rust" | "rs" => crate::engine::autofix::ProjectType::Rust,
+                "python" | "py" => crate::engine::autofix::ProjectType::Python,
+                "typescript" | "ts" | "js" => crate::engine::autofix::ProjectType::TypeScript,
+                "go" | "golang" => crate::engine::autofix::ProjectType::Go,
+                _ => crate::engine::autofix::ProjectType::Unknown,
+            });
+
+        let max_iterations = arguments
+            .get("max_iterations")
+            .and_then(|v| v.as_u64())
+            .map(|v| v as usize)
+            .unwrap_or(3);
+
+        let path_str = arguments
+            .get("path")
+            .and_then(|v| v.as_str());
+
+        let target_path = path_str.map(|p| {
+            let path = Path::new(p);
+            if path.is_relative() {
+                if let Some(ref base) = self.working_dir {
+                    base.join(path)
+                } else {
+                    path.to_path_buf()
+                }
+            } else {
+                path.to_path_buf()
+            }
+        });
+
+        let task_owned = task.to_string();
+        tokio::task::spawn_blocking(move || {
+            let engine = crate::engine::grounding::GroundingEngine::new();
+            let options = crate::engine::grounding::GroundingOptions {
+                max_iterations,
+                adversarial_critique: true,
+                ast_grounding: true,
+                sandbox_exec: false,
+                provider: None,
+                model: None,
+            };
+
+            let report = engine.elevate(
+                &task_owned,
+                lang_opt,
+                target_path.as_deref(),
+                &options,
+            )?;
+
+            let status_badge = if report.final_verified {
+                "✅ CERTIFIED GROUNDED TRUTH"
+            } else {
+                "⚠️ VERIFICATION FAILED"
+            };
+
+            let lang_fence = match report.language {
+                crate::engine::autofix::ProjectType::Rust => "rust",
+                crate::engine::autofix::ProjectType::Python => "python",
+                crate::engine::autofix::ProjectType::TypeScript => "typescript",
+                crate::engine::autofix::ProjectType::Go => "go",
+                _ => "text",
+            };
+
+            let mut out = format!("# Deterministic Grounding Certification Report\n\n");
+            out.push_str(&format!("- **Status**: {}\n", status_badge));
+            out.push_str(&format!("- **Task**: {}\n", report.task));
+            out.push_str(&format!("- **Language**: {:?}\n", report.language));
+            out.push_str(&format!("- **Confidence Score**: {:.1}%\n", report.confidence_score * 100.0));
+            out.push_str(&format!("- **Passes Executed**: {}\n", report.total_passes));
+            out.push_str(&format!("- **Initial Clean**: {}\n", report.initial_clean));
+            out.push_str(&format!("- **Critique Findings**: {}\n", report.critique_count));
+            out.push_str(&format!("- **Compiler Self-Heals**: {}\n", report.compiler_healed_count));
+            out.push_str(&format!("- **Duration**: {}ms\n\n", report.duration_ms));
+
+            out.push_str("### Grounded & Verified Output Code\n");
+            out.push_str(&format!("```{lang_fence}\n{}\n```\n", report.final_code.trim()));
+
+            Ok(out)
+        })
+        .await
+        .map_err(|e| TagisanError::Execution(format!("GroundedInference panic: {e}")))?
+    }
+}
+

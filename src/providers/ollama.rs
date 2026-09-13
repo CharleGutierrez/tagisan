@@ -225,8 +225,12 @@ impl OllamaProvider {
                     ContentBlock::ToolCall { name, arguments, .. } => {
                         text_parts.push(format!("[Tool Call: {}({})]", name, arguments));
                     }
-                    ContentBlock::ToolResult { tool_call_id, content, .. } => {
-                        text_parts.push(format!("[Tool Result for {}: {}]", tool_call_id, content));
+                    ContentBlock::ToolResult { tool_call_id, content, is_error } => {
+                        if *is_error {
+                            text_parts.push(format!("[Tool Error for {}: {}]", tool_call_id, content));
+                        } else {
+                            text_parts.push(format!("[Tool Result for {}: {}]", tool_call_id, content));
+                        }
                     }
                 }
             }
@@ -312,6 +316,8 @@ pub struct OllamaOptions {
 struct OllamaChatPayload<'a> {
     model: &'a str,
     messages: Vec<OllamaMessage>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    format: Option<&'a serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     tools: Option<Vec<OllamaTool<'a>>>,
     stream: bool,
@@ -464,6 +470,7 @@ impl LlmProvider for OllamaProvider {
         let payload = OllamaChatPayload {
             model: &effective_model,
             messages,
+            format: req.format.as_ref(),
             tools,
             stream: false,
             keep_alive: Some(&keep_alive),
@@ -616,6 +623,7 @@ impl LlmProvider for OllamaProvider {
         let payload = OllamaChatPayload {
             model: &effective_model,
             messages,
+            format: req.format.as_ref(),
             tools,
             stream: true,
             keep_alive: Some(&keep_alive),

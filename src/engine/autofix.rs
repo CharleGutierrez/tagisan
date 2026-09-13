@@ -35,15 +35,13 @@ impl fmt::Display for ProjectType {
 
 /// Detect the programming ecosystem of a project path or file.
 pub fn detect_project_type(path: &Path) -> ProjectType {
-    if path.is_file() {
-        if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-            match ext {
-                "rs" => return ProjectType::Rust,
-                "ts" | "tsx" | "js" | "jsx" => return ProjectType::TypeScript,
-                "py" => return ProjectType::Python,
-                "go" => return ProjectType::Go,
-                _ => {}
-            }
+    if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+        match ext {
+            "rs" => return ProjectType::Rust,
+            "ts" | "tsx" | "js" | "jsx" => return ProjectType::TypeScript,
+            "py" => return ProjectType::Python,
+            "go" => return ProjectType::Go,
+            _ => {}
         }
     }
 

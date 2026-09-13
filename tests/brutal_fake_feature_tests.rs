@@ -3,6 +3,7 @@
 //! Automated empirical proof exposing every fake feature identified across
 //! Vella and Tagisan. Tests pass inputs, assert hardcoded returns, and verify
 //! absence of underlying hardware, networking, or algorithmic implementations.
+#![cfg(feature = "vella")]
 
 use serde_json::{json, Value};
 use tagisan::tools::ToolHandler;

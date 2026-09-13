@@ -83,6 +83,14 @@ impl ToolHandler for PythonEvalTool {
                 "timeout_secs": {
                     "type": "integer",
                     "description": "Optional execution timeout in seconds (default: 30)."
+                },
+                "auto_resolve": {
+                    "type": "boolean",
+                    "description": "Whether to autonomously install missing Python packages if ModuleNotFoundError occurs (default: false)."
+                },
+                "allow_native": {
+                    "type": "boolean",
+                    "description": "Explicitly permit native C extension compilation during auto-installation (default: false)."
                 }
             },
             "required": ["code"]
@@ -122,10 +130,36 @@ impl ToolHandler for PythonEvalTool {
             .map(Duration::from_secs)
             .unwrap_or(self.default_timeout);
 
+        let auto_resolve = arguments
+            .get("auto_resolve")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let allow_native = arguments
+            .get("allow_native")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
         let runtime = self.get_runtime()?;
-        let res = runtime
+        let mut res = runtime
             .eval(code, timeout_duration, None, self.working_dir.clone())
             .await?;
+
+        if auto_resolve && !res.is_success() {
+            if let Some(pkg) = extract_missing_python_package(&res.stderr) {
+                let _ = runtime
+                    .install(
+                        &[pkg],
+                        allow_native,
+                        timeout_duration,
+                        self.working_dir.clone(),
+                    )
+                    .await;
+                res = runtime
+                    .eval(code, timeout_duration, None, self.working_dir.clone())
+                    .await?;
+            }
+        }
 
         Ok(res.combined_output())
     }

@@ -406,6 +406,8 @@ pub struct CompletionRequest {
     pub stream: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub system_prompt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tools: Vec<ToolDefinition>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -423,6 +425,7 @@ impl CompletionRequest {
             max_tokens: Some(4096),
             stream: false,
             system_prompt: None,
+            format: None,
             tools: Vec::new(),
             tool_choice: None,
             cancellation_token: None,
@@ -473,6 +476,24 @@ impl CompletionRequest {
         self.cancellation_token = Some(token);
         self
     }
+
+    /// Set response format constraint (e.g. "json" or JSON Schema Value)
+    pub fn with_format(mut self, format: impl Into<serde_json::Value>) -> Self {
+        self.format = Some(format.into());
+        self
+    }
+
+    /// Set optional response format constraint
+    pub fn with_opt_format(mut self, format: Option<serde_json::Value>) -> Self {
+        self.format = format;
+        self
+    }
+
+    /// Convenience helper to enforce JSON format constraint
+    pub fn with_json_format(mut self) -> Self {
+        self.format = Some(serde_json::Value::String("json".to_string()));
+        self
+    }
 }
 
 /// Universal completion response payload
@@ -491,6 +512,7 @@ pub struct CompletionResponse {
 #[derive(Debug, Clone, Default)]
 pub struct ChatSession {
     pub system_prompt: Option<String>,
+    pub format: Option<serde_json::Value>,
     pub history: Vec<Message>,
 }
 
@@ -501,6 +523,11 @@ impl ChatSession {
 
     pub fn with_system(mut self, system: impl Into<String>) -> Self {
         self.system_prompt = Some(system.into());
+        self
+    }
+
+    pub fn with_format(mut self, format: impl Into<serde_json::Value>) -> Self {
+        self.format = Some(format.into());
         self
     }
 
@@ -528,6 +555,7 @@ impl ChatSession {
             max_tokens: Some(4096),
             stream: false,
             system_prompt: self.system_prompt.clone(),
+            format: self.format.clone(),
             tools: Vec::new(),
             tool_choice: None,
             cancellation_token: None,
