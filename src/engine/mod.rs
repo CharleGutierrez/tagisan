@@ -1,8 +1,19 @@
 pub mod budget;
+pub mod embedded;
+pub mod gguf;
+pub mod server;
+
+pub use budget::TokenBudgetTracker;
+pub use embedded::EmbeddedLlmProvider;
+pub use gguf::{
+    GgufFile, GgufMetadata, GgufTensorInfo, GgufValue, GgufValueType, OllamaBlobResolver,
+    OllamaModelDetails, OllamaModelSummary, DEFAULT_ALIGNMENT, GGUF_MAGIC, GGUF_VERSION_2,
+    GGUF_VERSION_3,
+};
+pub use server::OllamaServer;
 
 use crate::error::{Result, TagisanError};
 use crate::providers::LlmProvider;
-use budget::TokenBudgetTracker;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
@@ -37,7 +48,7 @@ impl EngineContext {
 
     /// Retrieve the default available provider (checking popular defaults, then any registered provider)
     pub fn default_provider(&self) -> Option<Arc<dyn LlmProvider>> {
-        for name in &["anthropic", "openai", "gemini", "xai", "deepseek", "ollama"] {
+        for name in &["embedded", "anthropic", "openai", "gemini", "xai", "deepseek", "ollama"] {
             if let Some(p) = self.providers.get(*name) {
                 return Some(p.clone());
             }

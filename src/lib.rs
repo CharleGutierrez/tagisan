@@ -9,6 +9,7 @@ pub mod eval;
 pub mod mcp;
 pub mod memory;
 pub mod perl;
+pub mod plugins;
 pub mod providers;
 pub mod python;
 pub mod strategies;
@@ -19,7 +20,6 @@ pub mod tui;
 pub mod types;
 pub mod vella;
 pub mod harness;
-pub mod plugins;
 
 pub use harness::*;
 pub use plugins::{
@@ -60,8 +60,12 @@ pub use dag::{
     RetryPolicy, TaskNode, TaskOutput, TaskStatus, WorkflowEvent, WorkflowGraph, WorkflowPlanner,
     WorkflowResult, WorkflowRunner, PLANNER_SYSTEM_PROMPT,
 };
-pub use engine::budget::TokenBudgetTracker;
-pub use engine::EngineContext;
+pub use engine::{
+    budget::TokenBudgetTracker, EmbeddedLlmProvider, EngineContext, GgufFile, GgufMetadata,
+    GgufTensorInfo, GgufValue, GgufValueType, OllamaBlobResolver, OllamaModelDetails,
+    OllamaModelSummary, OllamaServer, DEFAULT_ALIGNMENT, GGUF_MAGIC, GGUF_VERSION_2,
+    GGUF_VERSION_3,
+};
 pub use error::{Result, TagisanError};
 pub use memory::{
     cosine_similarity, default_embedding_provider, dot_product, l2_norm, normalize_vector,

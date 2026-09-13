@@ -412,6 +412,32 @@ enum Commands {
         #[command(subcommand)]
         action: crate::plugins::PluginAction,
     },
+    /// Start the native Ollama-compatible Rust Tensor Engine HTTP server
+    Serve {
+        /// Port to listen on (default: 11434 with automatic fallback)
+        #[arg(short, long, default_value = "11434")]
+        port: u16,
+
+        /// Host address to bind to
+        #[arg(short = 'H', long, default_value = "127.0.0.1")]
+        host: String,
+    },
+    /// Inspect and manage local GGUF tensor models and Ollama blob store
+    Engine {
+        #[command(subcommand)]
+        action: EngineAction,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum EngineAction {
+    /// List all discovered Ollama models and GGUF blobs
+    List,
+    /// Inspect GGUF binary headers, tensor tensors, and architecture metadata
+    Inspect {
+        /// Model name, tag, or path to GGUF file
+        model: String,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -3428,8 +3454,71 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Plugin { action } => {
             crate::plugins::handle_plugin_command(action.clone()).await?;
         }
+
+        Commands::Serve { port, host } => {
+            crate::engine::OllamaServer::start(&host, port).await?;
+        }
+
+        Commands::Engine { action } => {
+            handle_engine_command(action).await?;
+        }
     }
 
+    Ok(())
+}
+
+async fn handle_engine_command(action: EngineAction) -> Result<(), Box<dyn std::error::Error>> {
+    let resolver = crate::engine::OllamaBlobResolver::new(None);
+    match action {
+        EngineAction::List => {
+            let models = resolver.list_installed_models()?;
+            if models.is_empty() {
+                println!("No Ollama models found in '{}'", resolver.base_dir.display());
+                return Ok(());
+            }
+
+            println!("=========================================================================================================");
+            println!(" Tagisan Tensor Engine - Local Ollama Models (GGUF)");
+            println!(" Base Directory: {}", resolver.base_dir.display());
+            println!("=========================================================================================================");
+            println!("{:<35} {:<10} {:<12} {:<10} {:<15}", "NAME", "FAMILY", "SIZE", "QUANT", "MODIFIED");
+            println!("---------------------------------------------------------------------------------------------------------");
+            for m in &models {
+                let size_mb = (m.size as f64) / (1024.0 * 1024.0);
+                let size_str = if size_mb >= 1024.0 {
+                    format!("{:.2} GB", size_mb / 1024.0)
+                } else {
+                    format!("{:.1} MB", size_mb)
+                };
+                let mod_short = m.modified_at.split('T').next().unwrap_or(&m.modified_at);
+                println!(
+                    "{:<35} {:<10} {:<12} {:<10} {:<15}",
+                    m.name,
+                    m.details.family,
+                    size_str,
+                    m.details.quantization_level,
+                    mod_short
+                );
+            }
+            println!("=========================================================================================================");
+        }
+        EngineAction::Inspect { model } => {
+            let model_path = if std::path::Path::new(&model).exists() {
+                std::path::PathBuf::from(&model)
+            } else {
+                let summary = resolver.resolve(&model)?;
+                println!("Resolved model '{}' -> {}", model, summary.model_path.display());
+                summary.model_path
+            };
+
+            let start = std::time::Instant::now();
+            let gguf = crate::engine::GgufFile::open(&model_path)?;
+            let elapsed = start.elapsed();
+
+            println!("{}", gguf.inspect());
+            println!("Zero-Copy mmap & header parse latency: {:.3} ms", elapsed.as_secs_f64() * 1000.0);
+        }
+    }
     Ok(())
 }
 
