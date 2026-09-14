@@ -23,9 +23,11 @@ pub mod vella;
 pub mod harness;
 pub mod notify;
 pub mod otp;
+pub mod gleam;
 
 pub use harness::*;
 pub use otp::*;
+pub use gleam::*;
 pub use plugins::{
     handle_plugin_command, CuratedCatalogItem, InstallScope, LoadedPlugin, PluginAction,
     PluginCapabilities, PluginDebateJudge, PluginEngine, PluginExecutionContext,
