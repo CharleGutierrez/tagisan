@@ -534,6 +534,9 @@ cargo test --test skills_local_to_nonlocal_transition_brutal_tests -- --nocaptur
 # Brutal verification: Real-Time Notification Hub & Abnormality Alerting (18 Tests)
 cargo test --test skills_notification_local_nonlocal_brutal_tests -- --nocapture
 
+# Brutal verification: Skills Authenticity & LLM Integration Census (7 Tests, 4,622 Skills)
+cargo test --test skills_authenticity_and_integration_brutal_tests -- --nocapture
+
 # Brutal verification: AST Codebase Graph & Blast Radius (7 Phases)
 python3 scripts/test_codebase_graph_verification.py
 
