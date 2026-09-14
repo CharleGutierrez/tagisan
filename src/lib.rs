@@ -47,8 +47,9 @@ pub use perl::{PerlExecutionResult, PerlRuntime};
 pub use python::{PythonExecutionResult, PythonRuntime};
 pub use ecc::{
     all_built_in_skills as all_ecc_skills, all_presets as all_ecc_presets, build_ecc_pipeline,
-    compute_dir_fingerprint, estimate_tokens, extract_triggers_from_text,
-    find_built_in_skill as find_ecc_skill, find_preset as find_ecc_preset, format_cheat_sheet,
+    build_ecc_pipeline_with_skills, compute_dir_fingerprint, estimate_tokens,
+    extract_triggers_from_text, find_built_in_skill as find_ecc_skill,
+    find_preset as find_ecc_preset, format_cheat_sheet,
     format_cloud_guidelines, format_dense_invariants, format_hierarchical,
     global_dispatcher as global_ecc_dispatcher, is_local_provider,
     load_agents_from_dir as load_ecc_agents_from_dir,
@@ -150,7 +151,7 @@ pub use swarm::{
     SyntaxValidationGate, TeamConsensusEngine, ToolExecutionResult, ToolExecutionTask, TopicCluster,
     ValidationGate, VotingRule, WorkerInfo,
 };
-pub use tui::{run_debate_tui, Spinner};
+pub use tui::{run_debate_tui, run_debate_tui_with_system, Spinner};
 pub use types::{
     ChatSession, CompletionRequest, CompletionResponse, ContentBlock, FinishReason, Message,
     ProviderCapabilities, Role, StreamChunk, StreamChunkDelta, TokenUsage, ToolDefinition,

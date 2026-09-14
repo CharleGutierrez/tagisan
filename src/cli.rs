@@ -5,7 +5,7 @@ use std::env;
 use std::io::Write;
 use std::sync::Arc;
 use crate::{
-    all_ecc_presets, build_ecc_pipeline, load_ecc_agents_from_dir,
+    all_ecc_presets, build_ecc_pipeline, build_ecc_pipeline_with_skills, load_ecc_agents_from_dir,
     resolve_ecc_agent, resolve_ecc_skill,
     AnthropicProvider, AutonomousAgent, CalculatorTool, ChatSession, ColibriProvider, CollaborationStrategy,
     CompletionRequest, ContentBlock, DagScheduler, DeleteFileTool, DialecticalDebateStrategy, EccAuditDebate,
@@ -103,6 +103,18 @@ enum Commands {
         /// Launch interactive multi-pane Terminal User Interface (TUI)
         #[arg(long)]
         tui: bool,
+
+        /// Explicit engineering skill to inject into all debate agents by name (e.g. "rust-tokio-concurrency")
+        #[arg(long)]
+        skill: Option<String>,
+
+        /// Automatically detect and inject relevant engineering skills based on prompt semantics
+        #[arg(long)]
+        auto_skills: bool,
+
+        /// Explicitly disable skill injection in debate
+        #[arg(long)]
+        no_skills: bool,
 
         /// The problem or architecture decision to debate
         prompt: String,
@@ -1458,6 +1470,18 @@ enum EccAction {
         /// Enable long-term vector memory (.tagisan/memory.json)
         #[arg(long)]
         memory: bool,
+
+        /// Explicit engineering skill to inject into all pipeline agents by name (e.g. "rust-tokio-concurrency")
+        #[arg(long)]
+        skill: Option<String>,
+
+        /// Automatically detect and inject relevant engineering skills into pipeline stages based on objective semantics
+        #[arg(long)]
+        auto_skills: bool,
+
+        /// Explicitly disable skill injection in pipeline
+        #[arg(long)]
+        no_skills: bool,
     },
     /// Run an Adversarial ECC Engineering Audit (Architect vs Security Auditor -> Chief Adjudicator)
     Audit {
@@ -2131,12 +2155,57 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             );
         }
 
-        Commands::Debate { tui, prompt } => {
+        Commands::Debate {
+            tui,
+            skill,
+            auto_skills,
+            no_skills,
+            prompt,
+        } => {
             let ctx = build_engine_context(cli.max_budget);
+
+            let should_inject_skills = !no_skills && (skill.is_some() || auto_skills);
+            let mut debate_system_instruction: Option<String> = None;
+
+            if should_inject_skills {
+                let dispatcher = crate::ecc::skills::global_dispatcher();
+                let (equipped_text, injected_skills, budget) = dispatcher.equip_prompt_maximized(
+                    "",
+                    &prompt,
+                    "anthropic",
+                    None,
+                    skill.as_deref(),
+                    None,
+                    None,
+                );
+
+                if !injected_skills.is_empty() {
+                    debate_system_instruction = Some(equipped_text);
+                    let mode_badge = match budget.mode {
+                        crate::ecc::InjectionMode::DenseInvariants => "Dense Invariants DSL (<1.2k tokens)".cyan().bold(),
+                        crate::ecc::InjectionMode::Hierarchical => "Hierarchical Multi-Tier Architecture".blue().bold(),
+                        crate::ecc::InjectionMode::Comprehensive => "Cloud Comprehensive Specification".magenta().bold(),
+                        crate::ecc::InjectionMode::CheatSheet => "Local Cheat-Sheet (<1k tokens)".cyan().bold(),
+                    };
+                    let skill_names: Vec<String> = injected_skills
+                        .iter()
+                        .map(|s| format!("{} ({:.1})", s.skill.name, s.score))
+                        .collect();
+                    println!(
+                        "{} [{}] Injected {} skill(s) into debate [Budget: ~{} tokens / {}k ctx] -> [{}]\n",
+                        "⚡ Dynamic Skills:".bold().yellow(),
+                        mode_badge,
+                        injected_skills.len(),
+                        budget.max_tokens,
+                        budget.context_window / 1000,
+                        skill_names.join(", ").green()
+                    );
+                }
+            }
 
             if tui {
                 // Interactive Ratatui / Crossterm TUI
-                crate::run_debate_tui(prompt, &ctx).await?;
+                crate::run_debate_tui_with_system(prompt, &ctx, debate_system_instruction).await?;
                 return Ok(());
             }
 
@@ -2176,7 +2245,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             let debate = DialecticalDebateStrategy::new(proponent, adversary, adjudicator);
             let input = StrategyInput {
                 prompt,
-                system_instruction: None,
+                system_instruction: debate_system_instruction,
             };
 
             let spinner = Spinner::start("Executing dialectical debate (Thesis -> Antithesis -> Synthesis)...");
@@ -3109,8 +3178,13 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     mcp_config,
                     mcp,
                     memory,
+                    skill,
+                    auto_skills,
+                    no_skills,
                 } => {
                     let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
+
+                    let should_inject_skills = !no_skills && (skill.is_some() || auto_skills);
 
                     println!("{}", "═══════════════════════════════════════════════════════════".bold().blue());
                     println!("{}", "  🏛️  ECC 5-STAGE MULTI-AGENT ENGINEERING PIPELINE".bold().yellow());
@@ -3118,6 +3192,41 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     println!("{}", "═══════════════════════════════════════════════════════════".bold().blue());
                     println!("Objective: \"{}\"", objective.italic());
                     println!("Active Engine: {} [{}]\n", provider_id.cyan().bold(), model_name.yellow().bold());
+
+                    if should_inject_skills {
+                        let dispatcher = crate::ecc::skills::global_dispatcher();
+                        let (_, injected_skills, budget) = dispatcher.equip_prompt_maximized(
+                            "",
+                            &objective,
+                            &provider_id,
+                            Some(&model_name),
+                            skill.as_deref(),
+                            None,
+                            None,
+                        );
+
+                        if !injected_skills.is_empty() {
+                            let mode_badge = match budget.mode {
+                                crate::ecc::InjectionMode::DenseInvariants => "Dense Invariants DSL (<1.2k tokens)".cyan().bold(),
+                                crate::ecc::InjectionMode::Hierarchical => "Hierarchical Multi-Tier Architecture".blue().bold(),
+                                crate::ecc::InjectionMode::Comprehensive => "Cloud Comprehensive Specification".magenta().bold(),
+                                crate::ecc::InjectionMode::CheatSheet => "Local Cheat-Sheet (<1k tokens)".cyan().bold(),
+                            };
+                            let skill_names: Vec<String> = injected_skills
+                                .iter()
+                                .map(|s| format!("{} ({:.1})", s.skill.name, s.score))
+                                .collect();
+                            println!(
+                                "{} [{}] Injected {} skill(s) into pipeline [Budget: ~{} tokens / {}k ctx] -> [{}]\n",
+                                "⚡ Dynamic Skills:".bold().yellow(),
+                                mode_badge,
+                                injected_skills.len(),
+                                budget.max_tokens,
+                                budget.context_window / 1000,
+                                skill_names.join(", ").green()
+                            );
+                        }
+                    }
 
                     // Build Tool Registry
                     let mut registry = ToolRegistry::new();
@@ -3159,7 +3268,15 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         registry.register_tool(crate::tools::builtin::SaveMemoryTool::new(mem_store, emb_prov));
                     }
 
-                    let mut pipeline_graph = build_ecc_pipeline(&objective, prov, &model_name, registry)?;
+                    let mut pipeline_graph = build_ecc_pipeline_with_skills(
+                        &objective,
+                        prov,
+                        &model_name,
+                        registry,
+                        skill.as_deref(),
+                        auto_skills,
+                        no_skills,
+                    )?;
 
                     // Display DAG topology
                     println!("{}", "════════════════ PIPELINE TOPOLOGY ════════════════".bold().blue());

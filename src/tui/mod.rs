@@ -215,6 +215,15 @@ impl TuiState {
 
 /// Launch the interactive multi-pane TUI for Dialectical Debate
 pub async fn run_debate_tui(topic: String, ctx: &EngineContext) -> Result<()> {
+    run_debate_tui_with_system(topic, ctx, None).await
+}
+
+/// Launch the interactive multi-pane TUI for Dialectical Debate with optional dynamic skills system instruction
+pub async fn run_debate_tui_with_system(
+    topic: String,
+    ctx: &EngineContext,
+    system_instruction: Option<String>,
+) -> Result<()> {
     enable_raw_mode().map_err(|e| crate::error::TagisanError::Execution(e.to_string()))?;
     let mut stdout_handle = stdout();
     execute!(stdout_handle, EnterAlternateScreen)
@@ -227,13 +236,13 @@ pub async fn run_debate_tui(topic: String, ctx: &EngineContext) -> Result<()> {
     let mut state = TuiState::new(topic.clone());
     let (tx, mut rx) = mpsc::unbounded_channel::<DebateEvent>();
 
-    // Start debate automatically on launch
-    start_debate_task(topic.clone(), ctx, tx.clone());
+    // Start debate automatically on launch with skills system instruction if provided
+    start_debate_task(topic.clone(), ctx, tx.clone(), system_instruction.clone());
     state.is_running = true;
     state.start_instant = Some(Instant::now());
     state.status = "Debate in progress: Streaming Round 1 (Thesis)...".to_string();
 
-    let res = run_app_loop(&mut terminal, &mut state, &mut rx, tx, ctx).await;
+    let res = run_app_loop(&mut terminal, &mut state, &mut rx, tx, ctx, system_instruction).await;
 
     // Cleanup terminal
     disable_raw_mode().ok();
@@ -247,6 +256,7 @@ fn start_debate_task(
     topic: String,
     ctx: &EngineContext,
     tx: mpsc::UnboundedSender<DebateEvent>,
+    system_instruction: Option<String>,
 ) {
     let ctx_budget = ctx.budget_tracker.clone();
     let ctx_cancel = ctx.cancellation_token.clone();
@@ -314,10 +324,13 @@ fn start_debate_task(
             "You are the Proponent in a high-rigor peer debate.\nUser Prompt:\n\"{}\"\n\nTASK: Provide a comprehensive, thoroughly reasoned initial solution.",
             topic
         );
-        let req1 = crate::types::CompletionRequest::new(p_model.clone(), thesis_prompt)
+        let mut req1 = crate::types::CompletionRequest::new(p_model.clone(), thesis_prompt)
             .with_temperature(0.7)
             .with_stream(true)
             .with_cancellation(ctx_cancel.clone());
+        if let Some(ref sys) = system_instruction {
+            req1 = req1.with_system(sys.clone());
+        }
 
         let round1_start = Instant::now();
         let mut stream1 = match p_prov.stream(req1).await {
@@ -371,10 +384,13 @@ fn start_debate_task(
             "You are the Adversarial Critic in a high-rigor peer debate.\nOriginal Topic:\n\"{}\"\n\nProponent Solution:\n{}\n\nTASK: Ruthlessly scrutinize the solution for bugs, flaws, and edge cases.",
             topic, thesis_text
         );
-        let req2 = crate::types::CompletionRequest::new(a_model.clone(), antithesis_prompt)
+        let mut req2 = crate::types::CompletionRequest::new(a_model.clone(), antithesis_prompt)
             .with_temperature(0.4)
             .with_stream(true)
             .with_cancellation(ctx_cancel.clone());
+        if let Some(ref sys) = system_instruction {
+            req2 = req2.with_system(sys.clone());
+        }
 
         let round2_start = Instant::now();
         let mut stream2 = match a_prov.stream(req2).await {
@@ -428,10 +444,13 @@ fn start_debate_task(
             "You are the Lakandiwa in this Tagisan debate.\nTopic:\n\"{}\"\n\n--- Thesis ---\n{}\n\n--- Antithesis ---\n{}\n\nTASK: Evaluate arguments and produce the definitive verified synthesis.",
             topic, thesis_text, antithesis_text
         );
-        let req3 = crate::types::CompletionRequest::new(adj_model.clone(), synthesis_prompt)
+        let mut req3 = crate::types::CompletionRequest::new(adj_model.clone(), synthesis_prompt)
             .with_temperature(0.2)
             .with_stream(true)
             .with_cancellation(ctx_cancel.clone());
+        if let Some(ref sys) = system_instruction {
+            req3 = req3.with_system(sys.clone());
+        }
 
         let round3_start = Instant::now();
         let mut stream3 = match adj_prov.stream(req3).await {
@@ -495,6 +514,7 @@ async fn run_app_loop(
     rx: &mut mpsc::UnboundedReceiver<DebateEvent>,
     tx: mpsc::UnboundedSender<DebateEvent>,
     ctx: &EngineContext,
+    system_instruction: Option<String>,
 ) -> Result<()> {
     loop {
         // Drain all pending debate stream events
@@ -542,7 +562,7 @@ async fn run_app_loop(
                             state.scroll_proponent = 0;
                             state.scroll_adversary = 0;
                             state.scroll_lakandiwa = 0;
-                            start_debate_task(state.topic.clone(), ctx, tx.clone());
+                            start_debate_task(state.topic.clone(), ctx, tx.clone(), system_instruction.clone());
                         }
                     }
                     _ => {}

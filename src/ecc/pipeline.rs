@@ -29,7 +29,20 @@ pub fn build_ecc_pipeline(
     objective: &str,
     provider: Arc<dyn LlmProvider>,
     model: &str,
+    tools: ToolRegistry,
+) -> Result<WorkflowGraph> {
+    build_ecc_pipeline_with_skills(objective, provider, model, tools, None, false, false)
+}
+
+/// Constructs the canonical 5-stage ECC Engineering Workflow Pipeline DAG with customizable skill injection:
+pub fn build_ecc_pipeline_with_skills(
+    objective: &str,
+    provider: Arc<dyn LlmProvider>,
+    model: &str,
     mut tools: ToolRegistry,
+    skill: Option<&str>,
+    auto_skills: bool,
+    no_skills: bool,
 ) -> Result<WorkflowGraph> {
     // 0. Ensure search_skills discovery tool is available to all pipeline agents
     if !tools.contains("search_skills") {
@@ -37,22 +50,37 @@ pub fn build_ecc_pipeline(
     }
 
     let dispatcher = crate::ecc::skills::global_dispatcher();
+    let should_inject = !no_skills && (auto_skills || skill.is_some());
+    let prov_id = provider.provider_id();
 
     // Helper: Dynamically auto-equip relevant engineering skills into system prompt
     let equip_skills = |base_prompt: &str, stage_query: &str, domain_bias: Option<&str>| -> String {
-        let full_query = format!("{} {}", objective, stage_query);
-        let dispatched = dispatcher.dispatch(&full_query, 2, domain_bias);
-        let mut prompt = base_prompt.to_string();
-        if !dispatched.is_empty() {
-            prompt.push_str("\n\n--- AUTO-EQUIPPED SPECIALIZED ENGINEERING SKILLS ---");
-            for d in dispatched {
-                prompt.push_str(&format!(
-                    "\n\n### Skill: {} (Match Score: {:.1} | Domain: {})\n{}\n",
-                    d.skill.name, d.score, d.domain, d.skill.instructions
-                ));
-            }
+        if !should_inject {
+            return base_prompt.to_string();
         }
-        prompt
+        if let Some(explicit) = skill {
+            let (equipped, _, _) = dispatcher.equip_prompt_maximized(
+                base_prompt,
+                objective,
+                prov_id,
+                Some(model),
+                Some(explicit),
+                None,
+                domain_bias,
+            );
+            return equipped;
+        }
+        let full_query = format!("{} {}", objective, stage_query);
+        let (equipped, _, _) = dispatcher.equip_prompt_maximized(
+            base_prompt,
+            &full_query,
+            prov_id,
+            Some(model),
+            None,
+            None,
+            domain_bias,
+        );
+        equipped
     };
 
     let mut graph = WorkflowGraph::new();

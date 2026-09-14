@@ -13,7 +13,7 @@ pub use agentshield::{
     ThreatActorProfile, ThreatLevel,
 };
 pub use audit::EccAuditDebate;
-pub use pipeline::build_ecc_pipeline;
+pub use pipeline::{build_ecc_pipeline, build_ecc_pipeline_with_skills};
 pub use presets::{all_presets, find_preset};
 pub use semantic_guard::{PreservedDiagnostic, SemanticInvariantGuard, SemanticViolation};
 pub use skill_jit::{SkillJitManager, SkillJitStats, SkillTier, WarmSkillEntry};
