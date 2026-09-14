@@ -1054,6 +1054,81 @@ enum McpAction {
         #[arg(short, long)]
         config: Option<String>,
     },
+    /// Browse or dump entries from the 500 MCP plugin catalog (.ecc/mcp_catalog.json)
+    Catalog {
+        /// Filter catalog by domain name or keyword (e.g. "Search", "Domain 2", "Cybersecurity")
+        #[arg(short, long)]
+        domain: Option<String>,
+
+        /// Filter catalog by authority (e.g. "Smithery.ai", "NPM Registry", "PyPI", "Glama.ai")
+        #[arg(short, long)]
+        authority: Option<String>,
+
+        /// Maximum number of catalog entries to display (default: 50)
+        #[arg(short, long, default_value = "50")]
+        limit: usize,
+
+        /// Output full catalog entries as JSON
+        #[arg(long)]
+        json: bool,
+    },
+    /// Multi-keyword fuzzy search across the 500 MCP plugin catalog
+    Search {
+        /// Search keywords or phrase (e.g. "postgres database", "vector memory", "browser scraping")
+        query: String,
+
+        /// Optional domain filter
+        #[arg(short, long)]
+        domain: Option<String>,
+
+        /// Optional authority filter
+        #[arg(short, long)]
+        authority: Option<String>,
+
+        /// Maximum results to display (default: 25)
+        #[arg(short, long, default_value = "25")]
+        limit: usize,
+
+        /// Output search results as JSON
+        #[arg(long)]
+        json: bool,
+    },
+    /// Add an MCP server to configuration (from catalog entry or custom command)
+    Add {
+        /// Name of the catalog plugin (e.g. "brave-search-mcp") or custom server name
+        name: String,
+
+        /// Custom executable command (if omitted, auto-generated from catalog)
+        #[arg(long)]
+        command: Option<String>,
+
+        /// Custom arguments for the command
+        #[arg(long)]
+        args: Vec<String>,
+
+        /// Target configuration file path (defaults to mcp.dynamic.json)
+        #[arg(short, long)]
+        config: Option<String>,
+    },
+    /// Remove an MCP server from configuration
+    Remove {
+        /// Server name to remove
+        server: String,
+
+        /// Target configuration file path (defaults to mcp.dynamic.json or discovered mcp.json)
+        #[arg(short, long)]
+        config: Option<String>,
+    },
+    /// Verify active MCP server configuration, commands, environment variables, and AgentShield security
+    Verify {
+        /// Specific server name to verify (if omitted, verifies all configured servers)
+        #[arg(short, long)]
+        server: Option<String>,
+
+        /// Optional path to mcp.json configuration file
+        #[arg(long)]
+        config: Option<String>,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -3430,6 +3505,320 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                     manager.shutdown_all().await;
+                }
+
+                McpAction::Catalog {
+                    domain,
+                    authority,
+                    limit,
+                    json,
+                } => {
+                    let catalog = match crate::mcp::McpCatalog::load_default() {
+                        Ok(c) => c,
+                        Err(e) => {
+                            eprintln!("{}: Failed to load MCP catalog: {}", "Error".red().bold(), e);
+                            std::process::exit(1);
+                        }
+                    };
+
+                    let filtered = catalog.search_filtered(None, domain.as_deref(), authority.as_deref());
+
+                    if json {
+                        let out = serde_json::to_string_pretty(&filtered)?;
+                        println!("{out}");
+                        return Ok(());
+                    }
+
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  📚  Model Context Protocol (MCP) 500-Plugin Catalog".bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+                    println!("Total plugins loaded: {}", catalog.len().to_string().cyan().bold());
+                    if domain.is_some() || authority.is_some() {
+                        println!("Matching criteria:    {}", filtered.len().to_string().green().bold());
+                    }
+
+                    let display_count = filtered.len().min(limit);
+                    println!("\nDisplaying {} of {} plugins:\n", display_count.to_string().yellow(), filtered.len());
+
+                    for entry in filtered.iter().take(limit) {
+                        println!(
+                            "  [{:>3}] {:<32} | {:<20} | {}",
+                            entry.index.to_string().dimmed(),
+                            entry.name.cyan().bold(),
+                            entry.authority.green(),
+                            entry.description
+                        );
+                        println!(
+                            "        ↳ Domain: {}",
+                            entry.domain.dimmed()
+                        );
+                    }
+
+                    if filtered.len() > limit {
+                        println!(
+                            "\n{} Showing first {} results. Use '--limit {}' to view all matching plugins.",
+                            "ℹ".blue().bold(),
+                            limit,
+                            filtered.len()
+                        );
+                    }
+                }
+
+                McpAction::Search {
+                    query,
+                    domain,
+                    authority,
+                    limit,
+                    json,
+                } => {
+                    let catalog = match crate::mcp::McpCatalog::load_default() {
+                        Ok(c) => c,
+                        Err(e) => {
+                            eprintln!("{}: Failed to load MCP catalog: {}", "Error".red().bold(), e);
+                            std::process::exit(1);
+                        }
+                    };
+
+                    let results = catalog.search_filtered(Some(&query), domain.as_deref(), authority.as_deref());
+
+                    if json {
+                        let out = serde_json::to_string_pretty(&results)?;
+                        println!("{out}");
+                        return Ok(());
+                    }
+
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", format!("  🔍  MCP Catalog Search: \"{}\"", query).bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    if results.is_empty() {
+                        println!("\n{} No matching MCP plugins found for query '{}'", "⚠".yellow().bold(), query);
+                        println!("Tip: Try broader search terms or browse full index via 'tgs mcp catalog'");
+                        return Ok(());
+                    }
+
+                    println!("Found {} matching plugin(s):\n", results.len().to_string().green().bold());
+                    let display_count = results.len().min(limit);
+
+                    for (i, entry) in results.iter().take(limit).enumerate() {
+                        println!(
+                            "  {}. [{:>3}] {:<32} ({})",
+                            (i + 1).to_string().dimmed(),
+                            entry.index.to_string().dimmed(),
+                            entry.name.cyan().bold(),
+                            entry.authority.green()
+                        );
+                        println!("     Description: {}", entry.description);
+                        println!("     Domain:      {}", entry.domain.dimmed());
+                        println!("     Quick Add:   {}", format!("tgs mcp add {}", entry.name).yellow());
+                        println!();
+                    }
+
+                    if results.len() > limit {
+                        println!(
+                            "{} Showing top {} matches of {}. Use '--limit {}' to see more.",
+                            "ℹ".blue().bold(),
+                            limit,
+                            results.len(),
+                            results.len()
+                        );
+                    }
+                }
+
+                McpAction::Add {
+                    name,
+                    command,
+                    args,
+                    config,
+                } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", format!("  ➕  Adding MCP Server: {}", name).bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let (mut cfg, target_path) = if let Some(ref cfg_path) = config {
+                        let p = std::path::PathBuf::from(cfg_path);
+                        let c = if p.is_file() {
+                            crate::mcp::McpConfig::from_file(&p)?
+                        } else {
+                            crate::mcp::McpConfig::new()
+                        };
+                        (c, p)
+                    } else if let Some((p, c)) = crate::mcp::McpConfig::discover_default() {
+                        (c, p)
+                    } else {
+                        (crate::mcp::McpConfig::new(), std::path::PathBuf::from("mcp.dynamic.json"))
+                    };
+
+                    let catalog = crate::mcp::McpCatalog::load_default().ok();
+                    let catalog_entry = catalog.as_ref().and_then(|c| c.get_by_name(&name));
+
+                    let server_config = if let Some(entry) = catalog_entry {
+                        println!("Found plugin '{}' in sovereign catalog (Authority: {})", entry.name.cyan().bold(), entry.authority.green());
+                        let mut generated = crate::mcp::McpCatalog::entry_to_server_config(entry);
+                        if let Some(cmd) = command {
+                            generated.command = cmd;
+                        }
+                        if !args.is_empty() {
+                            generated.args = args;
+                        }
+                        generated
+                    } else {
+                        let cmd = command.unwrap_or_else(|| {
+                            eprintln!("{}: '{}' was not found in catalog. Using default 'npx'. Specify '--command <cmd>' for custom command.", "Warning".yellow().bold(), name);
+                            "npx".to_string()
+                        });
+                        crate::mcp::McpServerConfig {
+                            command: cmd,
+                            args,
+                            env: std::collections::HashMap::new(),
+                            description: Some(format!("Custom server {name}")),
+                            ..Default::default()
+                        }
+                    };
+
+                    println!("  Command:     {} {}", server_config.command.green().bold(), server_config.args.join(" ").dimmed());
+                    if !server_config.env.is_empty() {
+                        println!("  Environment: {} variable(s)", server_config.env.len());
+                        for (k, v) in &server_config.env {
+                            println!("    {} = {}", k.cyan(), v.dimmed());
+                        }
+                    }
+
+                    cfg.add_server(name.clone(), server_config);
+                    cfg.save_to_file(&target_path)?;
+
+                    println!("\n{} Successfully saved MCP server '{}' to '{}'!", "✔".green().bold(), name.cyan().bold(), target_path.display());
+                }
+
+                McpAction::Remove { server, config } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", format!("  ➖  Removing MCP Server: {}", server).bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let (mut cfg, target_path) = if let Some(ref cfg_path) = config {
+                        let p = std::path::PathBuf::from(cfg_path);
+                        if !p.is_file() {
+                            eprintln!("{}: Config file '{}' does not exist.", "Error".red().bold(), p.display());
+                            std::process::exit(1);
+                        }
+                        let c = crate::mcp::McpConfig::from_file(&p)?;
+                        (c, p)
+                    } else if let Some((p, c)) = crate::mcp::McpConfig::discover_default() {
+                        (c, p)
+                    } else {
+                        eprintln!("{}: No MCP configuration found.", "Error".red().bold());
+                        std::process::exit(1);
+                    };
+
+                    if let Some(removed) = cfg.remove_server(&server) {
+                        cfg.save_to_file(&target_path)?;
+                        println!("{} Successfully removed server '{}' from '{}'.", "✔".green().bold(), server.cyan().bold(), target_path.display());
+                        println!("  Removed command: {} {}", removed.command.yellow(), removed.args.join(" ").dimmed());
+                    } else {
+                        eprintln!("{}: Server '{}' not found in configuration '{}'.", "Warning".yellow().bold(), server, target_path.display());
+                    }
+                }
+
+                McpAction::Verify { server, config } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  🛡️  MCP Server Configuration & AgentShield Verification".bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let (cfg, path) = if let Some(ref cfg_path) = config {
+                        let p = std::path::PathBuf::from(cfg_path);
+                        let c = crate::mcp::McpConfig::from_file(&p)?;
+                        (c, p)
+                    } else if let Some((p, c)) = crate::mcp::McpConfig::discover_default() {
+                        (c, p)
+                    } else {
+                        eprintln!("{}: No MCP configuration found.", "Error".red().bold());
+                        std::process::exit(1);
+                    };
+
+                    println!("Configuration file: {}", path.display().to_string().cyan());
+                    let target_servers: Vec<String> = if let Some(ref s) = server {
+                        if !cfg.mcp_servers.contains_key(s) {
+                            eprintln!("{}: Server '{}' not found in configuration.", "Error".red().bold(), s);
+                            std::process::exit(1);
+                        }
+                        vec![s.clone()]
+                    } else {
+                        cfg.mcp_servers.keys().cloned().collect()
+                    };
+
+                    if target_servers.is_empty() {
+                        println!("\nNo configured MCP servers to verify.");
+                        return Ok(());
+                    }
+
+                    println!("Verifying {} configured server(s)...\n", target_servers.len());
+
+                    let mut passed_count = 0;
+                    let mut warning_count = 0;
+                    let mut blocked_count = 0;
+
+                    for name in &target_servers {
+                        let srv_cfg = &cfg.mcp_servers[name];
+                        println!("Server: [{}]", name.cyan().bold());
+                        println!("  Raw Command:  {} {}", srv_cfg.command, srv_cfg.args.join(" ").dimmed());
+
+                        // 1. AgentShield scan
+                        let shield_verdict = crate::AgentShieldScanner::scan_command(&srv_cfg.command);
+                        match shield_verdict {
+                            crate::AgentShieldVerdict::Block { reason, threat_level } => {
+                                println!("  AgentShield:  {} [{:?}] {}", "BLOCKED".red().bold(), threat_level, reason);
+                                blocked_count += 1;
+                                println!();
+                                continue;
+                            }
+                            crate::AgentShieldVerdict::Allow => {
+                                println!("  AgentShield:  {}", "ALLOWED (Clean)".green());
+                            }
+                        }
+
+                        // 2. Expand env vars
+                        let expanded = srv_cfg.expand_env();
+                        if expanded.command != srv_cfg.command || expanded.args != srv_cfg.args {
+                            println!("  Expanded:     {} {}", expanded.command.green(), expanded.args.join(" ").dimmed());
+                        }
+
+                        // 3. Inspect env variables
+                        let mut missing_vars = Vec::new();
+                        for (k, v) in &srv_cfg.env {
+                            if v.starts_with("${") && v.ends_with("}") {
+                                let var_name = v.trim_start_matches("${").trim_end_matches("}");
+                                let var_key = var_name.split_once(":-").map(|(n, _)| n).unwrap_or(var_name);
+                                if std::env::var(var_key).is_err() && !var_name.contains(":-") {
+                                    missing_vars.push(var_key);
+                                }
+                            }
+                        }
+
+                        if !missing_vars.is_empty() {
+                            println!("  Env Status:   {} (Unset: {})", "WARNING".yellow().bold(), missing_vars.join(", ").yellow());
+                            warning_count += 1;
+                        } else {
+                            println!("  Env Status:   {}", "OK (All variables resolved)".green());
+                        }
+
+                        if let Some(ref auth) = srv_cfg.authority {
+                            println!("  Authority:    {}", auth.dimmed());
+                        }
+                        if let Some(ref desc) = srv_cfg.description {
+                            println!("  Description:  {}", desc.dimmed());
+                        }
+
+                        passed_count += 1;
+                        println!();
+                    }
+
+                    println!("---------------------------------------------------------");
+                    println!(
+                        "Verification complete: {} passed, {} warnings, {} blocked.",
+                        passed_count.to_string().green().bold(),
+                        warning_count.to_string().yellow().bold(),
+                        blocked_count.to_string().red().bold()
+                    );
                 }
             }
         }

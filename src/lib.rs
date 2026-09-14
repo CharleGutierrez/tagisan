@@ -102,9 +102,10 @@ pub use strategies::harmony::StructuredHarmonyStrategy;
 pub use strategies::moa::MixtureOfAgentsStrategy;
 pub use strategies::{CollaborationStrategy, IntermediateStep, StrategyInput, StrategyOutput};
 pub use mcp::{
-    JsonRpcError, JsonRpcNotification, JsonRpcRequest, JsonRpcResponse, McpClient, McpConfig,
-    McpContentBlock, McpInitializeResult, McpManager, McpServer, McpServerConfig, McpServerInfo,
-    McpToolCallResult, McpToolDefinition, McpToolWrapper, StdioTransport,
+    expand_env_vars, JsonRpcError, JsonRpcNotification, JsonRpcRequest, JsonRpcResponse,
+    McpCatalog, McpCatalogEntry, McpClient, McpConfig, McpContentBlock, McpInitializeResult,
+    McpManager, McpServer, McpServerConfig, McpServerInfo, McpToolCallResult, McpToolDefinition,
+    McpToolWrapper, StdioTransport,
 };
 pub use tools::builtin::{
     CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, GitWorktreeTool,

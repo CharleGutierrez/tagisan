@@ -297,6 +297,7 @@ if __name__ == "__main__":
         command: "python".to_string(),
         args: vec!["-u".to_string(), script_str],
         env: HashMap::new(),
+        ..Default::default()
     };
 
     // 1. Connect and perform initialize handshake

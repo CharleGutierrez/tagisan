@@ -27,6 +27,8 @@ impl StdioTransport {
     /// Spawn the child process and start background stdio reader tasks
     pub async fn spawn(server_name: impl Into<String>, config: &McpServerConfig) -> Result<Self> {
         let name = server_name.into();
+        let expanded_config = config.expand_env();
+        let config = &expanded_config;
 
         let discovered_bun = crate::bun::BunRuntime::find_bun();
         let acceleration_enabled = std::env::var("TAGISAN_DISABLE_BUN_ACCELERATION").is_err();

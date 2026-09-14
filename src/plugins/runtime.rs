@@ -334,6 +334,7 @@ impl McpPluginEngine {
             command,
             args: mcp_cfg.args,
             env: mcp_cfg.env,
+            ..Default::default()
         };
 
         let client = Arc::new(

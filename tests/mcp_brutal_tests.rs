@@ -214,6 +214,7 @@ os._exit(1)
         command: "python".to_string(),
         args: vec!["-u".to_string(), crash_script.to_str().unwrap().to_string()],
         env: HashMap::new(),
+        ..Default::default()
     };
 
     let client_res = McpClient::connect("crash_server", &config).await;
@@ -254,6 +255,7 @@ sys.stdout.flush()
         command: "python".to_string(),
         args: vec!["-u".to_string(), slow_script.to_str().unwrap().to_string()],
         env: HashMap::new(),
+        ..Default::default()
     };
 
     let transport = StdioTransport::spawn("slow_server", &config).await.unwrap();
@@ -317,6 +319,7 @@ while True:
         command: "python".to_string(),
         args: vec!["-u".to_string(), server_script.to_str().unwrap().to_string()],
         env: HashMap::new(),
+        ..Default::default()
     };
 
     let client = McpClient::connect("unicode_server", &config).await.expect("connect failed");
@@ -372,6 +375,7 @@ while True:
         command: "python".to_string(),
         args: vec!["-u".to_string(), server_script.to_str().unwrap().to_string()],
         env: HashMap::new(),
+        ..Default::default()
     };
 
     let client = McpClient::connect("ping_server", &config).await.expect("connect failed");
