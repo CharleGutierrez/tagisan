@@ -1621,6 +1621,8 @@ pub fn resolve_provider_and_model(
     } else if let Some(ref ep) = env_provider {
         if ep == "auto" {
             "auto"
+        } else if (ep == "gemini" || ep == "google") && !crate::providers::gemini::GeminiProvider::is_available() {
+            "auto"
         } else {
             ep.as_str()
         }

@@ -150,6 +150,7 @@ impl GeminiOAuthManager {
             fs::remove_file(&path)
                 .map_err(|e| TagisanError::Execution(format!("Failed to remove OAuth tokens file: {e}")))?;
         }
+        Self::auto_configure_env_provider("auto");
         Ok(())
     }
 
