@@ -1524,11 +1524,10 @@ pub fn build_engine_context(max_budget: f64) -> EngineContext {
         }
     }
 
-    // Register Google Gemini if key exists or OAuth is authenticated
-    if let Ok(key) = env::var("GEMINI_API_KEY") {
-        if is_valid_key(&key) {
-            ctx.register_provider(Arc::new(GeminiProvider::new(key)));
-        }
+    // Register Google Gemini if valid key exists or OAuth is authenticated
+    let valid_gemini_key = env::var("GEMINI_API_KEY").ok().filter(|k| is_valid_key(k));
+    if let Some(key) = valid_gemini_key {
+        ctx.register_provider(Arc::new(GeminiProvider::new(key)));
     } else if crate::auth::GeminiOAuthManager::is_authenticated() {
         ctx.register_provider(Arc::new(GeminiProvider::with_oauth(crate::auth::GeminiOAuthManager::new())));
     }
@@ -1565,7 +1564,13 @@ fn format_capabilities(caps: ProviderCapabilities) -> String {
 pub fn default_model_for_provider(provider_id: &str) -> String {
     match provider_id {
         "colibri" => "deepseek-v4".to_string(),
-        "gemini" => "gemini-2.0-flash".to_string(),
+        "gemini" => {
+            if crate::auth::GeminiOAuthManager::is_authenticated() {
+                "gemini-2.5-flash".to_string()
+            } else {
+                "gemini-2.0-flash".to_string()
+            }
+        }
         "deepseek" => "deepseek-chat".to_string(),
         "anthropic" => "claude-3-5-sonnet-20241022".to_string(),
         "openai" => "gpt-4o".to_string(),
@@ -1611,8 +1616,14 @@ pub fn resolve_provider_and_model(
         }
     } else if user_provider != "auto" {
         user_provider
+    } else if crate::auth::GeminiOAuthManager::is_authenticated() {
+        "gemini"
     } else if let Some(ref ep) = env_provider {
-        ep.as_str()
+        if ep == "auto" {
+            "auto"
+        } else {
+            ep.as_str()
+        }
     } else {
         "auto"
     };

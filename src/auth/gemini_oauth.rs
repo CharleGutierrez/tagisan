@@ -474,6 +474,7 @@ impl GeminiOAuthManager {
         };
 
         Self::save_tokens(&tokens)?;
+        Self::auto_configure_env_provider("gemini");
 
         let display_email = user_email.as_deref().unwrap_or("Authorized Account");
         println!(
@@ -484,8 +485,58 @@ impl GeminiOAuthManager {
             "{}",
             format!("Credentials saved to {:?}", Self::token_file_path()).dimmed()
         );
+        println!(
+            "{}",
+            "✔ Default provider automatically switched to Google Gemini.".green()
+        );
 
         Ok(tokens)
+    }
+
+    /// Automatically sets TAGISAN_PROVIDER and TGS_PROVIDER in environment and .env files
+    pub fn auto_configure_env_provider(provider: &str) {
+        std::env::set_var("TAGISAN_PROVIDER", provider);
+        std::env::set_var("TGS_PROVIDER", provider);
+
+        let mut candidate_paths = Vec::new();
+        if let Ok(curr) = std::env::current_dir() {
+            candidate_paths.push(curr.join(".env"));
+            if let Some(p) = curr.parent() {
+                candidate_paths.push(p.join(".env"));
+            }
+        }
+        if let Ok(home) = std::env::var("HOME") {
+            let home_path = PathBuf::from(home);
+            candidate_paths.push(home_path.join(".config").join("tagisan").join(".env"));
+        }
+
+        for env_path in candidate_paths {
+            if env_path.is_file() {
+                if let Ok(content) = std::fs::read_to_string(&env_path) {
+                    let mut modified = false;
+                    let mut new_lines = Vec::new();
+                    for line in content.lines() {
+                        let trimmed = line.trim();
+                        if (trimmed.starts_with("TAGISAN_PROVIDER=") || trimmed.starts_with("export TAGISAN_PROVIDER="))
+                            && !line.trim_start().starts_with('#')
+                        {
+                            new_lines.push(format!("TAGISAN_PROVIDER={}", provider));
+                            modified = true;
+                        } else if (trimmed.starts_with("TGS_PROVIDER=") || trimmed.starts_with("export TGS_PROVIDER="))
+                            && !line.trim_start().starts_with('#')
+                        {
+                            new_lines.push(format!("TGS_PROVIDER={}", provider));
+                            modified = true;
+                        } else {
+                            new_lines.push(line.to_string());
+                        }
+                    }
+                    if modified {
+                        let _ = std::fs::write(&env_path, new_lines.join("\n") + "\n");
+                    }
+                }
+            }
+        }
     }
 }
 

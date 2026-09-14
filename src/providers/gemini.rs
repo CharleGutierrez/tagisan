@@ -8,7 +8,7 @@ use crate::types::{
 use async_trait::async_trait;
 use eventsource_stream::Eventsource;
 use futures::StreamExt;
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE, USER_AGENT};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Instant;
@@ -53,7 +53,8 @@ impl GeminiProvider {
     /// Check if either API key or OAuth session is present and available
     pub fn is_available() -> bool {
         if let Ok(key) = std::env::var("GEMINI_API_KEY") {
-            if !key.trim().is_empty() {
+            let k = key.trim();
+            if !k.is_empty() && !k.starts_with("your_") && !k.ends_with("_key_here") {
                 return true;
             }
         }
@@ -63,6 +64,16 @@ impl GeminiProvider {
     /// Alias for is_available()
     pub fn has_credentials() -> bool {
         Self::is_available()
+    }
+
+    /// Helper to map model names when using OAuth / AntiGravity endpoint
+    pub fn sanitize_oauth_model(model: &str) -> &str {
+        let clean = model.strip_prefix("models/").unwrap_or(model);
+        if clean.is_empty() || clean == "auto" || clean.contains("2.0") || clean.contains("1.5") {
+            "gemini-2.5-flash"
+        } else {
+            clean
+        }
     }
 
     /// Prepare the API URL and authorization headers dynamically based on auth type
@@ -92,12 +103,16 @@ impl GeminiProvider {
                     lock.get_valid_access_token().await?
                 };
                 let url = format!(
-                    "https://generativelanguage.googleapis.com/v1beta/{}:{}",
-                    model_clean, stream_param
+                    "https://daily-cloudcode-pa.googleapis.com/v1internal:{}",
+                    stream_param
                 );
                 let auth_val = HeaderValue::from_str(&format!("Bearer {}", token))
                     .map_err(|e| TagisanError::Authentication("gemini".into(), format!("Invalid auth header: {e}")))?;
                 headers.insert(AUTHORIZATION, auth_val);
+                headers.insert(
+                    USER_AGENT,
+                    HeaderValue::from_static("antigravity/2.0.0"),
+                );
                 Ok((url, headers))
             }
         }
@@ -139,39 +154,31 @@ impl GeminiProvider {
                     ContentBlock::Text { text } => {
                         parts.push(GeminiPart {
                             text: Some(text.clone()),
-                            inline_data: None,
-                            function_call: None,
-                            function_response: None,
+                            ..Default::default()
                         });
                     }
                     ContentBlock::Thinking { thinking, .. } => {
                         parts.push(GeminiPart {
                             text: Some(format!("<think>\n{}\n</think>", thinking)),
-                            inline_data: None,
-                            function_call: None,
-                            function_response: None,
+                            ..Default::default()
                         });
                     }
                     ContentBlock::Image { media_type, data_base64 } => {
                         parts.push(GeminiPart {
-                            text: None,
                             inline_data: Some(GeminiBlob {
                                 mime_type: media_type.clone(),
                                 data: data_base64.clone(),
                             }),
-                            function_call: None,
-                            function_response: None,
+                            ..Default::default()
                         });
                     }
                     ContentBlock::ToolCall { name, arguments, .. } => {
                         parts.push(GeminiPart {
-                            text: None,
-                            inline_data: None,
                             function_call: Some(GeminiFunctionCall {
                                 name: name.clone(),
                                 args: arguments.clone(),
                             }),
-                            function_response: None,
+                            ..Default::default()
                         });
                     }
                     ContentBlock::ToolResult { tool_call_id, content, is_error } => {
@@ -187,9 +194,6 @@ impl GeminiProvider {
                             });
 
                         parts.push(GeminiPart {
-                            text: None,
-                            inline_data: None,
-                            function_call: None,
                             function_response: Some(GeminiFunctionResponse {
                                 name: fn_name,
                                 response: serde_json::json!({
@@ -197,6 +201,7 @@ impl GeminiProvider {
                                     "is_error": is_error
                                 }),
                             }),
+                            ..Default::default()
                         });
                     }
                 }
@@ -231,6 +236,13 @@ struct GeminiGeneratePayload<'a> {
 }
 
 #[derive(Serialize)]
+struct GeminiCcpaPayload<'a> {
+    project: &'static str,
+    model: &'a str,
+    request: GeminiGeneratePayload<'a>,
+}
+
+#[derive(Serialize)]
 struct GeminiToolWrapper<'a> {
     #[serde(rename = "functionDeclarations")]
     function_declarations: Vec<GeminiFunctionDeclaration<'a>>,
@@ -249,10 +261,14 @@ struct GeminiContent {
     parts: Vec<GeminiPart>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 struct GeminiPart {
     #[serde(skip_serializing_if = "Option::is_none")]
     text: Option<String>,
+    #[serde(default)]
+    thought: Option<bool>,
+    #[serde(rename = "thoughtSignature", default)]
+    thought_signature: Option<String>,
     #[serde(rename = "inlineData", skip_serializing_if = "Option::is_none")]
     inline_data: Option<GeminiBlob>,
     #[serde(rename = "functionCall", skip_serializing_if = "Option::is_none")]
@@ -298,6 +314,8 @@ struct GeminiApiResponse {
     candidates: Option<Vec<GeminiCandidate>>,
     #[serde(rename = "usageMetadata")]
     usage_metadata: Option<GeminiUsageMetadata>,
+    #[serde(default)]
+    response: Option<Box<GeminiApiResponse>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -348,9 +366,7 @@ impl LlmProvider for GeminiProvider {
         let system_instruction = req.system_prompt.map(|s| GeminiSystemInstruction {
             parts: vec![GeminiPart {
                 text: Some(s),
-                inline_data: None,
-                function_call: None,
-                function_response: None,
+                ..Default::default()
             }],
         });
 
@@ -380,11 +396,24 @@ impl LlmProvider for GeminiProvider {
             tools,
         };
 
+        let is_oauth = matches!(&self.auth, GeminiAuth::OAuth(_));
+        let body_value = if is_oauth {
+            let oauth_model = Self::sanitize_oauth_model(&req.model);
+            serde_json::to_value(&GeminiCcpaPayload {
+                project: "default-cli-project",
+                model: oauth_model,
+                request: payload,
+            })
+        } else {
+            serde_json::to_value(&payload)
+        }
+        .map_err(TagisanError::Serialization)?;
+
         let send_future = self
             .client
             .post(&url)
             .headers(headers)
-            .json(&payload)
+            .json(&body_value)
             .send();
 
         let response = if let Some(token) = &req.cancellation_token {
@@ -409,8 +438,13 @@ impl LlmProvider for GeminiProvider {
         }
 
         let api_resp: GeminiApiResponse = response.json().await?;
-        let candidate = api_resp
-            .candidates
+        let (candidates, usage_metadata) = if let Some(inner) = api_resp.response {
+            (inner.candidates, inner.usage_metadata)
+        } else {
+            (api_resp.candidates, api_resp.usage_metadata)
+        };
+
+        let candidate = candidates
             .and_then(|c| c.into_iter().next())
             .ok_or_else(|| TagisanError::BadResponse("gemini".into(), "No candidates returned".into()))?;
 
@@ -453,7 +487,7 @@ impl LlmProvider for GeminiProvider {
             }
         };
 
-        let usage = match api_resp.usage_metadata {
+        let usage = match usage_metadata {
             Some(u) => TokenUsage {
                 prompt_tokens: u.prompt_token_count.unwrap_or(0),
                 completion_tokens: u.candidates_token_count.unwrap_or(0),
@@ -488,9 +522,7 @@ impl LlmProvider for GeminiProvider {
         let system_instruction = req.system_prompt.map(|s| GeminiSystemInstruction {
             parts: vec![GeminiPart {
                 text: Some(s),
-                inline_data: None,
-                function_call: None,
-                function_response: None,
+                ..Default::default()
             }],
         });
 
@@ -520,11 +552,24 @@ impl LlmProvider for GeminiProvider {
             tools,
         };
 
+        let is_oauth = matches!(&self.auth, GeminiAuth::OAuth(_));
+        let body_value = if is_oauth {
+            let oauth_model = Self::sanitize_oauth_model(&req.model);
+            serde_json::to_value(&GeminiCcpaPayload {
+                project: "default-cli-project",
+                model: oauth_model,
+                request: payload,
+            })
+        } else {
+            serde_json::to_value(&payload)
+        }
+        .map_err(TagisanError::Serialization)?;
+
         let send_future = self
             .client
             .post(&url)
             .headers(headers)
-            .json(&payload)
+            .json(&body_value)
             .send();
 
         let response = if let Some(token) = &req.cancellation_token {
@@ -573,10 +618,20 @@ impl LlmProvider for GeminiProvider {
                         if data.is_empty() {
                             continue;
                         }
+                        if data.starts_with("{\"error\":") || data.starts_with("[{\"error\":") {
+                            tracing::warn!("Gemini stream error payload: {}", data);
+                            continue;
+                        }
 
                         match serde_json::from_str::<GeminiApiResponse>(data) {
                             Ok(resp) => {
-                                let usage = resp.usage_metadata.map(|u| TokenUsage {
+                                let (candidates, usage_metadata) = if let Some(inner) = resp.response {
+                                    (inner.candidates, inner.usage_metadata)
+                                } else {
+                                    (resp.candidates, resp.usage_metadata)
+                                };
+
+                                let usage = usage_metadata.map(|u| TokenUsage {
                                     prompt_tokens: u.prompt_token_count.unwrap_or(0),
                                     completion_tokens: u.candidates_token_count.unwrap_or(0),
                                     reasoning_tokens: None,
@@ -584,7 +639,7 @@ impl LlmProvider for GeminiProvider {
                                     estimated_cost_usd: None,
                                 });
 
-                                if let Some(candidate) = resp.candidates.and_then(|c| c.into_iter().next()) {
+                                if let Some(candidate) = candidates.and_then(|c| c.into_iter().next()) {
                                     if let Some(content) = candidate.content {
                                         for (idx, part) in content.parts.into_iter().enumerate() {
                                             if let Some(text) = part.text {
