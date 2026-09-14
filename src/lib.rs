@@ -22,8 +22,10 @@ pub mod types;
 pub mod vella;
 pub mod harness;
 pub mod notify;
+pub mod otp;
 
 pub use harness::*;
+pub use otp::*;
 pub use plugins::{
     handle_plugin_command, CuratedCatalogItem, InstallScope, LoadedPlugin, PluginAction,
     PluginCapabilities, PluginDebateJudge, PluginEngine, PluginExecutionContext,
