@@ -69,10 +69,13 @@ impl GeminiProvider {
     /// Helper to map model names when using OAuth / AntiGravity endpoint
     pub fn sanitize_oauth_model(model: &str) -> &str {
         let clean = model.strip_prefix("models/").unwrap_or(model);
-        if clean.is_empty() || clean == "auto" || clean.contains("2.0") || clean.contains("1.5") {
-            "gemini-2.5-flash"
-        } else {
-            clean
+        match clean {
+            "" | "auto" | "default" | "flash" | "gemini-flash" => "gemini-2.5-flash",
+            "lite" | "flash-lite" | "gemini-flash-lite" => "gemini-2.5-flash-lite",
+            "pro" | "gemini-pro" | "gemini-2.5-pro" | "gemini-3-pro" | "gemini-3.1-pro" => "gemini-3.1-pro-low",
+            "gemini-3" | "gemini-3.6" | "gemini-3.7" => "gemini-3.6-flash-medium",
+            _ if clean.contains("2.0") || clean.contains("1.5") => "gemini-2.5-flash",
+            other => other,
         }
     }
 
