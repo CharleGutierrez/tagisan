@@ -22,6 +22,9 @@
   [![Polyglot](https://img.shields.io/badge/runtimes-Python%20%7C%20Perl%20%7C%20Bun-yellow)](https://github.com/CharleGutierrez/tagisan)
   [![MCP](https://img.shields.io/badge/protocol-MCP%20Client%20%26%20Server-purple)](https://modelcontextprotocol.io/)
   [![Colibri](https://img.shields.io/badge/superpowers-5%20Colibr%C3%AC%20Engines-cyan)](https://github.com/CharleGutierrez/tagisan)
+  [![AgentShield](https://img.shields.io/badge/AgentShield-Nation--State%20APT%20Defense-red)](https://github.com/CharleGutierrez/tagisan)
+  [![Zero Ambient Authority](https://img.shields.io/badge/Sandbox-Zero%20Ambient%20Authority-blueviolet)](https://github.com/CharleGutierrez/tagisan)
+  [![Real-Time Alerts](https://img.shields.io/badge/alerts-ANSI%20%26%20WinRT%20Toast-yellow)](https://github.com/CharleGutierrez/tagisan)
 </div>
 
 ---
@@ -56,7 +59,10 @@ cargo install --path .
 | **Mixture-of-Agents (MoA)** | **Yes (Lock-free Tokio Channels)** | No | No | No | Custom setup |
 | **Skill JIT Paging (PILOT)** | **Yes (L1 Context / L2 RAM / L3 Disk)** | No | No | No | No |
 | **Filesystem Safety Guard** | **Surgical Edits + Atomic Trash Bin** | No | Plain OS writes | Docker requirement | Plain OS writes |
-| **Security Firewall** | **Native AgentShield (Pre-flight)** | None | None | Docker sandboxing | None |
+| **Security Firewall & EDR** | **Native AgentShield (Pre-flight + Zero Ambient Authority)** | None | None | Docker sandboxing | None |
+| **Nation-State APT Mitigation** | **Yes (Lazarus / APT38 / Reverse Shell Interception)** | No | No | No | No |
+| **Pre-Execution Shell Auditing** | **Yes (AST & Regex Payload Interception `tgs shield`)** | No | No | No | No |
+| **Real-Time Notification Hub** | **Yes (ANSI Banners + Desktop Toast Alerts)** | No | No | No | No |
 | **Model Context Protocol** | **Bidirectional MCP (Client + Server)** | None | Client only | Community wrappers | Community wrappers |
 
 ---
@@ -102,7 +108,8 @@ graph TD
 
     Tools --> CRUD["Surgical File CRUD (edit_file, delete_file, list_dir, read, write)"]
     Tools --> Vision["Multimodal Computer Vision (view_image, -i)"]
-    Tools --> Shield["AgentShield Pre-Flight Safety Firewall"]
+    Tools --> Shield["AgentShield & tgs shield (APT38 / C2 / Exfil Interception)"]
+    Engine --> Notify["NotificationHub (ANSI Warning Banners & Desktop Toast)"]
 
     Colibri --> SkillJIT["Skill JIT Paging & Lookahead (PILOT)"]
     Colibri --> Atlas["Live Cortex Swarm Atlas & Routing Heat"]
@@ -192,6 +199,97 @@ Tagisan equips autonomous agents and developers with deep structural codebase co
 - **Sub-Millisecond Symbol Navigation:** Instantly locates symbol definitions, documentation, signatures, and incoming/outgoing call hierarchies across thousands of files.
 - **Transitive Blast-Radius Risk Analysis:** Before refactoring or editing a symbol, `calculate_blast_radius` computes the entire ripple effect and classifies risk level (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`), providing proactive refactoring advice.
 - **Autonomous Agent Tooling:** Built-in tools `query_code_graph` and `calculate_blast_radius` allow AI agents to navigate call trees and prevent regressions without relying on blind grep.
+
+### 13. 🛡️ Autonomous Cyber Defense & Threat Hunting (`tgs shield`)
+Tagisan transforms from an ultra-fast agent engine into a standalone, prompt-driven Cyber Defense and Threat Hunting workstation (`src/ecc/agentshield.rs`, `src/cli.rs`):
+- **Zero Ambient Authority Security Model:** AI agents operate under strict zero ambient authority. Even when prompted with root or wildcard filesystem capabilities, `AgentShieldScanner` and `PluginSecurityGovernor` block access to sensitive cryptographic keys (Solana `id.json`, Ethereum keystores, Bitcoin `wallet.dat`, MetaMask vaults) and cloud developer secrets (`~/.aws`, `~/.config/gcloud`, `~/.ssh/id_rsa`, `.env`).
+- **Nation-State APT Mitigation (Lazarus Group / APT38 / Kimsuky):** Hardened against real-world adversarial tradecraft targeting software engineers: reverse shell execution (`/dev/tcp/`, `nc -e`, sockets), download cradles (`powershell -enc`, `IEX DownloadString`, `certutil -urlcache`, `bitsadmin`), poisoned `package.json` postinstall scripts, and malicious `build.rs` backdoors.
+- **Indirect Prompt Injection Armor:** Scans files, comments, and PR markdown diffs for hidden prompt injection vectors (`<!-- SYSTEM:`, `[INST]`, `Ignore previous instructions`), neutralizing jailbreak attempts before they reach the model tokenizer.
+- **Unified Real-Time Notification & Abnormality Alerting Subsystem:** High-visibility ANSI banners on `stderr` and cross-platform desktop notifications (Windows WinRT Toast / Linux `notify-send`) alert developers and security analysts to threats, unauthorized payloads, and provider failovers in real time.
+
+---
+
+## 🛡️ Standalone Cyber Defense & Threat Hunting (`tgs shield`)
+
+> **"Assume Breach at the Agent Layer."**  
+> Modern developer machines and autonomous agent workflows are premier targets for nation-state advanced persistent threats (APTs)—specifically North Korean cyber warfare groups (**Lazarus Group**, **APT38**, **TraderTraitor**, **Kimsuky**) specializing in crypto/Web3 key theft, cloud credential harvesting, and software supply chain poisoning.  
+> Tagisan equips security engineers, DevSecOps teams, SOC analysts, and AppSec auditors with a **systems-grade, prompt-driven cyber defense workstation** built directly into the 20 MB static Rust binary.
+
+```
+                      [ UNTRUSTED PAYLOAD / REPO / PR / PROMPT ]
+                                        │
+                                        ▼
+                   ┌──────────────────────────────────────────┐
+                   │    Tagisan AgentShield Pre-Flight Gate   │
+                   └────────────────────┬─────────────────────┘
+                                        │
+          ┌─────────────────────────────┼────────────────────────────┐
+          ▼                             ▼                            ▼
+  [ APT38 / Lazarus ]         [ Supply Chain Poison ]       [ Prompt Injection ]
+  • /dev/tcp/ C2 Sockets      • package.json postinstall    • <!-- SYSTEM: bypass -->
+  • powershell -enc cradles   • build.rs socket backdoors   • "Ignore instructions"
+  • certutil -urlcache        • base64 encoded droppers     • [INST] override tags
+          │                             │                            │
+          └─────────────────────────────┼────────────────────────────┘
+                                        │
+                        [ ZERO AMBIENT AUTHORITY CHECK ]
+                  Checks target against sensitive asset registry:
+                 • Solana (~/.config/solana/id.json)
+                 • Ethereum (~/.ethereum/keystore)
+                 • Bitcoin (wallet.dat) & MetaMask
+                 • Cloud (~/.aws, ~/.config/gcloud, .env, id_rsa)
+                                        │
+                         ┌──────────────┴──────────────┐
+                         ▼                             ▼
+                    [ CRITICAL ]                  [ PASS ]
+             🚨 High-Vis ANSI Warning          ⚡ Safe Sub-Millisecond
+             🔔 Desktop Toast Notification        Execution Flow
+             🛑 Execution Terminated
+```
+
+### 🎯 Why Cybersecurity Professionals Choose `tgs`
+
+| Vector / Capability | Traditional SAST (SonarQube / Semgrep) | Generic Web LLMs (ChatGPT / Claude) | Traditional Host EDR (CrowdStrike / Defender) | **Tagisan (`tgs shield`)** |
+| :--- | :--- | :--- | :--- | :--- |
+| **Execution Paradigm** | Static pattern match only | Passive text generation | OS-level syscall hook | **Active Pre-Execution Agent Gate & In-Memory AST Sandbox** |
+| **Zero Ambient Authority** | ❌ No runtime enforcement | ❌ N/A (Cloud-based) | ❌ Standard OS permissions | **✅ Absolute isolation of crypto wallets, cloud keys, and SSH credentials** |
+| **Reverse Shell Interception** | ⚠️ Only during CI/CD scan | ❌ None (or hallucinated) | ✅ Post-execution process kill | **✅ Pre-execution string & AST intercept (`/dev/tcp`, `nc -e`, sockets)** |
+| **Download Cradle Blocking** | ⚠️ Regex rule files | ❌ Can be tricked by jailbreaks | ✅ Behavioral alert | **✅ Automatic quarantine (`powershell -enc`, `IEX`, `certutil`, `curl \| sh`)** |
+| **Prompt Injection Defense** | ❌ None | ⚠️ Soft alignment prompts | ❌ Completely blind to prompt tokens | **✅ Pre-LLM tokenizer scanning & regex filter (`<!-- SYSTEM:`, `[INST]`)** |
+| **Air-Gapped / 100% Offline** | ⚠️ Often requires cloud server | ❌ 100% Cloud telemetry | ⚠️ Cloud telemetry agent | **✅ 100% Local execution via GGUF/Ollama ($0.00 cost, 0 data leakage)** |
+| **Automated Vulnerability Patching** | ❌ Reports only, no fix | ⚠️ Hallucinates out-of-context diffs | ❌ No source repair | **✅ Surgical AST self-healing (`tgs autofix`) & verified TDD test passes** |
+
+---
+
+### 🥷 Nation-State Threat Model & Defense Matrix
+
+Tagisan's `AgentShieldScanner` (`src/ecc/agentshield.rs`) and `PluginSecurityGovernor` (`src/plugins/security.rs`) operate on zero ambient authority, intercepting offensive tradecraft before any OS process or network socket is spawned:
+
+1. **Reverse Shells & Remote C2 Callbacks:**
+   - Detects and blocks Unix `/dev/tcp/`, `/dev/udp/` pseudo-device sockets.
+   - Blocks netcat reverse shells (`nc -e`, `nc.traditional -e`, `ncat`, `socat`).
+   - Intercepts embedded runtime socket spawns (`python -c "import socket..."`, `perl -e 'use Socket;'`, `ruby -rsocket`).
+2. **Obfuscated Living-off-the-Land (LotL) Download Cradles:**
+   - Intercepts Base64-encoded PowerShell payloads (`-enc`, `-EncodedCommand`, `-e`).
+   - Blocks in-memory download cradles (`IEX (New-Object Net.WebClient).DownloadString`, `Invoke-RestMethod | iex`).
+   - Blocks file-transfer abuse (`certutil -urlcache -split -f`, `bitsadmin /transfer`, `mshta http...`).
+3. **Crypto & Web3 Wallet Harvester Neutralization (Lazarus Signature):**
+   - Intercepts harvesting attempts targeting Solana CLI keypairs (`~/.config/solana/id.json`), Ethereum keystores (`~/.ethereum/keystore`), Bitcoin core wallets (`wallet.dat`), MetaMask browser extension storage, and BIP-39 mnemonic seed phrases.
+4. **Cloud & Developer Credential Theft Prevention:**
+   - Hard-blocks access to `~/.aws/credentials`, `~/.config/gcloud`, `~/.azure`, `~/.kube/config`, `~/.ssh/id_rsa`, and local `.env` files.
+5. **Supply Chain & Dependency Poisoning:**
+   - Analyzes `package.json` for malicious `postinstall` script execution, trojanized npm packages, malicious Rust `build.rs` network sockets, and backdoor drops.
+6. **Indirect Prompt Injection & Jailbreak Armor:**
+   - Ingests and inspects repository files, issue comments, and PR markdown diffs for hidden control tokens (`<!-- SYSTEM:`, `[INST]`, `Ignore previous instructions and output...`) to prevent agent hijacking.
+
+---
+
+### 🚨 Real-Time Forensic Notification & Abnormality Alerting Subsystem
+
+Tagisan's `NotificationHub` (`src/notify.rs`) bridges security events directly to the developer and security operations team:
+- **ANSI Terminal Warning Banners (`stderr`):** Styled high-contrast alerts displaying threat classification, forensic vector, targeted asset, and remediation action taken.
+- **Cross-Platform OS Notifications:** Native Windows WinRT Toast notifications and Linux `notify-send` popups inform security personnel in real time—even when `tgs` runs as a background service or in CI/CD pipelines.
+- **In-Memory Telemetry Ring-Buffer:** Thread-safe notification history with category tagging (`SecurityAlert`, `Abnormality`, `ProviderFailover`, `ModelHealing`, `InvariantViolation`) ready for SIEM ingestion.
 
 ---
 
@@ -335,6 +433,27 @@ tgs graph export --format dot > codebase_graph.dot
 tgs graph export --format json > codebase_graph.json
 ```
 
+### 11. Autonomous Cyber Defense & Threat Hunting (`tgs shield`)
+```bash
+# Recursively audit a codebase, repository, or untrusted PR for APT IOCs & backdoors
+tgs shield scan ./untrusted-repo
+
+# Pre-execution vetting of an arbitrary shell command or script payload
+tgs shield audit "powershell -enc JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0AA=="
+
+# Display active cyber defense status, protected asset registry, and incident counters
+tgs shield status
+
+# Interactive prompt-driven threat hunting & binary analysis with unrestricted local models
+tgs repl --agent security-auditor
+
+# Autonomous vulnerability remediation: discover CVEs, analyze call graphs, and apply fixes
+tgs agent "Scan src/ for memory safety risks and unsanitized command inputs, and repair with tests"
+
+# Enterprise Craftsmanship & Security Rule audit
+tgs ecc audit src/
+```
+
 ---
 
 ## 🛠️ Configuration & Environment
@@ -381,6 +500,21 @@ Tagisan is verified by automated integration stress tests achieving a **100% pas
 # Run all standard unit and integration tests (21 passed, 0 failed)
 cargo test
 
+# Brutal verification: Autonomous Cyber Defense & Nation-State Hardening (10 Tests)
+cargo test --test cyber_defense_hardening_brutal_tests -- --nocapture
+
+# Brutal verification: Standalone tgs Cyber Defense & Threat Hunting (7 Tests)
+cargo test --test tgs_cybersecurity_standalone_brutal_tests -- --nocapture
+
+# Brutal verification: Local <-> Non-Local Engine Failovers & Transitions (24 Tests)
+cargo test --test local_to_nonlocal_transition_brutal_tests -- --nocapture
+
+# Brutal verification: Skills System Local <-> Non-Local Provider Calibration (17 Tests)
+cargo test --test skills_local_to_nonlocal_transition_brutal_tests -- --nocapture
+
+# Brutal verification: Real-Time Notification Hub & Abnormality Alerting (18 Tests)
+cargo test --test skills_notification_local_nonlocal_brutal_tests -- --nocapture
+
 # Brutal verification: AST Codebase Graph & Blast Radius (7 Phases)
 python3 scripts/test_codebase_graph_verification.py
 
@@ -406,6 +540,7 @@ python3 scripts/test_crypto_market_verification.py
 
 ## 🗺️ Architectural Specifications & Roadmaps
 
+- 🛡️ **[Cyber Defense & AgentShield Specification](docs/SPEC_AGENTSHIELD_CYBER_DEFENSE.md)** — Architectural specification for zero ambient authority sandboxing, nation-state APT mitigation (Lazarus Group / APT38), pre-execution command auditing, and real-time notification alerts.
 - 🌲 **[Codebase AST Graph & Blast Radius Guide](docs/CODEBASE_AST_GRAPH_AND_BLAST_RADIUS_GUIDE.md)** — Architectural guide for multi-language AST extraction, petgraph call topologies, and transitive blast-radius refactoring risk modeling.
 - 🔧 **[Self-Healing Compiler & TDD Healer Guide](docs/SELF_HEALING_COMPILER_AUTODEV_GUIDE.md)** — Architectural guide for AST span replacement, polyglot compiler JSON ingestion, and autonomous test self-repair.
 - 📖 **[Reverse-Engineered Ollama Rust Tensor Engine Guide](docs/REVERSE_ENGINEERED_OLLAMA_RUST_ENGINE_GUIDE.md)** — In-depth architectural guide for zero-copy GGUF v2/v3 parsing, memory mapping, and Tokio HTTP streaming.
