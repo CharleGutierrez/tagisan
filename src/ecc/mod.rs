@@ -8,7 +8,10 @@ pub mod skill_jit;
 pub mod skills;
 
 pub use agent::EccAgent;
-pub use agentshield::{AgentShieldScanner, AgentShieldVerdict, ThreatLevel};
+pub use agentshield::{
+    AgentShieldScanner, AgentShieldVerdict, CyberDefenseTelemetry, ShieldFinding, ShieldScanReport,
+    ThreatActorProfile, ThreatLevel,
+};
 pub use audit::EccAuditDebate;
 pub use pipeline::build_ecc_pipeline;
 pub use presets::{all_presets, find_preset};

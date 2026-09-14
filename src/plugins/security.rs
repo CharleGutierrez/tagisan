@@ -49,6 +49,15 @@ impl PluginSecurityGovernor {
         // 2. Subprocess Restriction
         let base_name = tool_name.rsplit("__").next().unwrap_or(tool_name);
         if !caps.subprocesses && is_subprocess_tool(base_name) {
+            crate::notify::notify_cyber_defense_alert(
+                "Untrusted Plugin / Compromised Tool",
+                "Unauthorized Subprocess Execution",
+                plugin_name,
+                tool_name,
+                "Critical",
+                "Subprocess execution blocked by Sandbox Governor",
+                "Block tool execution and enforce plugin capability boundaries",
+            );
             return Err(TagisanError::Execution(format!(
                 "Sandbox Violation: Plugin '{}' attempted to spawn a subprocess via '{}' but lacks 'subprocesses = true' permission",
                 plugin_name, tool_name
@@ -84,6 +93,19 @@ impl PluginSecurityGovernor {
         is_write: bool,
     ) -> Result<()> {
         let normalized = raw_path.replace('\\', "/");
+
+        // 0. AgentShield core sensitive file check (zero ambient authority invariant)
+        let shield_verdict = AgentShieldScanner::scan_file_path(raw_path);
+        if let AgentShieldVerdict::Block { reason, threat_level } = shield_verdict {
+            warn!(
+                "AgentShield blocked plugin '{}' access to sensitive path '{}' (Threat: {:?}): {}",
+                plugin_name, raw_path, threat_level, reason
+            );
+            return Err(TagisanError::Execution(format!(
+                "[AgentShield Security Block {:?}] {}",
+                threat_level, reason
+            )));
+        }
 
         // 1. Prevent directory traversal attacks
         if normalized.contains("../") || normalized.contains("/..") || normalized == ".." {
@@ -136,6 +158,15 @@ impl PluginSecurityGovernor {
         caps: &PluginCapabilities,
     ) -> Result<()> {
         if caps.network.is_empty() {
+            crate::notify::notify_cyber_defense_alert(
+                "Untrusted Plugin / C2 Egress",
+                "Unauthorized Network Connection (No Network Permitted)",
+                host_or_url,
+                plugin_name,
+                "Critical",
+                "Network connection blocked by Sandbox Governor",
+                "Drop outbound connection and enforce zero-network capability",
+            );
             return Err(TagisanError::Execution(format!(
                 "Sandbox Violation: Plugin '{}' attempted network connection to '{}' with zero network capabilities declared in tgs-plugin.toml",
                 plugin_name, host_or_url
@@ -174,6 +205,15 @@ impl PluginSecurityGovernor {
         });
 
         if !is_allowed {
+            crate::notify::notify_cyber_defense_alert(
+                "Untrusted Plugin / C2 Egress",
+                "Unauthorized Network Destination",
+                target_host,
+                host_or_url,
+                "High",
+                "Network connection blocked: host not in whitelist",
+                "Drop outbound socket connection and alert security administrator",
+            );
             return Err(TagisanError::Execution(format!(
                 "Sandbox Violation: Network destination '{}' is not permitted for plugin '{}'. Permitted: {:?}",
                 host_or_url, plugin_name, caps.network

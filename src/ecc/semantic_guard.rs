@@ -90,42 +90,52 @@ impl SemanticInvariantGuard {
 
         // 1. Tool name check
         if name.trim().is_empty() {
-            return Err(SemanticViolation::TruncatedToolSchema {
+            let violation = SemanticViolation::TruncatedToolSchema {
                 tool_name: name.clone(),
                 details: "Tool name cannot be empty".to_string(),
-            });
+            };
+            crate::notify::notify_semantic_guard(&violation, "Rejected schema: tool name cannot be empty");
+            return Err(violation);
         }
 
         // 2. Tool description check
         let desc = schema.description.trim();
         if desc.is_empty() {
-            return Err(SemanticViolation::TruncatedToolSchema {
+            let violation = SemanticViolation::TruncatedToolSchema {
                 tool_name: name.clone(),
                 details: "Tool description was stripped or empty".to_string(),
-            });
+            };
+            crate::notify::notify_semantic_guard(&violation, "Rejected schema: description was stripped or empty");
+            return Err(violation);
         }
         if desc.ends_with("...") || desc.ends_with("[truncated]") || desc.ends_with("…") {
-            return Err(SemanticViolation::TruncatedToolSchema {
+            let violation = SemanticViolation::TruncatedToolSchema {
                 tool_name: name.clone(),
                 details: "Tool description was detected as truncated".to_string(),
-            });
+            };
+            crate::notify::notify_semantic_guard(&violation, "Rejected schema: description was detected as truncated");
+            return Err(violation);
         }
 
         // 3. Parameters schema validation
         let params = &schema.parameters;
         if !params.is_object() {
-            return Err(SemanticViolation::TruncatedToolSchema {
+            let violation = SemanticViolation::TruncatedToolSchema {
                 tool_name: name.clone(),
                 details: "Tool parameters must be a valid JSON Schema object".to_string(),
-            });
+            };
+            crate::notify::notify_semantic_guard(&violation, "Rejected schema: parameters must be a valid JSON Schema object");
+            return Err(violation);
         }
 
         if let Some(props) = params.get("properties") {
             if !props.is_object() {
-                return Err(SemanticViolation::TruncatedToolSchema {
+                let violation = SemanticViolation::TruncatedToolSchema {
                     tool_name: name.clone(),
                     details: "'properties' field must be an object".to_string(),
-                });
+                };
+                crate::notify::notify_semantic_guard(&violation, "Rejected schema: 'properties' field must be an object");
+                return Err(violation);
             }
 
             // Check if required parameters have valid property definitions
@@ -134,10 +144,15 @@ impl SemanticInvariantGuard {
                 for req_val in required {
                     if let Some(req_name) = req_val.as_str() {
                         if !props_obj.contains_key(req_name) {
-                            return Err(SemanticViolation::DroppedRequiredParameter {
+                            let violation = SemanticViolation::DroppedRequiredParameter {
                                 tool_name: name.clone(),
                                 param_name: req_name.to_string(),
-                            });
+                            };
+                            crate::notify::notify_semantic_guard(
+                                &violation,
+                                &format!("Rejected schema: dropped required parameter '{}'", req_name),
+                            );
+                            return Err(violation);
                         }
                     }
                 }
@@ -234,14 +249,19 @@ impl SemanticInvariantGuard {
         // 5. Verify semantic capacity
         if max_tokens < condensed_token_est {
             let code_str = error_code.unwrap_or_else(|| "UNKNOWN_ERROR".to_string());
-            return Err(SemanticViolation::DiagnosticDegradation {
+            let violation = SemanticViolation::DiagnosticDegradation {
                 error_code: code_str,
                 details: format!(
                     "Context token budget ({}) is lower than minimum preserved semantic diagnostic requirement ({})",
                     max_tokens, condensed_token_est
                 ),
                 min_tokens_needed: condensed_token_est,
-            });
+            };
+            crate::notify::notify_semantic_guard(
+                &violation,
+                "Intercepted diagnostic degradation: insufficient token budget to preserve causality",
+            );
+            return Err(violation);
         }
 
         Ok(PreservedDiagnostic {
@@ -263,17 +283,27 @@ impl SemanticInvariantGuard {
     ) -> Result<(), SemanticViolation> {
         let required_tokens = prompt_tokens + (safety_rules.len() * 20);
         if required_tokens > context_budget {
-            return Err(SemanticViolation::ContextExhaustionWithInvariantRisk {
+            let violation = SemanticViolation::ContextExhaustionWithInvariantRisk {
                 required_tokens,
                 available_tokens: context_budget,
-            });
+            };
+            crate::notify::notify_semantic_guard(
+                &violation,
+                "Intercepted safety violation: context exhaustion risks mandatory invariants",
+            );
+            return Err(violation);
         }
 
         for rule in safety_rules {
             if rule.trim().is_empty() {
-                return Err(SemanticViolation::SafetyContractOmitted {
+                let violation = SemanticViolation::SafetyContractOmitted {
                     missing_rule: "Empty or null safety rule declared in contract".to_string(),
-                });
+                };
+                crate::notify::notify_semantic_guard(
+                    &violation,
+                    "Intercepted safety violation: mandatory safety rule omitted",
+                );
+                return Err(violation);
             }
         }
 

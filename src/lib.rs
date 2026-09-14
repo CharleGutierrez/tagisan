@@ -21,6 +21,7 @@ pub mod tui;
 pub mod types;
 pub mod vella;
 pub mod harness;
+pub mod notify;
 
 pub use harness::*;
 pub use plugins::{
@@ -49,9 +50,10 @@ pub use ecc::{
     load_agents_from_dir as load_ecc_agents_from_dir,
     load_skills_from_dir as load_ecc_skills_from_dir, resolve_agent as resolve_ecc_agent,
     resolve_skill as resolve_ecc_skill, AgentShieldScanner, AgentShieldVerdict, CachedCatalog,
-    DispatchedSkill, DiversifiedDispatchResult, EccAgent, EccAuditDebate, EccSkill, InjectionMode,
-    PreservedDiagnostic, SemanticInvariantGuard, SemanticViolation, SkillDispatcher, SkillJitManager,
-    SkillJitStats, SkillMetadata, SkillTier, ThreatLevel as EccThreatLevel, TokenBudget, WarmSkillEntry,
+    CyberDefenseTelemetry, DispatchedSkill, DiversifiedDispatchResult, EccAgent, EccAuditDebate,
+    EccSkill, InjectionMode, PreservedDiagnostic, SemanticInvariantGuard, SemanticViolation,
+    ShieldFinding, ShieldScanReport, SkillDispatcher, SkillJitManager, SkillJitStats, SkillMetadata,
+    SkillTier, ThreatActorProfile, ThreatLevel as EccThreatLevel, TokenBudget, WarmSkillEntry,
     SKILLS_CACHE_MAGIC, SKILLS_CACHE_VERSION,
 };
 
@@ -169,3 +171,18 @@ pub use eval::{
 pub use telemetry::{
     run_trace_command, run_trace_tui, TagisanTracer, TraceArgs, TraceEvent, TraceJournal, TraceSpan,
 };
+pub use notify::{
+    clear_history as clear_notification_history, desktop_delivery_count,
+    get_events_by_category as get_notification_events_by_category,
+    get_events_by_severity as get_notification_events_by_severity,
+    history as notification_history, hub as notification_hub,
+    notify as emit_notification, notify_context_downscaling, notify_domain_quota,
+    notify_failover, notify_model_auto_healed, notify_offline_lock,
+    notify_semantic_guard, notify_skill_transition, set_banner_enabled,
+    set_desktop_enabled, subscribe as subscribe_notifications, terminal_banner_count,
+    AutoHealDetails, ContextDownscaleDetails, DomainQuotaDetails,
+    FailoverNotificationDetails, NotificationCategory, NotificationEvent,
+    NotificationHub, NotificationPayload, NotificationSeverity, OfflineLockDetails,
+    SemanticGuardDetails, SkillTransitionDetails,
+};
+

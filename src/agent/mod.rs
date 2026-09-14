@@ -227,6 +227,21 @@ impl AutonomousAgent {
             }
         }
 
+        // AgentShield cyber defense: intercept indirect prompt injection before LLM ingestion
+        if self.agentshield_enabled {
+            for block in &final_content {
+                if let ContentBlock::Text { ref text } = block {
+                    let pi_verdict = crate::ecc::AgentShieldScanner::scan_prompt_injection(text);
+                    if let crate::ecc::AgentShieldVerdict::Block { ref reason, threat_level } = pi_verdict {
+                        return Err(TagisanError::Execution(format!(
+                            "[AgentShield Cyber Defense Block: {:?}] Prompt injection blocked: {}",
+                            threat_level, reason
+                        )));
+                    }
+                }
+            }
+        }
+
         session.add_user_message_with_blocks(final_content);
 
         self.execute_session(&mut session, ctx).await

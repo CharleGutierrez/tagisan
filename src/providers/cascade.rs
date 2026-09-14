@@ -67,7 +67,7 @@ impl CascadeProvider {
             TagisanError::BudgetExceeded { .. } => {
                 if let Some(next_entry) = self.entries.get(next_entry_idx) {
                     let id = next_entry.provider.provider_id().to_lowercase();
-                    id == "ollama" || id == "local"
+                    id == "ollama" || id == "local" || id == "colibri"
                 } else {
                     false
                 }
@@ -97,6 +97,62 @@ impl CascadeProvider {
             TagisanError::Io(_) => false,
         }
     }
+}
+
+fn notify_cascade_failover(
+    err: &TagisanError,
+    current_provider: &str,
+    current_model: &str,
+    next_entry: &CascadeEntry,
+    step_idx: usize,
+    total_steps: usize,
+) {
+    let next_prov_id = next_entry.provider.provider_id();
+    let next_model = next_entry.model.as_deref().unwrap_or("default");
+    let is_next_local = crate::ecc::is_local_provider(next_prov_id);
+    let cost_delta = if is_next_local {
+        "+$0.00 (Zero incremental cost on local hardware)"
+    } else {
+        "Cloud standard consumption"
+    };
+
+    let trigger_reason = match err {
+        TagisanError::RateLimited(p, wait) => format!(
+            "Rate limited (HTTP 429) on '{}'{}",
+            p,
+            wait.map(|d| format!(" (retry after: {:?})", d)).unwrap_or_default()
+        ),
+        TagisanError::Authentication(p, msg) => format!("Authentication failure (HTTP 401) on '{}': {}", p, msg),
+        TagisanError::BadResponse(p, msg) => format!("Bad response (HTTP 502) on '{}': {}", p, msg),
+        TagisanError::Network(msg) => format!("Network failure / timeout: {}", msg),
+        TagisanError::BudgetExceeded { max_budget, current_spent } => format!(
+            "Token budget reached (${:.2} spent >= ${:.2} max)",
+            current_spent, max_budget
+        ),
+        TagisanError::ContextLengthExceeded(p, req, max) => format!(
+            "Context length exceeded on '{}': requested {} > max {}",
+            p, req, max
+        ),
+        TagisanError::ProviderNotFound(p) => format!("Provider not found: {}", p),
+        TagisanError::NoModelsInstalled => "No models installed locally in Ollama".to_string(),
+        _ => format!("{}", err),
+    };
+
+    let action_taken = format!(
+        "🔄 Evacuating to fallback provider '{}' ({})",
+        next_prov_id, next_model
+    );
+
+    crate::notify::notify_failover(
+        current_provider,
+        current_model,
+        next_prov_id,
+        next_model,
+        &trigger_reason,
+        cost_delta,
+        &action_taken,
+        Some(format!("Cascade step {}/{}", step_idx + 1, total_steps)),
+    );
 }
 
 #[async_trait]
@@ -158,6 +214,9 @@ impl LlmProvider for CascadeProvider {
                         // Non-retryable error (e.g. User cancelled or budget limit reached without local fallback)
                         return Err(err);
                     }
+                    if let Some(next_entry) = self.entries.get(idx + 1) {
+                        notify_cascade_failover(&err, provider_id, &model_name, next_entry, idx, self.entries.len());
+                    }
                     last_error = Some(err);
                 }
             }
@@ -214,6 +273,9 @@ impl LlmProvider for CascadeProvider {
                     );
                     if !self.can_failover(&err, idx + 1) {
                         return Err(err);
+                    }
+                    if let Some(next_entry) = self.entries.get(idx + 1) {
+                        notify_cascade_failover(&err, provider_id, &model_name, next_entry, idx, self.entries.len());
                     }
                     last_error = Some(err);
                 }

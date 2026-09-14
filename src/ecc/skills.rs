@@ -9687,6 +9687,49 @@ impl TokenBudget {
         self.max_per_domain = max_per_domain;
         self
     }
+
+    /// Calibrate budget and emit notification if mode, context, or budget changed
+    pub fn transition_and_notify(
+        &self,
+        from_provider: &str,
+        to_provider: &str,
+        to_model: Option<&str>,
+        reason: &str,
+    ) -> Self {
+        let new_budget = Self::for_provider_and_model(to_provider, to_model);
+        if self.mode != new_budget.mode || self.max_tokens != new_budget.max_tokens {
+            let from_mode_str = format!("{:?}", self.mode);
+            let to_mode_str = format!("{:?}", new_budget.mode);
+            let action_taken = format!(
+                "Mutated prompt injection mode: {} ({} tokens) ➔ {} ({} tokens)",
+                from_mode_str, self.max_tokens, to_mode_str, new_budget.max_tokens
+            );
+            crate::notify::notify_skill_transition(
+                from_provider,
+                to_provider,
+                &from_mode_str,
+                &to_mode_str,
+                new_budget.max_tokens,
+                new_budget.context_window,
+                reason,
+                &action_taken,
+            );
+        }
+        if self.context_window != new_budget.context_window {
+            let action_taken = format!(
+                "Scaled context window: {} tokens ➔ {} tokens",
+                self.context_window, new_budget.context_window
+            );
+            crate::notify::notify_context_downscaling(
+                self.context_window,
+                new_budget.context_window,
+                to_model.unwrap_or(to_provider),
+                reason,
+                &action_taken,
+            );
+        }
+        new_budget
+    }
 }
 
 /// Detailed result of diversified skill dispatching
@@ -10602,6 +10645,8 @@ impl SkillDispatcher {
             || p.contains("local")
             || p.contains("llama")
             || p.contains("vllm")
+            || p.contains("colibri")
+            || p.contains("coli")
     }
 
     /// Format dispatched skills as a condensed Cheat Sheet for local LLMs (<1,000 tokens footprint for 8k context)
@@ -11042,6 +11087,7 @@ impl SkillDispatcher {
         let mut manifest: Vec<DispatchedSkill> = Vec::new();
         let mut domain_counts: HashMap<String, usize> = HashMap::new();
         let mut selected_tokens: HashSet<String> = HashSet::new();
+        let mut suppressed_domains: HashSet<String> = HashSet::new();
         let mut total_tokens = 0usize;
 
         for (doc_id, base_score, matched_triggers) in &ranked {
@@ -11082,6 +11128,15 @@ impl SkillDispatcher {
                         });
                     }
                 }
+            } else if suppressed_domains.insert(domain.clone()) {
+                crate::notify::notify_domain_quota(
+                    domain,
+                    budget.max_per_domain,
+                    &meta.name,
+                    vec![meta.name.clone()],
+                    if budget.max_per_domain == 1 { "local" } else { "cloud" },
+                    &format!("Anti-monopoly quota enforced: suppressed candidate '{}'", meta.name),
+                );
             }
 
             // Populate Tier 1 Manifest (up to 20 distinct relevant skills)

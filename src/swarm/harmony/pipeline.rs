@@ -51,20 +51,17 @@ pub fn render_failover_banner(
     stage_idx: usize,
     stage_title: &str,
 ) {
-    use colored::Colorize;
-    eprintln!("\n{}", "┌───────────────────────────── ⚠️  FAILOVER NOTICE ─────────────────────────────┐".yellow().bold());
-    let print_row = |content: &str| {
-        let char_count = content.chars().count();
-        let pad = if char_count < 77 { 77 - char_count } else { 0 };
-        eprintln!("│ {}{} │", content, " ".repeat(pad));
-    };
-    print_row(&format!("Cloud Provider : {} ({})", original_provider, original_model));
-    print_row(&format!("Trigger Reason : {}", trigger_reason));
-    print_row(&format!("Action Taken   : 🔄 Evacuating to Local LLM ({}: {})", target_provider, target_model));
-    print_row("Cost Delta     : +$0.00 (Zero incremental cost on local hardware)");
-    print_row(&format!("Current Stage  : Stage {} [{}]", stage_idx + 1, stage_title));
-    print_row("Context Retained: 100% (Architecture & Types preserved on Blackboard)");
-    eprintln!("{}\n", "└───────────────────────────────────────────────────────────────────────────────┘".yellow().bold());
+    let action_taken = format!("🔄 Evacuating to Local LLM ({}: {})", target_provider, target_model);
+    crate::notify::notify_failover(
+        original_provider,
+        original_model,
+        target_provider,
+        target_model,
+        trigger_reason,
+        "+$0.00 (Zero incremental cost on local hardware)",
+        &action_taken,
+        Some(format!("Stage {} [{}]", stage_idx + 1, stage_title)),
+    );
 }
 
 /// Emits an OS-native desktop notification alerting that failover occurred.
@@ -73,42 +70,20 @@ pub fn send_failover_desktop_notification(
     target_model: &str,
     trigger_reason: &str,
 ) {
-    let summary = "Tagisan Harmony Swarm: Failover to Local LLM";
-    let body = format!(
-        "Cloud provider '{}' triggered failover ({}) -> Evacuated to local model '{}'.",
-        original_provider, trigger_reason, target_model
-    );
-
-    #[cfg(target_family = "unix")]
-    {
-        let _ = std::process::Command::new("notify-send")
-            .arg("-u")
-            .arg("critical")
-            .arg("-a")
-            .arg("Tagisan")
-            .arg(&summary)
-            .arg(&body)
-            .spawn();
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        let script = format!(
-            "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] > $null; \
-             $template = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02); \
-             $textNodes = $template.GetElementsByTagName('text'); \
-             $textNodes.Item(0).AppendChild($template.CreateTextNode('{}')) > $null; \
-             $textNodes.Item(1).AppendChild($template.CreateTextNode('{}')) > $null; \
-             $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Tagisan'); \
-             $notification = [Windows.UI.Notifications.ToastNotification]::new($template); \
-             $notifier.Show($notification);",
-            summary, body
+    let is_recent = crate::notify::history().iter().rev().take(3).any(|e| {
+        e.message.contains(original_provider) && e.message.contains(trigger_reason)
+    });
+    if !is_recent {
+        crate::notify::notify_failover(
+            original_provider,
+            "cloud-model",
+            "ollama",
+            target_model,
+            trigger_reason,
+            "+$0.00 (Zero incremental cost on local hardware)",
+            &format!("🔄 Evacuating to Local LLM (ollama: {})", target_model),
+            None,
         );
-        let _ = std::process::Command::new("powershell")
-            .arg("-NoProfile")
-            .arg("-Command")
-            .arg(&script)
-            .spawn();
     }
 }
 
@@ -203,7 +178,11 @@ impl StructuredHarmonyPipeline {
         ctx: &EngineContext,
         role_id: &str,
     ) -> Option<(Arc<dyn LlmProvider>, String)> {
-        let prov = ctx.get_provider("ollama").or_else(|_| ctx.get_provider("local")).ok()?;
+        let prov = ctx
+            .get_provider("ollama")
+            .or_else(|_| ctx.get_provider("local"))
+            .or_else(|_| ctx.get_provider("colibri"))
+            .ok()?;
         let installed = crate::providers::ollama::OllamaProvider::discover_installed_models();
 
         let model = match role_id {
@@ -371,7 +350,8 @@ impl StructuredHarmonyPipeline {
     ) -> Result<RoleArtifact> {
         let role_cfg = stage.role.config();
         let is_already_local = role_cfg.provider.eq_ignore_ascii_case("ollama")
-            || role_cfg.provider.eq_ignore_ascii_case("local");
+            || role_cfg.provider.eq_ignore_ascii_case("local")
+            || role_cfg.provider.eq_ignore_ascii_case("colibri");
 
         let mut current_provider = ctx.get_provider(&role_cfg.provider)?;
         let mut current_model_override: Option<String> = None;
@@ -455,6 +435,7 @@ impl StructuredHarmonyPipeline {
                             | TagisanError::BadResponse(_, _)
                             | TagisanError::ContextLengthExceeded(_, _, _)
                             | TagisanError::Network(_)
+                            | TagisanError::Authentication(_, _)
                     );
 
                     let can_evacuate = current_failover_event.is_none()
@@ -479,6 +460,9 @@ impl StructuredHarmonyPipeline {
                                 }
                                 TagisanError::Network(msg) => {
                                     format!("Network fault: {}", msg)
+                                }
+                                TagisanError::Authentication(p, msg) => {
+                                    format!("Authentication failure on '{}': {}", p, msg)
                                 }
                                 _ => format!("Error: {}", err),
                             };

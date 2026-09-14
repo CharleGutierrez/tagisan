@@ -510,6 +510,36 @@ enum Commands {
         #[arg(short, long)]
         output: Option<String>,
     },
+    /// AgentShield Cyber Defense Subsystem: Scan repositories, audit commands, and monitor nation-state threat indicators
+    Shield {
+        #[command(subcommand)]
+        action: ShieldAction,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum ShieldAction {
+    /// Recursively scan files, codebases, repositories, and dependency manifests for nation-state APT indicators
+    Scan {
+        /// Path to file, directory, or repository to scan (defaults to current directory)
+        #[arg(default_value = ".")]
+        path: String,
+
+        /// Output results in JSON format
+        #[arg(long)]
+        json: bool,
+    },
+    /// Pre-execution vetting of an arbitrary shell command, script, or payload against AgentShield
+    Audit {
+        /// Command string, script, or payload to audit
+        command: String,
+
+        /// Output verdict in JSON format
+        #[arg(long)]
+        json: bool,
+    },
+    /// Display active cyber defense profile, protected assets, threat actor profiles, and telemetry
+    Status,
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -1331,7 +1361,7 @@ fn is_valid_key(key: &str) -> bool {
     !k.is_empty() && !k.starts_with("your_") && !k.ends_with("_key_here")
 }
 
-fn build_engine_context(max_budget: f64) -> EngineContext {
+pub fn build_engine_context(max_budget: f64) -> EngineContext {
     let mut ctx = EngineContext::new(max_budget);
 
     // Register Anthropic if key exists
@@ -1400,7 +1430,7 @@ fn format_capabilities(caps: ProviderCapabilities) -> String {
     features.join(", ")
 }
 
-fn default_model_for_provider(provider_id: &str) -> String {
+pub fn default_model_for_provider(provider_id: &str) -> String {
     match provider_id {
         "colibri" => "deepseek-v4".to_string(),
         "gemini" => "gemini-2.0-flash".to_string(),
@@ -1412,7 +1442,7 @@ fn default_model_for_provider(provider_id: &str) -> String {
     }
 }
 
-fn resolve_provider_and_model(
+pub fn resolve_provider_and_model(
     ctx: &EngineContext,
     user_provider: &str,
     user_model: Option<String>,
@@ -1425,12 +1455,32 @@ fn resolve_provider_and_model(
         .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
         .unwrap_or(false);
 
-    let effective_user_provider = if user_provider != "auto" {
+    if local_only && user_provider != "auto" && !crate::ecc::is_local_provider(user_provider) {
+        crate::notify::notify_offline_lock(
+            user_provider,
+            "ollama",
+            "TAGISAN_LOCAL_ONLY or TAGISAN_OFFLINE environment lock is active",
+            "Overriding cloud provider request to local Ollama runtime (air-gapped privacy enforced)",
+        );
+    }
+
+    let effective_user_provider = if local_only {
+        // When local_only is enforced, override any cloud provider or auto detection to local (ollama or colibri)
+        if user_provider != "auto" && (user_provider == "ollama" || user_provider == "colibri" || user_provider == "local") {
+            user_provider
+        } else if let Some(ref ep) = env_provider {
+            if ep == "ollama" || ep == "colibri" || ep == "local" {
+                ep.as_str()
+            } else {
+                "ollama"
+            }
+        } else {
+            "ollama"
+        }
+    } else if user_provider != "auto" {
         user_provider
     } else if let Some(ref ep) = env_provider {
         ep.as_str()
-    } else if local_only {
-        "ollama"
     } else {
         "auto"
     };
@@ -1448,12 +1498,12 @@ fn resolve_provider_and_model(
                     matched
                 } else {
                     let fallback = installed[0].clone();
-                    eprintln!(
-                        "{}",
-                        format!(
-                            "⚠️  [Ollama Auto-Recovery] Specified model '{}' is not installed locally. Automatically falling back to '{}'.",
-                            m, fallback
-                        ).yellow().bold()
+                    crate::notify::notify_model_auto_healed(
+                        &m,
+                        &fallback,
+                        "ollama",
+                        "Specified model is not installed locally in Ollama catalog",
+                        &format!("Automatically falling back to '{}' and healed .env configuration", fallback),
                     );
                     OllamaProvider::auto_heal_env_file(&fallback);
                     fallback
@@ -1509,12 +1559,12 @@ fn resolve_provider_and_model(
             matched
         } else {
             let fallback = installed[0].clone();
-            eprintln!(
-                "{}",
-                format!(
-                    "⚠️  [Ollama Auto-Recovery] Specified model '{}' is not installed locally. Automatically falling back to '{}'.",
-                    m, fallback
-                ).yellow().bold()
+            crate::notify::notify_model_auto_healed(
+                &m,
+                &fallback,
+                "ollama",
+                "Specified model is not installed locally in Ollama catalog",
+                &format!("Automatically falling back to '{}' and healed .env configuration", fallback),
             );
             OllamaProvider::auto_heal_env_file(&fallback);
             fallback
@@ -3977,8 +4027,138 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         } => {
             handle_ground_command(task, path, max_iterations, no_critique, no_ast, output).await?;
         }
+
+        Commands::Shield { action } => {
+            handle_shield_command(action).await?;
+        }
     }
 
+    Ok(())
+}
+
+async fn handle_shield_command(action: ShieldAction) -> Result<(), Box<dyn std::error::Error>> {
+    match action {
+        ShieldAction::Scan { path, json } => {
+            let target_path = std::path::Path::new(&path);
+            if !json {
+                println!("{}", "=========================================================".cyan());
+                println!("{}", "  🛡️  AGENTSHIELD NATION-STATE APT REPOSITORY SCANNER".bold().yellow());
+                println!("{}", "=========================================================".cyan());
+                println!("Target Path: {}", path.bold().cyan());
+                println!("Engine:      AgentShield Zero Ambient Authority Scanner");
+                println!("Attribution: Lazarus Group (APT38/TraderTraitor/BlueNoroff), Kimsuky\n");
+            }
+
+            let report = crate::ecc::AgentShieldScanner::scan_directory(target_path);
+
+            if json {
+                println!("{}", serde_json::to_string_pretty(&report).unwrap_or_default());
+            } else {
+                println!("{}", format!("Scan complete: {} file(s) inspected.", report.files_scanned).bold());
+
+                if report.findings.is_empty() {
+                    println!("\n{}", "✅ AGENTSHIELD SCAN PASSED: No nation-state APT indicators detected.".bold().green());
+                } else {
+                    println!("\n{}", format!("🚨 AGENTSHIELD DETECTED {} SECURITY VIOLATION(S):", report.findings.len()).bold().red());
+                    for (idx, f) in report.findings.iter().enumerate() {
+                        println!("\n{}", format!("--- Finding #{} [{:?}] ---", idx + 1, f.severity).bold().red());
+                        println!("  Rule:         {}", f.rule_name.bold().yellow());
+                        println!("  Threat Actor: {}", f.threat_actor.bold().bright_red());
+                        println!("  Vector:       {}", f.attack_vector.cyan());
+                        if let Some(line) = f.line_number {
+                            println!("  Location:     {}:{}", f.file_path.bold(), line);
+                        } else {
+                            println!("  Location:     {}", f.file_path.bold());
+                        }
+                        println!("  Snippet:      {}", f.snippet.italic());
+                        println!("  Remediation:  {}", f.remediation.green());
+                    }
+                    println!("\n{}", "=========================================================".red());
+                    println!("{}", "  STATUS: REPOSITORY COMPROMISED / ISOLATION RECOMMENDED".bold().red());
+                    println!("{}", "=========================================================".red());
+                }
+            }
+
+            if !report.passed {
+                return Err(format!("AgentShield found {} security violation(s)", report.findings.len()).into());
+            }
+        }
+        ShieldAction::Audit { command, json } => {
+            if !json {
+                println!("{}", "=========================================================".cyan());
+                println!("{}", "  🛡️  AGENTSHIELD PRE-EXECUTION COMMAND AUDIT".bold().yellow());
+                println!("{}", "=========================================================".cyan());
+                println!("Auditing Command: \"{}\"", command.bold().cyan());
+            }
+
+            let verdict = crate::ecc::AgentShieldScanner::scan_command(&command);
+
+            if json {
+                let json_verdict = match &verdict {
+                    crate::ecc::AgentShieldVerdict::Allow => serde_json::json!({
+                        "status": "Allow",
+                        "command": command,
+                        "safe": true
+                    }),
+                    crate::ecc::AgentShieldVerdict::Block { reason, threat_level } => serde_json::json!({
+                        "status": "Block",
+                        "command": command,
+                        "safe": false,
+                        "reason": reason,
+                        "threat_level": format!("{:?}", threat_level),
+                        "attribution": "Lazarus Group / APT38"
+                    }),
+                };
+                println!("{}", serde_json::to_string_pretty(&json_verdict).unwrap_or_default());
+            } else {
+                match verdict {
+                    crate::ecc::AgentShieldVerdict::Allow => {
+                        println!("\n{}", "✅ AGENTSHIELD AUDIT PASSED: Command verified safe (0 malicious indicators detected).".bold().green());
+                    }
+                    crate::ecc::AgentShieldVerdict::Block { reason, threat_level } => {
+                        println!("\n{}", "🚨 CRITICAL CYBER THREAT INTERCEPTED BEFORE EXECUTION!".bold().bright_red());
+                        println!("  Threat Actor: {}", "Lazarus Group / APT38 / TraderTraitor".bold().red());
+                        println!("  Threat Level: {:?}", threat_level);
+                        println!("  Reason:       {}", reason.bold().yellow());
+                        println!("  Action Taken: Execution terminated before spawning subshell.");
+                        println!("  Remediation:  Isolate host environment, verify command origin, and revoke exposed secrets.");
+                        return Err(format!("Command blocked by AgentShield [{:?}]: {}", threat_level, reason).into());
+                    }
+                }
+            }
+        }
+        ShieldAction::Status => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🛡️  AGENTSHIELD ACTIVE DEFENSE & TELEMETRY STATUS".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let telemetry = crate::ecc::AgentShieldScanner::incident_telemetry();
+            println!("Status:          {}", if telemetry.critical_incidents > 0 { telemetry.status.bold().red() } else { telemetry.status.bold().green() });
+            println!("Defense Policy:  ZERO AMBIENT AUTHORITY (ENFORCING)");
+            println!("Host Subsystem:  AgentShield Invariant Defense & NotificationHub");
+
+            println!("\n{}", "--- Monitored Nation-State Threat Actor Profiles ---".bold().cyan());
+            for (i, p) in crate::ecc::AgentShieldScanner::threat_actor_profiles().iter().enumerate() {
+                println!("  {}. {}", i + 1, p.name.bold().yellow());
+                println!("     Aliases:      {}", p.aliases.join(", ").italic());
+                println!("     Attribution:  {}", p.attribution);
+                println!("     Targets:      {}", p.primary_targets.join(", "));
+                println!("     Indicators:   {}", p.ttp_indicators.join("; "));
+            }
+
+            println!("\n{}", "--- Protected Asset Categories ---".bold().cyan());
+            for asset in crate::ecc::AgentShieldScanner::protected_assets() {
+                println!("  🔒 {}", asset);
+            }
+
+            println!("\n{}", "--- Live Telemetry & Incident Counters ---".bold().cyan());
+            println!("  Total Logged Security Events: {}", telemetry.total_incidents);
+            println!("  Critical Interceptions:       {}", telemetry.critical_incidents);
+            println!("  Security Alerts:              {}", telemetry.security_alerts);
+            println!("  Warnings:                     {}", telemetry.warning_incidents);
+            println!("{}", "=========================================================\n".cyan());
+        }
+    }
     Ok(())
 }
 

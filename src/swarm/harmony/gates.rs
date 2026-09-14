@@ -133,7 +133,23 @@ impl ValidationGate for AgentShieldSecurityGate {
     }
 
     fn validate(&self, artifact: &RoleArtifact) -> GateResult {
-        // 1. Language-specific code block audits
+        // 1. Indirect Prompt Injection Audit across raw output and all code blocks
+        let all_texts = std::iter::once(&artifact.raw_output)
+            .chain(artifact.code_blocks.iter().map(|b| &b.code));
+
+        for text in all_texts {
+            let pi_verdict = AgentShieldScanner::scan_prompt_injection(text);
+            if let crate::ecc::AgentShieldVerdict::Block { ref reason, threat_level } = pi_verdict {
+                return GateResult::RetryWithCritique {
+                    critique: format!(
+                        "AgentShield Security Rule Triggered [{:?}]: {reason}. Remove adversarial indirect prompt injection directives immediately.",
+                        threat_level
+                    ),
+                };
+            }
+        }
+
+        // 2. Language-specific code block audits
         for block in &artifact.code_blocks {
             let lang = block.language.to_lowercase();
             if lang == "python" || lang == "py" {
@@ -166,14 +182,35 @@ impl ValidationGate for AgentShieldSecurityGate {
                         ),
                     };
                 }
+            } else if lang == "bash" || lang == "sh" || lang == "shell" || lang == "cmd" || lang == "powershell" || lang == "pwsh" {
+                let v = AgentShieldScanner::scan_command(&block.code);
+                if let crate::ecc::AgentShieldVerdict::Block { ref reason, threat_level } = v {
+                    return GateResult::RetryWithCritique {
+                        critique: format!(
+                            "AgentShield Security Rule Triggered in Shell/Command [{:?}]: {reason}. Rewrite without this dangerous operation.",
+                            threat_level
+                        ),
+                    };
+                }
             }
         }
 
-        // 2. Universal scan for destructive operations, raw storage access, and fork bombs
+        // 3. Universal scan for destructive operations, raw storage access, C2 callbacks, crypto theft, and fork bombs
         let texts = std::iter::once(&artifact.raw_output)
             .chain(artifact.code_blocks.iter().map(|b| &b.code));
 
         for text in texts {
+            // General command scan on any block / output
+            let cmd_v = AgentShieldScanner::scan_command(text);
+            if let crate::ecc::AgentShieldVerdict::Block { ref reason, threat_level } = cmd_v {
+                return GateResult::RetryWithCritique {
+                    critique: format!(
+                        "AgentShield Security Rule Triggered [{:?}]: {reason}. Rewrite your code to eliminate this dangerous operation immediately.",
+                        threat_level
+                    ),
+                };
+            }
+
             let lower = text.to_lowercase();
             if (lower.contains("rm") && (lower.contains("-rf") || lower.contains("-fr")) && (lower.contains('/') || lower.contains("\"/\"") || lower.contains("'/'")))
                 || lower.contains("rm -rf")

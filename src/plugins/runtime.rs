@@ -439,73 +439,159 @@ impl PluginEngine for NativePluginEngine {
         arguments: Value,
         _context: &PluginExecutionContext,
     ) -> Result<String> {
-        let lib_path = self.library_path.clone();
-        let tool = tool_name.to_string();
-        let args_json = serde_json::to_string(&arguments)?;
+        #[cfg(unix)]
+        {
+            let lib_path = self.library_path.clone();
+            let tool = tool_name.to_string();
+            let args_json = serde_json::to_string(&arguments)?;
 
-        tokio::task::spawn_blocking(move || {
-            let path_str = lib_path.to_string_lossy().to_string();
-            let c_path = std::ffi::CString::new(path_str).map_err(|e| {
-                TagisanError::Execution(format!("Invalid path string: {e}"))
-            })?;
+            tokio::task::spawn_blocking(move || {
+                let path_str = lib_path.to_string_lossy().to_string();
+                let c_path = std::ffi::CString::new(path_str).map_err(|e| {
+                    TagisanError::Execution(format!("Invalid path string: {e}"))
+                })?;
 
-            unsafe {
-                let handle = libc::dlopen(c_path.as_ptr(), libc::RTLD_NOW);
-                if handle.is_null() {
-                    let err = std::ffi::CStr::from_ptr(libc::dlerror()).to_string_lossy();
-                    return Err(TagisanError::Execution(format!(
-                        "dlopen failed on '{}': {err}",
-                        lib_path.display()
-                    )));
-                }
+                unsafe {
+                    let handle = libc::dlopen(c_path.as_ptr(), libc::RTLD_NOW);
+                    if handle.is_null() {
+                        let err = std::ffi::CStr::from_ptr(libc::dlerror()).to_string_lossy();
+                        return Err(TagisanError::Execution(format!(
+                            "dlopen failed on '{}': {err}",
+                            lib_path.display()
+                        )));
+                    }
 
-                type ExecuteFn = unsafe extern "C" fn(
-                    *const libc::c_char,
-                    *const libc::c_char,
-                    *mut libc::c_char,
-                    usize,
-                ) -> i32;
+                    type ExecuteFn = unsafe extern "C" fn(
+                        *const libc::c_char,
+                        *const libc::c_char,
+                        *mut libc::c_char,
+                        usize,
+                    ) -> i32;
 
-                let sym_name = std::ffi::CString::new("tgs_plugin_execute").unwrap();
-                let sym = libc::dlsym(handle, sym_name.as_ptr());
+                    let sym_name = std::ffi::CString::new("tgs_plugin_execute").unwrap();
+                    let sym = libc::dlsym(handle, sym_name.as_ptr());
 
-                if sym.is_null() {
+                    if sym.is_null() {
+                        libc::dlclose(handle);
+                        return Err(TagisanError::Execution(format!(
+                            "Missing entrypoint symbol 'tgs_plugin_execute' in '{}'",
+                            lib_path.display()
+                        )));
+                    }
+
+                    let exec_fn: ExecuteFn = std::mem::transmute(sym);
+                    let c_tool = std::ffi::CString::new(tool).unwrap();
+                    let c_args = std::ffi::CString::new(args_json).unwrap();
+                    let mut out_buffer = vec![0u8; 64 * 1024];
+
+                    let rc = exec_fn(
+                        c_tool.as_ptr(),
+                        c_args.as_ptr(),
+                        out_buffer.as_mut_ptr() as *mut libc::c_char,
+                        out_buffer.len(),
+                    );
+
+                    let out_str = if rc == 0 {
+                        std::ffi::CStr::from_ptr(out_buffer.as_ptr() as *const libc::c_char)
+                            .to_string_lossy()
+                            .to_string()
+                    } else {
+                        libc::dlclose(handle);
+                        return Err(TagisanError::Execution(format!(
+                            "Native plugin execution returned non-zero error code: {rc}"
+                        )));
+                    };
+
                     libc::dlclose(handle);
-                    return Err(TagisanError::Execution(format!(
-                        "Missing entrypoint symbol 'tgs_plugin_execute' in '{}'",
-                        lib_path.display()
-                    )));
+                    Ok(out_str)
                 }
-
-                let exec_fn: ExecuteFn = std::mem::transmute(sym);
-                let c_tool = std::ffi::CString::new(tool).unwrap();
-                let c_args = std::ffi::CString::new(args_json).unwrap();
-                let mut out_buffer = vec![0u8; 64 * 1024];
-
-                let rc = exec_fn(
-                    c_tool.as_ptr(),
-                    c_args.as_ptr(),
-                    out_buffer.as_mut_ptr() as *mut libc::c_char,
-                    out_buffer.len(),
-                );
-
-                let out_str = if rc == 0 {
-                    std::ffi::CStr::from_ptr(out_buffer.as_ptr() as *const libc::c_char)
-                        .to_string_lossy()
-                        .to_string()
-                } else {
-                    libc::dlclose(handle);
-                    return Err(TagisanError::Execution(format!(
-                        "Native plugin execution returned non-zero error code: {rc}"
-                    )));
-                };
-
-                libc::dlclose(handle);
-                Ok(out_str)
+            })
+            .await
+            .map_err(|e| TagisanError::Execution(format!("Native task join failed: {e}")))?
+        }
+        #[cfg(windows)]
+        {
+            extern "system" {
+                fn LoadLibraryA(lpLibFileName: *const libc::c_char) -> *mut std::ffi::c_void;
+                fn GetProcAddress(hModule: *mut std::ffi::c_void, lpProcName: *const libc::c_char) -> *mut std::ffi::c_void;
+                fn FreeLibrary(hModule: *mut std::ffi::c_void) -> i32;
+                fn GetLastError() -> u32;
             }
-        })
-        .await
-        .map_err(|e| TagisanError::Execution(format!("Native task join failed: {e}")))?
+
+            let lib_path = self.library_path.clone();
+            let tool = tool_name.to_string();
+            let args_json = serde_json::to_string(&arguments)?;
+
+            tokio::task::spawn_blocking(move || {
+                let path_str = lib_path.to_string_lossy().to_string();
+                let c_path = std::ffi::CString::new(path_str).map_err(|e| {
+                    TagisanError::Execution(format!("Invalid path string: {e}"))
+                })?;
+
+                unsafe {
+                    let handle = LoadLibraryA(c_path.as_ptr());
+                    if handle.is_null() {
+                        let err_code = GetLastError();
+                        return Err(TagisanError::Execution(format!(
+                            "LoadLibraryA failed on '{}' (error code: {err_code})",
+                            lib_path.display()
+                        )));
+                    }
+
+                    type ExecuteFn = unsafe extern "C" fn(
+                        *const libc::c_char,
+                        *const libc::c_char,
+                        *mut libc::c_char,
+                        usize,
+                    ) -> i32;
+
+                    let sym_name = std::ffi::CString::new("tgs_plugin_execute").unwrap();
+                    let sym = GetProcAddress(handle, sym_name.as_ptr());
+
+                    if sym.is_null() {
+                        FreeLibrary(handle);
+                        return Err(TagisanError::Execution(format!(
+                            "Missing entrypoint symbol 'tgs_plugin_execute' in '{}'",
+                            lib_path.display()
+                        )));
+                    }
+
+                    let exec_fn: ExecuteFn = std::mem::transmute(sym);
+                    let c_tool = std::ffi::CString::new(tool).unwrap();
+                    let c_args = std::ffi::CString::new(args_json).unwrap();
+                    let mut out_buffer = vec![0u8; 64 * 1024];
+
+                    let rc = exec_fn(
+                        c_tool.as_ptr(),
+                        c_args.as_ptr(),
+                        out_buffer.as_mut_ptr() as *mut libc::c_char,
+                        out_buffer.len(),
+                    );
+
+                    let out_str = if rc == 0 {
+                        std::ffi::CStr::from_ptr(out_buffer.as_ptr() as *const libc::c_char)
+                            .to_string_lossy()
+                            .to_string()
+                    } else {
+                        FreeLibrary(handle);
+                        return Err(TagisanError::Execution(format!(
+                            "Native plugin execution returned non-zero error code: {rc}"
+                        )));
+                    };
+
+                    FreeLibrary(handle);
+                    Ok(out_str)
+                }
+            })
+            .await
+            .map_err(|e| TagisanError::Execution(format!("Native task join failed: {e}")))?
+        }
+        #[cfg(not(any(unix, windows)))]
+        {
+            Err(TagisanError::Execution(
+                "Native plugins are not supported on this platform".to_string(),
+            ))
+        }
     }
 
     fn runtime_type(&self) -> PluginRuntimeType {

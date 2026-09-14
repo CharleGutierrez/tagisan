@@ -34,6 +34,8 @@ impl TokenBudgetTracker {
             m if m.contains("deepseek-r1") || m.contains("deepseek-chat") || m.contains("deepseek-v3") => (0.55, 2.19),
             m if m.contains("ollama")
                 || m.contains("local")
+                || m.contains("colibri")
+                || m.contains("coli")
                 || m.contains("qwen")
                 || m.contains("dolphin")
                 || m.contains("llama")
