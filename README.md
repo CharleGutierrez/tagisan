@@ -563,6 +563,7 @@ python3 scripts/test_crypto_market_verification.py
 ## 🗺️ Architectural Specifications & Roadmaps
 
 - 🛡️ **[Cyber Defense & AgentShield Specification](docs/SPEC_AGENTSHIELD_CYBER_DEFENSE.md)** — Architectural specification for zero ambient authority sandboxing, nation-state APT mitigation (Lazarus Group / APT38), pre-execution command auditing, and real-time notification alerts.
+- ⚡ **[Top 50 Essential Skills for TGS Ecosystem](docs/TOP_50_ESSENTIAL_SKILLS_FOR_TGS_ECOSYSTEM.md)** — The authoritative canon of 50 open-source engineering capabilities, protocols, and architectures powering the Tagisan runtime.
 - 🌲 **[Codebase AST Graph & Blast Radius Guide](docs/CODEBASE_AST_GRAPH_AND_BLAST_RADIUS_GUIDE.md)** — Architectural guide for multi-language AST extraction, petgraph call topologies, and transitive blast-radius refactoring risk modeling.
 - 🔧 **[Self-Healing Compiler & TDD Healer Guide](docs/SELF_HEALING_COMPILER_AUTODEV_GUIDE.md)** — Architectural guide for AST span replacement, polyglot compiler JSON ingestion, and autonomous test self-repair.
 - 📖 **[Reverse-Engineered Ollama Rust Tensor Engine Guide](docs/REVERSE_ENGINEERED_OLLAMA_RUST_ENGINE_GUIDE.md)** — In-depth architectural guide for zero-copy GGUF v2/v3 parsing, memory mapping, and Tokio HTTP streaming.
