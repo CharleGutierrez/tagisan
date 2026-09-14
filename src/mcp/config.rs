@@ -78,6 +78,7 @@ impl McpConfig {
         let candidates = [
             ".tagisan/mcp.json",
             "tagisan.mcp.json",
+            "mcp.dynamic.json",
             "mcp.json",
             ".mcp.json",
         ];

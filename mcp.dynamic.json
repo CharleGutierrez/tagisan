@@ -1,0 +1,2104 @@
+{
+  "mcpServers": {
+    "smithery-brave-search": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-brave-search"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-brave-search",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-exa-semantic-search": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-exa-semantic-search"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-exa-semantic-search",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-tavily-ai-research": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-tavily-ai-research"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-tavily-ai-research",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-perplexity-sonar": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-perplexity-sonar"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-perplexity-sonar",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-neon-postgres": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-neon-postgres"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-neon-postgres",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-supabase-db": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-supabase-db"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-supabase-db",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-qdrant-vector-db": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-qdrant-vector-db"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-qdrant-vector-db",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-redis-cache": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-redis-cache"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-redis-cache",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-cloudflare-workers": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-cloudflare-workers"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-cloudflare-workers",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-cloudflare-d1": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-cloudflare-d1"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-cloudflare-d1",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-cloudflare-kv": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-cloudflare-kv"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-cloudflare-kv",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-sentry-telemetry": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-sentry-telemetry"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-sentry-telemetry",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-datadog-metrics": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-datadog-metrics"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-datadog-metrics",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-slack-collaboration": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-slack-collaboration"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-slack-collaboration",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-notion-knowledge": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-notion-knowledge"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-notion-knowledge",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-linear-issue-tracker": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-linear-issue-tracker"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-linear-issue-tracker",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-jira-cloud": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-jira-cloud"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-jira-cloud",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-browserbase-headless": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-browserbase-headless"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-browserbase-headless",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-puppeteer-crawler": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-puppeteer-crawler"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-puppeteer-crawler",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-playwright-tester": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-playwright-tester"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-playwright-tester",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-clickhouse-analytics": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-clickhouse-analytics"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-clickhouse-analytics",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-milvus-vector-search": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-milvus-vector-search"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-milvus-vector-search",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-pinecone-indexer": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-pinecone-indexer"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-pinecone-indexer",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-weaviate-hybrid": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-weaviate-hybrid"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-weaviate-hybrid",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-chroma-db": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-chroma-db"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-chroma-db",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-elasticsearch-log": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-elasticsearch-log"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-elasticsearch-log",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-mongodb-atlas": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-mongodb-atlas"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-mongodb-atlas",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-neo4j-graph": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-neo4j-graph"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-neo4j-graph",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-snowflake-warehouse": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-snowflake-warehouse"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-snowflake-warehouse",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "smithery-bigquery-sql": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "smithery-bigquery-sql"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "smithery-bigquery-sql",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-brave-web": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-brave-web"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-brave-web",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-sqlite-analyzer": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-sqlite-analyzer"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-sqlite-analyzer",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-duckdb-olap": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-duckdb-olap"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-duckdb-olap",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-mem0-memory": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-mem0-memory"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-mem0-memory",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-chroma-server": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-chroma-server"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-chroma-server",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-docker-daemon": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-docker-daemon"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-docker-daemon",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-kubernetes-cluster": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-kubernetes-cluster"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-kubernetes-cluster",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-terraform-plan": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-terraform-plan"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-terraform-plan",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-aws-s3-storage": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-aws-s3-storage"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-aws-s3-storage",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-aws-lambda-runner": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-aws-lambda-runner"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-aws-lambda-runner",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-gcp-cloud-run": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-gcp-cloud-run"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-gcp-cloud-run",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-azure-blob": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-azure-blob"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-azure-blob",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-cloudflare-dns": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-cloudflare-dns"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-cloudflare-dns",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-vercel-deployment": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-vercel-deployment"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-vercel-deployment",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-netlify-functions": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-netlify-functions"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-netlify-functions",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-stripe-billing": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-stripe-billing"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-stripe-billing",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-resend-email": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-resend-email"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-resend-email",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-twilio-messaging": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-twilio-messaging"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-twilio-messaging",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-pagerduty-incident": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-pagerduty-incident"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-pagerduty-incident",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "glama-grafana-loki": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "glama-grafana-loki"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "glama-grafana-loki",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-git": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-git"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-git",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-fetch": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-fetch"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-fetch",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-filesystem": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-filesystem"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-filesystem",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-memory": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-memory"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-memory",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-puppeteer": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-puppeteer"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-puppeteer",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-postgres": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-postgres"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-postgres",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-sqlite": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-sqlite"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-sqlite",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-sequentialthinking": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-sequentialthinking"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-sequentialthinking",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-slack": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-slack"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-slack",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-github": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-github"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-github",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-gitlab": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-gitlab"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-gitlab",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-google-drive": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-google-drive"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-google-drive",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-google-maps": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-google-maps"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-google-maps",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-everart": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-everart"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-everart",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-obsidian": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-obsidian"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-obsidian",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-linear": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-linear"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-linear",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-sentry": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-sentry"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-sentry",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-docker": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-docker"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-docker",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-kubernetes": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-kubernetes"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-kubernetes",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-postman": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-postman"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-postman",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-redis": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-redis"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-redis",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-kafka": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-kafka"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-kafka",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-rabbitmq": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-rabbitmq"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-rabbitmq",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-brave-search": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-brave-search"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-brave-search",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-todoist": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-todoist"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-todoist",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-notion": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-notion"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-notion",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-airtable": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-airtable"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-airtable",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-snowflake": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-snowflake"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-snowflake",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-azure-devops": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-azure-devops"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-azure-devops",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "npm-mcp-server-atlassian-confluence": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "npm-mcp-server-atlassian-confluence"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "npm-mcp-server-atlassian-confluence",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-math": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-math"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-math",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-arxiv": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-arxiv"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-arxiv",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-rag-docs": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-rag-docs"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-rag-docs",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-chromadb": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-chromadb"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-chromadb",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-duckdb": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-duckdb"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-duckdb",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-pandas": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-pandas"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-pandas",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-scipy": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-scipy"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-scipy",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-statsmodels": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-statsmodels"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-statsmodels",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-networkx": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-networkx"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-networkx",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-spacy-nlp": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-spacy-nlp"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-spacy-nlp",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-whisper-transcribe": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-whisper-transcribe"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-whisper-transcribe",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-opencv-vision": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-opencv-vision"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-opencv-vision",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-pillow-imaging": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-pillow-imaging"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-pillow-imaging",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-matplotlib-charts": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-matplotlib-charts"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-matplotlib-charts",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-seaborn-plots": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-seaborn-plots"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-seaborn-plots",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-scikit-learn": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-scikit-learn"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-scikit-learn",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-xgboost": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-xgboost"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-xgboost",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-lightgbm": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-lightgbm"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-lightgbm",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-catboost": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-catboost"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-catboost",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "pypi-mcp-server-polars": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "pypi-mcp-server-polars"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "pypi-mcp-server-polars",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-salesforce-crm": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-salesforce-crm"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-salesforce-crm",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-hubspot-marketing": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-hubspot-marketing"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-hubspot-marketing",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-zendesk-support": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-zendesk-support"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-zendesk-support",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-servicenow-itsm": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-servicenow-itsm"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-servicenow-itsm",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-dynamics-365": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-dynamics-365"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-dynamics-365",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-zoho-crm": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-zoho-crm"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-zoho-crm",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-pipedrive-deals": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-pipedrive-deals"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-pipedrive-deals",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-freshdesk-tickets": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-freshdesk-tickets"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-freshdesk-tickets",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-intercom-conversations": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-intercom-conversations"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-intercom-conversations",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-gorgias-ecommerce-support": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-gorgias-ecommerce-support"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-gorgias-ecommerce-support",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-stripe-subscriptions": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-stripe-subscriptions"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-stripe-subscriptions",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-plaid-banking": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-plaid-banking"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-plaid-banking",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-paypal-payouts": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-paypal-payouts"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-paypal-payouts",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-square-pos": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-square-pos"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-square-pos",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-quickbooks-accounting": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-quickbooks-accounting"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-quickbooks-accounting",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-xero-cloud-accounting": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-xero-cloud-accounting"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-xero-cloud-accounting",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-brex-corporate-cards": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-brex-corporate-cards"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-brex-corporate-cards",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-ramp-expense-management": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-ramp-expense-management"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-ramp-expense-management",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-wise-crossborder": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-wise-crossborder"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-wise-crossborder",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-bill-com-ap-ar": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-bill-com-ap-ar"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-bill-com-ap-ar",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-okta-identity": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-okta-identity"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-okta-identity",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-auth0-management": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-auth0-management"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-auth0-management",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-ping-identity-sso": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-ping-identity-sso"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-ping-identity-sso",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-cyberark-pam": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-cyberark-pam"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-cyberark-pam",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-1password-secrets": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-1password-secrets"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-1password-secrets",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-hashicorp-vault-approle": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-hashicorp-vault-approle"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-hashicorp-vault-approle",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-onelogin-directory": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-onelogin-directory"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-onelogin-directory",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-keycloak-admin": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-keycloak-admin"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-keycloak-admin",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-aws-iam-identity-center": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-aws-iam-identity-center"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-aws-iam-identity-center",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-azure-entra-id": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-azure-entra-id"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-azure-entra-id",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-slack-enterprise-grid": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-slack-enterprise-grid"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-slack-enterprise-grid",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-ms-teams-graph": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-ms-teams-graph"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-ms-teams-graph",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-discord-bot-ops": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-discord-bot-ops"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-discord-bot-ops",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-zoom-meeting-transcripts": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-zoom-meeting-transcripts"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-zoom-meeting-transcripts",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-google-workspace-admin": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-google-workspace-admin"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-google-workspace-admin",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-gmail-inbox-automation": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-gmail-inbox-automation"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-gmail-inbox-automation",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-google-calendar-scheduler": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-google-calendar-scheduler"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-google-calendar-scheduler",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-google-drive-sync": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-google-drive-sync"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-google-drive-sync",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-google-docs-generator": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-google-docs-generator"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-google-docs-generator",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-google-sheets-cruncher": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-google-sheets-cruncher"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-google-sheets-cruncher",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-notion-database-sync": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-notion-database-sync"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-notion-database-sync",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-coda-workspace": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-coda-workspace"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-coda-workspace",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-asana-projects": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-asana-projects"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-asana-projects",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-monday-boards": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-monday-boards"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-monday-boards",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-clickup-tasks": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-clickup-tasks"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-clickup-tasks",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-trello-boards": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-trello-boards"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-trello-boards",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-basecamp-hq": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-basecamp-hq"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-basecamp-hq",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-linear-graphql": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-linear-graphql"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-linear-graphql",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-wrike-workflows": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-wrike-workflows"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-wrike-workflows",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "composio-smartsheet-grid": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "composio-smartsheet-grid"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "composio-smartsheet-grid",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-datadog-synthetics": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-datadog-synthetics"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-datadog-synthetics",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-pagerduty-v2": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-pagerduty-v2"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-pagerduty-v2",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-opsgenie-alerts": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-opsgenie-alerts"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-opsgenie-alerts",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-splunk-oncall": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-splunk-oncall"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-splunk-oncall",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-cloudflare-zero-trust": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-cloudflare-zero-trust"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-cloudflare-zero-trust",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-fastly-vcl": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-fastly-vcl"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-fastly-vcl",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-akamai-edgeworkers": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-akamai-edgeworkers"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-akamai-edgeworkers",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-launchdarkly-flags": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-launchdarkly-flags"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-launchdarkly-flags",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-split-io-experiments": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-split-io-experiments"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-split-io-experiments",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-honeycomb-traces": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-honeycomb-traces"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-honeycomb-traces",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-dynatrace-davis": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-dynatrace-davis"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-dynatrace-davis",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-new-relic-nrql": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-new-relic-nrql"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-new-relic-nrql",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-better-uptime-monitors": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-better-uptime-monitors"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-better-uptime-monitors",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-statuspage-incident": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-statuspage-incident"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-statuspage-incident",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "postman-pingdom-checks": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "postman-pingdom-checks"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "postman-pingdom-checks",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "zapier-marketo-lead-sync": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "zapier-marketo-lead-sync"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "zapier-marketo-lead-sync",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "zapier-klaviyo-flows": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "zapier-klaviyo-flows"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "zapier-klaviyo-flows",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "zapier-mailchimp-campaigns": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "zapier-mailchimp-campaigns"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "zapier-mailchimp-campaigns",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "zapier-outreach-sequences": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "zapier-outreach-sequences"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "zapier-outreach-sequences",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "zapier-salesloft-cadence": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "zapier-salesloft-cadence"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "zapier-salesloft-cadence",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "zapier-apollo-enrichment": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "zapier-apollo-enrichment"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "zapier-apollo-enrichment",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "zapier-gong-call-intelligence": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "zapier-gong-call-intelligence"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "zapier-gong-call-intelligence",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "zapier-clearbit-reveal": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "zapier-clearbit-reveal"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "zapier-clearbit-reveal",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "zapier-zoominfo-enterprise": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "zapier-zoominfo-enterprise"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "zapier-zoominfo-enterprise",
+        "TGS_SANDBOX": "strict"
+      }
+    },
+    "zapier-mixpanel-cohorts": {
+      "command": "tgs",
+      "args": [
+        "skill",
+        "exec",
+        "zapier-mixpanel-cohorts"
+      ],
+      "env": {
+        "TGS_SKILL_NAME": "zapier-mixpanel-cohorts",
+        "TGS_SANDBOX": "strict"
+      }
+    }
+  }
+}

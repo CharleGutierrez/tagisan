@@ -1892,7 +1892,19 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
         }
         m
     });
-    map.get(&lower).cloned()
+    if let Some(skill) = map.get(&lower).cloned() {
+        return Some(skill);
+    }
+
+    // Dynamic on-disk fallback: probe .ecc/skills/<lower>/SKILL.md
+    let candidate = Path::new(".ecc/skills").join(&lower).join("SKILL.md");
+    if candidate.is_file() {
+        if let Ok(skill) = EccSkill::from_file(&candidate) {
+            return Some(skill);
+        }
+    }
+
+    None
 }
 
 /// Local LLM Supercharger Skill

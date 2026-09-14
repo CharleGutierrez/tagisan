@@ -1,0 +1,4007 @@
+{
+  "version": "1.0.0",
+  "total_skills": 500,
+  "generated_at": "2026-09-14T05:45:22Z",
+  "skills": [
+    {
+      "name": "smithery-brave-search",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Independent web search and news indexing with zero tracking",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-brave-search/SKILL.md"
+    },
+    {
+      "name": "smithery-exa-semantic-search",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Neural semantic web search optimized for developer documentation",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-exa-semantic-search/SKILL.md"
+    },
+    {
+      "name": "smithery-tavily-ai-research",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Autonomous agent research engine aggregating verified web sources",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-tavily-ai-research/SKILL.md"
+    },
+    {
+      "name": "smithery-perplexity-sonar",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Online reasoning engine with citations and confidence metrics",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-perplexity-sonar/SKILL.md"
+    },
+    {
+      "name": "smithery-neon-postgres",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Serverless PostgreSQL branching and ephemeral database provisioning",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-neon-postgres/SKILL.md"
+    },
+    {
+      "name": "smithery-supabase-db",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "PostgreSQL schema introspection, RLS policy audit, and SQL runner",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-supabase-db/SKILL.md"
+    },
+    {
+      "name": "smithery-qdrant-vector-db",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Vector memory management, HNSW collection indexing, and KNN queries",
+      "integration": "MCP stdio client / VectorStoreBackend",
+      "relative_path": "smithery-qdrant-vector-db/SKILL.md"
+    },
+    {
+      "name": "smithery-redis-cache",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "In-memory key-value caching, pub/sub messaging, and session states",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-redis-cache/SKILL.md"
+    },
+    {
+      "name": "smithery-cloudflare-workers",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Edge worker script deployment, route binding, and execution tail logs",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-cloudflare-workers/SKILL.md"
+    },
+    {
+      "name": "smithery-cloudflare-d1",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Serverless edge relational SQL query execution and schema migrations",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-cloudflare-d1/SKILL.md"
+    },
+    {
+      "name": "smithery-cloudflare-kv",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Ultra-low-latency distributed key-value storage across global edge pops",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-cloudflare-kv/SKILL.md"
+    },
+    {
+      "name": "smithery-sentry-telemetry",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Real-time error tracking, exception stack trace inspection, and RCA triage",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-sentry-telemetry/SKILL.md"
+    },
+    {
+      "name": "smithery-datadog-metrics",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "APM trace querying, metric dashboard evaluation, and alert verification",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-datadog-metrics/SKILL.md"
+    },
+    {
+      "name": "smithery-slack-collaboration",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Workspace channel messaging, thread summarization, and bot alerts",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-slack-collaboration/SKILL.md"
+    },
+    {
+      "name": "smithery-notion-knowledge",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Workspace document querying, block extraction, and knowledge sync",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-notion-knowledge/SKILL.md"
+    },
+    {
+      "name": "smithery-linear-issue-tracker",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Issue lifecycle management, sprint cycle triage, and roadmap linking",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-linear-issue-tracker/SKILL.md"
+    },
+    {
+      "name": "smithery-jira-cloud",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Enterprise issue tracking, backlog grooming, and workflow state transitions",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-jira-cloud/SKILL.md"
+    },
+    {
+      "name": "smithery-browserbase-headless",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Cloud headless Chromium fleet with automated anti-bot bypass and scraping",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-browserbase-headless/SKILL.md"
+    },
+    {
+      "name": "smithery-puppeteer-crawler",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Headless DOM automation, screenshot diffing, and form submission",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-puppeteer-crawler/SKILL.md"
+    },
+    {
+      "name": "smithery-playwright-tester",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Multi-browser E2E testing, trace recording, and accessibility checks",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-playwright-tester/SKILL.md"
+    },
+    {
+      "name": "smithery-clickhouse-analytics",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Columnar OLAP SQL queries and log aggregation at petabyte scale",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-clickhouse-analytics/SKILL.md"
+    },
+    {
+      "name": "smithery-milvus-vector-search",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "High-throughput billion-scale vector collection search and IVF-PQ",
+      "integration": "MCP stdio client / VectorStoreBackend",
+      "relative_path": "smithery-milvus-vector-search/SKILL.md"
+    },
+    {
+      "name": "smithery-pinecone-indexer",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Managed vector index search with namespace isolation and metadata filtering",
+      "integration": "MCP stdio client / VectorStoreBackend",
+      "relative_path": "smithery-pinecone-indexer/SKILL.md"
+    },
+    {
+      "name": "smithery-weaviate-hybrid",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Hybrid BM25 keyword and dense vector retrieval with schema introspection",
+      "integration": "MCP stdio client / VectorStoreBackend",
+      "relative_path": "smithery-weaviate-hybrid/SKILL.md"
+    },
+    {
+      "name": "smithery-chroma-db",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Embedded vector collection storage, document embeddings, and querying",
+      "integration": "MCP stdio client / VectorStoreBackend",
+      "relative_path": "smithery-chroma-db/SKILL.md"
+    },
+    {
+      "name": "smithery-elasticsearch-log",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Lucene full-text cluster search, index mapping, and log aggregation",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-elasticsearch-log/SKILL.md"
+    },
+    {
+      "name": "smithery-mongodb-atlas",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "BSON document queries, aggregation pipeline execution, and index verification",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-mongodb-atlas/SKILL.md"
+    },
+    {
+      "name": "smithery-neo4j-graph",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Cypher property graph querying, node traversal, and relationship modeling",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-neo4j-graph/SKILL.md"
+    },
+    {
+      "name": "smithery-snowflake-warehouse",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "Data warehouse SQL query orchestration and virtual warehouse management",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-snowflake-warehouse/SKILL.md"
+    },
+    {
+      "name": "smithery-bigquery-sql",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Smithery.ai",
+      "description": "BigQuery dataset querying, partitioning analysis, and schema inspection",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "smithery-bigquery-sql/SKILL.md"
+    },
+    {
+      "name": "glama-brave-web",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Web scraping and real-time news retrieval with Brave search index",
+      "integration": "MCP SSE client / ToolRegistry",
+      "relative_path": "glama-brave-web/SKILL.md"
+    },
+    {
+      "name": "glama-sqlite-analyzer",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "In-process SQLite database introspection, schema validation, and SQL execution",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-sqlite-analyzer/SKILL.md"
+    },
+    {
+      "name": "glama-duckdb-olap",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Fast in-process columnar SQL analysis on Parquet, Arrow, and CSV files",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-duckdb-olap/SKILL.md"
+    },
+    {
+      "name": "glama-mem0-memory",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Persistent multi-turn agent memory extraction, storage, and context recall",
+      "integration": "MCP stdio client / MemoryBackend",
+      "relative_path": "glama-mem0-memory/SKILL.md"
+    },
+    {
+      "name": "glama-chroma-server",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "ChromaDB vector store connector for document embeddings and similarity search",
+      "integration": "MCP stdio client / VectorStoreBackend",
+      "relative_path": "glama-chroma-server/SKILL.md"
+    },
+    {
+      "name": "glama-docker-daemon",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Docker container lifecycle management, image building, and isolated runs",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-docker-daemon/SKILL.md"
+    },
+    {
+      "name": "glama-kubernetes-cluster",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Kubernetes cluster resource inspection, pod log streaming, and deployment patch",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-kubernetes-cluster/SKILL.md"
+    },
+    {
+      "name": "glama-terraform-plan",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Terraform HCL infrastructure plan generation, state inspection, and validation",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-terraform-plan/SKILL.md"
+    },
+    {
+      "name": "glama-aws-s3-storage",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Amazon S3 bucket listing, object download/upload, and presigned URL generation",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-aws-s3-storage/SKILL.md"
+    },
+    {
+      "name": "glama-aws-lambda-runner",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Serverless AWS Lambda function invocation, log retrieval, and payload testing",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-aws-lambda-runner/SKILL.md"
+    },
+    {
+      "name": "glama-gcp-cloud-run",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Google Cloud Run service status checking, revision deployments, and logs",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-gcp-cloud-run/SKILL.md"
+    },
+    {
+      "name": "glama-azure-blob",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Azure Blob storage container exploration and binary asset transfer",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-azure-blob/SKILL.md"
+    },
+    {
+      "name": "glama-cloudflare-dns",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Cloudflare DNS record querying, zone updating, and propagation checks",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-cloudflare-dns/SKILL.md"
+    },
+    {
+      "name": "glama-vercel-deployment",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Vercel edge deployment status inspection, build logs, and environment variables",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-vercel-deployment/SKILL.md"
+    },
+    {
+      "name": "glama-netlify-functions",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Netlify serverless function trigger, build inspection, and preview deployment",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-netlify-functions/SKILL.md"
+    },
+    {
+      "name": "glama-stripe-billing",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Stripe payment intent inspection, customer balance audits, and webhook events",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-stripe-billing/SKILL.md"
+    },
+    {
+      "name": "glama-resend-email",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "Transactional email delivery, template rendering, and delivery status tracking",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-resend-email/SKILL.md"
+    },
+    {
+      "name": "glama-twilio-messaging",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "SMS notification dispatch, phone number verification, and WhatsApp webhook",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-twilio-messaging/SKILL.md"
+    },
+    {
+      "name": "glama-pagerduty-incident",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "On-call schedule querying, incident acknowledgement, and escalation triggers",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-pagerduty-incident/SKILL.md"
+    },
+    {
+      "name": "glama-grafana-loki",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "Glama.ai",
+      "description": "LogQL log stream querying, metric extraction, and dashboard alert checks",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "glama-grafana-loki/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-git",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Local git repository branch inspection, commit diffing, and blame analysis",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-git/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-fetch",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "HTTP fetching with Markdown conversion and content sanitization",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-fetch/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-filesystem",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Controlled sandboxed filesystem read/write with path restriction",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-filesystem/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-memory",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Graph-based persistent knowledge graph for agent session entities",
+      "integration": "MCP stdio client / MemoryBackend",
+      "relative_path": "npm-mcp-server-memory/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-puppeteer",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Automated browser interaction, DOM scraping, and screenshot capture",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-puppeteer/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-postgres",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "PostgreSQL database connection, schema introspection, and parameterized queries",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-postgres/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-sqlite",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "SQLite database querying, schema dump, and transaction rollback testing",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-sqlite/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-sequentialthinking",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Dynamic problem breakdown and step-by-step hypothesis validation loop",
+      "integration": "MCP stdio client / CognitiveEngine",
+      "relative_path": "npm-mcp-server-sequentialthinking/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-slack",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Slack API connector for workspace communications and bot interactions",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-slack/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-github",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry (Binary)",
+      "description": "Standalone npm distribution of GitHub REST and GraphQL API client",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-github/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-gitlab",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "GitLab project repository, issue tracker, and CI/CD pipeline automation",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-gitlab/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-google-drive",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Google Drive file discovery, export to text, and document metadata extraction",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-google-drive/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-google-maps",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Geocoding, route calculation, elevation, and location search queries",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-google-maps/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-everart",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "AI image generation and style-conditioned visual asset synthesis",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-everart/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-obsidian",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Local Obsidian markdown vault searching, link graph analysis, and note writing",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-obsidian/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-linear",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Linear engineering workflow automation and team velocity inspection",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-linear/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-sentry",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Production crash analysis, breadcrumb tracing, and regression detection",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-sentry/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-docker",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Docker container and image manipulation through native Unix socket",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-docker/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-kubernetes",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Kubernetes cluster state inspection and manifest validation",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-kubernetes/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-postman",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Postman API collection execution, mock testing, and schema validation",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-postman/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-redis",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Redis key management, memory usage profiling, and stream consumption",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-redis/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-kafka",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Apache Kafka topic offset monitoring, message production, and partition audit",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-kafka/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-rabbitmq",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "RabbitMQ queue inspection, message consumption, and exchange topology",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-rabbitmq/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-brave-search",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Brave Search Web & Local API connector for accurate live queries",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-brave-search/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-todoist",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Task organization, project priority management, and deadline scheduling",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-todoist/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-notion",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Notion API blocks, databases, and page tree sync for developer wikis",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-notion/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-airtable",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Airtable base records querying, schema mapping, and relational syncing",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-airtable/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-snowflake",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Snowflake warehouse queries and data lake introspection",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-snowflake/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-azure-devops",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Azure DevOps work items, build pipelines, and artifact feed automation",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-azure-devops/SKILL.md"
+    },
+    {
+      "name": "npm-mcp-server-atlassian-confluence",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "NPM Registry",
+      "description": "Confluence enterprise documentation search, space hierarchy, and page creation",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "npm-mcp-server-atlassian-confluence/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-math",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Symbolic mathematics, calculus, and matrix equation solving via SymPy",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-math/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-arxiv",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "ArXiv scientific paper search, abstract extraction, and PDF metadata parsing",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-arxiv/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-rag-docs",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Local document vectorization and retrieval with chunking and reranking",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-rag-docs/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-chromadb",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Chroma vector database client with native Python embedding pipelines",
+      "integration": "MCP stdio client / VectorStoreBackend",
+      "relative_path": "pypi-mcp-server-chromadb/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-duckdb",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "DuckDB analytical querying and Parquet file analysis via Python runtime",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-duckdb/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-pandas",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "DataFrame data manipulation, aggregation, and statistical profiling",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-pandas/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-scipy",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Scientific computing, optimization, interpolation, and signal processing",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-scipy/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-statsmodels",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Econometric time-series modeling, ARIMA forecasting, and statistical hypothesis tests",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-statsmodels/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-networkx",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Graph theory algorithms, centrality metrics, and shortest path traversal",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-networkx/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-spacy-nlp",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Named entity recognition, dependency parsing, and linguistic lemmatization",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-spacy-nlp/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-whisper-transcribe",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Local audio transcription and timestamped speech-to-text synthesis",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-whisper-transcribe/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-opencv-vision",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Computer vision image filtering, edge detection, and feature matching",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-opencv-vision/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-pillow-imaging",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Image format conversion, thumbnail generation, and metadata cleaning",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-pillow-imaging/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-matplotlib-charts",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Data visualization chart generation, SVG export, and metric plotting",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-matplotlib-charts/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-seaborn-plots",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Statistical data visualization, heatmaps, and distribution plots",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-seaborn-plots/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-scikit-learn",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Machine learning clustering, dimensionality reduction, and classification models",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-scikit-learn/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-xgboost",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Gradient boosted decision tree training, inference, and feature importance",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-xgboost/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-lightgbm",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Fast distributed gradient boosting and leaf-wise tree splitting analysis",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-lightgbm/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-catboost",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Categorical feature boosting model evaluation and cross-validation",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-catboost/SKILL.md"
+    },
+    {
+      "name": "pypi-mcp-server-polars",
+      "tier": "Tier 1: Model Context Protocol (MCP) & Web Registries",
+      "source": "PyPI",
+      "description": "Blazing-fast multi-threaded Arrow DataFrame query execution and transforms",
+      "integration": "MCP stdio client / ToolRegistry",
+      "relative_path": "pypi-mcp-server-polars/SKILL.md"
+    },
+    {
+      "name": "composio-salesforce-crm",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Salesforce CRM lead creation, opportunity tracking, and SOQL record sync",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-salesforce-crm/SKILL.md"
+    },
+    {
+      "name": "composio-hubspot-marketing",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "HubSpot contact management, deal stages, and email campaign analytics",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-hubspot-marketing/SKILL.md"
+    },
+    {
+      "name": "composio-zendesk-support",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Zendesk customer ticket creation, priority escalation, and macro replies",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-zendesk-support/SKILL.md"
+    },
+    {
+      "name": "composio-servicenow-itsm",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "ServiceNow incident lifecycle, change requests, and CMDB CI updates",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-servicenow-itsm/SKILL.md"
+    },
+    {
+      "name": "composio-dynamics-365",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Microsoft Dynamics 365 enterprise account sync and ERP data retrieval",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-dynamics-365/SKILL.md"
+    },
+    {
+      "name": "composio-zoho-crm",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Zoho CRM customer record updates, deal pipelines, and invoice linking",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-zoho-crm/SKILL.md"
+    },
+    {
+      "name": "composio-pipedrive-deals",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Pipedrive deal pipeline stage advancement and activity scheduling",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-pipedrive-deals/SKILL.md"
+    },
+    {
+      "name": "composio-freshdesk-tickets",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Freshdesk ticket routing, SLA status monitoring, and satisfaction surveys",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-freshdesk-tickets/SKILL.md"
+    },
+    {
+      "name": "composio-intercom-conversations",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Intercom live chat message history retrieval and automated agent replies",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-intercom-conversations/SKILL.md"
+    },
+    {
+      "name": "composio-gorgias-ecommerce-support",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Gorgias Shopify customer ticket triage and order refund handling",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-gorgias-ecommerce-support/SKILL.md"
+    },
+    {
+      "name": "composio-stripe-subscriptions",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Stripe customer subscription billing, invoice generation, and refunds",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-stripe-subscriptions/SKILL.md"
+    },
+    {
+      "name": "composio-plaid-banking",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Plaid bank account authentication, balance checking, and transaction sync",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-plaid-banking/SKILL.md"
+    },
+    {
+      "name": "composio-paypal-payouts",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "PayPal payment transaction auditing and payout execution verification",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-paypal-payouts/SKILL.md"
+    },
+    {
+      "name": "composio-square-pos",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Square point-of-sale inventory adjustments, orders, and payment capture",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-square-pos/SKILL.md"
+    },
+    {
+      "name": "composio-quickbooks-accounting",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "QuickBooks general ledger entry, invoice creation, and balance sheets",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-quickbooks-accounting/SKILL.md"
+    },
+    {
+      "name": "composio-xero-cloud-accounting",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Xero bank reconciliation, expense tracking, and purchase order sync",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-xero-cloud-accounting/SKILL.md"
+    },
+    {
+      "name": "composio-brex-corporate-cards",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Brex corporate credit card transaction categorization and receipt match",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-brex-corporate-cards/SKILL.md"
+    },
+    {
+      "name": "composio-ramp-expense-management",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Ramp corporate expense policy verification and spend limit checks",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-ramp-expense-management/SKILL.md"
+    },
+    {
+      "name": "composio-wise-crossborder",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Wise international money transfer rate quote and batch payment trigger",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-wise-crossborder/SKILL.md"
+    },
+    {
+      "name": "composio-bill-com-ap-ar",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Bill.com accounts payable approval workflow and vendor payment status",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-bill-com-ap-ar/SKILL.md"
+    },
+    {
+      "name": "composio-okta-identity",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Okta user provisioning, group assignment, and MFA status verification",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-okta-identity/SKILL.md"
+    },
+    {
+      "name": "composio-auth0-management",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Auth0 client application creation, token configuration, and user audits",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-auth0-management/SKILL.md"
+    },
+    {
+      "name": "composio-ping-identity-sso",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "PingFederate SAML/OIDC session validation and federated identity checks",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-ping-identity-sso/SKILL.md"
+    },
+    {
+      "name": "composio-cyberark-pam",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "CyberArk privileged access security credential rotation and vault retrieval",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-cyberark-pam/SKILL.md"
+    },
+    {
+      "name": "composio-1password-secrets",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "1Password service account secret retrieval and automated credential injection",
+      "integration": "ToolRegistry / AgentShield",
+      "relative_path": "composio-1password-secrets/SKILL.md"
+    },
+    {
+      "name": "composio-hashicorp-vault-approle",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "HashiCorp Vault AppRole authentication and dynamic DB credential lease",
+      "integration": "ToolRegistry / AgentShield",
+      "relative_path": "composio-hashicorp-vault-approle/SKILL.md"
+    },
+    {
+      "name": "composio-onelogin-directory",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "OneLogin directory user provisioning and active directory synchronization",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-onelogin-directory/SKILL.md"
+    },
+    {
+      "name": "composio-keycloak-admin",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Keycloak realm role management, client secret refresh, and token claims",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-keycloak-admin/SKILL.md"
+    },
+    {
+      "name": "composio-aws-iam-identity-center",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "AWS IAM Identity Center permission set assignment and SSO audits",
+      "integration": "ToolRegistry / AgentShield",
+      "relative_path": "composio-aws-iam-identity-center/SKILL.md"
+    },
+    {
+      "name": "composio-azure-entra-id",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Microsoft Entra ID (Azure AD) enterprise app consent and tenant audits",
+      "integration": "ToolRegistry / AgentShield",
+      "relative_path": "composio-azure-entra-id/SKILL.md"
+    },
+    {
+      "name": "composio-slack-enterprise-grid",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Enterprise Grid cross-workspace channel administration and compliance export",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-slack-enterprise-grid/SKILL.md"
+    },
+    {
+      "name": "composio-ms-teams-graph",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Microsoft Graph API Teams message dispatch and meeting transcription fetch",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-ms-teams-graph/SKILL.md"
+    },
+    {
+      "name": "composio-discord-bot-ops",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Discord bot interaction handling, guild role checking, and webhook alerts",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-discord-bot-ops/SKILL.md"
+    },
+    {
+      "name": "composio-zoom-meeting-transcripts",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Zoom cloud recording transcript download and AI meeting summarization",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-zoom-meeting-transcripts/SKILL.md"
+    },
+    {
+      "name": "composio-google-workspace-admin",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Google Workspace user directory management and domain audit reporting",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-google-workspace-admin/SKILL.md"
+    },
+    {
+      "name": "composio-gmail-inbox-automation",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Gmail search filters, draft creation, and label classification",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-gmail-inbox-automation/SKILL.md"
+    },
+    {
+      "name": "composio-google-calendar-scheduler",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Google Calendar event conflict resolution and multi-calendar booking",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-google-calendar-scheduler/SKILL.md"
+    },
+    {
+      "name": "composio-google-drive-sync",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Google Drive corporate file indexing, OCR parsing, and permission sync",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-google-drive-sync/SKILL.md"
+    },
+    {
+      "name": "composio-google-docs-generator",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Google Docs template population, heading styling, and PDF export",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-google-docs-generator/SKILL.md"
+    },
+    {
+      "name": "composio-google-sheets-cruncher",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Google Sheets formula recalculation, range appending, and CSV exports",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-google-sheets-cruncher/SKILL.md"
+    },
+    {
+      "name": "composio-notion-database-sync",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Notion database schema sync, property rollups, and linked relations",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-notion-database-sync/SKILL.md"
+    },
+    {
+      "name": "composio-coda-workspace",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Coda document table mutations, canvas formulas, and pack interactions",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-coda-workspace/SKILL.md"
+    },
+    {
+      "name": "composio-asana-projects",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Asana portfolio project tracking, milestone updates, and dependency graphs",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-asana-projects/SKILL.md"
+    },
+    {
+      "name": "composio-monday-boards",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Monday.com work OS board column updates, item groups, and status triggers",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-monday-boards/SKILL.md"
+    },
+    {
+      "name": "composio-clickup-tasks",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "ClickUp space hierarchy navigation, custom task fields, and time tracking",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-clickup-tasks/SKILL.md"
+    },
+    {
+      "name": "composio-trello-boards",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Trello board list cards moving, checklist updates, and webhook callbacks",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-trello-boards/SKILL.md"
+    },
+    {
+      "name": "composio-basecamp-hq",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Basecamp project message boards, to-do lists, and campfire chat ping",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-basecamp-hq/SKILL.md"
+    },
+    {
+      "name": "composio-linear-graphql",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Linear GraphQL API client for engineering team cycles and triage filters",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-linear-graphql/SKILL.md"
+    },
+    {
+      "name": "composio-wrike-workflows",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Wrike enterprise project blueprint cloning and resource allocation",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-wrike-workflows/SKILL.md"
+    },
+    {
+      "name": "composio-smartsheet-grid",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Composio.dev",
+      "description": "Smartsheet grid row updates, automated approval requests, and webhooks",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "composio-smartsheet-grid/SKILL.md"
+    },
+    {
+      "name": "postman-datadog-synthetics",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Datadog synthetic API test execution, uptime verification, and alert rules",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-datadog-synthetics/SKILL.md"
+    },
+    {
+      "name": "postman-pagerduty-v2",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "PagerDuty incident triggers, service maintenance windows, and roster shifts",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-pagerduty-v2/SKILL.md"
+    },
+    {
+      "name": "postman-opsgenie-alerts",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Opsgenie alert deduplication, responder assignment, and voice escalation",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-opsgenie-alerts/SKILL.md"
+    },
+    {
+      "name": "postman-splunk-oncall",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Splunk On-Call (VictorOps) routing keys, incident logs, and timeline posts",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-splunk-oncall/SKILL.md"
+    },
+    {
+      "name": "postman-cloudflare-zero-trust",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Cloudflare Access application policies and Gateway DNS firewall rules",
+      "integration": "ToolRegistry / AgentShield",
+      "relative_path": "postman-cloudflare-zero-trust/SKILL.md"
+    },
+    {
+      "name": "postman-fastly-vcl",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Fastly VCL service configuration diffing, edge dictionary updates, and purges",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-fastly-vcl/SKILL.md"
+    },
+    {
+      "name": "postman-akamai-edgeworkers",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Akamai EdgeWorkers JavaScript deployment and property manager rules",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-akamai-edgeworkers/SKILL.md"
+    },
+    {
+      "name": "postman-launchdarkly-flags",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "LaunchDarkly feature flag toggling, targeted percentage rollouts, and audit",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-launchdarkly-flags/SKILL.md"
+    },
+    {
+      "name": "postman-split-io-experiments",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Split.io feature experiment tracking, targeting rules, and metric variance",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-split-io-experiments/SKILL.md"
+    },
+    {
+      "name": "postman-honeycomb-traces",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Honeycomb high-cardinality distributed trace query and anomaly markers",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-honeycomb-traces/SKILL.md"
+    },
+    {
+      "name": "postman-dynatrace-davis",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Dynatrace Davis AI problem root cause analysis and host metrics",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-dynatrace-davis/SKILL.md"
+    },
+    {
+      "name": "postman-new-relic-nrql",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "New Relic NRQL metric queries, error rate analysis, and entity health",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-new-relic-nrql/SKILL.md"
+    },
+    {
+      "name": "postman-better-uptime-monitors",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Better Uptime heartbeat monitor verification and incident notification",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-better-uptime-monitors/SKILL.md"
+    },
+    {
+      "name": "postman-statuspage-incident",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Atlassian Statuspage component status updates and public incident notices",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-statuspage-incident/SKILL.md"
+    },
+    {
+      "name": "postman-pingdom-checks",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Postman API Network",
+      "description": "Pingdom synthetic check response time monitoring and probe outage alerts",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "postman-pingdom-checks/SKILL.md"
+    },
+    {
+      "name": "zapier-marketo-lead-sync",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Zapier Platform",
+      "description": "Marketo marketing automation lead scoring and campaign membership sync",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "zapier-marketo-lead-sync/SKILL.md"
+    },
+    {
+      "name": "zapier-klaviyo-flows",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Zapier Platform",
+      "description": "Klaviyo e-commerce SMS and email flow event triggers and list segmentation",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "zapier-klaviyo-flows/SKILL.md"
+    },
+    {
+      "name": "zapier-mailchimp-campaigns",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Zapier Platform",
+      "description": "Mailchimp subscriber tags, audience campaigns, and open-rate webhooks",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "zapier-mailchimp-campaigns/SKILL.md"
+    },
+    {
+      "name": "zapier-outreach-sequences",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Zapier Platform",
+      "description": "Outreach.io sales prospect sequencing, call logging, and reply sentiment",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "zapier-outreach-sequences/SKILL.md"
+    },
+    {
+      "name": "zapier-salesloft-cadence",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Zapier Platform",
+      "description": "Salesloft cadence step execution, email tracking, and CRM syncing",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "zapier-salesloft-cadence/SKILL.md"
+    },
+    {
+      "name": "zapier-apollo-enrichment",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Zapier Platform",
+      "description": "Apollo.io B2B lead contact enrichment, domain lookups, and verified emails",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "zapier-apollo-enrichment/SKILL.md"
+    },
+    {
+      "name": "zapier-gong-call-intelligence",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Zapier Platform",
+      "description": "Gong.io sales call audio transcription, tracker keywords, and deal insights",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "zapier-gong-call-intelligence/SKILL.md"
+    },
+    {
+      "name": "zapier-clearbit-reveal",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Zapier Platform",
+      "description": "Clearbit IP-to-company Deanonymization and firmographic data enrichment",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "zapier-clearbit-reveal/SKILL.md"
+    },
+    {
+      "name": "zapier-zoominfo-enterprise",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Zapier Platform",
+      "description": "ZoomInfo enterprise corporate hierarchy, org charts, and intent signals",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "zapier-zoominfo-enterprise/SKILL.md"
+    },
+    {
+      "name": "zapier-mixpanel-cohorts",
+      "tier": "Tier 2: Enterprise Actions & API Orchestration (Composio / Postman / Zapier)",
+      "source": "Zapier Platform",
+      "description": "Mixpanel product event tracking, behavioral cohort sync, and retention graphs",
+      "integration": "ToolRegistry / MCP Connector",
+      "relative_path": "zapier-mixpanel-cohorts/SKILL.md"
+    },
+    {
+      "name": "ebpf-tc-traffic-shaping",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "eBPF.io",
+      "description": "Traffic Control (cls_bpf) packet classification, rate limiting, and DSCP remarking",
+      "integration": "Native Rust / libbpf-rs / AgentShield",
+      "relative_path": "ebpf-tc-traffic-shaping/SKILL.md"
+    },
+    {
+      "name": "ebpf-kprobe-syscall-interceptor",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "eBPF.io",
+      "description": "Dynamic kernel function entry/exit probing for non-invasive audit logs",
+      "integration": "Native Rust / aya-rs / AgentShield",
+      "relative_path": "ebpf-kprobe-syscall-interceptor/SKILL.md"
+    },
+    {
+      "name": "ebpf-uprobe-userspace-tracer",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "eBPF.io",
+      "description": "Userspace function symbol hooking for zero-overhead runtime telemetry",
+      "integration": "Native Rust / aya-rs / Telemetry",
+      "relative_path": "ebpf-uprobe-userspace-tracer/SKILL.md"
+    },
+    {
+      "name": "ebpf-sockops-socket-redirect",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "eBPF.io",
+      "description": "Kernel TCP socket splice and localhost acceleration bypassing network stack",
+      "integration": "Native Rust / Tokio / Net",
+      "relative_path": "ebpf-sockops-socket-redirect/SKILL.md"
+    },
+    {
+      "name": "ebpf-xdp-ddos-mitigation",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "eBPF.io",
+      "description": "Driver-level XDP packet filtering dropping malicious packets at 10M+ pps",
+      "integration": "Native Rust / AgentShield",
+      "relative_path": "ebpf-xdp-ddos-mitigation/SKILL.md"
+    },
+    {
+      "name": "dpdk-rte-ring-lockless-fifo",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "DPDK.org",
+      "description": "Multi-producer multi-consumer lockless ring buffer for gigabit packet bursts",
+      "integration": "Native Rust / FFI",
+      "relative_path": "dpdk-rte-ring-lockless-fifo/SKILL.md"
+    },
+    {
+      "name": "dpdk-poll-mode-driver-tuning",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "DPDK.org",
+      "description": "PMD core affinity assignment and RX/TX descriptor ring size optimization",
+      "integration": "Native Rust / HardwareEngine",
+      "relative_path": "dpdk-poll-mode-driver-tuning/SKILL.md"
+    },
+    {
+      "name": "dpdk-hugepage-memory-pool",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "DPDK.org",
+      "description": "2MB/1GB hugepage memory allocation eliminating TLB miss latency",
+      "integration": "Native Rust / Allocator",
+      "relative_path": "dpdk-hugepage-memory-pool/SKILL.md"
+    },
+    {
+      "name": "spdk-nvme-pcie-direct-io",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "SPDK.io",
+      "description": "Userspace polled-mode NVMe driver over PCIe bypassing OS kernel overhead",
+      "integration": "Native Rust / Colibri Storage",
+      "relative_path": "spdk-nvme-pcie-direct-io/SKILL.md"
+    },
+    {
+      "name": "spdk-bdev-striped-raid0",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "SPDK.io",
+      "description": "Block device striping across dual NVMe SSDs achieving 14.8 GB/s tensor throughput",
+      "integration": "Colibr\u00ec Engine / Storage",
+      "relative_path": "spdk-bdev-striped-raid0/SKILL.md"
+    },
+    {
+      "name": "spdk-nvmf-rdma-initiator",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "SPDK.io",
+      "description": "NVMe over Fabrics RDMA initiator for remote low-latency tensor access",
+      "integration": "Distributed P2P / Mesh",
+      "relative_path": "spdk-nvmf-rdma-initiator/SKILL.md"
+    },
+    {
+      "name": "linux-io-uring-async-engine",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Linux io_uring submission/completion queue submission for zero-syscall async I/O",
+      "integration": "Native Tokio / FileCRUD",
+      "relative_path": "linux-io-uring-async-engine/SKILL.md"
+    },
+    {
+      "name": "linux-io-uring-sqpoll-tuning",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Submission Queue Polling kernel thread binding for zero-latency I/O loops",
+      "integration": "Tokio Core / Engine",
+      "relative_path": "linux-io-uring-sqpoll-tuning/SKILL.md"
+    },
+    {
+      "name": "linux-landlock-lsm-sandbox",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Landlock LSM filesystem hierarchy restriction without root privileges",
+      "integration": "AgentShield / Sandbox",
+      "relative_path": "linux-landlock-lsm-sandbox/SKILL.md"
+    },
+    {
+      "name": "linux-seccomp-bpf-filter",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Strict Berkeley Packet Filter syscall whitelisting for untrusted subprocesses",
+      "integration": "AgentShield / Sandbox",
+      "relative_path": "linux-seccomp-bpf-filter/SKILL.md"
+    },
+    {
+      "name": "linux-cgroups-v2-memory-clamp",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Control Group v2 memory.high and memory.max hard limits preventing OOM freezes",
+      "integration": "Engine / ProcessManager",
+      "relative_path": "linux-cgroups-v2-memory-clamp/SKILL.md"
+    },
+    {
+      "name": "linux-cgroups-v2-cpu-weight",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "CFS scheduler CPU bandwidth quota and weight prioritization across agent threads",
+      "integration": "Tokio Swarm / Scheduler",
+      "relative_path": "linux-cgroups-v2-cpu-weight/SKILL.md"
+    },
+    {
+      "name": "linux-numa-node-affinity",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Non-Uniform Memory Access node binding preventing inter-socket interconnect bottlenecks",
+      "integration": "Native Rust / GGUF Mmap",
+      "relative_path": "linux-numa-node-affinity/SKILL.md"
+    },
+    {
+      "name": "linux-epoll-edge-triggered",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "High-performance edge-triggered (EPOLLET) multiplexing for massive TCP connections",
+      "integration": "Tokio / tgs serve",
+      "relative_path": "linux-epoll-edge-triggered/SKILL.md"
+    },
+    {
+      "name": "linux-memfd-secret-protection",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Anonymous file memory inaccessible to kernel page tables or debugging tools",
+      "integration": "AgentShield / Security",
+      "relative_path": "linux-memfd-secret-protection/SKILL.md"
+    },
+    {
+      "name": "linux-mprotect-w-xor-x",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Write-XOR-Execute memory permission enforcement preventing shellcode injection",
+      "integration": "AgentShield / Runtime",
+      "relative_path": "linux-mprotect-w-xor-x/SKILL.md"
+    },
+    {
+      "name": "linux-prctl-no-new-privs",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Syscall privilege elevation prevention for child processes spawned by agents",
+      "integration": "AgentShield / Subprocess",
+      "relative_path": "linux-prctl-no-new-privs/SKILL.md"
+    },
+    {
+      "name": "linux-splice-zero-copy-pipe",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Kernel-space data pipe splicing between file descriptors with zero userspace copies",
+      "integration": "FileCRUD / Engine",
+      "relative_path": "linux-splice-zero-copy-pipe/SKILL.md"
+    },
+    {
+      "name": "linux-perf-events-hardware-pmc",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Hardware Performance Monitoring Counter analysis for cache misses and branch mispredictions",
+      "integration": "Engine / Telemetry",
+      "relative_path": "linux-perf-events-hardware-pmc/SKILL.md"
+    },
+    {
+      "name": "linux-namespaces-isolation",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Mount, PID, Network, and IPC namespace sandboxing for autonomous tool evaluation",
+      "integration": "AgentShield / Sandbox",
+      "relative_path": "linux-namespaces-isolation/SKILL.md"
+    },
+    {
+      "name": "posix-pthread-affinity-pinning",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "POSIX IEEE 1003.1",
+      "description": "Real-time thread affinity setting to dedicated performance cores (P-cores)",
+      "integration": "Tokio Swarm / Engine",
+      "relative_path": "posix-pthread-affinity-pinning/SKILL.md"
+    },
+    {
+      "name": "posix-shm-open-zero-copy",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "POSIX IEEE 1003.1",
+      "description": "POSIX shared memory mapping for IPC tensor exchange between local agent processes",
+      "integration": "Native Rust / Swarm",
+      "relative_path": "posix-shm-open-zero-copy/SKILL.md"
+    },
+    {
+      "name": "posix-madvise-hugepage-advice",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "POSIX IEEE 1003.1",
+      "description": "MADV_HUGEPAGE and MADV_WILLNEED advice to OS kernel for large GGUF weights",
+      "integration": "GGUF Engine / Mmap",
+      "relative_path": "posix-madvise-hugepage-advice/SKILL.md"
+    },
+    {
+      "name": "posix-mlock-page-locking",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "POSIX IEEE 1003.1",
+      "description": "Memory locking preventing tensor page swapping into disk swap space",
+      "integration": "GGUF Engine / Allocator",
+      "relative_path": "posix-mlock-page-locking/SKILL.md"
+    },
+    {
+      "name": "posix-sigaction-crash-recovery",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "POSIX IEEE 1003.1",
+      "description": "Crash handler installation with SIGSEGV/SIGBUS recovery and register state dump",
+      "integration": "Engine / FaultRecovery",
+      "relative_path": "posix-sigaction-crash-recovery/SKILL.md"
+    },
+    {
+      "name": "simd-avx512-fp16-gemm",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Intel Architecture Manuals",
+      "description": "AVX-512 FP16 vector instructions for high-throughput matrix multiplication on CPU",
+      "integration": "Tensor Engine / SIMD",
+      "relative_path": "simd-avx512-fp16-gemm/SKILL.md"
+    },
+    {
+      "name": "simd-avx2-fma-matrix-kernel",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Intel Architecture Manuals",
+      "description": "Fused Multiply-Add AVX2 8-wide float kernels for quantized tensor dequantization",
+      "integration": "Tensor Engine / SIMD",
+      "relative_path": "simd-avx2-fma-matrix-kernel/SKILL.md"
+    },
+    {
+      "name": "simd-vnni-int8-acceleration",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Intel Architecture Manuals",
+      "description": "Vector Neural Network Instructions for INT8 low-precision tensor dot products",
+      "integration": "Tensor Engine / Quant",
+      "relative_path": "simd-vnni-int8-acceleration/SKILL.md"
+    },
+    {
+      "name": "simd-arm-neon-fp16-vectorizer",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "ARM Architecture Reference Manual",
+      "description": "ARM64 NEON vector registers and half-precision floating point operations for Apple Silicon",
+      "integration": "Tensor Engine / SIMD",
+      "relative_path": "simd-arm-neon-fp16-vectorizer/SKILL.md"
+    },
+    {
+      "name": "simd-arm-sve2-scalable-vectors",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "ARM Architecture Reference Manual",
+      "description": "Scalable Vector Extension 2 length-agnostic vector processing on ARM servers",
+      "integration": "Tensor Engine / SIMD",
+      "relative_path": "simd-arm-sve2-scalable-vectors/SKILL.md"
+    },
+    {
+      "name": "riscv-vector-extension-rvv",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "RISC-V ISA Specification",
+      "description": "RISC-V standard vector extension (RVV 1.0) matrix assembly kernels",
+      "integration": "Baremetal / QEMU Emulator",
+      "relative_path": "riscv-vector-extension-rvv/SKILL.md"
+    },
+    {
+      "name": "riscv-svpbmt-page-memory-types",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "RISC-V ISA Specification",
+      "description": "Page-based memory type control for coherent DMA buffers on RISC-V SoC",
+      "integration": "Baremetal / QEMU Emulator",
+      "relative_path": "riscv-svpbmt-page-memory-types/SKILL.md"
+    },
+    {
+      "name": "hardware-rdtsc-nanosecond-timer",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "x86-64 Software Developer's Manual",
+      "description": "High-precision invariant CPU cycle counter reading for sub-microsecond latency benchmarks",
+      "integration": "Criterion / Metrics",
+      "relative_path": "hardware-rdtsc-nanosecond-timer/SKILL.md"
+    },
+    {
+      "name": "hardware-clflushopt-cache-flush",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "x86-64 Software Developer's Manual",
+      "description": "Optimized CPU cache line flushing for non-volatile memory (NVDIMM) persistence",
+      "integration": "Storage / Persistence",
+      "relative_path": "hardware-clflushopt-cache-flush/SKILL.md"
+    },
+    {
+      "name": "hardware-sfence-memory-barrier",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "x86-64 Software Developer's Manual",
+      "description": "Store fence memory barrier ensuring out-of-order write synchronization",
+      "integration": "Lockless Channels",
+      "relative_path": "hardware-sfence-memory-barrier/SKILL.md"
+    },
+    {
+      "name": "pcie-aer-error-recovery",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "PCI-SIG Specifications",
+      "description": "PCI Express Advanced Error Reporting register polling and link recovery",
+      "integration": "Baremetal / QEMU Emulator",
+      "relative_path": "pcie-aer-error-recovery/SKILL.md"
+    },
+    {
+      "name": "pcie-sriov-virtual-functions",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "PCI-SIG Specifications",
+      "description": "Single Root I/O Virtualization VF allocation for hardware-isolated network slices",
+      "integration": "HardwareEngine",
+      "relative_path": "pcie-sriov-virtual-functions/SKILL.md"
+    },
+    {
+      "name": "pcie-dma-coherent-allocator",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "PCI-SIG Specifications",
+      "description": "Contiguous physical memory DMA allocation for GPU-host zero-copy transfer",
+      "integration": "Tensor Engine / CUDA",
+      "relative_path": "pcie-dma-coherent-allocator/SKILL.md"
+    },
+    {
+      "name": "nvme-direct-admin-passthrough",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "NVM Express Specification",
+      "description": "Raw NVMe Command Set administration submission via /dev/nvme0 passthrough",
+      "integration": "Storage / SPDK",
+      "relative_path": "nvme-direct-admin-passthrough/SKILL.md"
+    },
+    {
+      "name": "nvme-atomic-write-units",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "NVM Express Specification",
+      "description": "NVMe Atomic Write Unit Normal (AWUN) verification for crash-consistent database commits",
+      "integration": "FileCRUD / Safety",
+      "relative_path": "nvme-atomic-write-units/SKILL.md"
+    },
+    {
+      "name": "nvme-zns-zoned-namespaces",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "NVM Express Specification",
+      "description": "Zoned Namespace append-only write placement for zero write amplification",
+      "integration": "Colibr\u00ec Storage",
+      "relative_path": "nvme-zns-zoned-namespaces/SKILL.md"
+    },
+    {
+      "name": "linux-btrfs-subvolume-snapshots",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Btrfs subvolume snapshot creation for instant sub-millisecond repository sandboxing",
+      "integration": "FileCRUD / GitWorktree",
+      "relative_path": "linux-btrfs-subvolume-snapshots/SKILL.md"
+    },
+    {
+      "name": "linux-zfs-arc-cache-tuning",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "OpenZFS Docs",
+      "description": "ZFS Adaptive Replacement Cache tuning and persistent L2ARC cache management",
+      "integration": "Colibr\u00ec Storage",
+      "relative_path": "linux-zfs-arc-cache-tuning/SKILL.md"
+    },
+    {
+      "name": "linux-dm-crypt-luks2-vault",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "LUKS2 authenticated disk encryption volume mounting with argon2id key derivation",
+      "integration": "AgentShield / Vault",
+      "relative_path": "linux-dm-crypt-luks2-vault/SKILL.md"
+    },
+    {
+      "name": "linux-fuse-userspace-filesystem",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Filesystem in Userspace implementation for virtualized agent artifact sandboxes",
+      "integration": "FileCRUD / Sandbox",
+      "relative_path": "linux-fuse-userspace-filesystem/SKILL.md"
+    },
+    {
+      "name": "linux-overlayfs-ephemeral-layer",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "OverlayFS copy-on-write scratch layers for non-destructive tool test runs",
+      "integration": "FileCRUD / Sandbox",
+      "relative_path": "linux-overlayfs-ephemeral-layer/SKILL.md"
+    },
+    {
+      "name": "linux-netlink-route-monitor",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Netlink socket subscription for routing table changes and link state transitions",
+      "integration": "Distributed P2P / Mesh",
+      "relative_path": "linux-netlink-route-monitor/SKILL.md"
+    },
+    {
+      "name": "linux-sysctl-tcp-bbr-congestion",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "TCP BBR v2/v3 congestion control socket option tuning for WAN cluster links",
+      "integration": "Distributed P2P / Mesh",
+      "relative_path": "linux-sysctl-tcp-bbr-congestion/SKILL.md"
+    },
+    {
+      "name": "linux-sysfs-cpu-frequency-governor",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "CPU scaling governor tuning to 'performance' mode during adversarial swarm execution",
+      "integration": "Engine / HostConfig",
+      "relative_path": "linux-sysfs-cpu-frequency-governor/SKILL.md"
+    },
+    {
+      "name": "linux-procfs-oom-score-adj",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "OOM killer score adjustment ensuring Tagisan daemon survives system memory exhaustion",
+      "integration": "Engine / Daemon",
+      "relative_path": "linux-procfs-oom-score-adj/SKILL.md"
+    },
+    {
+      "name": "linux-wireguard-tunnel-kernel",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "WireGuard Technical Whitepaper",
+      "description": "Kernel-space WireGuard UDP tunnel provisioning for secure P2P agent mesh",
+      "integration": "Distributed P2P / Mesh",
+      "relative_path": "linux-wireguard-tunnel-kernel/SKILL.md"
+    },
+    {
+      "name": "linux-vfio-iommu-userspace-pci",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Virtual Function I/O userspace DMA mapping with IOMMU protection",
+      "integration": "HardwareEngine / QEMU",
+      "relative_path": "linux-vfio-iommu-userspace-pci/SKILL.md"
+    },
+    {
+      "name": "linux-uio-userspace-interrupts",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Userspace I/O driver interrupt handling for FPGA and custom accelerator boards",
+      "integration": "HardwareEngine",
+      "relative_path": "linux-uio-userspace-interrupts/SKILL.md"
+    },
+    {
+      "name": "linux-audit-framework-kaudit",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "Kernel audit subsystem rule injection for real-time security incident detection",
+      "integration": "AgentShield / EDR",
+      "relative_path": "linux-audit-framework-kaudit/SKILL.md"
+    },
+    {
+      "name": "linux-fanotify-filesystem-guard",
+      "tier": "Tier 3: Low-Level Systems, Linux Kernel & Hardware Acceleration",
+      "source": "Linux Kernel Docs (kernel.org)",
+      "description": "fanotify FAN_ACCESS_PERM interception blocking unauthorized modifications before execution",
+      "integration": "AgentShield / EDR",
+      "relative_path": "linux-fanotify-filesystem-guard/SKILL.md"
+    },
+    {
+      "name": "smt-z3-qf-bv-bitvector",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "SMT-LIB / Z3 Project",
+      "description": "Quantifier-Free Bit-Vector theory constraint solving for integer overflow detection",
+      "integration": "Z3 SMT Solver Tool",
+      "relative_path": "smt-z3-qf-bv-bitvector/SKILL.md"
+    },
+    {
+      "name": "smt-z3-qf-arrays-extensionality",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "SMT-LIB / Z3 Project",
+      "description": "Array theory reasoning with read-over-write axioms for buffer safety proofs",
+      "integration": "Z3 SMT Solver Tool",
+      "relative_path": "smt-z3-qf-arrays-extensionality/SKILL.md"
+    },
+    {
+      "name": "smt-z3-craig-interpolation",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "SMT-LIB / Z3 Project",
+      "description": "Craig interpolant extraction from unsatisfiability proofs to synthesize loop invariants",
+      "integration": "Formal Invariant Prover",
+      "relative_path": "smt-z3-craig-interpolation/SKILL.md"
+    },
+    {
+      "name": "smt-z3-horn-clause-chc",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "SMT-LIB / Z3 Project",
+      "description": "Constrained Horn Clauses solving for automated safety property reachability",
+      "integration": "Formal Invariant Prover",
+      "relative_path": "smt-z3-horn-clause-chc/SKILL.md"
+    },
+    {
+      "name": "smt-z3-maxsmt-optimization",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "SMT-LIB / Z3 Project",
+      "description": "Weighted soft constraint optimization for optimal code refactoring decisions",
+      "integration": "Blast Radius Engine",
+      "relative_path": "smt-z3-maxsmt-optimization/SKILL.md"
+    },
+    {
+      "name": "smt-cvc5-string-theory",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "SMT-LIB / cvc5 Project",
+      "description": "Regular expressions and string constraint solving for parser vulnerability checks",
+      "integration": "AgentShield / Interceptor",
+      "relative_path": "smt-cvc5-string-theory/SKILL.md"
+    },
+    {
+      "name": "smt-cvc5-finite-field-arithmetic",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "SMT-LIB / cvc5 Project",
+      "description": "Finite field constraint solving for cryptographic circuit correctness validation",
+      "integration": "Post-Quantum Auditor",
+      "relative_path": "smt-cvc5-finite-field-arithmetic/SKILL.md"
+    },
+    {
+      "name": "tla-plus-spec-synthesis",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "TLA+ Foundation",
+      "description": "Synthesizing TLA+ state-machine specifications from Rust/Go distributed code",
+      "integration": "TLA+ Consensus Checker",
+      "relative_path": "tla-plus-spec-synthesis/SKILL.md"
+    },
+    {
+      "name": "tla-plus-cfg-invariants",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "TLA+ Foundation",
+      "description": "Configuring TLC model checker CFG invariants (TypeOK, Safety, MutualExclusion)",
+      "integration": "TLA+ Consensus Checker",
+      "relative_path": "tla-plus-cfg-invariants/SKILL.md"
+    },
+    {
+      "name": "tla-plus-liveness-temporal",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "TLA+ Foundation",
+      "description": "Fairness condition specifications and temporal liveness property verification",
+      "integration": "TLA+ Consensus Checker",
+      "relative_path": "tla-plus-liveness-temporal/SKILL.md"
+    },
+    {
+      "name": "tla-plus-symmetry-reduction",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "TLA+ Foundation",
+      "description": "Symmetry set permutations to prune combinatorial state explosion during TLC checks",
+      "integration": "TLA+ Consensus Checker",
+      "relative_path": "tla-plus-symmetry-reduction/SKILL.md"
+    },
+    {
+      "name": "tla-plus-tlapm-proof-assistant",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "TLA+ Foundation",
+      "description": "Mechanized formal proof derivation using TLA+ Proof Manager (TLAPM)",
+      "integration": "Formal Invariant Prover",
+      "relative_path": "tla-plus-tlapm-proof-assistant/SKILL.md"
+    },
+    {
+      "name": "llvm-ir-mem2reg-ssa",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "LLVM Language Reference (llvm.org)",
+      "description": "Promoting alloca memory operations into Static Single Assignment (SSA) phi-nodes",
+      "integration": "Compiler IR Optimizer",
+      "relative_path": "llvm-ir-mem2reg-ssa/SKILL.md"
+    },
+    {
+      "name": "llvm-ir-gvn-redundancy-elimination",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "LLVM Language Reference (llvm.org)",
+      "description": "Global Value Numbering to eliminate redundant computations and sub-expressions",
+      "integration": "Compiler IR Optimizer",
+      "relative_path": "llvm-ir-gvn-redundancy-elimination/SKILL.md"
+    },
+    {
+      "name": "llvm-ir-licm-loop-invariant",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "LLVM Language Reference (llvm.org)",
+      "description": "Hoisting loop-invariant computations outside innermost hot loops",
+      "integration": "Compiler IR Optimizer",
+      "relative_path": "llvm-ir-licm-loop-invariant/SKILL.md"
+    },
+    {
+      "name": "llvm-ir-polly-polyhedral-loops",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "LLVM Language Reference (llvm.org)",
+      "description": "Polyhedral model loop tiling and affine dependency transformations for SIMD/GPU",
+      "integration": "Compiler IR Optimizer",
+      "relative_path": "llvm-ir-polly-polyhedral-loops/SKILL.md"
+    },
+    {
+      "name": "llvm-ir-alias-analysis-tbaa",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "LLVM Language Reference (llvm.org)",
+      "description": "Type-Based Alias Analysis (TBAA) metadata generation to disambiguate raw pointers",
+      "integration": "Compiler IR Optimizer",
+      "relative_path": "llvm-ir-alias-analysis-tbaa/SKILL.md"
+    },
+    {
+      "name": "llvm-ir-coroutine-elision",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "LLVM Language Reference (llvm.org)",
+      "description": "CoroElide pass to convert dynamic heap frame allocations into static stack frames",
+      "integration": "Tokio Async Tuning",
+      "relative_path": "llvm-ir-coroutine-elision/SKILL.md"
+    },
+    {
+      "name": "llvm-ir-tail-call-elimination",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "LLVM Language Reference (llvm.org)",
+      "description": "Converting recursive tail calls into iterative loops to prevent stack overflows",
+      "integration": "Compiler IR Optimizer",
+      "relative_path": "llvm-ir-tail-call-elimination/SKILL.md"
+    },
+    {
+      "name": "llvm-ir-inline-cost-heuristics",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "LLVM Language Reference (llvm.org)",
+      "description": "Target-aware function inlining threshold tuning based on call site frequency",
+      "integration": "Compiler IR Optimizer",
+      "relative_path": "llvm-ir-inline-cost-heuristics/SKILL.md"
+    },
+    {
+      "name": "tree-sitter-rust-cst-extraction",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Tree-sitter Docs",
+      "description": "Incremental concrete syntax tree querying for Rust functions, structs, and traits",
+      "integration": "AST Codebase Graph",
+      "relative_path": "tree-sitter-rust-cst-extraction/SKILL.md"
+    },
+    {
+      "name": "tree-sitter-python-grammar-traversal",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Tree-sitter Docs",
+      "description": "Surgical CST traversal extracting Python decorators, async defs, and type hints",
+      "integration": "AST Codebase Graph",
+      "relative_path": "tree-sitter-python-grammar-traversal/SKILL.md"
+    },
+    {
+      "name": "tree-sitter-typescript-type-nodes",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Tree-sitter Docs",
+      "description": "Syntax tree pattern matching for TypeScript interfaces, unions, and generics",
+      "integration": "AST Codebase Graph",
+      "relative_path": "tree-sitter-typescript-type-nodes/SKILL.md"
+    },
+    {
+      "name": "tree-sitter-go-interface-resolver",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Tree-sitter Docs",
+      "description": "Go interface method set extraction and structural implementation edge building",
+      "integration": "AST Codebase Graph",
+      "relative_path": "tree-sitter-go-interface-resolver/SKILL.md"
+    },
+    {
+      "name": "tree-sitter-c-cpp-macro-expander",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Tree-sitter Docs",
+      "description": "C/C++ AST preprocessor directive mapping and symbol binding resolution",
+      "integration": "AST Codebase Graph",
+      "relative_path": "tree-sitter-c-cpp-macro-expander/SKILL.md"
+    },
+    {
+      "name": "rustc-mir-borrow-checker-rules",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "rustc dev guide (doc.rust-lang.org)",
+      "description": "MIR Non-Lexical Lifetimes (NLL) analysis and borrow region constraint debugging",
+      "integration": "Self-Healing Compiler (autofix)",
+      "relative_path": "rustc-mir-borrow-checker-rules/SKILL.md"
+    },
+    {
+      "name": "rustc-thir-pattern-exhaustiveness",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "rustc dev guide (doc.rust-lang.org)",
+      "description": "THIR match pattern exhaustiveness and unreachable branch diagnostic repair",
+      "integration": "Self-Healing Compiler (autofix)",
+      "relative_path": "rustc-thir-pattern-exhaustiveness/SKILL.md"
+    },
+    {
+      "name": "rustc-trait-solver-chalk",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "rustc dev guide (doc.rust-lang.org)",
+      "description": "First-order logic trait solver resolution for higher-ranked trait bounds (HRTB)",
+      "integration": "Self-Healing Compiler (autofix)",
+      "relative_path": "rustc-trait-solver-chalk/SKILL.md"
+    },
+    {
+      "name": "rustc-monomorphization-collector",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "rustc dev guide (doc.rust-lang.org)",
+      "description": "Generic code bloat analysis and monomorphization partition cost audits",
+      "integration": "AST Codebase Graph",
+      "relative_path": "rustc-monomorphization-collector/SKILL.md"
+    },
+    {
+      "name": "kani-rust-bounded-model-checking",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Kani Rust Verifier Docs",
+      "description": "Bounded model checking for unsafe Rust transmutes and pointer offset bounds",
+      "integration": "Kani Formal Verifier",
+      "relative_path": "kani-rust-bounded-model-checking/SKILL.md"
+    },
+    {
+      "name": "kani-rust-panic-freedom-proofs",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Kani Rust Verifier Docs",
+      "description": "Mathematical verification that memory accesses cannot trigger out-of-bounds panics",
+      "integration": "Kani Formal Verifier",
+      "relative_path": "kani-rust-panic-freedom-proofs/SKILL.md"
+    },
+    {
+      "name": "kani-rust-loop-unrolling-bounds",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Kani Rust Verifier Docs",
+      "description": "Configuring exact unrolling bounds for iterative algorithms in verification harnesses",
+      "integration": "Kani Formal Verifier",
+      "relative_path": "kani-rust-loop-unrolling-bounds/SKILL.md"
+    },
+    {
+      "name": "dafny-pre-post-condition-proofs",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Dafny Language Reference",
+      "description": "Synthesizing 'requires' preconditions and 'ensures' postconditions for critical logic",
+      "integration": "Formal Invariant Prover",
+      "relative_path": "dafny-pre-post-condition-proofs/SKILL.md"
+    },
+    {
+      "name": "dafny-loop-variant-decreases",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Dafny Language Reference",
+      "description": "Specifying 'decreases' termination metrics ensuring loop and recursion termination",
+      "integration": "Formal Invariant Prover",
+      "relative_path": "dafny-loop-variant-decreases/SKILL.md"
+    },
+    {
+      "name": "dafny-ghost-state-refinement",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Dafny Language Reference",
+      "description": "Ghost variables and ghost methods for specifying abstract behavioral invariants",
+      "integration": "Formal Invariant Prover",
+      "relative_path": "dafny-ghost-state-refinement/SKILL.md"
+    },
+    {
+      "name": "lean4-theorem-formalization",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Lean 4 Documentation",
+      "description": "Formalizing software architectural invariants as interactive machine-checked theorems",
+      "integration": "Formal Invariant Prover",
+      "relative_path": "lean4-theorem-formalization/SKILL.md"
+    },
+    {
+      "name": "lean4-tactic-metaprogramming",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Lean 4 Documentation",
+      "description": "Writing custom Lean 4 syntax tactics for automated equivalence reduction",
+      "integration": "Formal Invariant Prover",
+      "relative_path": "lean4-tactic-metaprogramming/SKILL.md"
+    },
+    {
+      "name": "petgraph-callgraph-scc-detection",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Petgraph Docs (docs.rs)",
+      "description": "Tarjan's strongly connected components algorithm detecting circular code dependencies",
+      "integration": "AST Codebase Graph",
+      "relative_path": "petgraph-callgraph-scc-detection/SKILL.md"
+    },
+    {
+      "name": "petgraph-dominator-tree-analysis",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Petgraph Docs (docs.rs)",
+      "description": "Computing immediate dominator nodes for control flow graphs and loop preheaders",
+      "integration": "Compiler IR Optimizer",
+      "relative_path": "petgraph-dominator-tree-analysis/SKILL.md"
+    },
+    {
+      "name": "petgraph-transitive-reduction",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Petgraph Docs (docs.rs)",
+      "description": "Pruning redundant transitive dependency edges in multi-crate workspace graphs",
+      "integration": "Blast Radius Engine",
+      "relative_path": "petgraph-transitive-reduction/SKILL.md"
+    },
+    {
+      "name": "oxc-ast-typescript-transformer",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Oxc Project Docs",
+      "description": "High-performance Rust-native AST visitor for TypeScript AST transformations",
+      "integration": "Polyglot Runtimes / Bun",
+      "relative_path": "oxc-ast-typescript-transformer/SKILL.md"
+    },
+    {
+      "name": "oxc-semantic-scope-hoisting",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Oxc Project Docs",
+      "description": "Lexical scope and symbol declaration binding analysis across ES modules",
+      "integration": "Polyglot Runtimes / Bun",
+      "relative_path": "oxc-semantic-scope-hoisting/SKILL.md"
+    },
+    {
+      "name": "syn-quote-rust-proc-macro",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "syn/quote Docs (docs.rs)",
+      "description": "Derive procedural macro token stream parsing and AST code synthesis",
+      "integration": "Self-Healing Compiler",
+      "relative_path": "syn-quote-rust-proc-macro/SKILL.md"
+    },
+    {
+      "name": "syn-visitor-ast-mutation",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "syn Docs (docs.rs)",
+      "description": "In-place syntax tree visitor applying surgical span substitutions to Rust code",
+      "integration": "Self-Healing Compiler",
+      "relative_path": "syn-visitor-ast-mutation/SKILL.md"
+    },
+    {
+      "name": "swc-ecmascript-minifier",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "SWC Docs",
+      "description": "Rust-based ECMAScript AST optimization, dead branch dropping, and scope mangling",
+      "integration": "Polyglot Runtimes",
+      "relative_path": "swc-ecmascript-minifier/SKILL.md"
+    },
+    {
+      "name": "libloading-ffi-symbol-lookup",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "libloading Docs (docs.rs)",
+      "description": "Dynamic shared object (.so/.dll) loading and C-ABI function symbol binding",
+      "integration": "Plugin Tier D (Native)",
+      "relative_path": "libloading-ffi-symbol-lookup/SKILL.md"
+    },
+    {
+      "name": "bindgen-c-header-transpiler",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "rust-bindgen Docs",
+      "description": "Automated C header file parsing and idiomatic Rust extern \"C\" binding generation",
+      "integration": "Baremetal / HardwareEngine",
+      "relative_path": "bindgen-c-header-transpiler/SKILL.md"
+    },
+    {
+      "name": "cxx-rust-cpp-bridge",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "CXX Project Docs",
+      "description": "Safe bidirectional C++ and Rust type interop with compile-time type validation",
+      "integration": "Plugin Tier D (Native)",
+      "relative_path": "cxx-rust-cpp-bridge/SKILL.md"
+    },
+    {
+      "name": "wasmparser-binary-validator",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "WebAssembly Wasmparser Docs",
+      "description": "Validating WebAssembly binary section headers, function signatures, and limits",
+      "integration": "Plugin Tier A (WASM)",
+      "relative_path": "wasmparser-binary-validator/SKILL.md"
+    },
+    {
+      "name": "wasmtime-fuel-metering",
+      "tier": "Tier 4: Compiler Engineering, Formal Verification & Symbolic Reasoning",
+      "source": "Wasmtime Docs",
+      "description": "Injecting execution fuel limits into WebAssembly instances to prevent infinite loops",
+      "integration": "Plugin Tier A (WASM)",
+      "relative_path": "wasmtime-fuel-metering/SKILL.md"
+    },
+    {
+      "name": "gguf-v3-header-zero-copy-parser",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "GGML/GGUF Spec",
+      "description": "Parsing GGUF v2/v3 metadata, tensor shapes, and offsets in 56 microseconds via memmap2",
+      "integration": "In-Process GGUF Tensor Engine",
+      "relative_path": "gguf-v3-header-zero-copy-parser/SKILL.md"
+    },
+    {
+      "name": "gguf-tensor-byte-offset-resolver",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "GGML/GGUF Spec",
+      "description": "Direct physical byte slice calculation for tensor weight chunks without buffer copies",
+      "integration": "In-Process GGUF Tensor Engine",
+      "relative_path": "gguf-tensor-byte-offset-resolver/SKILL.md"
+    },
+    {
+      "name": "gguf-kv-metadata-extractor",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "GGML/GGUF Spec",
+      "description": "Extracting context length, attention heads, rope frequency, and block counts",
+      "integration": "Deep Model Inspection",
+      "relative_path": "gguf-kv-metadata-extractor/SKILL.md"
+    },
+    {
+      "name": "gguf-tokenizer-bpe-unpacker",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "GGML/GGUF Spec",
+      "description": "Extracting Byte-Pair Encoding vocabularies and regex merge tables from GGUF headers",
+      "integration": "In-Process Tokenizer",
+      "relative_path": "gguf-tokenizer-bpe-unpacker/SKILL.md"
+    },
+    {
+      "name": "gguf-chat-template-jinja-eval",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "GGML/GGUF Spec",
+      "description": "Rendering ChatML, Llama-3, and DeepSeek chat templates directly from metadata",
+      "integration": "Ollama Server Daemon",
+      "relative_path": "gguf-chat-template-jinja-eval/SKILL.md"
+    },
+    {
+      "name": "ollama-manifest-blob-resolver",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Ollama.com Library",
+      "description": "Mapping friendly model tags to sha256 blob weights in ~/.ollama/models/manifests/",
+      "integration": "OllamaBlobResolver",
+      "relative_path": "ollama-manifest-blob-resolver/SKILL.md"
+    },
+    {
+      "name": "ollama-ndjson-streaming-daemon",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Ollama.com Protocol",
+      "description": "Serving streaming NDJSON /api/chat and /api/generate over Tokio HTTP on :11434",
+      "integration": "tgs serve Daemon",
+      "relative_path": "ollama-ndjson-streaming-daemon/SKILL.md"
+    },
+    {
+      "name": "ollama-heartbeat-keepalive-pulse",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Tagisan Engine Innovation",
+      "description": "Emitting 3s non-breaking heartbeat keepalives preventing HTTP timeout drops",
+      "integration": "Anti-Timeout Heartbeat",
+      "relative_path": "ollama-heartbeat-keepalive-pulse/SKILL.md"
+    },
+    {
+      "name": "quant-awq-4bit-gemm-fused",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "AutoAWQ Project Docs",
+      "description": "Activation-aware Weight Quantization 4-bit matrix multiplication with FP16 scale",
+      "integration": "Tensor Engine / Quant",
+      "relative_path": "quant-awq-4bit-gemm-fused/SKILL.md"
+    },
+    {
+      "name": "quant-gptq-exl2-kernel",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "ExLlamaV2 Specs",
+      "description": "Variable-bitrate quantization (2-6 bits) for sub-4GB VRAM execution of 8B models",
+      "integration": "Tensor Engine / Quant",
+      "relative_path": "quant-gptq-exl2-kernel/SKILL.md"
+    },
+    {
+      "name": "quant-k-quants-q4-k-m-dequant",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "GGML Library Reference",
+      "description": "Block-based K-quants (Q4_K_M, Q5_K_M) dot products using SIMD vectorized unrolling",
+      "integration": "Tensor Engine / Quant",
+      "relative_path": "quant-k-quants-q4-k-m-dequant/SKILL.md"
+    },
+    {
+      "name": "quant-fp8-e4m3-tensor-cores",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "NVIDIA Hopper Architecture Manual",
+      "description": "FP8 (E4M3 / E5M2) tensor core GEMM for high-speed inference without loss of precision",
+      "integration": "CUDA Tensor Engine",
+      "relative_path": "quant-fp8-e4m3-tensor-cores/SKILL.md"
+    },
+    {
+      "name": "triton-cuda-fused-attention-kernel",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Triton-lang.org Docs",
+      "description": "Fused multi-head attention kernel in OpenAI Triton eliminating intermediate HBM reads",
+      "integration": "Triton CUDA Fuser Tool",
+      "relative_path": "triton-cuda-fused-attention-kernel/SKILL.md"
+    },
+    {
+      "name": "triton-cuda-rmsnorm-kernel",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Triton-lang.org Docs",
+      "description": "Triton kernel fusing RMSNorm and residual additions into a single memory pass",
+      "integration": "Triton CUDA Fuser Tool",
+      "relative_path": "triton-cuda-rmsnorm-kernel/SKILL.md"
+    },
+    {
+      "name": "triton-cuda-rope-embedding-kernel",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Triton-lang.org Docs",
+      "description": "In-place Rotary Positional Embedding (RoPE) calculation for arbitrary sequence lengths",
+      "integration": "Triton CUDA Fuser Tool",
+      "relative_path": "triton-cuda-rope-embedding-kernel/SKILL.md"
+    },
+    {
+      "name": "triton-cuda-swiglu-activation",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Triton-lang.org Docs",
+      "description": "Fused SwiGLU activation and gate projection kernel optimizing feed-forward layers",
+      "integration": "Triton CUDA Fuser Tool",
+      "relative_path": "triton-cuda-swiglu-activation/SKILL.md"
+    },
+    {
+      "name": "vllm-paged-attention-kv-cache",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "vLLM Documentation",
+      "description": "Virtual memory block allocation for KV cache eliminating memory fragmentation",
+      "integration": "Colibr\u00ec Inference Engine",
+      "relative_path": "vllm-paged-attention-kv-cache/SKILL.md"
+    },
+    {
+      "name": "vllm-continuous-batching-scheduler",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "vLLM Documentation",
+      "description": "Iteration-level continuous request scheduling maximizing GPU compute utilization",
+      "integration": "tgs serve Daemon",
+      "relative_path": "vllm-continuous-batching-scheduler/SKILL.md"
+    },
+    {
+      "name": "vllm-chunked-prefill-pipelining",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "vLLM Documentation",
+      "description": "Interleaving large prompt prefill chunks with decode tokens to stabilize generation latency",
+      "integration": "Tensor Engine / Scheduler",
+      "relative_path": "vllm-chunked-prefill-pipelining/SKILL.md"
+    },
+    {
+      "name": "sglang-radix-attention-prefix-tree",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "SGLang Documentation",
+      "description": "Radix tree caching of prompt prefix key-value states for sub-millisecond reuse",
+      "integration": "In-Process KV Cache",
+      "relative_path": "sglang-radix-attention-prefix-tree/SKILL.md"
+    },
+    {
+      "name": "speculative-decoding-draft-verifier",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "ArXiv AI Research",
+      "description": "Draft model lookahead speculative token generation and target model parallel verification",
+      "integration": "Tensor Engine / Decoder",
+      "relative_path": "speculative-decoding-draft-verifier/SKILL.md"
+    },
+    {
+      "name": "speculative-ngram-lookahead-cache",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "ArXiv AI Research",
+      "description": "Self-speculative n-gram matching for deterministic syntax token lookahead acceleration",
+      "integration": "Tensor Engine / Decoder",
+      "relative_path": "speculative-ngram-lookahead-cache/SKILL.md"
+    },
+    {
+      "name": "colibri-moe-expert-router",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Colibr\u00ec MoE Architecture",
+      "description": "Top-k sparse expert gating and dynamic routing across local Mixture-of-Experts",
+      "integration": "Colibr\u00ec Superpowers",
+      "relative_path": "colibri-moe-expert-router/SKILL.md"
+    },
+    {
+      "name": "colibri-dual-ssd-striped-weights",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Colibr\u00ec MoE Architecture",
+      "description": "Asynchronous PCIe NVMe dual-drive striping streaming model weights at ~14.8 GB/s",
+      "integration": "Colibr\u00ec Inference Provider",
+      "relative_path": "colibri-dual-ssd-striped-weights/SKILL.md"
+    },
+    {
+      "name": "colibri-skill-jit-l1-l2-l3-paging",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Colibr\u00ec MoE Architecture",
+      "description": "3-tier memory model: L1 Active Context \u2194 L2 Warm RAM AST \u2194 L3 Cold NVMe Disk",
+      "integration": "PILOT JIT Engine",
+      "relative_path": "colibri-skill-jit-l1-l2-l3-paging/SKILL.md"
+    },
+    {
+      "name": "colibri-semantic-invariant-guard",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Colibr\u00ec MoE Architecture",
+      "description": "Zero lossy schema truncation enforcing complete compiler diagnostic preservation",
+      "integration": "Semantic Invariant Guard",
+      "relative_path": "colibri-semantic-invariant-guard/SKILL.md"
+    },
+    {
+      "name": "multimodal-clip-vision-encoder",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "OpenAI Research Papers",
+      "description": "Vision Transformer patch embedding projecting raw image bytes into LLM token space",
+      "integration": "Multimodal Computer Vision",
+      "relative_path": "multimodal-clip-vision-encoder/SKILL.md"
+    },
+    {
+      "name": "multimodal-moondream-feature-extractor",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Hugging Face Hub",
+      "description": "Lightweight 1.8B parameter vision feature extraction for edge image comprehension",
+      "integration": "Multimodal Computer Vision",
+      "relative_path": "multimodal-moondream-feature-extractor/SKILL.md"
+    },
+    {
+      "name": "multimodal-base64-image-preflight",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "W3C Media Specs",
+      "description": "Validating image dimensions, computing perceptual hash, and sanitizing EXIF metadata",
+      "integration": "Tool view_image / -i",
+      "relative_path": "multimodal-base64-image-preflight/SKILL.md"
+    },
+    {
+      "name": "local-embedding-bge-large-en",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Hugging Face Hub",
+      "description": "Generating 1024-dimensional dense semantic embeddings locally with zero network calls",
+      "integration": "Memory / Embeddings",
+      "relative_path": "local-embedding-bge-large-en/SKILL.md"
+    },
+    {
+      "name": "local-reranker-bge-reranker-v2",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Hugging Face Hub",
+      "description": "Cross-encoder scoring calculating precise relevance between queries and retrieved chunks",
+      "integration": "Memory / Retrieval",
+      "relative_path": "local-reranker-bge-reranker-v2/SKILL.md"
+    },
+    {
+      "name": "model-abliteration-refusal-removal",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "ArXiv Research (FailSpy)",
+      "description": "Mathematical orthogonalization of refusal direction vectors in attention weights",
+      "integration": "Abliterated Mode",
+      "relative_path": "model-abliteration-refusal-removal/SKILL.md"
+    },
+    {
+      "name": "flash-attention-v2-tiling",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Dao AI Research",
+      "description": "Online softmax tiling and block matrix multiplication for infinite context windows",
+      "integration": "Tensor Engine / Kernel",
+      "relative_path": "flash-attention-v2-tiling/SKILL.md"
+    },
+    {
+      "name": "flash-decoding-parallel-kv-split",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Dao AI Research",
+      "description": "Splitting sequence dimension across thread blocks for low-latency single token decoding",
+      "integration": "Tensor Engine / Kernel",
+      "relative_path": "flash-decoding-parallel-kv-split/SKILL.md"
+    },
+    {
+      "name": "tensorrt-llm-inflight-batching",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "NVIDIA Technical Docs",
+      "description": "Fine-grained GPU stream synchronization for concurrent swarm agent inferences",
+      "integration": "Swarm Hub / Engine",
+      "relative_path": "tensorrt-llm-inflight-batching/SKILL.md"
+    },
+    {
+      "name": "ggml-cuda-mmq-quantized-gemm",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "llama.cpp Technical Docs",
+      "description": "CUDA-accelerated matrix-vector operations directly on quantized integer tensors",
+      "integration": "Tensor Engine / GPU",
+      "relative_path": "ggml-cuda-mmq-quantized-gemm/SKILL.md"
+    },
+    {
+      "name": "ggml-vulkan-shader-compute",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Khronos Group Vulkan Spec",
+      "description": "Cross-platform Vulkan compute SPIR-V shaders for AMD and Intel GPU acceleration",
+      "integration": "Tensor Engine / GPU",
+      "relative_path": "ggml-vulkan-shader-compute/SKILL.md"
+    },
+    {
+      "name": "ggml-metal-mps-apple-silicon",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Apple Metal Framework Docs",
+      "description": "Metal Performance Shaders graph execution on unified Apple Silicon memory",
+      "integration": "Tensor Engine / Mac",
+      "relative_path": "ggml-metal-mps-apple-silicon/SKILL.md"
+    },
+    {
+      "name": "ggml-opencl-heterogeneous-compute",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Khronos Group OpenCL Spec",
+      "description": "OpenCL kernel compilation for legacy and integrated GPUs",
+      "integration": "Tensor Engine / GPU",
+      "relative_path": "ggml-opencl-heterogeneous-compute/SKILL.md"
+    },
+    {
+      "name": "ggml-blas-openblas-tuning",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "OpenBLAS Project Reference",
+      "description": "Thread affinity and SGEMM optimization for multi-socket enterprise CPU servers",
+      "integration": "Tensor Engine / CPU",
+      "relative_path": "ggml-blas-openblas-tuning/SKILL.md"
+    },
+    {
+      "name": "tokenizer-tiktoken-cl100k-bpe",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "OpenAI Cookbook",
+      "description": "Fast Rust-native BPE encoding for GPT-4o and Claude prompt token count budgeting",
+      "integration": "Prompt Budgeting",
+      "relative_path": "tokenizer-tiktoken-cl100k-bpe/SKILL.md"
+    },
+    {
+      "name": "tokenizer-sentencepiece-unigram",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Google Research Docs",
+      "description": "Unigram language model tokenization for Llama and Mistral family architectures",
+      "integration": "Tokenizer Engine",
+      "relative_path": "tokenizer-sentencepiece-unigram/SKILL.md"
+    },
+    {
+      "name": "tokenizer-huggingface-tokenizers-rs",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "Hugging Face Docs",
+      "description": "Multi-threaded tokenization pipelines with zero-allocation byte offsets",
+      "integration": "Tokenizer Engine",
+      "relative_path": "tokenizer-huggingface-tokenizers-rs/SKILL.md"
+    },
+    {
+      "name": "model-context-window-rope-scaling",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "ArXiv AI Research",
+      "description": "Linear and YaRN (Yet another RoPE extensioN) frequency scaling for 128k+ tokens",
+      "integration": "Context Window Engine",
+      "relative_path": "model-context-window-rope-scaling/SKILL.md"
+    },
+    {
+      "name": "model-kv-cache-fp8-quantization",
+      "tier": "Tier 5: Local Tensor Engines, Quantization & GGUF Acceleration",
+      "source": "vLLM Documentation",
+      "description": "Quantizing cached key and value tensors to FP8 halving memory requirements",
+      "integration": "Tensor Engine / KV Cache",
+      "relative_path": "model-kv-cache-fp8-quantization/SKILL.md"
+    },
+    {
+      "name": "swarm-dialectical-debate-engine",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Tagisan ng Talino / Lakandiwa",
+      "description": "3-round adversarial debate: Thesis (Proponent) -> Antithesis (Adversary) -> Synthesis (Lakandiwa)",
+      "integration": "Dialectical Debate Engine",
+      "relative_path": "swarm-dialectical-debate-engine/SKILL.md"
+    },
+    {
+      "name": "swarm-mixture-of-agents-layer",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Together AI MoA Spec / ArXiv",
+      "description": "Layer 1 parallel proposers over non-blocking channels aggregated by Layer 2 master model",
+      "integration": "Mixture-of-Agents (MoA)",
+      "relative_path": "swarm-mixture-of-agents-layer/SKILL.md"
+    },
+    {
+      "name": "swarm-borda-count-consensus",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Voting Theory / Social Choice",
+      "description": "Ranked-choice Borda count scoring aggregating multiple agent refactoring proposals",
+      "integration": "Consensus Voting Engine",
+      "relative_path": "swarm-borda-count-consensus/SKILL.md"
+    },
+    {
+      "name": "swarm-quadratic-voting-allocation",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Mechanism Design / ArXiv",
+      "description": "Quadratic token budget allocation to prioritize critical bug fixes during triage",
+      "integration": "Consensus Voting Engine",
+      "relative_path": "swarm-quadratic-voting-allocation/SKILL.md"
+    },
+    {
+      "name": "swarm-condorcet-pairwise-arbiter",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Voting Theory / Social Choice",
+      "description": "Pairwise Condorcet matrix comparison selecting the universally preferred architecture plan",
+      "integration": "Consensus Voting Engine",
+      "relative_path": "swarm-condorcet-pairwise-arbiter/SKILL.md"
+    },
+    {
+      "name": "swarm-petgraph-dag-pipeline",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Tagisan Architecture Blueprint",
+      "description": "5-stage parallel directed acyclic graph workflow execution with failure propagation",
+      "integration": "ECC 5-Stage Pipeline",
+      "relative_path": "swarm-petgraph-dag-pipeline/SKILL.md"
+    },
+    {
+      "name": "swarm-pilot-lookahead-prefetcher",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Colibr\u00ec MoE / PILOT Engine",
+      "description": "1-step lookahead skill and AST context prefetching based on planned subagent steps",
+      "integration": "PILOT JIT Engine",
+      "relative_path": "swarm-pilot-lookahead-prefetcher/SKILL.md"
+    },
+    {
+      "name": "swarm-atlas-routing-heat-decay",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Colibr\u00ec Cortex Atlas",
+      "description": "Empirical agent invocation frequency tracking with exponential heat decay routing",
+      "integration": "Swarm Atlas Dashboard",
+      "relative_path": "swarm-atlas-routing-heat-decay/SKILL.md"
+    },
+    {
+      "name": "swarm-p2p-cluster-mesh-gossip",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Distributed Systems / Tokio",
+      "description": "Tokio TCP coordinator and worker mesh on port 8765 distributing tool tasks",
+      "integration": "tgs swarm cluster",
+      "relative_path": "swarm-p2p-cluster-mesh-gossip/SKILL.md"
+    },
+    {
+      "name": "swarm-episodic-reflexion-vault",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research / Reflexion",
+      "description": "Case-law database indexing past compiler panics and verified solutions for instant retrieval",
+      "integration": "ReflexionVaultTool",
+      "relative_path": "swarm-episodic-reflexion-vault/SKILL.md"
+    },
+    {
+      "name": "swarm-git-worktree-isolation",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Git Internals / Tagisan",
+      "description": "Branching agent tasks into ephemeral git worktrees with diff validation before merge",
+      "integration": "GitWorktreeMergeArbiter",
+      "relative_path": "swarm-git-worktree-isolation/SKILL.md"
+    },
+    {
+      "name": "swarm-tdd-healing-feedback-loop",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Extreme Programming / Tagisan",
+      "description": "Autonomous diagnosis, surgical patch application, and re-compilation up to max attempts",
+      "integration": "tgs autofix",
+      "relative_path": "swarm-tdd-healing-feedback-loop/SKILL.md"
+    },
+    {
+      "name": "swarm-transitive-blast-radius",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Program Analysis / Petgraph",
+      "description": "Computing the ripple effect of symbol refactoring across modules and call sites",
+      "integration": "tgs graph",
+      "relative_path": "swarm-transitive-blast-radius/SKILL.md"
+    },
+    {
+      "name": "swarm-semantic-invariant-enforcer",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Tagisan Architectural Standard",
+      "description": "Enforcing zero SLA on speed but strict mathematical guarantee on schema completeness",
+      "integration": "Semantic Invariant Guard",
+      "relative_path": "swarm-semantic-invariant-enforcer/SKILL.md"
+    },
+    {
+      "name": "swarm-auto-sequential-scheduler",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Systems Architecture / Tagisan",
+      "description": "Sequential CPU-bound local model scheduling preventing cache trashing and swap freezes",
+      "integration": "Concurrency Manager",
+      "relative_path": "swarm-auto-sequential-scheduler/SKILL.md"
+    },
+    {
+      "name": "agent-cognitive-react-loop",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Interleaved Reasoning and Acting (ReAct) thought-action-observation cycle execution",
+      "integration": "Core Agent Loop",
+      "relative_path": "agent-cognitive-react-loop/SKILL.md"
+    },
+    {
+      "name": "agent-plan-and-solve-decomposition",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Decomposing multi-step programming tasks into explicit execution subgoals with dependencies",
+      "integration": "Goal Decomposition",
+      "relative_path": "agent-plan-and-solve-decomposition/SKILL.md"
+    },
+    {
+      "name": "agent-tree-of-thoughts-evaluator",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Exploring multiple reasoning branches simultaneously with heuristic evaluation scoring",
+      "integration": "Cognitive Engine",
+      "relative_path": "agent-tree-of-thoughts-evaluator/SKILL.md"
+    },
+    {
+      "name": "agent-graph-of-thoughts-merge",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Non-linear graph representation enabling synergistic combination of divergent reasoning paths",
+      "integration": "Cognitive Engine",
+      "relative_path": "agent-graph-of-thoughts-merge/SKILL.md"
+    },
+    {
+      "name": "agent-chain-of-verification-cove",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Generating verification questions and checking factual grounding before emitting answers",
+      "integration": "Verification Loop",
+      "relative_path": "agent-chain-of-verification-cove/SKILL.md"
+    },
+    {
+      "name": "agent-self-consistency-sampling",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Sampling multiple independent reasoning paths and selecting majority consensus verdict",
+      "integration": "Consensus Engine",
+      "relative_path": "agent-self-consistency-sampling/SKILL.md"
+    },
+    {
+      "name": "agent-critic-rubric-evaluator",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "LLM-as-a-Judge Literature",
+      "description": "Structured evaluation rubrics assessing code security, idiomatic patterns, and performance",
+      "integration": "LLM Judge",
+      "relative_path": "agent-critic-rubric-evaluator/SKILL.md"
+    },
+    {
+      "name": "agent-subagent-fanout-barrier",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Distributed Systems / Tokio",
+      "description": "Concurrent subagent dispatch with Tokio JoinSet barrier synchronization",
+      "integration": "Subagent Dispatcher",
+      "relative_path": "agent-subagent-fanout-barrier/SKILL.md"
+    },
+    {
+      "name": "agent-hierarchical-delegation",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "CrewAI / AutoGen Specs",
+      "description": "Supervisor agent coordinating specialist worker agents with role-scoped tools",
+      "integration": "Swarm Coordinator",
+      "relative_path": "agent-hierarchical-delegation/SKILL.md"
+    },
+    {
+      "name": "agent-dynamic-prompt-compression",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Selective summarization of prior conversational turns preserving invariant symbols",
+      "integration": "Context Compressor",
+      "relative_path": "agent-dynamic-prompt-compression/SKILL.md"
+    },
+    {
+      "name": "agent-sliding-window-attention-pruning",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "AI Research",
+      "description": "Evicting low-attention conversational tokens to maintain bounded context latency",
+      "integration": "Context Manager",
+      "relative_path": "agent-sliding-window-attention-pruning/SKILL.md"
+    },
+    {
+      "name": "agent-lost-in-the-middle-mitigation",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Re-positioning critical system prompts and invariants at both head and tail of prompt",
+      "integration": "Prompt Assembler",
+      "relative_path": "agent-lost-in-the-middle-mitigation/SKILL.md"
+    },
+    {
+      "name": "agent-rag-hyde-query-expansion",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Generating Hypothetical Document Embeddings (HyDE) to improve vector retrieval accuracy",
+      "integration": "RAG Pipeline",
+      "relative_path": "agent-rag-hyde-query-expansion/SKILL.md"
+    },
+    {
+      "name": "agent-rag-parent-document-retriever",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "LangChain Research",
+      "description": "Indexing granular small text chunks while returning full parent document context",
+      "integration": "RAG Pipeline",
+      "relative_path": "agent-rag-parent-document-retriever/SKILL.md"
+    },
+    {
+      "name": "agent-rag-multi-query-fusion",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "LangChain Research",
+      "description": "Generating multiple semantic query variations and fusing reciprocal rank results",
+      "integration": "RAG Pipeline",
+      "relative_path": "agent-rag-multi-query-fusion/SKILL.md"
+    },
+    {
+      "name": "agent-rag-contextual-compression",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "LangChain Research",
+      "description": "Extracting only query-relevant sentences from retrieved documents before prompt injection",
+      "integration": "RAG Pipeline",
+      "relative_path": "agent-rag-contextual-compression/SKILL.md"
+    },
+    {
+      "name": "agent-tool-use-schema-sanitizer",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "OpenAI / Anthropic Specs",
+      "description": "Validating tool JSON schema types, default values, and required parameters",
+      "integration": "ToolRegistry",
+      "relative_path": "agent-tool-use-schema-sanitizer/SKILL.md"
+    },
+    {
+      "name": "agent-tool-error-backoff-recovery",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Distributed Systems Specs",
+      "description": "Exponential backoff, jitter, and alternative tool fallback upon API failures",
+      "integration": "ToolRegistry",
+      "relative_path": "agent-tool-error-backoff-recovery/SKILL.md"
+    },
+    {
+      "name": "agent-structured-output-json-schema",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "JSON Schema Draft 2020-12",
+      "description": "Constrained decoding enforcing strict JSON schema compliance during token generation",
+      "integration": "Structured Output",
+      "relative_path": "agent-structured-output-json-schema/SKILL.md"
+    },
+    {
+      "name": "agent-pydantic-validation-repair",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Pydantic Documentation",
+      "description": "Automated re-prompting with validation error diagnostics when outputs violate schemas",
+      "integration": "Self-Healing Output",
+      "relative_path": "agent-pydantic-validation-repair/SKILL.md"
+    },
+    {
+      "name": "agent-state-machine-checkpointing",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "LangGraph Documentation",
+      "description": "Serializing agent execution state graphs to disk for crash resumption and time-travel",
+      "integration": "Session Persistence",
+      "relative_path": "agent-state-machine-checkpointing/SKILL.md"
+    },
+    {
+      "name": "agent-human-in-the-loop-interrupt",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "LangGraph Documentation",
+      "description": "Injecting human review pause points prior to irreversible filesystem or cloud mutations",
+      "integration": "Safety Approval",
+      "relative_path": "agent-human-in-the-loop-interrupt/SKILL.md"
+    },
+    {
+      "name": "agent-multi-turn-conversation-memory",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Semantic Kernel Specs",
+      "description": "Managing episodic, semantic, and working memory tiers across long-lived sessions",
+      "integration": "MemoryBackend",
+      "relative_path": "agent-multi-turn-conversation-memory/SKILL.md"
+    },
+    {
+      "name": "agent-zero-shot-cot-triggering",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Synthesizing step-by-step thinking tokens to unlock deep reasoning in base models",
+      "integration": "Prompt Engine",
+      "relative_path": "agent-zero-shot-cot-triggering/SKILL.md"
+    },
+    {
+      "name": "agent-few-shot-exemplar-selection",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Vector similarity search selecting the most relevant few-shot code examples",
+      "integration": "Prompt Engine",
+      "relative_path": "agent-few-shot-exemplar-selection/SKILL.md"
+    },
+    {
+      "name": "agent-synthetic-data-bootstrapping",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Anthropic Research",
+      "description": "Bootstrapping domain instruction datasets using high-capability teacher models",
+      "integration": "Dataset Generator",
+      "relative_path": "agent-synthetic-data-bootstrapping/SKILL.md"
+    },
+    {
+      "name": "agent-dpo-preference-alignment",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Direct Preference Optimization scoring for ranking multi-agent code completions",
+      "integration": "Consensus Engine",
+      "relative_path": "agent-dpo-preference-alignment/SKILL.md"
+    },
+    {
+      "name": "agent-constitutional-ai-critique",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Anthropic Research Papers",
+      "description": "Automated critique and revision loops against a set of explicit behavioral rules",
+      "integration": "AgentShield",
+      "relative_path": "agent-constitutional-ai-critique/SKILL.md"
+    },
+    {
+      "name": "agent-adversarial-red-teaming-probe",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "Cybersecurity AI Specs",
+      "description": "Simulating jailbreaks, prompt injection, and extraction attacks against system prompts",
+      "integration": "AgentShield",
+      "relative_path": "agent-adversarial-red-teaming-probe/SKILL.md"
+    },
+    {
+      "name": "agent-hallucination-entropy-audit",
+      "tier": "Tier 6: Multi-Agent Swarms, MoA & Cognitive Architecture",
+      "source": "ArXiv AI Research",
+      "description": "Monitoring token generation entropy to detect and halt speculative hallucination loops",
+      "integration": "Hallucination Detector",
+      "relative_path": "agent-hallucination-entropy-audit/SKILL.md"
+    },
+    {
+      "name": "mitre-t1059-command-shell-interceptor",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "MITRE ATT&CK (attack.mitre.org)",
+      "description": "Interception and AST token analysis of /bin/sh, bash, and cmd.exe commands before execution",
+      "integration": "AgentShield / tgs shield",
+      "relative_path": "mitre-t1059-command-shell-interceptor/SKILL.md"
+    },
+    {
+      "name": "mitre-t1071-c2-beacon-detector",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "MITRE ATT&CK (attack.mitre.org)",
+      "description": "Detecting periodic outbound HTTP/DNS beaconing patterns indicative of Command & Control",
+      "integration": "AgentShield / Network",
+      "relative_path": "mitre-t1071-c2-beacon-detector/SKILL.md"
+    },
+    {
+      "name": "mitre-t1053-cron-persistence-sentinel",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "MITRE ATT&CK (attack.mitre.org)",
+      "description": "Monitoring modifications to /etc/cron*, crontab, and systemd timers to block stealth persistence",
+      "integration": "AgentShield / FileWatch",
+      "relative_path": "mitre-t1053-cron-persistence-sentinel/SKILL.md"
+    },
+    {
+      "name": "mitre-t1098-account-manipulation-guard",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "MITRE ATT&CK (attack.mitre.org)",
+      "description": "Detecting unauthorized additions to /etc/sudoers, authorized_keys, and local admin groups",
+      "integration": "AgentShield / Audit",
+      "relative_path": "mitre-t1098-account-manipulation-guard/SKILL.md"
+    },
+    {
+      "name": "mitre-t1055-process-injection-blocker",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "MITRE ATT&CK (attack.mitre.org)",
+      "description": "Blocking ptrace, process_vm_writev, and /proc/$PID/mem tampering by spawned tools",
+      "integration": "AgentShield / Seccomp",
+      "relative_path": "mitre-t1055-process-injection-blocker/SKILL.md"
+    },
+    {
+      "name": "mitre-t1552-unsecured-credentials-scanner",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "MITRE ATT&CK (attack.mitre.org)",
+      "description": "Scanning code diffs and environment for private keys, AWS tokens, and hardcoded secrets",
+      "integration": "Secret Entropy Scanner",
+      "relative_path": "mitre-t1552-unsecured-credentials-scanner/SKILL.md"
+    },
+    {
+      "name": "mitre-t1041-exfiltration-over-c2-clamp",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "MITRE ATT&CK (attack.mitre.org)",
+      "description": "Clamping outbound socket byte buffers to prevent mass data exfiltration of source code",
+      "integration": "AgentShield / EDR",
+      "relative_path": "mitre-t1041-exfiltration-over-c2-clamp/SKILL.md"
+    },
+    {
+      "name": "mitre-t1036-masquerading-binary-verifier",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "MITRE ATT&CK (attack.mitre.org)",
+      "description": "Verifying executable binary ELF/PE hashes to prevent system utility spoofing (e.g. fake curl)",
+      "integration": "AgentShield / Binary",
+      "relative_path": "mitre-t1036-masquerading-binary-verifier/SKILL.md"
+    },
+    {
+      "name": "mitre-t1562-impair-defenses-alerter",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "MITRE ATT&CK (attack.mitre.org)",
+      "description": "Immediate panic if a tool attempts to disable AgentShield, iptables, or audit logs",
+      "integration": "AgentShield / Sentinel",
+      "relative_path": "mitre-t1562-impair-defenses-alerter/SKILL.md"
+    },
+    {
+      "name": "mitre-t1485-data-destruction-blocker",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "MITRE ATT&CK (attack.mitre.org)",
+      "description": "Intercepting destructive commands (rm -rf /, mkfs, dd of=/dev/sd*) and routing to atomic trash",
+      "integration": "FileCRUD / SafeRecycler",
+      "relative_path": "mitre-t1485-data-destruction-blocker/SKILL.md"
+    },
+    {
+      "name": "lazarus-apt38-reverse-shell-breaker",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "Cyber Threat Intelligence",
+      "description": "Detecting /dev/tcp, mkfifo netcat, and python pty interactive reverse shell signatures",
+      "integration": "AgentShield APT Defense",
+      "relative_path": "lazarus-apt38-reverse-shell-breaker/SKILL.md"
+    },
+    {
+      "name": "lazarus-crypto-address-poisoning-check",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "Cyber Threat Intelligence",
+      "description": "Validating EVM and Bitcoin recipient addresses against known malware clipboard poisoners",
+      "integration": "AgentShield / Crypto",
+      "relative_path": "lazarus-crypto-address-poisoning-check/SKILL.md"
+    },
+    {
+      "name": "lazarus-malicious-npm-postinstall-audit",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "Cyber Threat Intelligence",
+      "description": "Static analysis of package.json postinstall scripts for obfuscated base64 fetch payloads",
+      "integration": "AgentShield / Polyglot",
+      "relative_path": "lazarus-malicious-npm-postinstall-audit/SKILL.md"
+    },
+    {
+      "name": "owasp-llm01-prompt-injection-filter",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "OWASP GenAI Top 10 (owasp.org)",
+      "description": "Detecting direct and indirect prompt injection attempts in user inputs and web scrapes",
+      "integration": "Prompt Injection Defense",
+      "relative_path": "owasp-llm01-prompt-injection-filter/SKILL.md"
+    },
+    {
+      "name": "owasp-llm02-insecure-output-handling",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "OWASP GenAI Top 10 (owasp.org)",
+      "description": "Sanitizing LLM outputs before passing to system shells, browser DOM, or compilers",
+      "integration": "Semantic Invariant Guard",
+      "relative_path": "owasp-llm02-insecure-output-handling/SKILL.md"
+    },
+    {
+      "name": "owasp-llm03-training-data-poisoning",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "OWASP GenAI Top 10 (owasp.org)",
+      "description": "Verifying provenance and cryptographic hashes of training and fine-tuning datasets",
+      "integration": "Model Hub / Integrity",
+      "relative_path": "owasp-llm03-training-data-poisoning/SKILL.md"
+    },
+    {
+      "name": "owasp-llm04-model-denial-of-service",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "OWASP GenAI Top 10 (owasp.org)",
+      "description": "Limiting prompt token count and recursive generation depth to prevent compute exhaustion",
+      "integration": "Concurrency Manager",
+      "relative_path": "owasp-llm04-model-denial-of-service/SKILL.md"
+    },
+    {
+      "name": "owasp-llm05-supply-chain-vulnerability",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "OWASP GenAI Top 10 (owasp.org)",
+      "description": "Auditing third-party plugin manifests and WebAssembly packages for dependency CVEs",
+      "integration": "Plugin Tier A / B",
+      "relative_path": "owasp-llm05-supply-chain-vulnerability/SKILL.md"
+    },
+    {
+      "name": "owasp-llm06-sensitive-information-leak",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "OWASP GenAI Top 10 (owasp.org)",
+      "description": "Automatic PII, credit card, and API key scrubbing before prompt persistence to memory",
+      "integration": "MemoryBackend / Redact",
+      "relative_path": "owasp-llm06-sensitive-information-leak/SKILL.md"
+    },
+    {
+      "name": "owasp-llm07-insecure-plugin-design",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "OWASP GenAI Top 10 (owasp.org)",
+      "description": "Capability-based access control restricting plugins to explicit network and file scopes",
+      "integration": "Plugin Manifest / tgs-plugin",
+      "relative_path": "owasp-llm07-insecure-plugin-design/SKILL.md"
+    },
+    {
+      "name": "owasp-llm08-excessive-agency-restraint",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "OWASP GenAI Top 10 (owasp.org)",
+      "description": "Enforcing human confirmation modals for irreversible git pushes, deletes, and cloud edits",
+      "integration": "Safety Guardrail",
+      "relative_path": "owasp-llm08-excessive-agency-restraint/SKILL.md"
+    },
+    {
+      "name": "owasp-llm09-overreliance-hallucination",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "OWASP GenAI Top 10 (owasp.org)",
+      "description": "Automated compiler verification pass ensuring generated code compiles before acceptance",
+      "integration": "tgs autofix",
+      "relative_path": "owasp-llm09-overreliance-hallucination/SKILL.md"
+    },
+    {
+      "name": "owasp-llm10-model-theft-prevention",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "OWASP GenAI Top 10 (owasp.org)",
+      "description": "In-memory tensor encryption and zero-ambient memory access protecting weights",
+      "integration": "GGUF Engine / Security",
+      "relative_path": "owasp-llm10-model-theft-prevention/SKILL.md"
+    },
+    {
+      "name": "sigma-rule-suspicious-process-spawn",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "Sigma Rules Project",
+      "description": "Evaluating Sigma YAML rules against subprocess spawn events in real-time",
+      "integration": "AgentShield / EDR",
+      "relative_path": "sigma-rule-suspicious-process-spawn/SKILL.md"
+    },
+    {
+      "name": "sigma-rule-powershell-download-cradle",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "Sigma Rules Project",
+      "description": "Detecting Net.WebClient, Invoke-Expression (IEX), and encoded PowerShell execution",
+      "integration": "AgentShield / Windows",
+      "relative_path": "sigma-rule-powershell-download-cradle/SKILL.md"
+    },
+    {
+      "name": "sigma-rule-shadow-copy-deletion",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "Sigma Rules Project",
+      "description": "Intercepting vssadmin delete shadows or wmic shadowcopy delete ransomware behavior",
+      "integration": "AgentShield / Windows",
+      "relative_path": "sigma-rule-shadow-copy-deletion/SKILL.md"
+    },
+    {
+      "name": "yara-x-pattern-matching-engine",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "YARA-X Project Reference",
+      "description": "Scanning downloaded files and memory buffers using compiled YARA-X rules",
+      "integration": "AgentShield / MalwareScan",
+      "relative_path": "yara-x-pattern-matching-engine/SKILL.md"
+    },
+    {
+      "name": "yara-x-webshell-signature-scan",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "YARA-X Project Reference",
+      "description": "Detecting PHP, JSP, and ASPX webshell signatures in created workspace files",
+      "integration": "FileCRUD / Safety",
+      "relative_path": "yara-x-webshell-signature-scan/SKILL.md"
+    },
+    {
+      "name": "yara-x-obfuscated-entropy-eval",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "YARA-X Project Reference",
+      "description": "Flagging high-Shannon-entropy strings indicative of packed payloads or keys",
+      "integration": "Secret Entropy Scanner",
+      "relative_path": "yara-x-obfuscated-entropy-eval/SKILL.md"
+    },
+    {
+      "name": "nist-sp800-53-access-control-ac3",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "NIST CSRC (csrc.nist.gov)",
+      "description": "Enforcing Least Privilege and Role-Based Access Control on all agent tools",
+      "integration": "Zero Ambient Authority",
+      "relative_path": "nist-sp800-53-access-control-ac3/SKILL.md"
+    },
+    {
+      "name": "nist-sp800-53-audit-logging-au2",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "NIST CSRC (csrc.nist.gov)",
+      "description": "Immutable append-only JSONL logging of all tool calls, inputs, and results",
+      "integration": "NotificationHub / Audit",
+      "relative_path": "nist-sp800-53-audit-logging-au2/SKILL.md"
+    },
+    {
+      "name": "nist-sp800-53-crypto-protection-sc13",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "NIST CSRC (csrc.nist.gov)",
+      "description": "Validating that all internal communications use TLS 1.3 or WireGuard ChaCha20",
+      "integration": "P2P Cluster Mesh",
+      "relative_path": "nist-sp800-53-crypto-protection-sc13/SKILL.md"
+    },
+    {
+      "name": "cve-nvd-cvss-v3-score-parser",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "NVD Database (nvd.nist.gov)",
+      "description": "Parsing CVSS v3.1 vector strings to calculate exploitability and impact severity",
+      "integration": "Security Review",
+      "relative_path": "cve-nvd-cvss-v3-score-parser/SKILL.md"
+    },
+    {
+      "name": "cve-nvd-cpe-dependency-matcher",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "NVD Database (nvd.nist.gov)",
+      "description": "Matching crate, pip, and npm versions against published Common Platform Enumerations",
+      "integration": "Cargo Deny / Audit",
+      "relative_path": "cve-nvd-cpe-dependency-matcher/SKILL.md"
+    },
+    {
+      "name": "slsa-level-3-provenance-verifier",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "SLSA Framework Specs",
+      "description": "Verifying build attestation cryptographic signatures generated by secure builders",
+      "integration": "Plugin Tier A / D",
+      "relative_path": "slsa-level-3-provenance-verifier/SKILL.md"
+    },
+    {
+      "name": "sigstore-cosign-signature-verify",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "Sigstore Project Docs",
+      "description": "Validating OIDC keyless container and WebAssembly signatures with transparency logs",
+      "integration": "Plugin Tier A (WASM)",
+      "relative_path": "sigstore-cosign-signature-verify/SKILL.md"
+    },
+    {
+      "name": "cyclonedx-sbom-vulnerability-audit",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "CycloneDX Specification",
+      "description": "Parsing JSON SBOMs and cross-referencing components against known vulnerability feeds",
+      "integration": "Security Review",
+      "relative_path": "cyclonedx-sbom-vulnerability-audit/SKILL.md"
+    },
+    {
+      "name": "spdx-license-compliance-checker",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "SPDX Standards",
+      "description": "Verifying software licenses against approved enterprise policies (MIT, Apache, BSD)",
+      "integration": "Cargo Deny / Legal",
+      "relative_path": "spdx-license-compliance-checker/SKILL.md"
+    },
+    {
+      "name": "seccomp-custom-bpf-generator",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "Linux Kernel Security",
+      "description": "Synthesizing custom seccomp BPF bytecodes tailor-made for each agent execution tier",
+      "integration": "AgentShield / Sandbox",
+      "relative_path": "seccomp-custom-bpf-generator/SKILL.md"
+    },
+    {
+      "name": "apparmor-profile-enforcer",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "AppArmor Documentation",
+      "description": "Enforcing path-based AppArmor security profiles on child execution environments",
+      "integration": "AgentShield / Linux",
+      "relative_path": "apparmor-profile-enforcer/SKILL.md"
+    },
+    {
+      "name": "selinux-type-enforcement-context",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "SELinux Project Reference",
+      "description": "Auditing SELinux security contexts and type enforcement transitions on Fedora/RHEL",
+      "integration": "AgentShield / Linux",
+      "relative_path": "selinux-type-enforcement-context/SKILL.md"
+    },
+    {
+      "name": "constant-time-crypto-timing-auditor",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "Cryptography Engineering",
+      "description": "Auditing cryptographic code for branch-dependent execution time and cache side-channels",
+      "integration": "Post-Quantum Auditor",
+      "relative_path": "constant-time-crypto-timing-auditor/SKILL.md"
+    },
+    {
+      "name": "tls-certificate-pinning-validator",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "IETF RFC 7469",
+      "description": "Strict SPKI public key pinning for outbound HTTPS connections to critical AI providers",
+      "integration": "Network / TLS",
+      "relative_path": "tls-certificate-pinning-validator/SKILL.md"
+    },
+    {
+      "name": "zero-knowledge-proof-snark-verifier",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "ZK-Proof Specifications",
+      "description": "Verifying zero-knowledge proofs of execution without revealing proprietary inputs",
+      "integration": "Formal Invariant Prover",
+      "relative_path": "zero-knowledge-proof-snark-verifier/SKILL.md"
+    },
+    {
+      "name": "post-quantum-kyber-kem-handshake",
+      "tier": "Tier 7: Cybersecurity, EDR & Nation-State APT Defense",
+      "source": "NIST PQC Standards",
+      "description": "Quantum-resistant ML-KEM (Kyber) key encapsulation for inter-agent cluster links",
+      "integration": "P2P Cluster Mesh",
+      "relative_path": "post-quantum-kyber-kem-handshake/SKILL.md"
+    },
+    {
+      "name": "bun-native-microservice-serve",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Bun Documentation (bun.sh)",
+      "description": "Bun.serve HTTP server implementation with WebSocket upgrades and TLS",
+      "integration": "Bun Runtime / Polyglot",
+      "relative_path": "bun-native-microservice-serve/SKILL.md"
+    },
+    {
+      "name": "bun-test-runner-reporter",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Bun Documentation (bun.sh)",
+      "description": "Running unit tests via native bun:test with snapshot diffing and coverage",
+      "integration": "Bun Runtime / Polyglot",
+      "relative_path": "bun-test-runner-reporter/SKILL.md"
+    },
+    {
+      "name": "bun-worker-thread-pool",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Bun Documentation (bun.sh)",
+      "description": "Isolated multi-threaded worker pools executing background JavaScript tools",
+      "integration": "Bun Runtime / Polyglot",
+      "relative_path": "bun-worker-thread-pool/SKILL.md"
+    },
+    {
+      "name": "bun-ffi-native-dlopen",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Bun Documentation (bun.sh)",
+      "description": "Calling C-ABI shared libraries directly from TypeScript with zero-overhead FFI",
+      "integration": "Bun Runtime / Polyglot",
+      "relative_path": "bun-ffi-native-dlopen/SKILL.md"
+    },
+    {
+      "name": "cursor-rules-nextjs-app-router",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Cursor Directory (cursor.directory)",
+      "description": "Next.js 15 App Router conventions, React Server Components, and server actions",
+      "integration": "Web Design & Dev Vibe Coder",
+      "relative_path": "cursor-rules-nextjs-app-router/SKILL.md"
+    },
+    {
+      "name": "cursor-rules-react-19-compiler",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Cursor Directory (cursor.directory)",
+      "description": "React 19 useActionState, useOptimistic, and automated compiler memoization rules",
+      "integration": "Web Design & Dev Vibe Coder",
+      "relative_path": "cursor-rules-react-19-compiler/SKILL.md"
+    },
+    {
+      "name": "cursor-rules-tailwind-v4-theme",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Cursor Directory (cursor.directory)",
+      "description": "Tailwind CSS v4 @theme CSS-first configuration and OKLCH color token palettes",
+      "integration": "Web Design & Dev Vibe Coder",
+      "relative_path": "cursor-rules-tailwind-v4-theme/SKILL.md"
+    },
+    {
+      "name": "cursor-rules-shadcn-radix-primitives",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Cursor Directory (cursor.directory)",
+      "description": "Accessible UI components built on Radix primitives with Tailwind variant classes",
+      "integration": "Web Design & Dev Vibe Coder",
+      "relative_path": "cursor-rules-shadcn-radix-primitives/SKILL.md"
+    },
+    {
+      "name": "cursor-rules-svelte-5-runes",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Cursor Directory (cursor.directory)",
+      "description": "Svelte 5 $state, $derived, and $effect runes for fine-grained reactive stores",
+      "integration": "Web Design & Dev Vibe Coder",
+      "relative_path": "cursor-rules-svelte-5-runes/SKILL.md"
+    },
+    {
+      "name": "cursor-rules-vue-pinia-composition",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Cursor Directory (cursor.directory)",
+      "description": "Vue 3 Composition API with script setup and Pinia type-safe stores",
+      "integration": "Web Design & Dev Vibe Coder",
+      "relative_path": "cursor-rules-vue-pinia-composition/SKILL.md"
+    },
+    {
+      "name": "cursor-rules-astro-content-collections",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Cursor Directory (cursor.directory)",
+      "description": "Astro 5 islands architecture and type-safe Zod content collections",
+      "integration": "Web Design & Dev Vibe Coder",
+      "relative_path": "cursor-rules-astro-content-collections/SKILL.md"
+    },
+    {
+      "name": "cursor-rules-tanstack-query-v5",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Cursor Directory (cursor.directory)",
+      "description": "TanStack Query v5 optimistic mutations, query keys, and garbage collection",
+      "integration": "Web Design & Dev Vibe Coder",
+      "relative_path": "cursor-rules-tanstack-query-v5/SKILL.md"
+    },
+    {
+      "name": "cursor-rules-tanstack-router-type-safe",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Cursor Directory (cursor.directory)",
+      "description": "100% type-safe file-based routing, loader prefetching, and search params validation",
+      "integration": "Web Design & Dev Vibe Coder",
+      "relative_path": "cursor-rules-tanstack-router-type-safe/SKILL.md"
+    },
+    {
+      "name": "cursor-rules-trpc-e2e-contracts",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Cursor Directory (cursor.directory)",
+      "description": "End-to-end type safety between backend router and frontend client with zero codegen",
+      "integration": "Web Design & Dev Vibe Coder",
+      "relative_path": "cursor-rules-trpc-e2e-contracts/SKILL.md"
+    },
+    {
+      "name": "cursor-rules-hono-edge-api",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Cursor Directory (cursor.directory)",
+      "description": "Ultrafast Hono framework routing on Bun, Cloudflare Workers, and Deno",
+      "integration": "Web Design & Dev Vibe Coder",
+      "relative_path": "cursor-rules-hono-edge-api/SKILL.md"
+    },
+    {
+      "name": "vercel-ai-sdk-core-stream-text",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Vercel AI SDK Docs",
+      "description": "Streaming LLM completions using streamText and structured tools via streamObject",
+      "integration": "Web Interface / SSE",
+      "relative_path": "vercel-ai-sdk-core-stream-text/SKILL.md"
+    },
+    {
+      "name": "vercel-ai-sdk-rsc-generative-ui",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Vercel AI SDK Docs",
+      "description": "Streaming React components and dynamic generative UI directly from agent tools",
+      "integration": "Web Interface",
+      "relative_path": "vercel-ai-sdk-rsc-generative-ui/SKILL.md"
+    },
+    {
+      "name": "vercel-ai-sdk-data-stream-protocol",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Vercel AI SDK Docs",
+      "description": "Encoding tool calls, text deltas, and metadata into standardized SSE data streams",
+      "integration": "Ollama / HTTP Daemon",
+      "relative_path": "vercel-ai-sdk-data-stream-protocol/SKILL.md"
+    },
+    {
+      "name": "w3c-webgpu-compute-pipeline",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "W3C WebGPU Specification",
+      "description": "WGSL compute shaders for in-browser matrix multiplication and image processing",
+      "integration": "Multimodal / Vision",
+      "relative_path": "w3c-webgpu-compute-pipeline/SKILL.md"
+    },
+    {
+      "name": "w3c-webgl2-geometry-rendering",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "W3C WebGL Specification",
+      "description": "WebGL2 vertex/fragment shaders and framebuffers for interactive data canvas",
+      "integration": "Data Visualization",
+      "relative_path": "w3c-webgl2-geometry-rendering/SKILL.md"
+    },
+    {
+      "name": "threejs-r3f-3d-scene-builder",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Three.js / React Three Fiber Docs",
+      "description": "Declarative 3D scene graph rendering with PBR materials and camera controls",
+      "integration": "Web 3D Graphics",
+      "relative_path": "threejs-r3f-3d-scene-builder/SKILL.md"
+    },
+    {
+      "name": "framer-motion-spring-physics",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Motion for React Docs",
+      "description": "Spring-physics layout transitions, gesture tracking, and enter/exit animations",
+      "integration": "Web Design & Dev",
+      "relative_path": "framer-motion-spring-physics/SKILL.md"
+    },
+    {
+      "name": "rive-state-machine-canvas",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Rive Runtime Docs",
+      "description": "Interactive vector state-machine animations driven by AI agent telemetry states",
+      "integration": "Web Design & Dev",
+      "relative_path": "rive-state-machine-canvas/SKILL.md"
+    },
+    {
+      "name": "lottie-vector-animation-json",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "LottieFiles Documentation",
+      "description": "Lightweight vector animations rendered to SVG/Canvas based on operational status",
+      "integration": "NotificationHub",
+      "relative_path": "lottie-vector-animation-json/SKILL.md"
+    },
+    {
+      "name": "zod-v4-schema-validation-transforms",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Zod Documentation (zod.dev)",
+      "description": "Type inference, recursive schema parsing, and transformation pipelines",
+      "integration": "Structured Output",
+      "relative_path": "zod-v4-schema-validation-transforms/SKILL.md"
+    },
+    {
+      "name": "valibot-modular-schema-validator",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Valibot Documentation",
+      "description": "Tree-shakable sub-kilobyte schema validation for high-speed edge validation",
+      "integration": "Structured Output",
+      "relative_path": "valibot-modular-schema-validator/SKILL.md"
+    },
+    {
+      "name": "arktype-optimized-runtime-types",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "ArkType Documentation",
+      "description": "Sub-nanosecond syntax-driven runtime type checking using 100% TypeScript syntax",
+      "integration": "Structured Output",
+      "relative_path": "arktype-optimized-runtime-types/SKILL.md"
+    },
+    {
+      "name": "biome-lint-format-engine",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Biome Project Docs (biomejs.dev)",
+      "description": "Sub-millisecond Rust-native formatting and linting for JS/TS/JSX codebases",
+      "integration": "Self-Healing Compiler",
+      "relative_path": "biome-lint-format-engine/SKILL.md"
+    },
+    {
+      "name": "oxc-isolated-declarations-dts",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Oxc Project Docs",
+      "description": "Generating TypeScript .d.ts declaration files in Rust without running tsc",
+      "integration": "Self-Healing Compiler",
+      "relative_path": "oxc-isolated-declarations-dts/SKILL.md"
+    },
+    {
+      "name": "turbopack-incremental-compilation",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Next.js / Turbopack Docs",
+      "description": "Function-level caching and incremental compilation for lightning-fast HMR",
+      "integration": "Web Developer Experience",
+      "relative_path": "turbopack-incremental-compilation/SKILL.md"
+    },
+    {
+      "name": "vite-plugin-dev-server-proxy",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Vite Documentation (vite.dev)",
+      "description": "Vite rollup-based bundling, ES module serving, and API proxy routing",
+      "integration": "Web Developer Experience",
+      "relative_path": "vite-plugin-dev-server-proxy/SKILL.md"
+    },
+    {
+      "name": "storybook-component-isolation",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Storybook Documentation",
+      "description": "Component-driven development, visual regression test stories, and accessibility",
+      "integration": "Web Design & Dev",
+      "relative_path": "storybook-component-isolation/SKILL.md"
+    },
+    {
+      "name": "playwright-visual-diff-comparison",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Playwright Documentation",
+      "description": "Pixel-by-pixel screenshot comparison with configurable perceptual thresholds",
+      "integration": "Computer Vision / QA",
+      "relative_path": "playwright-visual-diff-comparison/SKILL.md"
+    },
+    {
+      "name": "axe-core-a11y-wcag-compliance",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Deque axe-core Docs",
+      "description": "Automated accessibility auditing validating WCAG 2.2 AA contrast and ARIA roles",
+      "integration": "Web Design & Dev",
+      "relative_path": "axe-core-a11y-wcag-compliance/SKILL.md"
+    },
+    {
+      "name": "lucide-react-icon-token-system",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Lucide Project Docs",
+      "description": "Consistent vector icon sets with customizable stroke width and color inheritance",
+      "integration": "Web Design & Dev",
+      "relative_path": "lucide-react-icon-token-system/SKILL.md"
+    },
+    {
+      "name": "cmdk-command-palette-interface",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Paco Coursey cmdk Docs",
+      "description": "Fast, composable, unstyled command palette primitive with keyboard navigation",
+      "integration": "TGS CLI / TUI",
+      "relative_path": "cmdk-command-palette-interface/SKILL.md"
+    },
+    {
+      "name": "sonner-toast-notification-stack",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Emil Kowalski Sonner Docs",
+      "description": "Customizable stacking toast notifications for asynchronous agent task updates",
+      "integration": "NotificationHub",
+      "relative_path": "sonner-toast-notification-stack/SKILL.md"
+    },
+    {
+      "name": "vaul-drawer-swipe-gesture",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Emil Kowalski Vaul Docs",
+      "description": "Physics-based mobile drawer component with smooth gesture dismissal",
+      "integration": "Web Design & Dev",
+      "relative_path": "vaul-drawer-swipe-gesture/SKILL.md"
+    },
+    {
+      "name": "zustand-vanilla-state-store",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Zustand Docs",
+      "description": "Unopinionated, microscopic state store with transient updates outside React render",
+      "integration": "Web Design & Dev",
+      "relative_path": "zustand-vanilla-state-store/SKILL.md"
+    },
+    {
+      "name": "jotai-atomic-dependency-graph",
+      "tier": "Tier 8: Modern Full-Stack, Bun/TS & UI/UX Vibe Coding",
+      "source": "Jotai Docs (jotai.org)",
+      "description": "Bottom-up atomic state architecture optimizing selective component re-renders",
+      "integration": "Web Design & Dev",
+      "relative_path": "jotai-atomic-dependency-graph/SKILL.md"
+    },
+    {
+      "name": "opentelemetry-otlp-grpc-exporter",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "OpenTelemetry (opentelemetry.io)",
+      "description": "Streaming distributed traces and span events over OTLP gRPC to Jaeger/Datadog",
+      "integration": "Telemetry Module",
+      "relative_path": "opentelemetry-otlp-grpc-exporter/SKILL.md"
+    },
+    {
+      "name": "opentelemetry-semantic-conventions",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "OpenTelemetry (opentelemetry.io)",
+      "description": "Instrumenting gen_ai.system, gen_ai.request.model, and token count attributes",
+      "integration": "Telemetry Module",
+      "relative_path": "opentelemetry-semantic-conventions/SKILL.md"
+    },
+    {
+      "name": "opentelemetry-baggage-propagation",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "W3C / OpenTelemetry",
+      "description": "Propagating contextual correlation metadata across asynchronous agent swarms",
+      "integration": "Telemetry Module",
+      "relative_path": "opentelemetry-baggage-propagation/SKILL.md"
+    },
+    {
+      "name": "opentelemetry-metric-counter-histogram",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "OpenTelemetry (opentelemetry.io)",
+      "description": "Recording high-resolution inference duration histograms and token counters",
+      "integration": "Telemetry Module",
+      "relative_path": "opentelemetry-metric-counter-histogram/SKILL.md"
+    },
+    {
+      "name": "prometheus-exposition-format-metrics",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Prometheus Docs (prometheus.io)",
+      "description": "Exposing /metrics in Prometheus text format for cluster-wide scraping",
+      "integration": "tgs serve Daemon",
+      "relative_path": "prometheus-exposition-format-metrics/SKILL.md"
+    },
+    {
+      "name": "grafana-dashboard-json-synthesis",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Grafana Documentation",
+      "description": "Auto-generating Grafana JSON dashboards visualizing agent swarm latency and cost",
+      "integration": "Telemetry Module",
+      "relative_path": "grafana-dashboard-json-synthesis/SKILL.md"
+    },
+    {
+      "name": "jaeger-trace-waterfall-analysis",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Jaeger Project Reference",
+      "description": "Analyzing distributed trace waterfalls to identify bottleneck tool executions",
+      "integration": "Telemetry Module",
+      "relative_path": "jaeger-trace-waterfall-analysis/SKILL.md"
+    },
+    {
+      "name": "ietf-rfc-9113-http2-multiplexing",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "IETF RFCs (ietf.org)",
+      "description": "HTTP/2 binary framing and concurrent stream multiplexing over a single TCP connection",
+      "integration": "Tokio HTTP Daemon",
+      "relative_path": "ietf-rfc-9113-http2-multiplexing/SKILL.md"
+    },
+    {
+      "name": "ietf-rfc-9204-qpack-compression",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "IETF RFCs (ietf.org)",
+      "description": "QPACK header compression for HTTP/3 and QUIC connections reducing transport overhead",
+      "integration": "Networking / Engine",
+      "relative_path": "ietf-rfc-9204-qpack-compression/SKILL.md"
+    },
+    {
+      "name": "ietf-rfc-9000-quic-transport",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "IETF RFCs (ietf.org)",
+      "description": "QUIC UDP-based transport protocol with zero head-of-line blocking for swarm mesh",
+      "integration": "P2P Cluster Mesh",
+      "relative_path": "ietf-rfc-9000-quic-transport/SKILL.md"
+    },
+    {
+      "name": "ietf-rfc-8446-tls-13-handshake",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "IETF RFCs (ietf.org)",
+      "description": "1-RTT TLS 1.3 cryptographic handshake with Forward Secrecy and AES-GCM / ChaCha20",
+      "integration": "Security / Network",
+      "relative_path": "ietf-rfc-8446-tls-13-handshake/SKILL.md"
+    },
+    {
+      "name": "ietf-rfc-6455-websocket-framing",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "IETF RFCs (ietf.org)",
+      "description": "Full-duplex WebSocket connection handling for low-latency live browser terminal streaming",
+      "integration": "TGS Web Daemon",
+      "relative_path": "ietf-rfc-6455-websocket-framing/SKILL.md"
+    },
+    {
+      "name": "ietf-rfc-8259-json-canonical-format",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "IETF RFCs (ietf.org)",
+      "description": "Canonical JSON serialization ensuring deterministic hash generation for caching",
+      "integration": "Cognitive Engine",
+      "relative_path": "ietf-rfc-8259-json-canonical-format/SKILL.md"
+    },
+    {
+      "name": "ietf-rfc-5905-ntp-clock-drift-bound",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "IETF RFCs (ietf.org)",
+      "description": "Verifying NTP clock skew bounds across cluster nodes before consensus voting",
+      "integration": "Consensus Engine",
+      "relative_path": "ietf-rfc-5905-ntp-clock-drift-bound/SKILL.md"
+    },
+    {
+      "name": "ptp-ieee-1588-truetime-sync",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "IEEE 1588 / TrueTime Specs",
+      "description": "Hardware timestamping and Precision Time Protocol synchronization with bounded uncertainty",
+      "integration": "PTP TrueTime Sentinel",
+      "relative_path": "ptp-ieee-1588-truetime-sync/SKILL.md"
+    },
+    {
+      "name": "raft-consensus-log-replication",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "USENIX ATC Paper (Ongaro & Ousterhout)",
+      "description": "Raft state machine leader election, log replication, and commit index safety",
+      "integration": "P2P Cluster Mesh",
+      "relative_path": "raft-consensus-log-replication/SKILL.md"
+    },
+    {
+      "name": "paxos-multi-paxos-ballot-voting",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Leslie Lamport Papers",
+      "description": "Multi-Paxos round-based consensus for distributed coordinator arbitration",
+      "integration": "P2P Cluster Mesh",
+      "relative_path": "paxos-multi-paxos-ballot-voting/SKILL.md"
+    },
+    {
+      "name": "gossip-swim-membership-protocol",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "IEEE Infocom Research",
+      "description": "SWIM weakly-consistent infection-style process group membership protocol with failure detection",
+      "integration": "P2P Cluster Mesh",
+      "relative_path": "gossip-swim-membership-protocol/SKILL.md"
+    },
+    {
+      "name": "chandy-lamport-distributed-snapshot",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "ACM Transactions",
+      "description": "Recording global state snapshots of running multi-agent swarms without pausing workers",
+      "integration": "Session Persistence",
+      "relative_path": "chandy-lamport-distributed-snapshot/SKILL.md"
+    },
+    {
+      "name": "vector-clock-causality-tracking",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Distributed Systems Research",
+      "description": "Vector clocks capturing happens-before causality relationships across distributed agents",
+      "integration": "P2P Cluster Mesh",
+      "relative_path": "vector-clock-causality-tracking/SKILL.md"
+    },
+    {
+      "name": "byzantine-fault-tolerant-pbft",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "OSDI Research (Castro & Liskov)",
+      "description": "Practical Byzantine Fault Tolerance withstanding malicious and compromised agent nodes",
+      "integration": "Consensus Engine",
+      "relative_path": "byzantine-fault-tolerant-pbft/SKILL.md"
+    },
+    {
+      "name": "circuit-breaker-hystrix-pattern",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Michael Nygard (Release It!)",
+      "description": "Trip-and-recover circuit breaker preventing cascade failures when APIs go down",
+      "integration": "ToolRegistry",
+      "relative_path": "circuit-breaker-hystrix-pattern/SKILL.md"
+    },
+    {
+      "name": "exponential-backoff-full-jitter",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "AWS Architecture Blog",
+      "description": "Decorrelated jitter algorithm smoothing retry spikes against throttled cloud endpoints",
+      "integration": "Provider Hub",
+      "relative_path": "exponential-backoff-full-jitter/SKILL.md"
+    },
+    {
+      "name": "rate-limiter-token-bucket-redis",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Distributed Rate Limiting Specs",
+      "description": "Distributed token bucket rate limiter tracking requests across all swarm workers",
+      "integration": "Provider Hub",
+      "relative_path": "rate-limiter-token-bucket-redis/SKILL.md"
+    },
+    {
+      "name": "rate-limiter-leaky-bucket-traffic",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Distributed Rate Limiting Specs",
+      "description": "Smooth rate-limiting queue ensuring steady egress request cadence to LLM providers",
+      "integration": "Provider Hub",
+      "relative_path": "rate-limiter-leaky-bucket-traffic/SKILL.md"
+    },
+    {
+      "name": "bulkhead-thread-isolation-pattern",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Michael Nygard (Release It!)",
+      "description": "Partitioning thread pools and CPU quotas so a stuck tool call never freezes the core",
+      "integration": "Tokio Swarm",
+      "relative_path": "bulkhead-thread-isolation-pattern/SKILL.md"
+    },
+    {
+      "name": "canary-progressive-traffic-shifting",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Cloud Native Deployment Specs",
+      "description": "Gradual 10% -> 25% -> 100% traffic shifting with automated rollback on error spikes",
+      "integration": "Canary Rollback Sentinel",
+      "relative_path": "canary-progressive-traffic-shifting/SKILL.md"
+    },
+    {
+      "name": "chaos-latency-packet-injection",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Principles of Chaos Engineering",
+      "description": "Injecting artificial 200ms latency spikes into local network links to test resilience",
+      "integration": "Chaos Fault Injector",
+      "relative_path": "chaos-latency-packet-injection/SKILL.md"
+    },
+    {
+      "name": "chaos-process-kill-monkey",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Principles of Chaos Engineering",
+      "description": "Randomly terminating non-critical worker subagents to verify automatic session healing",
+      "integration": "Chaos Fault Injector",
+      "relative_path": "chaos-process-kill-monkey/SKILL.md"
+    },
+    {
+      "name": "chaos-disk-exhaustion-simulator",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Principles of Chaos Engineering",
+      "description": "Simulating 100% disk full scenarios to verify atomic rollback to .bak snapshots",
+      "integration": "FileCRUD / Safety",
+      "relative_path": "chaos-disk-exhaustion-simulator/SKILL.md"
+    },
+    {
+      "name": "sre-golden-signals-monitoring",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Google SRE Handbook",
+      "description": "Tracking Latency, Traffic, Errors, and Saturation across all internal daemon endpoints",
+      "integration": "Telemetry Module",
+      "relative_path": "sre-golden-signals-monitoring/SKILL.md"
+    },
+    {
+      "name": "sre-error-budget-burn-rate-alert",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Google SRE Handbook",
+      "description": "Multiwindow multi-burn-rate alerting firing before SLO thresholds are breached",
+      "integration": "Telemetry Module",
+      "relative_path": "sre-error-budget-burn-rate-alert/SKILL.md"
+    },
+    {
+      "name": "sre-root-cause-analysis-triage",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "SRE Best Practices",
+      "description": "Correlating correlated log spikes, span failures, and recent commits for instant RCA",
+      "integration": "Failure Forensic Expert",
+      "relative_path": "sre-root-cause-analysis-triage/SKILL.md"
+    },
+    {
+      "name": "sre-postmortem-timeline-generator",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "SRE Best Practices",
+      "description": "Synthesizing chronological incident timelines, root causes, and prevention items",
+      "integration": "Failure Forensic Expert",
+      "relative_path": "sre-postmortem-timeline-generator/SKILL.md"
+    },
+    {
+      "name": "kubernetes-crd-operator-reconciliation",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Kubernetes Controller Docs",
+      "description": "Custom Resource Definition reconciliation loop ensuring desired cluster state",
+      "integration": "K8s CRD Sentinel",
+      "relative_path": "kubernetes-crd-operator-reconciliation/SKILL.md"
+    },
+    {
+      "name": "kubernetes-horizontal-pod-autoscaling",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Kubernetes Documentation",
+      "description": "Dynamic pod scaling based on custom queue depth and inference request backlog",
+      "integration": "K8s Operator",
+      "relative_path": "kubernetes-horizontal-pod-autoscaling/SKILL.md"
+    },
+    {
+      "name": "kubernetes-pdb-disruption-budget",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Kubernetes Documentation",
+      "description": "Pod Disruption Budget verification preventing accidental drain of active coordinator nodes",
+      "integration": "K8s Operator",
+      "relative_path": "kubernetes-pdb-disruption-budget/SKILL.md"
+    },
+    {
+      "name": "minio-s3-multipart-upload-tuning",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "MinIO Documentation",
+      "description": "Optimizing S3 multipart upload chunk sizes for high-throughput model weight checkpointing",
+      "integration": "Colibr\u00ec Storage",
+      "relative_path": "minio-s3-multipart-upload-tuning/SKILL.md"
+    },
+    {
+      "name": "clickhouse-merge-tree-partitioning",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "ClickHouse Documentation",
+      "description": "Designing efficient MergeTree partition keys and primary indices for multi-terabyte traces",
+      "integration": "Telemetry / Logs",
+      "relative_path": "clickhouse-merge-tree-partitioning/SKILL.md"
+    },
+    {
+      "name": "apache-arrow-flight-sql-transport",
+      "tier": "Tier 9: Distributed Systems, Telemetry & SRE Resiliency",
+      "source": "Apache Arrow Documentation",
+      "description": "High-performance streaming columnar data transport over gRPC between agent nodes",
+      "integration": "Data Processing",
+      "relative_path": "apache-arrow-flight-sql-transport/SKILL.md"
+    }
+  ]
+}
