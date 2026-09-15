@@ -19,11 +19,18 @@
 //! - `copilot_hardware_telemetry`: Windows Copilot+ PC NPU/DirectML hardware telemetry & carbon efficiency
 
 pub use crate::copilot::adr::CopilotAdrSyncTool;
+pub use crate::copilot::airgap::CopilotAirgapRouterTool;
+pub use crate::copilot::calendar::{CopilotCalendarPreReadTool, CopilotOutlookDraftTool};
 pub use crate::copilot::excel::CopilotExcelFunctionsTool;
+pub use crate::copilot::fabric::CopilotFabricQueryTool;
 pub use crate::copilot::hardware::CopilotHardwareTelemetryTool;
 pub use crate::copilot::incident::CopilotIncidentDebuggerTool;
+pub use crate::copilot::loop_pages::CopilotLoopSyncTool;
+pub use crate::copilot::ooxml::CopilotOoxmlGeneratorTool;
+pub use crate::copilot::perms_auditor::CopilotPermsAuditorTool;
 pub use crate::copilot::planner::CopilotPlannerSyncTool;
 pub use crate::copilot::purview::CopilotPurviewGuardTool;
+pub use crate::copilot::sharepoint_crawler::CopilotSharepointCrawlerTool;
 pub use crate::copilot::stream::CopilotStreamGatewayTool;
 
 use crate::copilot::graph::{ActionItem, GraphClient, TranscriptEntry};

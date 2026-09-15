@@ -228,6 +228,15 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotUniversalActionTool::new());
         registry.register_tool(crate::copilot::CopilotRmsGuardTool::new());
         registry.register_tool(crate::copilot::CopilotWorkloadIdentityTool::new());
+        // Phase 5 Enterprise Expansion Copilot Tools (8 tools -> 36 total)
+        registry.register_tool(crate::copilot::CopilotSharepointCrawlerTool::default());
+        registry.register_tool(crate::copilot::CopilotAirgapRouterTool::default());
+        registry.register_tool(crate::copilot::CopilotLoopSyncTool::default());
+        registry.register_tool(crate::copilot::CopilotOoxmlGeneratorTool::default());
+        registry.register_tool(crate::copilot::CopilotCalendarPreReadTool::default());
+        registry.register_tool(crate::copilot::CopilotOutlookDraftTool::default());
+        registry.register_tool(crate::copilot::CopilotFabricQueryTool::default());
+        registry.register_tool(crate::copilot::CopilotPermsAuditorTool::default());
         registry
     }
 
@@ -353,6 +362,15 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotUniversalActionTool::new());
         registry.register_tool(crate::copilot::CopilotRmsGuardTool::new());
         registry.register_tool(crate::copilot::CopilotWorkloadIdentityTool::new());
+        // Phase 5 Enterprise Expansion Copilot Tools (8 tools -> 36 total)
+        registry.register_tool(crate::copilot::CopilotSharepointCrawlerTool::default());
+        registry.register_tool(crate::copilot::CopilotAirgapRouterTool::default());
+        registry.register_tool(crate::copilot::CopilotLoopSyncTool::default());
+        registry.register_tool(crate::copilot::CopilotOoxmlGeneratorTool::default());
+        registry.register_tool(crate::copilot::CopilotCalendarPreReadTool::default());
+        registry.register_tool(crate::copilot::CopilotOutlookDraftTool::default());
+        registry.register_tool(crate::copilot::CopilotFabricQueryTool::default());
+        registry.register_tool(crate::copilot::CopilotPermsAuditorTool::default());
         registry
     }
 

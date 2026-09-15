@@ -147,6 +147,65 @@ impl GraphClient {
         &self.auth_manager
     }
 
+    /// Execute a generic GET request against Microsoft Graph API
+    pub async fn get(&self, endpoint: &str) -> Result<serde_json::Value> {
+        if self.is_mock() {
+            return Ok(serde_json::json!({ "value": [] }));
+        }
+        let token = self.auth_manager.get_valid_token().await?;
+        let url = if endpoint.starts_with("http") {
+            endpoint.to_string()
+        } else {
+            format!(
+                "{}/{}",
+                self.base_url.trim_end_matches('/'),
+                endpoint.trim_start_matches('/')
+            )
+        };
+        let res = self
+            .http
+            .get(&url)
+            .bearer_auth(token)
+            .send()
+            .await
+            .map_err(TagisanError::Network)?;
+        if !res.status().is_success() {
+            let err = res.text().await.unwrap_or_default();
+            return Err(TagisanError::BadResponse("microsoft_graph".to_string(), err));
+        }
+        res.json().await.map_err(TagisanError::Network)
+    }
+
+    /// Execute a generic POST request against Microsoft Graph API
+    pub async fn post(&self, endpoint: &str, payload: &serde_json::Value) -> Result<serde_json::Value> {
+        if self.is_mock() {
+            return Ok(serde_json::json!({ "id": "mock_id", "status": "success" }));
+        }
+        let token = self.auth_manager.get_valid_token().await?;
+        let url = if endpoint.starts_with("http") {
+            endpoint.to_string()
+        } else {
+            format!(
+                "{}/{}",
+                self.base_url.trim_end_matches('/'),
+                endpoint.trim_start_matches('/')
+            )
+        };
+        let res = self
+            .http
+            .post(&url)
+            .bearer_auth(token)
+            .json(payload)
+            .send()
+            .await
+            .map_err(TagisanError::Network)?;
+        if !res.status().is_success() {
+            let err = res.text().await.unwrap_or_default();
+            return Err(TagisanError::BadResponse("microsoft_graph".to_string(), err));
+        }
+        res.json().await.map_err(TagisanError::Network)
+    }
+
     /// Post a message to a Microsoft Teams channel or 1:1 / group chat
     /// Outbound DLP scanned via AgentShield prior to dispatch.
     pub async fn send_teams_message(&self, team_or_chat_id: &str, message: &str) -> Result<String> {

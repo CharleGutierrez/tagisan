@@ -5,22 +5,29 @@
 //! Enterprise Ecosystem (Teams, SharePoint/OneDrive, Outlook, Microsoft Search, and Copilot Studio).
 
 pub mod adr;
+pub mod airgap;
 pub mod auth;
 pub mod batch;
 pub mod bot;
 pub mod cae;
+pub mod calendar;
 pub mod connector;
 pub mod delta;
 pub mod excel;
+pub mod fabric;
 pub mod graph;
 pub mod hardware;
 pub mod incident;
 pub mod jwe;
+pub mod loop_pages;
 pub mod obo;
+pub mod ooxml;
+pub mod perms_auditor;
 pub mod planner;
 pub mod plugin;
 pub mod purview;
 pub mod sentinel;
+pub mod sharepoint_crawler;
 pub mod stream;
 pub mod subscriptions;
 pub mod throttling;
@@ -94,5 +101,32 @@ pub use tools::{
     CopilotExportDeckTool, CopilotExportReportTool, CopilotMeetingActionItemsTool,
     CopilotMeetingToCodeTool, CopilotSharepointGetTool, CopilotTeamsPostTool,
 };
+
+pub use airgap::{AirgapAuditReceipt, AirgapDecision, AirgapRouter, CopilotAirgapRouterTool};
+pub use calendar::{
+    CalendarEngine, CalendarEvent, CopilotCalendarPreReadTool, CopilotOutlookDraftTool,
+    DraftResult, LinkedPrInfo, PreReadBrief,
+};
+pub use fabric::{
+    CopilotFabricQueryTool, DaxQueryRequest, DaxQueryResult, FabricEngine, FabricWorkspace,
+    OneLakeTable,
+};
+pub use loop_pages::{
+    CopilotLoopSyncTool, LoopChecklistItem, LoopComponent, LoopComponentType, LoopPagesEngine,
+    LoopSyncAction, LoopSyncResult,
+};
+pub use ooxml::{
+    calculate_crc32, DocxSection, DocxTable, OoxmlEngine, OoxmlExportReport, PptxSlide,
+    ZipBuilder, CopilotOoxmlGeneratorTool,
+};
+pub use perms_auditor::{
+    CopilotPermsAuditorTool, GraphPermission, GraphPermissionType, ScopeAuditReport,
+    ScopeAuditorEngine,
+};
+pub use sharepoint_crawler::{
+    CopilotSharepointCrawlerTool, CrawlReport, CrawledDocument, DocumentChunk,
+    SharePointCrawlerEngine, SharePointSiteCrawlerConfig,
+};
+
 
 

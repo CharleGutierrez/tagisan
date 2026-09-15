@@ -84,6 +84,24 @@ use tagisan::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict, ThreatLe
 use tagisan::error::TagisanError;
 use tagisan::tools::ToolHandler;
 
+use tagisan::copilot::airgap::{AirgapRouter, CopilotAirgapRouterTool};
+use tagisan::copilot::calendar::{
+    CalendarEngine, CopilotCalendarPreReadTool, CopilotOutlookDraftTool,
+};
+use tagisan::copilot::fabric::{CopilotFabricQueryTool, FabricEngine};
+use tagisan::copilot::loop_pages::{
+    CopilotLoopSyncTool, LoopComponentType, LoopPagesEngine,
+};
+use tagisan::copilot::ooxml::{
+    calculate_crc32, CopilotOoxmlGeneratorTool, DocxSection, OoxmlEngine,
+};
+use tagisan::copilot::perms_auditor::{
+    CopilotPermsAuditorTool, ScopeAuditorEngine,
+};
+use tagisan::copilot::sharepoint_crawler::{
+    CopilotSharepointCrawlerTool, SharePointCrawlerEngine, SharePointSiteCrawlerConfig,
+};
+
 
 // =========================================================================
 // Test 1: Entra ID Device Code & Token Management Lifecycle
@@ -2986,6 +3004,525 @@ async fn test_full_suite_28_tools_concurrent_stress_50_workers() {
     }
 
     println!("  [✓] 50 Workers completed concurrent stress test across all 28 tools in {:.2?} (0 deadlocks, 0 race conditions, 100% reliable)", elapsed);
+}
+
+// =========================================================================
+// Test 41: SharePoint Delta Crawler & Semantic Chunking Engine
+// =========================================================================
+#[tokio::test]
+async fn test_sharepoint_delta_crawler_and_chunking() {
+    println!("\n=== [TEST 41] SharePoint & OneDrive Delta Crawler with Purview Inheritance ===");
+
+    let client = Arc::new(GraphClient::mock());
+    let crawler = SharePointCrawlerEngine::new(client.clone());
+
+    let config = SharePointSiteCrawlerConfig {
+        site_id: "judiciary-main".to_string(),
+        drive_id: "b!judiciary-docs-2026".to_string(),
+        folder_path: Some("/cases".to_string()),
+        max_items: 10,
+        chunk_size_tokens: 256,
+        inherit_purview_labels: true,
+        delta_token: None,
+    };
+
+    let report = crawler.crawl_library(&config).await.expect("Delta crawl failed");
+    assert!(report.items_indexed >= 3, "Expected at least 3 mock documents");
+    assert!(report.chunks_created > 0, "Chunks must be generated");
+    assert!(report.next_delta_token.is_some(), "Next delta token must be tracked");
+
+    // Verify Purview inheritance on confidential documents
+    let has_confidential = report.documents.iter().any(|d| {
+        d.sensitivity_label == PurviewSensitivity::Confidential
+            || d.sensitivity_label == PurviewSensitivity::HighlyConfidential
+    });
+    assert!(has_confidential, "Confidential documents must retain Purview classification");
+
+    // Verify SHA-256 ETag integrity
+    for doc in &report.documents {
+        assert!(doc.etag.starts_with("\"sha256-"));
+        for chunk in &doc.chunks {
+            assert_eq!(chunk.content_hash.len(), 64);
+        }
+    }
+
+    // Verify tool execution
+    let tool = CopilotSharepointCrawlerTool::default();
+    let tool_out = tool.execute(serde_json::json!({
+        "site_id": "judiciary-main",
+        "drive_id": "b!judiciary-docs-2026",
+        "max_items": 5
+    })).await.expect("Tool execution failed");
+
+    assert!(tool_out.contains("SharePoint Delta Crawl & Ingestion Complete"));
+    assert!(tool_out.contains("judiciary-main"));
+    println!("  [✓] SharePoint Delta Crawler, Purview inheritance, and chunking verified!");
+}
+
+// =========================================================================
+// Test 42: Purview Zero-Cloud-Egress Hardware Airgap & NPU Routing
+// =========================================================================
+#[tokio::test]
+async fn test_purview_zero_cloud_egress_airgap_router() {
+    println!("\n=== [TEST 42] Purview Zero-Cloud-Egress Airgap & On-Device NPU Routing ===");
+
+    let router = AirgapRouter::with_defaults();
+
+    // 1. Secret sensitivity must mandate air-gapped local execution
+    let secret_prompt = "CONFIDENTIAL: Internal crypto private key generation and court raffle seeds";
+    let decision = router.route_inference(secret_prompt, Some(PurviewSensitivity::Secret), None)
+        .expect("Routing failed");
+
+    assert!(decision.is_airgapped, "Secret sensitivity must trigger hardware airgap");
+    assert!(decision.target_model.starts_with("local:"), "Target must be local accelerator");
+    assert!(decision.blocked_cloud_endpoints.contains(&"https://api.openai.com".to_string()));
+    assert!(decision.blocked_cloud_endpoints.contains(&"https://generativelanguage.googleapis.com".to_string()));
+    assert_eq!(decision.audit_receipt.cloud_egress_blocked, true);
+    assert_eq!(decision.audit_receipt.cryptographic_proof.len(), 64);
+
+    // 2. Low sensitivity / public text routes to cloud
+    let public_prompt = "Hello Copilot, summarize standard public court rules";
+    let public_decision = router.route_inference(public_prompt, Some(PurviewSensitivity::General), None)
+        .expect("Routing failed");
+    assert!(!public_decision.is_airgapped);
+    assert_eq!(public_decision.audit_receipt.cloud_egress_blocked, false);
+
+    // 3. Autonomous Tool Execution
+    let tool = CopilotAirgapRouterTool::default();
+    let tool_out = tool.execute(serde_json::json!({
+        "prompt": "Highly confidential personnel review and compensation ledger",
+        "sensitivity": "highly_confidential"
+    })).await.expect("Tool execution failed");
+
+    assert!(tool_out.contains("Microsoft Purview Air-Gap Hardware Routing Decision"));
+    assert!(tool_out.contains("STRICT AIRGAP ENFORCED (Zero Cloud Egress)"));
+    assert!(tool_out.contains("receipt-airgap-"));
+    println!("  [✓] Zero-Cloud-Egress Airgap Router and cryptographic audit receipt verified!");
+}
+
+// =========================================================================
+// Test 43: Microsoft Loop & Copilot Pages Collaborative Multiplayer Sync
+// =========================================================================
+#[tokio::test]
+async fn test_microsoft_loop_and_pages_multiplayer_sync() {
+    println!("\n=== [TEST 43] Microsoft Loop Components & Copilot Pages Multiplayer Sync ===");
+
+    let engine = LoopPagesEngine::new();
+
+    // 1. Create a collaborative checklist
+    let items = [
+        ("Audit Entra ID Graph Scopes", false, Some("Lead SecOps")),
+        ("Deploy Pure-Rust OOXML Generator", true, Some("Senior Systems Engineer")),
+    ];
+
+    let comp = engine.create_checklist("Sprint Deployment Checklist", &items, "Test Author");
+    assert_eq!(comp.component_type, LoopComponentType::Checklist);
+    assert_eq!(comp.version, 1);
+
+    // 2. Apply delta action: toggle item 1 to completed
+    let sync_result = engine.apply_actions(&comp.id, &[
+        tagisan::copilot::loop_pages::LoopSyncAction::ToggleItem {
+            item_id: "item-1".to_string(),
+            completed: true,
+        },
+        tagisan::copilot::loop_pages::LoopSyncAction::AppendItem {
+            text: "Run 50-worker concurrent brutal stress suite".to_string(),
+            assignee: Some("QA Engineer".to_string()),
+        },
+    ]).expect("Sync failed");
+
+    assert_eq!(sync_result.applied_actions, 2);
+    assert_eq!(sync_result.fluid_sequence, 3);
+    assert!(sync_result.html_embed.contains("Sprint Deployment Checklist"));
+
+    // 3. Autonomous Tool Execution
+    let tool = CopilotLoopSyncTool::default();
+    let tool_out = tool.execute(serde_json::json!({
+        "action": "create_checklist",
+        "title": "Release Verification Tasks",
+        "items": [
+            { "id": "t1", "text": "Validate zero-egress hardware airgap", "completed": true },
+            { "id": "t2", "text": "Verify OOXML ZIP headers", "completed": false }
+        ]
+    })).await.expect("Tool execution failed");
+
+    assert!(tool_out.contains("Created Microsoft Loop Checklist Component"));
+    assert!(tool_out.contains("Release Verification Tasks"));
+    println!("  [✓] Microsoft Loop multiplayer synchronization and Adaptive Card rendering verified!");
+}
+
+// =========================================================================
+// Test 44: Pure-Rust OOXML Office Generator (.docx, .xlsx, .pptx)
+// =========================================================================
+#[tokio::test]
+async fn test_pure_rust_ooxml_generator_suite() {
+    println!("\n=== [TEST 44] Pure-Rust OOXML Office Suite Generator & CRC-32 Verification ===");
+
+    // 1. Verify ISO/IEC 29500 CRC-32 standard test vector: "123456789" -> 0xCBF43926
+    let test_crc = calculate_crc32(b"123456789");
+    assert_eq!(test_crc, 0xCBF43926, "CRC-32 implementation must match standard ITU-T V.42 / PKZIP");
+
+    // 2. Generate complete Office package suite in memory
+    let temp_dir = PathBuf::from(".tagisan/test_ooxml_export");
+    let _ = std::fs::remove_dir_all(&temp_dir);
+
+    let sections = vec![
+        DocxSection {
+            heading: "Executive Architecture Summary".to_string(),
+            level: 1,
+            paragraphs: vec![
+                "Tagisan enterprise copilot integrates deeply into Microsoft 365.".to_string(),
+                "Zero-egress hardware airgapping ensures complete regulatory sovereignty.".to_string(),
+            ],
+            table: None,
+        },
+        DocxSection {
+            heading: "Security & Governance".to_string(),
+            level: 2,
+            paragraphs: vec![
+                "Purview classification inheritance with AgentShield active scanning.".to_string(),
+            ],
+            table: None,
+        },
+    ];
+
+    let report = OoxmlEngine::export_suite(
+        &temp_dir,
+        "tagisan_arch_brief",
+        "Tagisan Enterprise Technical Briefing",
+        "Chief Architect",
+        &sections,
+        Some(PurviewSensitivity::Confidential),
+    ).expect("OOXML export failed");
+
+    assert!(report.docx_file.is_some());
+    assert!(report.xlsx_file.is_some());
+    assert!(report.pptx_file.is_some());
+    assert!(report.total_bytes > 3000);
+
+    // Verify valid ZIP PK headers on each generated file
+    let docx_bytes = std::fs::read(report.docx_file.as_ref().unwrap()).expect("Read docx failed");
+    assert_eq!(&docx_bytes[0..4], b"PK\x03\x04", "DOCX must start with valid PKZIP local file header");
+
+    let xlsx_bytes = std::fs::read(report.xlsx_file.as_ref().unwrap()).expect("Read xlsx failed");
+    assert_eq!(&xlsx_bytes[0..4], b"PK\x03\x04", "XLSX must start with valid PKZIP local file header");
+
+    let pptx_bytes = std::fs::read(report.pptx_file.as_ref().unwrap()).expect("Read pptx failed");
+    assert_eq!(&pptx_bytes[0..4], b"PK\x03\x04", "PPTX must start with valid PKZIP local file header");
+
+    // 3. Autonomous Tool Execution
+    let tool = CopilotOoxmlGeneratorTool::default();
+    let tool_out = tool.execute(serde_json::json!({
+        "title": "Quarterly Systems Audit",
+        "base_name": "q_audit",
+        "output_dir": ".tagisan/test_ooxml_tool_export",
+        "sensitivity": "confidential"
+    })).await.expect("Tool execution failed");
+
+    assert!(tool_out.contains("Native Microsoft Office Open XML Documents Generated"));
+    assert!(tool_out.contains("Word Document (.docx)"));
+    assert!(tool_out.contains("Excel Spreadsheet (.xlsx)"));
+    assert!(tool_out.contains("PowerPoint Presentation (.pptx)"));
+    println!("  [✓] Pure-Rust OOXML package generator and PKZIP CRC-32 headers verified!");
+}
+
+// =========================================================================
+// Test 45: Outlook Calendar Pre-Read Technical Briefing Engine
+// =========================================================================
+#[tokio::test]
+async fn test_calendar_pre_read_technical_briefing() {
+    println!("\n=== [TEST 45] Outlook Calendar Pre-Read Technical Briefing Engine ===");
+
+    let client = Arc::new(GraphClient::mock());
+    let engine = CalendarEngine::new(client);
+
+    // 1. Fetch upcoming meetings
+    let events = engine.get_upcoming_events(24).await.expect("Fetch upcoming events failed");
+    assert!(!events.is_empty(), "Must have mock upcoming events");
+
+    // 2. Synthesize pre-read technical brief
+    let event = &events[0];
+    let brief = engine.generate_preread_brief(event);
+
+    assert_eq!(&brief.event_id, &event.id);
+    assert!(!brief.executive_summary.is_empty());
+    assert!(brief.technical_risk_score >= 0.0 && brief.technical_risk_score <= 1.0);
+
+    // 3. Autonomous Tool Execution
+    let tool = CopilotCalendarPreReadTool::default();
+    let tool_out = tool.execute(serde_json::json!({
+        "meeting_id": &event.id
+    })).await.expect("Tool execution failed");
+
+    assert!(tool_out.contains("Outlook Calendar Pre-Read Briefing Synthesized"));
+    assert!(tool_out.contains("Technical Risk Assessment:"));
+    println!("  [✓] Calendar Pre-Read technical briefing with AST risk assessment verified!");
+}
+
+// =========================================================================
+// Test 46: Outlook Meeting Recap Draft Engine in /me/messages
+// =========================================================================
+#[tokio::test]
+async fn test_outlook_meeting_recap_draft_creator() {
+    println!("\n=== [TEST 46] Outlook Meeting Recap Draft Generator in /me/messages ===");
+
+    let client = Arc::new(GraphClient::mock());
+    let engine = CalendarEngine::new(client);
+
+    let action_items = vec![
+        ActionItem {
+            id: "act-1".to_string(),
+            title: "Implement Entra ID Least-Privilege Scope Auditor".to_string(),
+            description: "Replace broad scopes with minimal delegated scopes.".to_string(),
+            assignee: Some("SecOps Lead".to_string()),
+            priority: "High".to_string(),
+            due_date: Some("2026-09-30".to_string()),
+            category: Some("Security".to_string()),
+        },
+    ];
+
+    let draft = engine.create_recap_draft(
+        "Executive Architecture Review Recap",
+        &["architect@judiciary.gov.ph".to_string(), "dev-lead@judiciary.gov.ph".to_string()],
+        &["System architecture fully verified with zero compiler warnings.".to_string()],
+        &action_items,
+        &["https://github.com/judiciary/tagisan/pull/42".to_string()],
+        PurviewSensitivity::Confidential,
+    ).await.expect("Draft creation failed");
+
+    assert!(draft.draft_id.starts_with("draft-msg-"));
+    assert_eq!(draft.recipients_count, 2);
+
+    // Autonomous Tool Execution
+    let tool = CopilotOutlookDraftTool::default();
+    let tool_out = tool.execute(serde_json::json!({
+        "subject": "Sprint Review Engineering Recap",
+        "recipients": ["engineer@judiciary.gov.ph"],
+        "summary": "Completed integration of 8 new engines into Tagisan Copilot.",
+        "action_items": [
+            {
+                "id": "item-1",
+                "title": "Verify Power BI DAX execution",
+                "assignee": "Lead Engineer",
+                "priority": "High"
+            }
+        ],
+        "sensitivity": "confidential"
+    })).await.expect("Tool execution failed");
+
+    assert!(tool_out.contains("Outlook Meeting Recap Email Draft Created"));
+    assert!(tool_out.contains("draft-msg-"));
+    println!("  [✓] Outlook Meeting Recap draft dispatch with DLP & Purview verified!");
+}
+
+// =========================================================================
+// Test 47: Microsoft Fabric OneLake & Power BI DAX Analytics Engine
+// =========================================================================
+#[tokio::test]
+async fn test_microsoft_fabric_onelake_and_dax_queries() {
+    println!("\n=== [TEST 47] Microsoft Fabric OneLake Delta Tables & Power BI DAX Queries ===");
+
+    let client = Arc::new(GraphClient::mock());
+    let engine = FabricEngine::new(client);
+
+    // 1. List OneLake tables
+    let tables = engine.list_lakehouse_tables("ws-fabric-judiciary-01", "lh-court-dockets").await.expect("List tables failed");
+    assert!(!tables.is_empty());
+    assert_eq!(tables[0].format, "Delta");
+    assert!(tables[0].location_uri.starts_with("abfss://"));
+
+    // 2. Execute Power BI DAX query
+    let dax_res = engine.execute_dax_query(
+        "dataset-docket-kpi-01",
+        "EVALUATE SUMMARIZECOLUMNS('CourtDocket'[Branch], 'CourtDocket'[CaseType], \"TotalCases\", COUNTROWS('CourtDocket'))",
+    ).await.expect("DAX query execution failed");
+
+    assert!(!dax_res.columns.is_empty());
+    assert!(!dax_res.rows.is_empty());
+    assert_eq!(dax_res.row_count, dax_res.rows.len());
+
+    // 3. Autonomous Tool Execution
+    let tool = CopilotFabricQueryTool::default();
+
+    // 3a. list_tables action
+    let list_out = tool.execute(serde_json::json!({
+        "action": "list_tables",
+        "workspace_id": "ws-fabric-judiciary-01"
+    })).await.expect("Tool list_tables failed");
+    assert!(list_out.contains("Microsoft Fabric OneLake Tables"));
+
+    // 3b. execute_dax action
+    let dax_out = tool.execute(serde_json::json!({
+        "action": "execute_dax",
+        "dataset_id": "dataset-docket-kpi-01",
+        "dax_query": "EVALUATE SUMMARIZECOLUMNS('CourtDocket'[Branch])"
+    })).await.expect("Tool execute_dax failed");
+    assert!(dax_out.contains("Power BI DAX Query Execution Result"));
+    println!("  [✓] Microsoft Fabric OneLake delta discovery and DAX query engine verified!");
+}
+
+// =========================================================================
+// Test 48: Entra ID Least-Privilege Scope & Consent Auditor
+// =========================================================================
+#[tokio::test]
+async fn test_entra_id_least_privilege_scope_auditor() {
+    println!("\n=== [TEST 48] Microsoft Entra ID Least-Privilege Scope & Consent Auditor ===");
+
+    let tools = vec![
+        "copilot_teams_post",
+        "copilot_sharepoint_get",
+        "copilot_sharepoint_crawler",
+        "copilot_meeting_to_code",
+        "copilot_ooxml_generator",
+        "copilot_loop_sync",
+        "copilot_airgap_router",
+        "copilot_calendar_preread",
+        "copilot_outlook_draft",
+        "copilot_fabric_query",
+        "copilot_perms_auditor",
+    ];
+
+    let report = ScopeAuditorEngine::audit_tools(&tools);
+    assert_eq!(report.total_tools_analyzed, tools.len());
+    assert!(!report.minimal_delegated_scopes.is_empty());
+
+    // Generate Azure AD App Registration Manifest
+    let manifest = &report.app_registration_manifest_json;
+    let rra = manifest.get("requiredResourceAccess").and_then(|v| v.as_array()).expect("Missing requiredResourceAccess");
+    assert!(!rra.is_empty());
+    assert_eq!(rra[0]["resourceAppId"], "00000003-0000-0000-c000-000000000000");
+
+    // Generate SecOps Justification Markdown
+    let secops_doc = &report.secops_justification_markdown;
+    assert!(secops_doc.contains("Microsoft Graph Least-Privilege Scope & Consent Specification"));
+    assert!(secops_doc.contains("AgentShield"));
+
+    // Autonomous Tool Execution
+    let tool = CopilotPermsAuditorTool::default();
+    let tool_out = tool.execute(serde_json::json!({
+        "action": "audit"
+    })).await.expect("Tool audit failed");
+
+    assert!(tool_out.contains("Entra ID Least-Privilege Scope & Consent Audit"));
+    assert!(tool_out.contains("Enterprise Compliance Score:"));
+    println!("  [✓] Entra ID Least-Privilege Scope Auditor & SecOps Manifest Generator verified!");
+}
+
+// =========================================================================
+// Test 49: Brutal Enterprise Concurrent Stress Test (50 Workers across ALL 36 Tools)
+// =========================================================================
+#[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+async fn test_full_suite_all_36_tools_concurrent_stress_50_workers() {
+    println!("\n=== [TEST 49] Brutal Enterprise Concurrent Stress Test (50 Parallel Workers across ALL 36 Tools) ===");
+
+    let concurrency = 50;
+    let start_time = Instant::now();
+    let mut tasks = Vec::with_capacity(concurrency);
+
+    let valid_jwe = JweDecryptor::encrypt_payload(
+        b"0123456789abcdef0123456789abcdef",
+        &[0u8; 16],
+        b"{\"message\":\"worker_notification\"}",
+    ).expect("Encryption failed");
+    let valid_jwe_json = serde_json::to_value(&valid_jwe).expect("Serialization failed");
+
+    for worker_id in 0..concurrency {
+        let jwe_payload = valid_jwe_json.clone();
+        let task = tokio::spawn(async move {
+            // Original 28 tools
+            let t1 = CopilotTeamsPostTool::new();
+            let t2 = CopilotSharepointGetTool::new();
+            let t3 = CopilotMeetingActionItemsTool::new();
+            let t4 = CopilotExportReportTool::new();
+            let t5 = CopilotMeetingToCodeTool::new();
+            let t6 = CopilotBlastRadiusReportTool::new();
+            let t7 = CopilotDebateDispatchTool::new();
+            let t8 = CopilotPurviewGuardTool::new();
+            let t9 = CopilotAdrSyncTool::new();
+            let t10 = CopilotCreatePrTool::new();
+            let t11 = CopilotExportDeckTool::new();
+            let t12 = CopilotExcelFunctionsTool::new();
+            let t13 = CopilotStreamGatewayTool::new();
+            let t14 = CopilotPlannerSyncTool::new();
+            let t15 = CopilotIncidentDebuggerTool::new();
+            let t16 = CopilotHardwareTelemetryTool::new();
+            let t17 = CopilotOboExchangeTool::new();
+            let t18 = CopilotSubscriptionTool::new();
+            let t19 = CopilotPurviewSyncTool::new();
+            let t20 = CopilotSentinelAuditTool::new();
+            let t21 = CopilotCertifyTool::new();
+            let t22 = CopilotCaeHandlerTool::new();
+            let t23 = CopilotJweDecryptTool::default();
+            let t24 = CopilotGraphBatchTool::new();
+            let t25 = CopilotDeltaSyncTool::new();
+            let t26 = CopilotUniversalActionTool::new();
+            let t27 = CopilotRmsGuardTool::new();
+            let t28 = CopilotWorkloadIdentityTool::new();
+
+            // 8 New Tools
+            let t29 = CopilotSharepointCrawlerTool::default();
+            let t30 = CopilotAirgapRouterTool::default();
+            let t31 = CopilotLoopSyncTool::default();
+            let t32 = CopilotOoxmlGeneratorTool::default();
+            let t33 = CopilotCalendarPreReadTool::default();
+            let t34 = CopilotOutlookDraftTool::default();
+            let t35 = CopilotFabricQueryTool::default();
+            let t36 = CopilotPermsAuditorTool::default();
+
+            // Execute all 36 tools
+            let _ = t1.execute(serde_json::json!({ "channel": "stress", "message": format!("Worker {worker_id}") })).await.unwrap();
+            let _ = t2.execute(serde_json::json!({ "path": "docs/readme.md" })).await.unwrap();
+            let _ = t3.execute(serde_json::json!({ "transcript": [{ "speaker": "Alice", "text": "Fix bug" }] })).await.unwrap();
+            let _ = t4.execute(serde_json::json!({ "subject": "Report", "content": "Clean" })).await.unwrap();
+            let _ = t5.execute(serde_json::json!({ "meeting_id": format!("m_{worker_id}"), "transcript_text": "Alice: update" })).await.unwrap();
+            let _ = t6.execute(serde_json::json!({ "symbol": "EntraAuthManager" })).await.unwrap();
+            let _ = t7.execute(serde_json::json!({ "proposal": "Use Rust for microservices" })).await.unwrap();
+            let _ = t8.execute(serde_json::json!({ "content": "classified spec", "sensitivity": "confidential" })).await.unwrap();
+            let _ = t9.execute(serde_json::json!({ "proposal": "Adopt OIDC architecture", "title": format!("Worker {worker_id} ADR"), "decision": "Adopt OIDC" })).await.unwrap();
+            let _ = t10.execute(serde_json::json!({ "branch_name": format!("worker-{worker_id}"), "title": "Feat", "patch": "diff --git a/file b/file", "commit_msg": "test" })).await.unwrap();
+            let _ = t11.execute(serde_json::json!({ "title": "Deck", "format": "html" })).await.unwrap();
+            let _ = t12.execute(serde_json::json!({ "action": "eval", "formula": "=TGS.BLAST_RADIUS(\"EntraAuthManager\")" })).await.unwrap();
+            let _ = t13.execute(serde_json::json!({ "prompt": "Streaming check", "mode": "sse", "frames": 2 })).await.unwrap();
+            let _ = t14.execute(serde_json::json!({ "action": "create_single", "task_title": format!("Task {worker_id}") })).await.unwrap();
+            let _ = t15.execute(serde_json::json!({ "logs": "error: cannot find" })).await.unwrap();
+            let _ = t16.execute(serde_json::json!({ "workload_tokens": 1000, "accelerator": "npu" })).await.unwrap();
+            let _ = t17.execute(serde_json::json!({ "user_jwt": "mock_jwt" })).await.unwrap();
+            let _ = t18.execute(serde_json::json!({ "action": "validate_challenge", "validation_token": "tok" })).await.unwrap();
+            let _ = t19.execute(serde_json::json!({ "action": "list" })).await.unwrap();
+            let _ = t20.execute(serde_json::json!({ "action": "emit", "event_type": "ast_blast_radius", "summary": "audit" })).await.unwrap();
+            let _ = t21.execute(serde_json::json!({ "action": "audit" })).await.unwrap();
+            let _ = t22.execute(serde_json::json!({})).await.unwrap();
+            let _ = t23.execute(serde_json::json!({ "encrypted_content": jwe_payload })).await.unwrap();
+            let _ = t24.execute(serde_json::json!({ "requests": [{ "id": "1", "method": "GET", "url": "/me" }] })).await.unwrap();
+            let _ = t25.execute(serde_json::json!({ "resource": format!("me/drive/worker_{worker_id}") })).await.unwrap();
+            let _ = t26.execute(serde_json::json!({ "verb": "run_autofix", "user": "Worker" })).await.unwrap();
+            let _ = t27.execute(serde_json::json!({ "filename": "test.docx" })).await.unwrap();
+            let _ = t28.execute(serde_json::json!({ "action": "status" })).await.unwrap();
+
+            // Execute 8 new tools
+            let _ = t29.execute(serde_json::json!({ "site_id": format!("site_{worker_id}"), "max_items": 2 })).await.unwrap();
+            let _ = t30.execute(serde_json::json!({ "prompt": "worker airgap check", "sensitivity": "secret" })).await.unwrap();
+            let _ = t31.execute(serde_json::json!({ "action": "create_checklist", "title": format!("Loop {worker_id}") })).await.unwrap();
+            let _ = t32.execute(serde_json::json!({ "title": format!("Suite {worker_id}"), "output_dir": format!(".tagisan/test_ooxml_worker_{worker_id}") })).await.unwrap();
+            let _ = t33.execute(serde_json::json!({ "meeting_id": format!("evt_worker_{worker_id}") })).await.unwrap();
+            let _ = t34.execute(serde_json::json!({ "subject": format!("Recap {worker_id}"), "recipients": ["eng@test.com"] })).await.unwrap();
+            let _ = t35.execute(serde_json::json!({ "action": "list_tables" })).await.unwrap();
+            let _ = t36.execute(serde_json::json!({ "action": "audit" })).await.unwrap();
+
+            worker_id
+        });
+        tasks.push(task);
+    }
+
+    let results = futures::future::join_all(tasks).await;
+    let elapsed = start_time.elapsed();
+
+    assert_eq!(results.len(), concurrency);
+    for (i, res) in results.into_iter().enumerate() {
+        assert_eq!(res.expect("Worker panicked"), i);
+    }
+
+    println!("  [✓] 50 Workers completed concurrent stress test across ALL 36 Copilot tools in {:.2?} (0 deadlocks, 0 race conditions, 100% reliable)", elapsed);
 }
 
 

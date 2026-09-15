@@ -120,6 +120,7 @@ enum Commands {
         prompt: String,
     },
     /// Run an Autonomous Multi-Turn Agent with tools (Milestone 2)
+    #[command(alias = "run")]
     Agent {
         /// Provider ID: auto, anthropic, openai, xai, deepseek, gemini, ollama (default: auto-detected)
         #[arg(short, long, default_value = "auto")]
@@ -160,6 +161,18 @@ enum Commands {
         /// Run the agent in an isolated Git worktree sandbox
         #[arg(long)]
         sandbox: bool,
+
+        /// Explicit engineering skill to inject by name (e.g. "rust-tokio-concurrency")
+        #[arg(long)]
+        skill: Option<String>,
+
+        /// Automatically detect and inject relevant engineering skills based on prompt semantics
+        #[arg(long)]
+        auto_skills: bool,
+
+        /// Explicitly disable skill injection
+        #[arg(long)]
+        no_skills: bool,
 
         /// The agent goal or task prompt
         prompt: String,
@@ -1053,6 +1066,56 @@ pub enum CopilotAction {
         #[arg(long, default_value = "sync")]
         action: String,
     },
+
+    /// Audit active Copilot tools and generate least-privilege Entra ID permission manifest and SecOps justification
+    #[command(name = "audit-perms")]
+    AuditPerms {
+        /// Optional comma-separated active tools to audit
+        #[arg(long)]
+        tools: Option<String>,
+    },
+
+    /// Incrementally crawl SharePoint & OneDrive document libraries and inherit Purview labels
+    #[command(name = "crawl-sharepoint")]
+    CrawlSharepoint {
+        /// SharePoint Site ID or root
+        #[arg(long, default_value = "root")]
+        site_id: String,
+
+        /// SharePoint Drive ID
+        #[arg(long, default_value = "default")]
+        drive_id: String,
+
+        /// Maximum token size per semantic chunk
+        #[arg(long, default_value_t = 512)]
+        chunk_size: usize,
+    },
+
+    /// Enforce Purview zero-cloud-egress hardware air-gapping on Copilot+ PC NPU / DirectML
+    Airgap {
+        /// Prompt or code snippet to evaluate
+        #[arg(long)]
+        prompt: String,
+
+        /// Explicit sensitivity override (Public, General, Confidential, HighlyConfidential, Secret)
+        #[arg(long)]
+        sensitivity: Option<String>,
+    },
+
+    /// Generate native Microsoft Office Open XML (.docx Word, .xlsx Excel, .pptx PowerPoint) documents
+    Ooxml {
+        /// Document title
+        #[arg(long)]
+        title: String,
+
+        /// Output directory
+        #[arg(long, default_value = ".tagisan/ooxml")]
+        output_dir: String,
+
+        /// Base filename
+        #[arg(long, default_value = "briefing")]
+        base_name: String,
+    },
 }
 
 
@@ -1838,6 +1901,18 @@ enum SwarmAction {
         /// Lead agent name (default: architect)
         #[arg(long, default_value = "architect")]
         lead: String,
+
+        /// Explicit engineering skill to inject into swarm members by name
+        #[arg(long)]
+        skill: Option<String>,
+
+        /// Automatically detect and inject relevant engineering skills based on task semantics
+        #[arg(long)]
+        auto_skills: bool,
+
+        /// Explicitly disable skill injection in swarm
+        #[arg(long)]
+        no_skills: bool,
     },
     /// Execute sequential multi-stage pipeline across agents
     Pipeline {
@@ -1954,6 +2029,14 @@ enum EccAction {
         /// Optional ECC skill to attach to the agent context (e.g. tdd-workflow, security-review)
         #[arg(long)]
         skill: Option<String>,
+
+        /// Automatically detect and inject relevant engineering skills based on prompt semantics
+        #[arg(long)]
+        auto_skills: bool,
+
+        /// Explicitly disable skill injection
+        #[arg(long)]
+        no_skills: bool,
 
         /// Provider ID: auto, anthropic, openai, xai, deepseek, gemini, ollama
         #[arg(short, long, default_value = "auto")]
@@ -2837,6 +2920,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             mcp,
             memory,
             sandbox,
+            skill,
+            auto_skills,
+            no_skills,
             prompt,
         } => {
             let ctx = build_engine_context(cli.max_budget);
@@ -2961,24 +3047,48 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
             println!("Goal: \"{}\"\n", prompt.italic());
 
-            let mut agent = AutonomousAgent::new(prov, model_name, registry)
+            let mut agent = AutonomousAgent::new(prov, model_name.clone(), registry)
                 .with_agentshield(shield_active)
                 .with_max_iterations(max_iterations);
 
-            let dispatcher = crate::ecc::skills::global_dispatcher();
-            let top_skills = dispatcher.dispatch(&prompt, 2, None);
-            if !top_skills.is_empty() && top_skills[0].score >= 20.0 {
-                println!("{}", "⚡ Auto-Equipped Engineering Skills:".bold().cyan());
-                for s in &top_skills {
-                    println!("   • {} [Score: {:.1} | Domain: {}] - {}", s.skill.name.yellow().bold(), s.score, s.domain.green(), s.skill.description.italic());
-                    let mut current_prompt = agent.system_prompt.unwrap_or_default();
-                    current_prompt.push_str(&format!(
-                        "\n\n--- AUTO-EQUIPPED SPECIALIZED ENGINEERING SKILL: {} (Score: {:.1}) ---\n{}\n",
-                        s.skill.name, s.score, s.skill.instructions
-                    ));
-                    agent.system_prompt = Some(current_prompt);
+            let should_inject_skills = !no_skills && (skill.is_some() || auto_skills);
+            if should_inject_skills {
+                let dispatcher = crate::ecc::skills::global_dispatcher();
+                let base_prompt = agent.system_prompt.unwrap_or_else(|| {
+                    "You are Tagisan, a sovereign autonomous AI engineering agent equipped with local tools, code execution environments, and deep engineering capabilities.".to_string()
+                });
+                let (equipped_prompt, injected_skills, budget) = dispatcher.equip_prompt_maximized(
+                    &base_prompt,
+                    &prompt,
+                    &provider_id,
+                    Some(&model_name),
+                    skill.as_deref(),
+                    None,
+                    None,
+                );
+                agent.system_prompt = Some(equipped_prompt);
+
+                if !injected_skills.is_empty() {
+                    let mode_badge = match budget.mode {
+                        crate::ecc::InjectionMode::DenseInvariants => "Dense Invariants DSL (<1.2k tokens)".cyan().bold(),
+                        crate::ecc::InjectionMode::Hierarchical => "Hierarchical Multi-Tier Architecture".blue().bold(),
+                        crate::ecc::InjectionMode::Comprehensive => "Cloud Comprehensive Specification".magenta().bold(),
+                        crate::ecc::InjectionMode::CheatSheet => "Local Cheat-Sheet (<1k tokens)".cyan().bold(),
+                    };
+                    let skill_names: Vec<String> = injected_skills
+                        .iter()
+                        .map(|s| format!("{} ({:.1})", s.skill.name, s.score))
+                        .collect();
+                    println!(
+                        "{} [{}] Injected {} skill(s) [Budget: ~{} tokens / {}k ctx] -> [{}]\n",
+                        "⚡ Dynamic Skills:".bold().yellow(),
+                        mode_badge,
+                        injected_skills.len(),
+                        budget.max_tokens,
+                        budget.context_window / 1000,
+                        skill_names.join(", ").green()
+                    );
                 }
-                println!();
             }
 
             if let Some(ref sb) = sandbox_holder {
@@ -3542,6 +3652,8 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     agent,
                     prompt,
                     skill,
+                    auto_skills,
+                    no_skills,
                     provider,
                     model,
                     tools,
@@ -3565,54 +3677,45 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     };
 
-                    let dispatcher = crate::ecc::skills::global_dispatcher();
+                    let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
 
-                    // Skill Attachment: Explicit or Automated Right-Skills-for-Right-Job Dispatch
-                    if let Some(ref skill_name) = skill {
-                        if skill_name == "auto" {
-                            let top_skills = dispatcher.dispatch(&prompt, 2, None);
-                            if !top_skills.is_empty() {
-                                println!("{}", "⚡ Auto-Equipped Engineering Skills:".bold().cyan());
-                                for s in &top_skills {
-                                    println!("   • {} [Score: {:.1} | Domain: {}] - {}", s.skill.name.yellow().bold(), s.score, s.domain.green(), s.skill.description.italic());
-                                    ecc_agent.system_prompt.push_str(&format!(
-                                        "\n\n--- Auto-Equipped ECC Skill: {} (Score: {:.1}) ---\n{}",
-                                        s.skill.name, s.score, s.skill.instructions
-                                    ));
-                                }
-                            }
-                        } else {
-                            let skills_dir = std::path::Path::new(".ecc/skills");
-                            if let Some(attached_skill) = resolve_ecc_skill(skill_name, Some(skills_dir)) {
-                                println!("Attached Skill: {} ({})", attached_skill.name.cyan().bold(), attached_skill.description.italic());
-                                ecc_agent.system_prompt.push_str(&format!(
-                                    "\n\n--- Attached ECC Skill: {} ---\n{}",
-                                    attached_skill.name, attached_skill.instructions
-                                ));
-                            } else {
-                                eprintln!(
-                                    "{}: ECC skill '{}' not found. Run 'tagisan ecc skills' to view available skills.",
-                                    "Warning".yellow().bold(),
-                                    skill_name
-                                );
-                            }
-                        }
-                    } else {
-                        // Fully automated dispatch when --skill is omitted
-                        let top_skills = dispatcher.dispatch(&prompt, 2, None);
-                        if !top_skills.is_empty() {
-                            println!("{}", "⚡ Auto-Equipped Engineering Skills:".bold().cyan());
-                            for s in &top_skills {
-                                println!("   • {} [Score: {:.1} | Domain: {}] - {}", s.skill.name.yellow().bold(), s.score, s.domain.green(), s.skill.description.italic());
-                                ecc_agent.system_prompt.push_str(&format!(
-                                    "\n\n--- Auto-Equipped ECC Skill: {} (Score: {:.1}) ---\n{}",
-                                    s.skill.name, s.score, s.skill.instructions
-                                ));
-                            }
+                    let should_inject = !no_skills && (auto_skills || skill.is_some());
+                    if should_inject {
+                        let dispatcher = crate::ecc::skills::global_dispatcher();
+                        let (equipped_prompt, injected_skills, budget) = dispatcher.equip_prompt_maximized(
+                            &ecc_agent.system_prompt,
+                            &prompt,
+                            &provider_id,
+                            Some(&model_name),
+                            skill.as_deref(),
+                            None,
+                            Some(&agent),
+                        );
+                        ecc_agent.system_prompt = equipped_prompt;
+
+                        if !injected_skills.is_empty() {
+                            let mode_badge = match budget.mode {
+                                crate::ecc::InjectionMode::DenseInvariants => "Dense Invariants DSL (<1.2k tokens)".cyan().bold(),
+                                crate::ecc::InjectionMode::Hierarchical => "Hierarchical Multi-Tier Architecture".blue().bold(),
+                                crate::ecc::InjectionMode::Comprehensive => "Cloud Comprehensive Specification".magenta().bold(),
+                                crate::ecc::InjectionMode::CheatSheet => "Local Cheat-Sheet (<1k tokens)".cyan().bold(),
+                            };
+                            let skill_names: Vec<String> = injected_skills
+                                .iter()
+                                .map(|s| format!("{} ({:.1})", s.skill.name, s.score))
+                                .collect();
+                            println!(
+                                "{} [{}] Injected {} skill(s) into agent '{}' [Budget: ~{} tokens / {}k ctx] -> [{}]\n",
+                                "⚡ Dynamic Skills:".bold().yellow(),
+                                mode_badge,
+                                injected_skills.len(),
+                                agent.bold().cyan(),
+                                budget.max_tokens,
+                                budget.context_window / 1000,
+                                skill_names.join(", ").green()
+                            );
                         }
                     }
-
-                    let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
 
                     // Build Tool Registry
                     let mut registry = ToolRegistry::new();
@@ -4675,10 +4778,54 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Swarm { action } => {
             let ctx = build_engine_context(cli.max_budget);
             match action {
-                SwarmAction::Run { prompt, agents, lead } => {
+                SwarmAction::Run {
+                    prompt,
+                    agents,
+                    lead,
+                    skill,
+                    auto_skills,
+                    no_skills,
+                } => {
                     println!("{}", "=========================================================".cyan());
                     println!("{}", "  🐝  Tagisan Swarm: Lead Agent Orchestration".bold().yellow());
                     println!("{}", "=========================================================".cyan());
+
+                    let should_inject = !no_skills && (auto_skills || skill.is_some());
+                    let dispatcher = crate::ecc::skills::global_dispatcher();
+
+                    if should_inject {
+                        let (prov_id, model_name, _) = resolve_provider_and_model(&ctx, "auto", None)?;
+                        let (_, injected_skills, budget) = dispatcher.equip_prompt_maximized(
+                            "",
+                            &prompt,
+                            &prov_id,
+                            Some(&model_name),
+                            skill.as_deref(),
+                            None,
+                            None,
+                        );
+                        if !injected_skills.is_empty() {
+                            let mode_badge = match budget.mode {
+                                crate::ecc::InjectionMode::DenseInvariants => "Dense Invariants DSL (<1.2k tokens)".cyan().bold(),
+                                crate::ecc::InjectionMode::Hierarchical => "Hierarchical Multi-Tier Architecture".blue().bold(),
+                                crate::ecc::InjectionMode::Comprehensive => "Cloud Comprehensive Specification".magenta().bold(),
+                                crate::ecc::InjectionMode::CheatSheet => "Local Cheat-Sheet (<1k tokens)".cyan().bold(),
+                            };
+                            let skill_names: Vec<String> = injected_skills
+                                .iter()
+                                .map(|s| format!("{} ({:.1})", s.skill.name, s.score))
+                                .collect();
+                            println!(
+                                "{} [{}] Injected {} skill(s) into swarm [Budget: ~{} tokens / {}k ctx] -> [{}]\n",
+                                "⚡ Dynamic Skills:".bold().yellow(),
+                                mode_badge,
+                                injected_skills.len(),
+                                budget.max_tokens,
+                                budget.context_window / 1000,
+                                skill_names.join(", ").green()
+                            );
+                        }
+                    }
 
                     let agent_names: Vec<&str> = agents.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
                     let mut coordinator = SwarmCoordinator::new();
@@ -4686,15 +4833,27 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     for name in &agent_names {
                         let preset = crate::ecc::find_preset(name);
                         let role = preset.as_ref().map(|p| p.description.as_str()).unwrap_or("General Engineering Specialist");
-                        let sys_prompt = preset.as_ref().map(|p| p.system_prompt.clone());
-                        let (_, model_name, prov) = resolve_provider_and_model(&ctx, "auto", None)?;
+                        let mut sys_prompt = preset.as_ref().map(|p| p.system_prompt.clone()).unwrap_or_else(|| {
+                            format!("You are a specialized agent: {name}")
+                        });
+                        let (prov_id, model_name, prov) = resolve_provider_and_model(&ctx, "auto", None)?;
+
+                        if should_inject {
+                            let (equipped, _, _) = dispatcher.equip_prompt_maximized(
+                                &sys_prompt,
+                                &prompt,
+                                &prov_id,
+                                Some(&model_name),
+                                skill.as_deref(),
+                                None,
+                                Some(name),
+                            );
+                            sys_prompt = equipped;
+                        }
+
                         let member = SwarmMember::new(*name, role, model_name, prov)
-                            .with_tools(ToolRegistry::with_builtins());
-                        let member = if let Some(sys) = sys_prompt {
-                            member.with_system_prompt(sys)
-                        } else {
-                            member
-                        };
+                            .with_tools(ToolRegistry::with_builtins())
+                            .with_system_prompt(sys_prompt);
                         coordinator.register_member(member);
                     }
                     coordinator.set_lead(&lead);
@@ -5326,7 +5485,7 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
             println!("  Graph Execution Mode:  {}", if client.is_mock() { "Deterministic Mock / Sandbox".yellow() } else { "Live Enterprise Graph REST API".green().bold() });
             println!("  Base Endpoint:         https://graph.microsoft.com/v1.0");
 
-            println!("\n[3] Autonomous Copilot Tools in Registry (28 Tools):");
+            println!("\n[3] Autonomous Copilot Tools in Registry (36 Tools):");
             println!("  [✓] copilot_teams_post          (Post updates & debate verdicts to Teams)");
             println!("  [✓] copilot_sharepoint_get      (Ingest SharePoint/OneDrive docs with AgentShield)");
             println!("  [✓] copilot_meeting_action_items(Decompose Teams meeting transcripts into code tasks)");
@@ -5355,6 +5514,14 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
             println!("  [✓] copilot_universal_action    (Microsoft Teams Adaptive Card 1.6 Universal Actions Execute)");
             println!("  [✓] copilot_rms_guard           (Azure Information Protection AIP/RMS encryption barrier guard)");
             println!("  [✓] copilot_workload_identity   (Passwordless Azure Managed Identity & OIDC Federation)");
+            println!("  [✓] copilot_sharepoint_crawler  (SharePoint & OneDrive Delta Crawler with Purview inheritance)");
+            println!("  [✓] copilot_airgap_router       (Purview Zero-Cloud-Egress local NPU / DirectML routing)");
+            println!("  [✓] copilot_loop_sync           (Live Microsoft Loop & Copilot Pages collaborative sync)");
+            println!("  [✓] copilot_ooxml_generator     (Native pure-Rust Word .docx, Excel .xlsx, and PPT .pptx generator)");
+            println!("  [✓] copilot_calendar_preread    (Outlook Calendar pre-meeting intelligence & technical briefing)");
+            println!("  [✓] copilot_outlook_draft       (Post-meeting executive recap email draft generator)");
+            println!("  [✓] copilot_fabric_query        (Microsoft Fabric OneLake & Power BI DAX Semantic Layer)");
+            println!("  [✓] copilot_perms_auditor       (Least-Privilege Entra ID Scope & Consent Auditor with SecOps report)");
 
             println!("\n[4] AgentShield Cyber Defense Gate:");
             println!("  Outbound DLP:          {}", "ACTIVE (Zero API key/private key/credential leakage)".green().bold());
@@ -5830,6 +5997,70 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
             use crate::tools::ToolHandler;
             let tool = crate::copilot::purview::CopilotPurviewSyncTool::new();
             let args = serde_json::json!({ "action": action });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::AuditPerms { tools } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🛡️ ENTRA ID LEAST-PRIVILEGE SCOPE & CONSENT AUDITOR".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::perms_auditor::CopilotPermsAuditorTool::new();
+            let mut args_map = serde_json::Map::new();
+            if let Some(t_str) = tools {
+                let tool_list: Vec<String> = t_str.split(',').map(|s| s.trim().to_string()).collect();
+                args_map.insert("active_tools".to_string(), serde_json::Value::Array(tool_list.into_iter().map(serde_json::Value::String).collect()));
+            }
+            let out = tool.execute(serde_json::Value::Object(args_map)).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::CrawlSharepoint { site_id, drive_id, chunk_size } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📂 SHAREPOINT DELTA CRAWLER & PURVIEW INGESTION".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::sharepoint_crawler::CopilotSharepointCrawlerTool::default();
+            let args = serde_json::json!({
+                "site_id": site_id,
+                "drive_id": drive_id,
+                "chunk_size": chunk_size,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Airgap { prompt, sensitivity } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🔒 PURVIEW HARDWARE AIRGAP LOCAL NPU ROUTER".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::airgap::CopilotAirgapRouterTool::default();
+            let mut args_map = serde_json::Map::new();
+            args_map.insert("prompt".to_string(), serde_json::Value::String(prompt));
+            if let Some(sens) = sensitivity {
+                args_map.insert("sensitivity_override".to_string(), serde_json::Value::String(sens));
+            }
+            let out = tool.execute(serde_json::Value::Object(args_map)).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Ooxml { title, output_dir, base_name } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📄 NATIVE PURE-RUST OOXML DOCUMENT GENERATOR".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::ooxml::CopilotOoxmlGeneratorTool::new();
+            let args = serde_json::json!({
+                "title": title,
+                "output_dir": output_dir,
+                "base_name": base_name,
+            });
             let out = tool.execute(args).await?;
             println!("\n{out}");
         }
