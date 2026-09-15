@@ -24,9 +24,10 @@ use std::sync::Arc;
 
 pub use builtin::{
     CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, FetchSkillTool,
-    GitWorktreeTool, GroundedInferenceTool, ListDirTool, QueryCodeGraphTool, ReadFileTool,
-    ReflexionVaultTool, RunCommandTool, SaveMemoryTool, SearchMemoryTool, SearchSkillsTool,
-    ViewImageTool, WriteFileTool,
+    FindByNameTool, GitWorktreeTool, GrepSearchTool, GroundedInferenceTool, ListDirTool,
+    QueryCodeGraphTool, ReadFileTool, ReflexionVaultTool, ReplaceFileContentTool, RunCommandTool,
+    SaveMemoryTool, SearchMemoryTool, SearchSkillsTool, ViewFileTool, ViewImageTool,
+    WriteFileTool, WriteToFileTool,
     SimdVectorizerTool, ApiContractFuzzerTool, ChaosFaultInjectorTool,
     BinaryProtocolSynthesizerTool, CompilerIrOptimizerTool, ConstantTimeAuditorTool,
     EbpfTelemetryTracerTool, KaniFormalVerifierTool, TritonKernelFuserTool,
@@ -88,8 +89,13 @@ impl ToolRegistry {
     pub fn with_builtins() -> Self {
         let mut registry = Self::new();
         registry.register_tool(builtin::ReadFileTool::new());
+        registry.register_tool(builtin::ViewFileTool::new());
         registry.register_tool(builtin::WriteFileTool::new());
+        registry.register_tool(builtin::WriteToFileTool::new());
         registry.register_tool(builtin::EditFileTool::new());
+        registry.register_tool(builtin::ReplaceFileContentTool::new());
+        registry.register_tool(builtin::GrepSearchTool::new());
+        registry.register_tool(builtin::FindByNameTool::new());
         registry.register_tool(builtin::DeleteFileTool::new());
         registry.register_tool(builtin::ListDirTool::new());
         registry.register_tool(builtin::QueryCodeGraphTool::new());
@@ -167,8 +173,13 @@ impl ToolRegistry {
         let dir = dir.into();
         let mut registry = Self::new();
         registry.register_tool(builtin::ReadFileTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::ViewFileTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::WriteFileTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::WriteToFileTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::EditFileTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::ReplaceFileContentTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::GrepSearchTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::FindByNameTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::DeleteFileTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::ListDirTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::QueryCodeGraphTool::new().with_working_dir(dir.clone()));

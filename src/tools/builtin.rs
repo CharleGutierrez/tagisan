@@ -3,6 +3,7 @@ use crate::engine::graph::{BlastRisk, CodebaseGraph};
 use crate::error::{Result, TagisanError};
 use crate::types::ContentBlock;
 use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{HashMap, VecDeque};
 use std::path::{Path, PathBuf};
@@ -16,31 +17,163 @@ pub use crate::tools::web_search::WebSearchTool;
 // 1. ReadFileTool
 // =========================================================================
 
-/// Tool for reading file contents safely from local disk
-#[derive(Debug, Default, Clone)]
+/// Metadata returned when a binary file is detected during read operations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BinaryFileMetadata {
+    pub file: String,
+    pub is_binary: bool,
+    pub detected_type: String,
+    pub size_bytes: u64,
+    pub size_human: String,
+    pub message: String,
+}
+
+fn detect_binary_file(path: &Path, sample: &[u8], total_len: u64) -> Option<BinaryFileMetadata> {
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+    let known_binary_ext = match ext.as_str() {
+        "png" => Some("image/png"),
+        "jpg" | "jpeg" => Some("image/jpeg"),
+        "gif" => Some("image/gif"),
+        "webp" => Some("image/webp"),
+        "bmp" => Some("image/bmp"),
+        "ico" => Some("image/x-icon"),
+        "pdf" => Some("application/pdf"),
+        "mp3" => Some("audio/mpeg"),
+        "wav" => Some("audio/wav"),
+        "ogg" => Some("audio/ogg"),
+        "flac" => Some("audio/flac"),
+        "mp4" => Some("video/mp4"),
+        "webm" => Some("video/webm"),
+        "avi" => Some("video/x-msvideo"),
+        "mov" => Some("video/quicktime"),
+        "mkv" => Some("video/x-matroska"),
+        "zip" => Some("application/zip"),
+        "tar" => Some("application/x-tar"),
+        "gz" => Some("application/gzip"),
+        "7z" => Some("application/x-7z-compressed"),
+        "rar" => Some("application/vnd.rar"),
+        "exe" => Some("application/x-msdownload (PE executable)"),
+        "dll" => Some("application/x-msdownload (PE DLL)"),
+        "so" => Some("application/x-sharedlib (ELF)"),
+        "dylib" => Some("application/x-sharedlib (Mach-O)"),
+        "bin" => Some("application/octet-stream"),
+        "wasm" => Some("application/wasm"),
+        _ => None,
+    };
+
+    let magic_type = if sample.starts_with(b"\x89PNG\r\n\x1a\n") {
+        Some("image/png")
+    } else if sample.starts_with(b"\xFF\xD8\xFF") {
+        Some("image/jpeg")
+    } else if sample.starts_with(b"GIF87a") || sample.starts_with(b"GIF89a") {
+        Some("image/gif")
+    } else if sample.len() >= 12 && &sample[0..4] == b"RIFF" && &sample[8..12] == b"WEBP" {
+        Some("image/webp")
+    } else if sample.starts_with(b"%PDF-") {
+        Some("application/pdf")
+    } else if sample.starts_with(b"PK\x03\x04") {
+        Some("application/zip (or archive/package)")
+    } else if sample.starts_with(b"\x7FELF") {
+        Some("application/x-executable (ELF)")
+    } else if sample.starts_with(b"MZ") {
+        Some("application/x-dosexec (Windows PE binary)")
+    } else if sample.starts_with(b"\xCA\xFE\xBA\xBE")
+        || sample.starts_with(b"\xCF\xFA\xED\xFE")
+        || sample.starts_with(b"\xCE\xFA\xED\xFE")
+    {
+        Some("application/x-mach-binary")
+    } else if sample.starts_with(b"ID3") {
+        Some("audio/mpeg")
+    } else if sample.starts_with(b"OggS") {
+        Some("audio/ogg")
+    } else if sample.starts_with(b"fLaC") {
+        Some("audio/flac")
+    } else if sample.len() >= 12 && &sample[0..4] == b"RIFF" && &sample[8..12] == b"WAVE" {
+        Some("audio/wav")
+    } else if sample.len() >= 8 && &sample[4..8] == b"ftyp" {
+        Some("video/mp4")
+    } else if sample.starts_with(b"\x00asm") {
+        Some("application/wasm")
+    } else {
+        None
+    };
+
+    let is_binary = if let Some(t) = magic_type {
+        Some(t)
+    } else if let Some(t) = known_binary_ext {
+        Some(t)
+    } else if sample.contains(&0) {
+        Some("application/octet-stream (binary data with null bytes)")
+    } else if std::str::from_utf8(sample).is_err() {
+        Some("application/octet-stream (non-UTF8 binary)")
+    } else {
+        None
+    };
+
+    is_binary.map(|dtype| BinaryFileMetadata {
+        file: path.display().to_string().replace('\\', "/"),
+        is_binary: true,
+        detected_type: dtype.to_string(),
+        size_bytes: total_len,
+        size_human: format_bytes_human(total_len),
+        message: format!(
+            "Binary file detected ({dtype}, {} bytes). Binary content is not displayed as text.",
+            format_with_commas(total_len)
+        ),
+    })
+}
+
+/// Tool for reading file contents safely from local disk with line slicing, paging, and binary safety
+#[derive(Debug, Clone)]
 pub struct ReadFileTool {
     pub working_dir: Option<std::path::PathBuf>,
+    pub tool_name: &'static str,
+}
+
+impl Default for ReadFileTool {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ReadFileTool {
     pub fn new() -> Self {
-        Self { working_dir: None }
+        Self {
+            working_dir: None,
+            tool_name: "read_file",
+        }
+    }
+
+    pub fn new_view_file() -> Self {
+        Self {
+            working_dir: None,
+            tool_name: "view_file",
+        }
     }
 
     pub fn with_working_dir(mut self, dir: impl Into<std::path::PathBuf>) -> Self {
         self.working_dir = Some(dir.into());
         self
     }
+
+    pub fn with_name(mut self, name: &'static str) -> Self {
+        self.tool_name = name;
+        self
+    }
 }
 
 #[async_trait]
 impl ToolHandler for ReadFileTool {
-    fn name(&self) -> &'static str {
-        "read_file"
+    fn name(&self) -> &str {
+        self.tool_name
     }
 
-    fn description(&self) -> &'static str {
-        "Read the text contents of a file from the local filesystem."
+    fn description(&self) -> &str {
+        "Read file contents safely from local disk. Supports line range slicing (1-indexed start_line/end_line), pagination via content_offset, truncation safeguards (max_lines, max_bytes), line numbering, and safe binary file detection."
     }
 
     fn parameters_schema(&self) -> Value {
@@ -49,7 +182,31 @@ impl ToolHandler for ReadFileTool {
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "The absolute or relative path to the file to read."
+                    "description": "The absolute or relative path to the file to read (also accepts 'AbsolutePath' or 'file_path')."
+                },
+                "start_line": {
+                    "type": "integer",
+                    "description": "Optional 1-indexed line number to start reading from (inclusive)."
+                },
+                "end_line": {
+                    "type": "integer",
+                    "description": "Optional 1-indexed line number to stop reading at (inclusive)."
+                },
+                "max_lines": {
+                    "type": "integer",
+                    "description": "Maximum number of lines to return before clamping with truncation notice (default: 800)."
+                },
+                "max_bytes": {
+                    "type": "integer",
+                    "description": "Maximum bytes of content to return before clamping (default: 46080)."
+                },
+                "content_offset": {
+                    "type": "integer",
+                    "description": "Byte offset into file content for reading beyond initial byte limits."
+                },
+                "line_numbers": {
+                    "type": "boolean",
+                    "description": "Whether to prefix each line with its 1-indexed line number formatted as '<num>: <content>'. Default: false."
                 }
             },
             "required": ["path"]
@@ -59,27 +216,172 @@ impl ToolHandler for ReadFileTool {
     async fn execute(&self, arguments: Value) -> Result<String> {
         let path_str = arguments
             .get("path")
+            .or_else(|| arguments.get("AbsolutePath"))
+            .or_else(|| arguments.get("file_path"))
+            .or_else(|| arguments.get("filepath"))
+            .or_else(|| arguments.get("uri"))
             .and_then(|v| v.as_str())
-            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path'".to_string()))?;
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path' or 'AbsolutePath'".to_string()))?;
 
-        let path = Path::new(path_str);
-        let target_path = if path.is_relative() {
-            if let Some(ref base) = self.working_dir {
-                base.join(path)
-            } else {
-                path.to_path_buf()
-            }
-        } else {
-            path.to_path_buf()
-        };
+        let target_path = resolve_target_path(&self.working_dir, Path::new(path_str));
 
         if !target_path.exists() {
             return Err(TagisanError::Execution(format!("File does not exist: {}", target_path.display())));
         }
+        if target_path.is_dir() {
+            return Err(TagisanError::Execution(format!("Target path is a directory, not a file: {}", target_path.display())));
+        }
 
-        tokio::fs::read_to_string(&target_path)
+        let raw_bytes = tokio::fs::read(&target_path)
             .await
-            .map_err(|e| TagisanError::Execution(format!("Failed to read file '{}': {e}", target_path.display())))
+            .map_err(|e| TagisanError::Execution(format!("Failed to read file '{}': {e}", target_path.display())))?;
+        let total_bytes = raw_bytes.len() as u64;
+
+        let sample_len = raw_bytes.len().min(8192);
+        let sample = &raw_bytes[..sample_len];
+        if let Some(binary_meta) = detect_binary_file(&target_path, sample, total_bytes) {
+            return Ok(serde_json::to_string_pretty(&binary_meta).unwrap_or_else(|_| binary_meta.message));
+        }
+
+        let offset = arguments
+            .get("content_offset")
+            .or_else(|| arguments.get("ContentOffset"))
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0) as usize;
+
+        if offset >= raw_bytes.len() && !raw_bytes.is_empty() {
+            return Ok(format!("[Content offset {} is beyond file size {} bytes]", offset, total_bytes));
+        }
+
+        let mut safe_offset = offset.min(raw_bytes.len());
+        while safe_offset < raw_bytes.len() && (raw_bytes[safe_offset] & 0xC0) == 0x80 {
+            safe_offset += 1;
+        }
+
+        let text_slice = String::from_utf8_lossy(&raw_bytes[safe_offset..]);
+        let lines: Vec<&str> = text_slice.split_inclusive('\n').collect();
+        let total_lines = lines.len();
+
+        if total_lines == 0 {
+            return Ok(String::new());
+        }
+
+        let start_line = arguments
+            .get("start_line")
+            .or_else(|| arguments.get("StartLine"))
+            .and_then(|v| v.as_u64());
+
+        let end_line = arguments
+            .get("end_line")
+            .or_else(|| arguments.get("EndLine"))
+            .and_then(|v| v.as_u64());
+
+        let max_lines = arguments
+            .get("max_lines")
+            .or_else(|| arguments.get("MaxLines"))
+            .and_then(|v| v.as_u64())
+            .unwrap_or(800) as usize;
+
+        let max_bytes = arguments
+            .get("max_bytes")
+            .or_else(|| arguments.get("MaxBytes"))
+            .and_then(|v| v.as_u64())
+            .unwrap_or(46_080) as usize;
+
+        let line_numbers = arguments
+            .get("line_numbers")
+            .or_else(|| arguments.get("LineNumbers"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let (start_idx, end_idx) = match (start_line, end_line) {
+            (Some(s), Some(e)) => {
+                if s < 1 {
+                    return Err(TagisanError::Execution("Parameter 'start_line' must be >= 1".to_string()));
+                }
+                if e < 1 {
+                    return Err(TagisanError::Execution("Parameter 'end_line' must be >= 1".to_string()));
+                }
+                if s > e {
+                    return Err(TagisanError::Execution(format!(
+                        "Parameter 'start_line' ({s}) cannot be greater than 'end_line' ({e})"
+                    )));
+                }
+                let s_idx = (s as usize) - 1;
+                if s_idx >= total_lines {
+                    return Err(TagisanError::Execution(format!(
+                        "Parameter 'start_line' ({s}) exceeds total line count ({total_lines})"
+                    )));
+                }
+                let e_idx = (e as usize).min(total_lines);
+                (s_idx, e_idx)
+            }
+            (Some(s), None) => {
+                if s < 1 {
+                    return Err(TagisanError::Execution("Parameter 'start_line' must be >= 1".to_string()));
+                }
+                let s_idx = (s as usize) - 1;
+                if s_idx >= total_lines {
+                    return Err(TagisanError::Execution(format!(
+                        "Parameter 'start_line' ({s}) exceeds total line count ({total_lines})"
+                    )));
+                }
+                (s_idx, total_lines)
+            }
+            (None, Some(e)) => {
+                if e < 1 {
+                    return Err(TagisanError::Execution("Parameter 'end_line' must be >= 1".to_string()));
+                }
+                let e_idx = (e as usize).min(total_lines);
+                (0, e_idx)
+            }
+            (None, None) => (0, total_lines),
+        };
+
+        let range_count = end_idx - start_idx;
+        let count_clamped = range_count.min(max_lines);
+        let effective_end_idx = start_idx + count_clamped;
+
+        let mut output = String::new();
+        let mut bytes_accum = 0;
+        let mut lines_shown = 0;
+        let mut truncated_by_bytes = false;
+
+        for idx in start_idx..effective_end_idx {
+            let raw_line = lines[idx];
+            let line_num = idx + 1;
+            let formatted_line = if line_numbers {
+                format!("{}: {}", line_num, raw_line)
+            } else {
+                raw_line.to_string()
+            };
+            if bytes_accum + formatted_line.len() > max_bytes && lines_shown > 0 {
+                truncated_by_bytes = true;
+                break;
+            }
+            output.push_str(&formatted_line);
+            bytes_accum += formatted_line.len();
+            lines_shown += 1;
+        }
+
+        let truncated_by_lines = effective_end_idx < end_idx;
+        let is_truncated = truncated_by_lines || truncated_by_bytes;
+
+        if is_truncated {
+            let last_line = start_idx + lines_shown;
+            let warning = format!(
+                "\n[Content truncated: showing lines {} to {} of {} ({} bytes, max_lines: {}, max_bytes: {}). Use 'content_offset' or 'start_line'/'end_line' to view remaining content]",
+                start_idx + 1,
+                last_line,
+                total_lines,
+                bytes_accum,
+                max_lines,
+                max_bytes
+            );
+            output.push_str(&warning);
+        }
+
+        Ok(output)
     }
 }
 
@@ -87,31 +389,53 @@ impl ToolHandler for ReadFileTool {
 // 2. WriteFileTool
 // =========================================================================
 
-/// Tool for writing/creating files safely on the local filesystem
-#[derive(Debug, Default, Clone)]
+/// Tool for creating and overwriting files atomically on the local filesystem
+#[derive(Debug, Clone)]
 pub struct WriteFileTool {
     pub working_dir: Option<std::path::PathBuf>,
+    pub tool_name: &'static str,
+}
+
+impl Default for WriteFileTool {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl WriteFileTool {
     pub fn new() -> Self {
-        Self { working_dir: None }
+        Self {
+            working_dir: None,
+            tool_name: "write_file",
+        }
+    }
+
+    pub fn new_write_to_file() -> Self {
+        Self {
+            working_dir: None,
+            tool_name: "write_to_file",
+        }
     }
 
     pub fn with_working_dir(mut self, dir: impl Into<std::path::PathBuf>) -> Self {
         self.working_dir = Some(dir.into());
         self
     }
+
+    pub fn with_name(mut self, name: &'static str) -> Self {
+        self.tool_name = name;
+        self
+    }
 }
 
 #[async_trait]
 impl ToolHandler for WriteFileTool {
-    fn name(&self) -> &'static str {
-        "write_file"
+    fn name(&self) -> &str {
+        self.tool_name
     }
 
-    fn description(&self) -> &'static str {
-        "Write text content to a file on the local filesystem. Creates parent directories automatically if they do not exist."
+    fn description(&self) -> &str {
+        "Write text content to a file atomically on the local filesystem. Creates parent directories automatically, prevents accidental overwrites when overwrite: false, and supports artifact metadata."
     }
 
     fn parameters_schema(&self) -> Value {
@@ -120,11 +444,24 @@ impl ToolHandler for WriteFileTool {
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "The target file path to create or overwrite."
+                    "description": "The target file path to create or overwrite (also accepts 'TargetFile' or 'file_path')."
                 },
                 "content": {
                     "type": "string",
-                    "description": "The text content to write into the file."
+                    "description": "The text content to write into the file (also accepts 'CodeContent' or 'code')."
+                },
+                "overwrite": {
+                    "type": "boolean",
+                    "description": "Whether to allow overwriting an existing file. If false and target exists, returns actionable error. Default: true."
+                },
+                "artifact_metadata": {
+                    "type": "object",
+                    "properties": {
+                        "summary": { "type": "string" },
+                        "user_facing": { "type": "boolean" },
+                        "request_feedback": { "type": "boolean" }
+                    },
+                    "description": "Optional metadata for tracked artifacts."
                 }
             },
             "required": ["path", "content"]
@@ -134,38 +471,91 @@ impl ToolHandler for WriteFileTool {
     async fn execute(&self, arguments: Value) -> Result<String> {
         let path_str = arguments
             .get("path")
+            .or_else(|| arguments.get("TargetFile"))
+            .or_else(|| arguments.get("target_file"))
+            .or_else(|| arguments.get("file_path"))
             .and_then(|v| v.as_str())
-            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path'".to_string()))?;
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path' or 'TargetFile'".to_string()))?;
 
         let content = arguments
             .get("content")
+            .or_else(|| arguments.get("CodeContent"))
+            .or_else(|| arguments.get("code_content"))
+            .or_else(|| arguments.get("code"))
             .and_then(|v| v.as_str())
-            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'content'".to_string()))?;
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'content' or 'CodeContent'".to_string()))?;
 
-        let path = Path::new(path_str);
-        let target_path = if path.is_relative() {
-            if let Some(ref base) = self.working_dir {
-                base.join(path)
-            } else {
-                path.to_path_buf()
+        let overwrite = arguments
+            .get("overwrite")
+            .or_else(|| arguments.get("Overwrite"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(true);
+
+        let target_path = resolve_target_path(&self.working_dir, Path::new(path_str));
+
+        if !overwrite && target_path.exists() {
+            return Err(TagisanError::Execution(format!(
+                "Target file already exists at '{}' and 'overwrite' is set to false. Set 'overwrite: true' to allow overwriting this file.",
+                target_path.display()
+            )));
+        }
+
+        let parent_dir = target_path.parent().unwrap_or_else(|| Path::new("."));
+        if !parent_dir.as_os_str().is_empty() {
+            tokio::fs::create_dir_all(parent_dir).await.map_err(|e| {
+                TagisanError::Execution(format!("Failed to create parent directory '{parent_dir:?}': {e}"))
+            })?;
+        }
+
+        // Atomic file write using temporary file rename in parent dir
+        let temp_file_name = format!(
+            ".tmp_write_{}_{}_{}",
+            target_path.file_name().and_then(|n| n.to_str()).unwrap_or("file"),
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_nanos()
+        );
+        let temp_path = parent_dir.join(temp_file_name);
+
+        tokio::fs::write(&temp_path, content).await.map_err(|e| {
+            TagisanError::Execution(format!("Failed to write temporary file '{}': {e}", temp_path.display()))
+        })?;
+
+        if let Err(rename_err) = tokio::fs::rename(&temp_path, &target_path).await {
+            let _ = tokio::fs::remove_file(&temp_path).await;
+            tokio::fs::write(&target_path, content).await.map_err(|write_err| {
+                TagisanError::Execution(format!(
+                    "Failed to write target file '{}' (rename failed: {rename_err}; direct write failed: {write_err})",
+                    target_path.display()
+                ))
+            })?;
+        }
+
+        let mut output = format!("Successfully wrote {} bytes to {}", content.len(), target_path.display());
+
+        let artifact_meta = arguments
+            .get("artifact_metadata")
+            .or_else(|| arguments.get("ArtifactMetadata"));
+        if let Some(meta) = artifact_meta {
+            let mut meta_lines = Vec::new();
+            if let Some(summary) = meta.get("summary").or_else(|| meta.get("Summary")).and_then(|v| v.as_str()) {
+                meta_lines.push(format!(" - Summary: {summary}"));
             }
-        } else {
-            path.to_path_buf()
-        };
-
-        if let Some(parent) = target_path.parent() {
-            if !parent.as_os_str().is_empty() {
-                tokio::fs::create_dir_all(parent).await.map_err(|e| {
-                    TagisanError::Execution(format!("Failed to create parent directory '{parent:?}': {e}"))
-                })?;
+            if let Some(uf) = meta.get("user_facing").or_else(|| meta.get("UserFacing")).and_then(|v| v.as_bool()) {
+                meta_lines.push(format!(" - User Facing: {uf}"));
+            }
+            if let Some(rf) = meta.get("request_feedback").or_else(|| meta.get("RequestFeedback")).and_then(|v| v.as_bool()) {
+                meta_lines.push(format!(" - Request Feedback: {rf}"));
+            }
+            if !meta_lines.is_empty() {
+                output.push_str("\nArtifact Metadata:\n");
+                output.push_str(&meta_lines.join("\n"));
             }
         }
 
-        tokio::fs::write(&target_path, content).await.map_err(|e| {
-            TagisanError::Execution(format!("Failed to write to file '{}': {e}", target_path.display()))
-        })?;
-
-        Ok(format!("Successfully wrote {} bytes to {}", content.len(), target_path.display()))
+        Ok(output)
     }
 }
 
@@ -231,31 +621,53 @@ async fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
 // 2a. EditFileTool
 // =========================================================================
 
-/// Tool for editing existing files by replacing exact content chunks, with line scoping, backup creation, and atomic writes.
-#[derive(Debug, Default, Clone)]
+/// Tool for editing existing files by replacing exact content chunks, with line scoping, backup creation, sliding window drift tolerance, and atomic writes.
+#[derive(Debug, Clone)]
 pub struct EditFileTool {
     pub working_dir: Option<PathBuf>,
+    pub tool_name: &'static str,
+}
+
+impl Default for EditFileTool {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl EditFileTool {
     pub fn new() -> Self {
-        Self { working_dir: None }
+        Self {
+            working_dir: None,
+            tool_name: "edit_file",
+        }
+    }
+
+    pub fn new_replace_file_content() -> Self {
+        Self {
+            working_dir: None,
+            tool_name: "replace_file_content",
+        }
     }
 
     pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
         self.working_dir = Some(dir.into());
         self
     }
+
+    pub fn with_name(mut self, name: &'static str) -> Self {
+        self.tool_name = name;
+        self
+    }
 }
 
 #[async_trait]
 impl ToolHandler for EditFileTool {
-    fn name(&self) -> &'static str {
-        "edit_file"
+    fn name(&self) -> &str {
+        self.tool_name
     }
 
-    fn description(&self) -> &'static str {
-        "Edit a file by replacing an exact chunk of target text with replacement text. Supports line-range scoping, multiple replacement toggle, automatic backup creation, and atomic writes."
+    fn description(&self) -> &str {
+        "Edit a file by replacing an exact chunk of target text with replacement text. Supports line-range scoping, line-drift sliding window tolerance, multiple replacement toggle, automatic backup creation, diff statistics, lint error tracking, and atomic writes."
     }
 
     fn parameters_schema(&self) -> Value {
@@ -264,31 +676,48 @@ impl ToolHandler for EditFileTool {
             "properties": {
                 "path": {
                     "type": "string",
-                    "description": "The target file to edit (absolute or relative to working directory)."
+                    "description": "The target file to edit (also accepts 'TargetFile' or 'file_path')."
                 },
                 "target_content": {
                     "type": "string",
-                    "description": "The exact substring or text chunk to be replaced."
+                    "description": "The exact substring or text chunk to be replaced (also accepts 'TargetContent')."
                 },
                 "replacement_content": {
                     "type": "string",
-                    "description": "The new replacement content."
+                    "description": "The new replacement content (also accepts 'ReplacementContent')."
                 },
                 "start_line": {
                     "type": "integer",
-                    "description": "Optional 1-indexed line number to start scoped search range."
+                    "description": "Optional 1-indexed line number to start scoped search range (also accepts 'StartLine')."
                 },
                 "end_line": {
                     "type": "integer",
-                    "description": "Optional 1-indexed line number to end scoped search range."
+                    "description": "Optional 1-indexed line number to end scoped search range (also accepts 'EndLine')."
                 },
                 "allow_multiple": {
                     "type": "boolean",
-                    "description": "If true, replaces all occurrences in the target scope. If false (default), errors if multiple matches found."
+                    "description": "If true, replaces all occurrences in the target scope. If false (default), errors if multiple matches found (also accepts 'AllowMultiple')."
                 },
                 "create_backup": {
                     "type": "boolean",
                     "description": "If true (default), writes '<path>.bak' before modifying."
+                },
+                "target_lint_error_ids": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Optional list of compiler/linter error IDs resolved by this edit (also accepts 'TargetLintErrorIds')."
+                },
+                "instruction": {
+                    "type": "string",
+                    "description": "Optional description of what the edit is intending to accomplish."
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Optional user-facing summary of why the edit was made."
+                },
+                "line_drift": {
+                    "type": "boolean",
+                    "description": "If true, enables sliding window tolerance (searches ±25 lines if target is not found at exact line range). Default: true for replace_file_content, false for edit_file."
                 }
             },
             "required": ["path", "target_content", "replacement_content"]
@@ -298,27 +727,58 @@ impl ToolHandler for EditFileTool {
     async fn execute(&self, arguments: Value) -> Result<String> {
         let path_str = arguments
             .get("path")
+            .or_else(|| arguments.get("TargetFile"))
+            .or_else(|| arguments.get("target_file"))
+            .or_else(|| arguments.get("file_path"))
             .and_then(|v| v.as_str())
-            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path'".to_string()))?;
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path' or 'TargetFile'".to_string()))?;
 
         let target_content = arguments
             .get("target_content")
+            .or_else(|| arguments.get("TargetContent"))
             .and_then(|v| v.as_str())
-            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'target_content'".to_string()))?;
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'target_content' or 'TargetContent'".to_string()))?;
 
         let replacement_content = arguments
             .get("replacement_content")
+            .or_else(|| arguments.get("ReplacementContent"))
             .and_then(|v| v.as_str())
-            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'replacement_content'".to_string()))?;
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'replacement_content' or 'ReplacementContent'".to_string()))?;
 
         if target_content.is_empty() {
             return Err(TagisanError::Execution("Parameter 'target_content' cannot be empty.".to_string()));
         }
 
-        let start_line = arguments.get("start_line").and_then(|v| v.as_u64());
-        let end_line = arguments.get("end_line").and_then(|v| v.as_u64());
-        let allow_multiple = arguments.get("allow_multiple").and_then(|v| v.as_bool()).unwrap_or(false);
-        let create_backup = arguments.get("create_backup").and_then(|v| v.as_bool()).unwrap_or(true);
+        let start_line = arguments.get("start_line").or_else(|| arguments.get("StartLine")).and_then(|v| v.as_u64());
+        let end_line = arguments.get("end_line").or_else(|| arguments.get("EndLine")).and_then(|v| v.as_u64());
+        let allow_multiple = arguments.get("allow_multiple").or_else(|| arguments.get("AllowMultiple")).and_then(|v| v.as_bool()).unwrap_or(false);
+        let create_backup = arguments.get("create_backup").or_else(|| arguments.get("CreateBackup")).and_then(|v| v.as_bool()).unwrap_or(true);
+        let line_drift = arguments
+            .get("line_drift")
+            .or_else(|| arguments.get("allow_drift"))
+            .or_else(|| arguments.get("drift_tolerance"))
+            .or_else(|| arguments.get("LineDrift"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(self.tool_name == "replace_file_content");
+
+        let target_lint_error_ids: Vec<String> = arguments
+            .get("target_lint_error_ids")
+            .or_else(|| arguments.get("TargetLintErrorIds"))
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().filter_map(|x| x.as_str().map(|s| s.to_string())).collect())
+            .unwrap_or_default();
+
+        let instruction = arguments
+            .get("instruction")
+            .or_else(|| arguments.get("Instruction"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        let description = arguments
+            .get("description")
+            .or_else(|| arguments.get("Description"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
 
         let target_path = resolve_target_path(&self.working_dir, Path::new(path_str));
 
@@ -335,6 +795,8 @@ impl ToolHandler for EditFileTool {
 
         let lines: Vec<&str> = original_content.split_inclusive('\n').collect();
         let total_lines = lines.len();
+
+        let mut drift_note: Option<String> = None;
 
         let (prefix, slice_content, suffix, scope_desc) = if start_line.is_some() || end_line.is_some() {
             let s = start_line.unwrap_or(1);
@@ -368,11 +830,42 @@ impl ToolHandler for EditFileTool {
             let start_idx = (s as usize) - 1;
             let end_idx = e;
 
-            let prefix = lines[..start_idx].join("");
-            let slice = lines[start_idx..end_idx].join("");
-            let suffix = lines[end_idx..].join("");
-            let scope_desc = format!("lines {s}..={e}");
-            (prefix, slice, suffix, scope_desc)
+            let exact_slice = lines[start_idx..end_idx].join("");
+            if exact_slice.contains(target_content) {
+                let prefix = lines[..start_idx].join("");
+                let suffix = lines[end_idx..].join("");
+                let scope_desc = format!("lines {s}..={e}");
+                (prefix, exact_slice, suffix, scope_desc)
+            } else if line_drift {
+                // Line-drift sliding window tolerance: expand search scope by ±25 lines
+                let drift_window = 25usize;
+                let drift_start = (s as usize).saturating_sub(drift_window).max(1);
+                let drift_end = (e + drift_window).min(total_lines);
+
+                let d_start_idx = drift_start - 1;
+                let d_end_idx = drift_end;
+                let drift_slice = lines[d_start_idx..d_end_idx].join("");
+
+                if drift_slice.contains(target_content) {
+                    drift_note = Some(format!(
+                        "line-drift sliding window applied (expanded requested lines {s}..={e} to lines {drift_start}..={drift_end})"
+                    ));
+                    let prefix = lines[..d_start_idx].join("");
+                    let suffix = lines[d_end_idx..].join("");
+                    let scope_desc = format!("lines {drift_start}..={drift_end} (drifted from requested lines {s}..={e})");
+                    (prefix, drift_slice, suffix, scope_desc)
+                } else {
+                    let prefix = lines[..start_idx].join("");
+                    let suffix = lines[end_idx..].join("");
+                    let scope_desc = format!("lines {s}..={e}");
+                    (prefix, exact_slice, suffix, scope_desc)
+                }
+            } else {
+                let prefix = lines[..start_idx].join("");
+                let suffix = lines[end_idx..].join("");
+                let scope_desc = format!("lines {s}..={e}");
+                (prefix, exact_slice, suffix, scope_desc)
+            }
         } else {
             (String::new(), original_content.clone(), String::new(), "entire file".to_string())
         };
@@ -445,12 +938,19 @@ impl ToolHandler for EditFileTool {
         let delta_bytes = (new_bytes as i64) - (original_bytes as i64);
         let new_lines_count = new_content.split_inclusive('\n').count();
 
-        Ok(format!(
+        let target_lines = target_content.split('\n').count();
+        let repl_lines = replacement_content.split('\n').count();
+        let lines_removed = target_lines * match_count;
+        let lines_added = repl_lines * match_count;
+        let net_delta_lines = (new_lines_count as i64) - (total_lines as i64);
+
+        let mut output = format!(
             "Successfully edited file '{}'.\n\
              - Scope: {}\n\
              - Replacements: {} occurrence(s)\n\
              - Size: {} bytes -> {} bytes ({:+})\n\
              - Line count: {} -> {}\n\
+             - Diff: +{} lines, -{} lines (net delta: {:+})\n\
              - Backup: {}",
             target_path.display(),
             scope_desc,
@@ -460,8 +960,26 @@ impl ToolHandler for EditFileTool {
             delta_bytes,
             total_lines,
             new_lines_count,
+            lines_added,
+            lines_removed,
+            net_delta_lines,
             backup_info
-        ))
+        );
+
+        if let Some(ref note) = drift_note {
+            output.push_str(&format!("\n - Drift: {note}"));
+        }
+        if let Some(ref desc) = description {
+            output.push_str(&format!("\n - Description: {desc}"));
+        }
+        if let Some(ref inst) = instruction {
+            output.push_str(&format!("\n - Instruction: {inst}"));
+        }
+        if !target_lint_error_ids.is_empty() {
+            output.push_str(&format!("\n - Resolved Lint IDs: {}", target_lint_error_ids.join(", ")));
+        }
+
+        Ok(output)
     }
 }
 
@@ -520,8 +1038,12 @@ impl ToolHandler for DeleteFileTool {
     async fn execute(&self, arguments: Value) -> Result<String> {
         let path_str = arguments
             .get("path")
+            .or_else(|| arguments.get("TargetFile"))
+            .or_else(|| arguments.get("target_file"))
+            .or_else(|| arguments.get("file_path"))
+            .or_else(|| arguments.get("AbsolutePath"))
             .and_then(|v| v.as_str())
-            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path'".to_string()))?;
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'path' or 'TargetFile'".to_string()))?;
 
         let recursive = arguments.get("recursive").and_then(|v| v.as_bool()).unwrap_or(false);
         let trash = arguments.get("trash").and_then(|v| v.as_bool()).unwrap_or(true);
@@ -679,6 +1201,11 @@ impl ToolHandler for ListDirTool {
     async fn execute(&self, arguments: Value) -> Result<String> {
         let path_str = arguments
             .get("path")
+            .or_else(|| arguments.get("DirectoryPath"))
+            .or_else(|| arguments.get("directory_path"))
+            .or_else(|| arguments.get("SearchDirectory"))
+            .or_else(|| arguments.get("search_directory"))
+            .or_else(|| arguments.get("AbsolutePath"))
             .and_then(|v| v.as_str())
             .unwrap_or(".");
 
@@ -838,6 +1365,709 @@ impl ToolHandler for ListDirTool {
         ));
 
         Ok(output)
+    }
+}
+
+// =========================================================================
+// 2d. GrepSearchTool
+// =========================================================================
+
+fn glob_to_regex(glob: &str) -> std::result::Result<regex::Regex, regex::Error> {
+    let mut pattern = String::from("^");
+    let mut chars = glob.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            '*' => {
+                if chars.peek() == Some(&'*') {
+                    chars.next();
+                    if chars.peek() == Some(&'/') || chars.peek() == Some(&'\\') {
+                        chars.next();
+                        pattern.push_str("(?:.*/)?");
+                    } else {
+                        pattern.push_str(".*");
+                    }
+                } else {
+                    pattern.push_str("[^/\\\\]*");
+                }
+            }
+            '?' => pattern.push_str("[^/\\\\]"),
+            '.' | '(' | ')' | '[' | ']' | '{' | '}' | '+' | '^' | '$' | '|' => {
+                pattern.push('\\');
+                pattern.push(c);
+            }
+            '\\' | '/' => pattern.push_str("[/\\\\]"),
+            other => pattern.push(other),
+        }
+    }
+    pattern.push('$');
+    regex::RegexBuilder::new(&pattern).case_insensitive(true).build()
+}
+
+/// Result structure for a single grep match
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GrepMatch {
+    pub filename: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line_number: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub line_content: Option<String>,
+}
+
+/// Tool for performing fast recursive regex and literal text searches across filesystem hierarchies
+#[derive(Debug, Default, Clone)]
+pub struct GrepSearchTool {
+    pub working_dir: Option<PathBuf>,
+}
+
+impl GrepSearchTool {
+    pub fn new() -> Self {
+        Self { working_dir: None }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+
+    async fn search_file(
+        path: &Path,
+        re: &regex::Regex,
+        match_per_line: bool,
+        max_results: usize,
+        matches: &mut Vec<GrepMatch>,
+    ) -> Result<bool> {
+        let raw_bytes = match tokio::fs::read(path).await {
+            Ok(b) => b,
+            Err(_) => return Ok(false),
+        };
+
+        // Binary check: skip if sample contains null bytes or non-UTF8
+        let check_len = raw_bytes.len().min(1024);
+        if raw_bytes[..check_len].contains(&0) {
+            return Ok(false);
+        }
+
+        let content = match std::str::from_utf8(&raw_bytes) {
+            Ok(s) => s,
+            Err(_) => return Ok(false),
+        };
+
+        let file_disp = path.to_string_lossy().replace('\\', "/");
+
+        for (idx, line) in content.lines().enumerate() {
+            if re.is_match(line) {
+                if match_per_line {
+                    matches.push(GrepMatch {
+                        filename: file_disp.clone(),
+                        line_number: Some(idx + 1),
+                        line_content: Some(line.to_string()),
+                    });
+                    if matches.len() >= max_results {
+                        return Ok(true);
+                    }
+                } else {
+                    matches.push(GrepMatch {
+                        filename: file_disp.clone(),
+                        line_number: None,
+                        line_content: None,
+                    });
+                    if matches.len() >= max_results {
+                        return Ok(true);
+                    }
+                    break;
+                }
+            }
+        }
+
+        Ok(matches.len() >= max_results)
+    }
+}
+
+#[async_trait]
+impl ToolHandler for GrepSearchTool {
+    fn name(&self) -> &str {
+        "grep_search"
+    }
+
+    fn description(&self) -> &str {
+        "Search for exact or regex patterns across files in a directory tree. Returns structured matching lines with file path, line numbers, and content snippets in JSON format."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "The search term or regex pattern to look for within files."
+                },
+                "search_path": {
+                    "type": "string",
+                    "description": "The path to search (file or directory, also accepts 'SearchPath' or 'path'). Default: '.'"
+                },
+                "is_regex": {
+                    "type": "boolean",
+                    "description": "If true, treats query as a regular expression. Default: false."
+                },
+                "case_insensitive": {
+                    "type": "boolean",
+                    "description": "If true, performs case-insensitive search. Default: false."
+                },
+                "match_per_line": {
+                    "type": "boolean",
+                    "description": "If true, returns each matching line with snippet and line number. If false, returns only unique filenames. Default: true."
+                },
+                "includes": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Glob patterns to filter files (e.g. ['*.rs', '!**/vendor/*']). Default: all files."
+                },
+                "max_results": {
+                    "type": "integer",
+                    "description": "Maximum number of match entries to return. Default: 50."
+                }
+            },
+            "required": ["query"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let query = arguments
+            .get("query")
+            .or_else(|| arguments.get("Query"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'query'".to_string()))?;
+
+        if query.is_empty() {
+            return Err(TagisanError::Execution("Parameter 'query' cannot be empty.".to_string()));
+        }
+
+        let search_path_str = arguments
+            .get("search_path")
+            .or_else(|| arguments.get("SearchPath"))
+            .or_else(|| arguments.get("path"))
+            .and_then(|v| v.as_str())
+            .unwrap_or(".");
+
+        let is_regex = arguments
+            .get("is_regex")
+            .or_else(|| arguments.get("IsRegex"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let case_insensitive = arguments
+            .get("case_insensitive")
+            .or_else(|| arguments.get("CaseInsensitive"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let match_per_line = arguments
+            .get("match_per_line")
+            .or_else(|| arguments.get("MatchPerLine"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(true);
+
+        let max_results = arguments
+            .get("max_results")
+            .or_else(|| arguments.get("MaxResults"))
+            .and_then(|v| v.as_u64())
+            .unwrap_or(50)
+            .max(1) as usize;
+
+        let includes: Vec<String> = arguments
+            .get("includes")
+            .or_else(|| arguments.get("Includes"))
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        let target_path = resolve_target_path(&self.working_dir, Path::new(search_path_str));
+
+        if !target_path.exists() {
+            return Err(TagisanError::Execution(format!("Search path does not exist: '{}'", target_path.display())));
+        }
+
+        let regex_pattern = if is_regex {
+            query.to_string()
+        } else {
+            regex::escape(query)
+        };
+
+        let re = regex::RegexBuilder::new(&regex_pattern)
+            .case_insensitive(case_insensitive)
+            .build()
+            .map_err(|e| TagisanError::Execution(format!("Invalid regex pattern '{query}': {e}")))?;
+
+        let mut positive_globs = Vec::new();
+        let mut negative_globs = Vec::new();
+        for inc in &includes {
+            if let Some(stripped) = inc.strip_prefix('!') {
+                if let Ok(reg) = glob_to_regex(stripped) {
+                    negative_globs.push(reg);
+                }
+            } else if let Ok(reg) = glob_to_regex(inc) {
+                positive_globs.push(reg);
+            }
+        }
+
+        let mut matches = Vec::new();
+
+        if target_path.is_file() {
+            Self::search_file(
+                &target_path,
+                &re,
+                match_per_line,
+                max_results,
+                &mut matches,
+            ).await?;
+        } else {
+            let mut queue = VecDeque::new();
+            queue.push_back(target_path.clone());
+
+            'dir_loop: while let Some(dir) = queue.pop_front() {
+                let mut reader = match tokio::fs::read_dir(&dir).await {
+                    Ok(r) => r,
+                    Err(_) => continue,
+                };
+
+                while let Ok(Some(entry)) = reader.next_entry().await {
+                    let entry_path = entry.path();
+                    let file_name = entry.file_name().to_string_lossy().to_string();
+
+                    let meta = match tokio::fs::symlink_metadata(&entry_path).await {
+                        Ok(m) => m,
+                        Err(_) => continue,
+                    };
+
+                    if meta.is_dir() {
+                        if file_name == ".git" || file_name == "node_modules" || file_name == "target" {
+                            continue;
+                        }
+                        queue.push_back(entry_path);
+                    } else if meta.is_file() {
+                        let rel_str = entry_path
+                            .strip_prefix(&target_path)
+                            .unwrap_or(&entry_path)
+                            .to_string_lossy()
+                            .replace('\\', "/");
+
+                        if negative_globs.iter().any(|g| g.is_match(&rel_str) || g.is_match(&file_name)) {
+                            continue;
+                        }
+                        if !positive_globs.is_empty()
+                            && !positive_globs.iter().any(|g| g.is_match(&rel_str) || g.is_match(&file_name))
+                        {
+                            continue;
+                        }
+
+                        let reached_max = Self::search_file(
+                            &entry_path,
+                            &re,
+                            match_per_line,
+                            max_results,
+                            &mut matches,
+                        ).await?;
+
+                        if reached_max || matches.len() >= max_results {
+                            break 'dir_loop;
+                        }
+                    }
+                }
+            }
+        }
+
+        serde_json::to_string_pretty(&matches)
+            .map_err(|e| TagisanError::Execution(format!("Serialization error: {e}")))
+    }
+}
+
+// =========================================================================
+// 2e. FindByNameTool
+// =========================================================================
+
+/// Structured entry returned by FindByNameTool
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FoundEntry {
+    pub path: String,
+    #[serde(rename = "type")]
+    pub entry_type: String,
+    pub size_bytes: u64,
+    pub modified: String,
+}
+
+/// Tool for fast filesystem scanning and discovery using glob/pattern matching
+#[derive(Debug, Default, Clone)]
+pub struct FindByNameTool {
+    pub working_dir: Option<PathBuf>,
+}
+
+impl FindByNameTool {
+    pub fn new() -> Self {
+        Self { working_dir: None }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for FindByNameTool {
+    fn name(&self) -> &str {
+        "find_by_name"
+    }
+
+    fn description(&self) -> &str {
+        "Search for files and directories matching a pattern, extensions, or type filters within a directory tree. Returns structured metadata with paths, sizes, and timestamps in JSON format."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "search_directory": {
+                    "type": "string",
+                    "description": "The directory to search within (also accepts 'SearchDirectory' or 'path'). Default: '.'"
+                },
+                "pattern": {
+                    "type": "string",
+                    "description": "Optional glob or substring pattern to search for (also accepts 'Pattern')."
+                },
+                "type": {
+                    "type": "string",
+                    "enum": ["file", "directory", "any"],
+                    "description": "Type filter: 'file', 'directory', or 'any'. Default: 'any'."
+                },
+                "max_depth": {
+                    "type": "integer",
+                    "description": "Optional maximum traversal depth (1 = direct children)."
+                },
+                "extensions": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Optional file extensions to include (without leading dot)."
+                },
+                "excludes": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Optional glob patterns to exclude."
+                },
+                "full_path": {
+                    "type": "boolean",
+                    "description": "If true, pattern matches the full relative path instead of only filename. Default: false."
+                },
+                "max_results": {
+                    "type": "integer",
+                    "description": "Maximum number of results to return. Default: 50."
+                }
+            }
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let dir_str = arguments
+            .get("search_directory")
+            .or_else(|| arguments.get("SearchDirectory"))
+            .or_else(|| arguments.get("path"))
+            .and_then(|v| v.as_str())
+            .unwrap_or(".");
+
+        let pattern_opt = arguments
+            .get("pattern")
+            .or_else(|| arguments.get("Pattern"))
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string());
+
+        let type_filter = arguments
+            .get("type")
+            .or_else(|| arguments.get("Type"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("any")
+            .to_lowercase();
+
+        let max_depth = arguments
+            .get("max_depth")
+            .or_else(|| arguments.get("MaxDepth"))
+            .and_then(|v| v.as_u64())
+            .map(|d| d.max(1) as usize);
+
+        let full_path = arguments
+            .get("full_path")
+            .or_else(|| arguments.get("FullPath"))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let max_results = arguments
+            .get("max_results")
+            .or_else(|| arguments.get("MaxResults"))
+            .and_then(|v| v.as_u64())
+            .unwrap_or(50)
+            .max(1) as usize;
+
+        let extensions: Vec<String> = arguments
+            .get("extensions")
+            .or_else(|| arguments.get("Extensions"))
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(|s| s.trim_start_matches('.').to_lowercase()))
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        let excludes: Vec<String> = arguments
+            .get("excludes")
+            .or_else(|| arguments.get("Excludes"))
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        let target_path = resolve_target_path(&self.working_dir, Path::new(dir_str));
+
+        if !target_path.exists() {
+            return Err(TagisanError::Execution(format!("Search directory does not exist: '{}'", target_path.display())));
+        }
+        if !target_path.is_dir() {
+            return Err(TagisanError::Execution(format!("Search path is not a directory: '{}'", target_path.display())));
+        }
+
+        let mut compiled_excludes = Vec::new();
+        for ex in &excludes {
+            if let Ok(reg) = glob_to_regex(ex) {
+                compiled_excludes.push(reg);
+            }
+        }
+
+        let pattern_regex = if let Some(ref pat) = pattern_opt {
+            glob_to_regex(pat).ok().or_else(|| {
+                regex::RegexBuilder::new(&regex::escape(pat))
+                    .case_insensitive(true)
+                    .build()
+                    .ok()
+            })
+        } else {
+            None
+        };
+
+        let mut results = Vec::new();
+        let mut queue = VecDeque::new();
+        queue.push_back((target_path.clone(), 1usize));
+
+        'search_loop: while let Some((current_dir, depth)) = queue.pop_front() {
+            let mut reader = match tokio::fs::read_dir(&current_dir).await {
+                Ok(r) => r,
+                Err(_) => continue,
+            };
+
+            while let Ok(Some(entry)) = reader.next_entry().await {
+                let entry_path = entry.path();
+                let file_name = entry.file_name().to_string_lossy().to_string();
+
+                let meta = match tokio::fs::symlink_metadata(&entry_path).await {
+                    Ok(m) => m,
+                    Err(_) => continue,
+                };
+
+                let is_dir = meta.is_dir();
+                let rel_path = entry_path
+                    .strip_prefix(&target_path)
+                    .unwrap_or(&entry_path)
+                    .to_string_lossy()
+                    .replace('\\', "/");
+
+                if compiled_excludes.iter().any(|g| g.is_match(&rel_path) || g.is_match(&file_name)) {
+                    continue;
+                }
+
+                if is_dir {
+                    let can_recurse = match max_depth {
+                        Some(max_d) => depth < max_d,
+                        None => true,
+                    };
+                    if can_recurse && file_name != ".git" && file_name != "target" && file_name != "node_modules" {
+                        queue.push_back((entry_path.clone(), depth + 1));
+                    }
+                }
+
+                if type_filter == "file" && is_dir {
+                    continue;
+                }
+                if type_filter == "directory" && !is_dir {
+                    continue;
+                }
+
+                if !extensions.is_empty() {
+                    if is_dir {
+                        continue;
+                    }
+                    let file_ext = entry_path
+                        .extension()
+                        .and_then(|e| e.to_str())
+                        .unwrap_or("")
+                        .to_lowercase();
+                    if !extensions.iter().any(|ext| ext == &file_ext) {
+                        continue;
+                    }
+                }
+
+                if let Some(ref reg) = pattern_regex {
+                    let match_target = if full_path { &rel_path } else { &file_name };
+                    if !reg.is_match(match_target) {
+                        continue;
+                    }
+                }
+
+                let modified_time = meta
+                    .modified()
+                    .ok()
+                    .map(|t| {
+                        let dt: chrono::DateTime<chrono::Utc> = t.into();
+                        dt.to_rfc3339()
+                    })
+                    .unwrap_or_else(|| "1970-01-01T00:00:00Z".to_string());
+
+                results.push(FoundEntry {
+                    path: rel_path,
+                    entry_type: if is_dir { "directory".to_string() } else { "file".to_string() },
+                    size_bytes: if is_dir { 0 } else { meta.len() },
+                    modified: modified_time,
+                });
+
+                if results.len() >= max_results {
+                    break 'search_loop;
+                }
+            }
+        }
+
+        serde_json::to_string_pretty(&results)
+            .map_err(|e| TagisanError::Execution(format!("Serialization error: {e}")))
+    }
+}
+
+// =========================================================================
+// 2f. Alias Structs for Antigravity CLI Tool Parity
+// =========================================================================
+
+/// Alias for ReadFileTool under the Antigravity 'view_file' name
+#[derive(Debug, Default, Clone)]
+pub struct ViewFileTool {
+    pub inner: ReadFileTool,
+}
+
+impl ViewFileTool {
+    pub fn new() -> Self {
+        Self {
+            inner: ReadFileTool::new().with_name("view_file"),
+        }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.inner = self.inner.with_working_dir(dir);
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for ViewFileTool {
+    fn name(&self) -> &str {
+        "view_file"
+    }
+
+    fn description(&self) -> &str {
+        "View the contents of a file from the local filesystem with optional line slicing and offset pagination (Antigravity CLI alias for read_file)."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        self.inner.parameters_schema()
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        self.inner.execute(arguments).await
+    }
+}
+
+/// Alias for WriteFileTool under the Antigravity 'write_to_file' name
+#[derive(Debug, Default, Clone)]
+pub struct WriteToFileTool {
+    pub inner: WriteFileTool,
+}
+
+impl WriteToFileTool {
+    pub fn new() -> Self {
+        Self {
+            inner: WriteFileTool::new().with_name("write_to_file"),
+        }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.inner = self.inner.with_working_dir(dir);
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for WriteToFileTool {
+    fn name(&self) -> &str {
+        "write_to_file"
+    }
+
+    fn description(&self) -> &str {
+        "Create new files or overwrite existing files atomically on local disk (Antigravity CLI alias for write_file)."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        self.inner.parameters_schema()
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        self.inner.execute(arguments).await
+    }
+}
+
+/// Alias for EditFileTool under the Antigravity 'replace_file_content' name
+#[derive(Debug, Default, Clone)]
+pub struct ReplaceFileContentTool {
+    pub inner: EditFileTool,
+}
+
+impl ReplaceFileContentTool {
+    pub fn new() -> Self {
+        Self {
+            inner: EditFileTool::new().with_name("replace_file_content"),
+        }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.inner = self.inner.with_working_dir(dir);
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for ReplaceFileContentTool {
+    fn name(&self) -> &str {
+        "replace_file_content"
+    }
+
+    fn description(&self) -> &str {
+        "Edit a file by replacing single contiguous blocks of text with line drift sliding window tolerance (Antigravity CLI alias for edit_file)."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        self.inner.parameters_schema()
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        self.inner.execute(arguments).await
     }
 }
 

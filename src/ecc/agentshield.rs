@@ -454,12 +454,21 @@ impl AgentShieldScanner {
 
                 Self::scan_command(cmd)
             }
-            "read_file" | "write_file" | "edit_file" | "delete_file" | "list_dir" | "view_image" | "query_code_graph" | "calculate_blast_radius" | "grounded_inference" => {
+            "read_file" | "view_file" | "write_file" | "write_to_file" | "edit_file" | "replace_file_content" | "grep_search" | "find_by_name" | "delete_file" | "list_dir" | "view_image" | "query_code_graph" | "calculate_blast_radius" | "grounded_inference" => {
                 let path = arguments
                     .get("path")
                     .or_else(|| arguments.get("file_path"))
                     .or_else(|| arguments.get("filepath"))
                     .or_else(|| arguments.get("uri"))
+                    .or_else(|| arguments.get("AbsolutePath"))
+                    .or_else(|| arguments.get("TargetFile"))
+                    .or_else(|| arguments.get("target_file"))
+                    .or_else(|| arguments.get("SearchPath"))
+                    .or_else(|| arguments.get("search_path"))
+                    .or_else(|| arguments.get("SearchDirectory"))
+                    .or_else(|| arguments.get("search_directory"))
+                    .or_else(|| arguments.get("DirectoryPath"))
+                    .or_else(|| arguments.get("directory_path"))
                     .and_then(|v| v.as_str())
                     .unwrap_or_default();
 
@@ -470,11 +479,17 @@ impl AgentShieldScanner {
                     }
                 }
 
-                if base_name == "write_file" || base_name == "edit_file" {
+                if matches!(base_name, "write_file" | "write_to_file" | "edit_file" | "replace_file_content") {
                     let content = arguments
                         .get("content")
                         .or_else(|| arguments.get("replacement"))
                         .or_else(|| arguments.get("code"))
+                        .or_else(|| arguments.get("ReplacementContent"))
+                        .or_else(|| arguments.get("replacement_content"))
+                        .or_else(|| arguments.get("CodeContent"))
+                        .or_else(|| arguments.get("code_content"))
+                        .or_else(|| arguments.get("TargetContent"))
+                        .or_else(|| arguments.get("target_content"))
                         .and_then(|v| v.as_str())
                         .unwrap_or_default();
 
@@ -2048,6 +2063,8 @@ impl AgentShieldScanner {
             ("id_rsa", "OpenSSH private RSA key", ThreatLevel::Critical),
             ("id_ed25519", "OpenSSH private Ed25519 key", ThreatLevel::Critical),
             ("id_ecdsa", "OpenSSH private ECDSA key", ThreatLevel::Critical),
+            (".ssh", "OpenSSH credential directory", ThreatLevel::Critical),
+            ("/.ssh", "OpenSSH credential directory", ThreatLevel::Critical),
             (".git-credentials", "Git plaintext credentials file", ThreatLevel::Critical),
             ("git-credentials", "Git plaintext credentials file", ThreatLevel::Critical),
             (".netrc", "Netrc remote machine login credentials", ThreatLevel::Critical),
