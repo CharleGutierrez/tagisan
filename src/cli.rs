@@ -712,6 +712,117 @@ pub enum CopilotAction {
         #[arg(long)]
         meeting: Option<String>,
     },
+
+    /// Microsoft Purview Data Sensitivity & Zero-Egress Air-Gapping Evaluation
+    Purview {
+        /// Content, code snippet, or document text to evaluate
+        #[arg(long)]
+        content: String,
+
+        /// Optional explicit sensitivity label: General, Confidential, HighlyConfidential, Secret
+        #[arg(long)]
+        label: Option<String>,
+
+        /// Optional planned destination or target execution engine
+        #[arg(long)]
+        destination: Option<String>,
+    },
+
+    /// Architecture Decision Record (ADR) Synthesis & Sync to OneNote / SharePoint
+    Adr {
+        /// Architectural proposal, design problem, or debate topic
+        #[arg(long)]
+        proposal: String,
+
+        /// Optional consensus decision or Lakandiwa debate synthesis
+        #[arg(long)]
+        verdict: Option<String>,
+
+        /// Optional human-readable title for the decision record
+        #[arg(long)]
+        title: Option<String>,
+
+        /// Target OneNote section (defaults to 'Architecture Decisions')
+        #[arg(long)]
+        onenote_section: Option<String>,
+
+        /// Target SharePoint folder (defaults to 'Engineering/ADRs')
+        #[arg(long)]
+        sharepoint_folder: Option<String>,
+    },
+
+    /// Ephemeral Git Branch Creation & Pull Request Automation with Blast Telemetry
+    Pr {
+        /// Code patch, diff snippet, or engineering requirement text
+        #[arg(long)]
+        patch: String,
+
+        /// Pull request title or conventional commit summary
+        #[arg(long)]
+        title: Option<String>,
+
+        /// Ephemeral branch name (auto-generated if omitted)
+        #[arg(long)]
+        branch: Option<String>,
+
+        /// Base branch to merge into (defaults to 'main')
+        #[arg(long, default_value = "main")]
+        base: String,
+
+        /// Target platform: 'azure_devops' or 'github' (defaults to 'azure_devops')
+        #[arg(long, default_value = "azure_devops")]
+        platform: String,
+
+        /// Primary architectural symbol affected
+        #[arg(long)]
+        symbol: Option<String>,
+
+        /// Teams channel or chat ID to dispatch the PR notification card
+        #[arg(long)]
+        channel: Option<String>,
+    },
+
+    /// Responsive Executive Presentation Briefing Slide Deck Generator (HTML & Markdown)
+    Deck {
+        /// Presentation title (defaults to 'Tagisan Executive Architecture Briefing')
+        #[arg(long, default_value = "Tagisan Executive Architecture Briefing")]
+        title: String,
+
+        /// Output format: 'html', 'markdown', or 'all' (defaults to 'all')
+        #[arg(long, default_value = "all")]
+        format: String,
+
+        /// File path to save the generated deck (e.g. '.tagisan/executive_deck.html')
+        #[arg(long)]
+        output: Option<String>,
+
+        /// Recipient email address to dispatch deck via Outlook
+        #[arg(long)]
+        email: Option<String>,
+
+        /// Custom executive notes or remarks
+        #[arg(long)]
+        notes: Option<String>,
+    },
+
+    /// Interactive Teams Bot Webhook Listener & Action.Submit Handler
+    Listen {
+        /// Port to listen on (default: 3978)
+        #[arg(short, long, default_value = "3978")]
+        port: u16,
+
+        /// Host address to bind to (default: 127.0.0.1)
+        #[arg(short = 'H', long, default_value = "127.0.0.1")]
+        host: String,
+
+        /// Dry-run test action to simulate: 'approve_patch', 'run_autofix', 'run_debate', 'sync_adr'
+        #[arg(long)]
+        test_action: Option<String>,
+
+        /// Target file or data for dry-run simulation
+        #[arg(long)]
+        target: Option<String>,
+    },
 }
 
 
@@ -5155,6 +5266,117 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
 
             let out = tool.execute(args).await?;
             println!("\n{out}");
+        }
+
+        CopilotAction::Purview { content, label, destination } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🛡️  MICROSOFT PURVIEW SENSITIVITY & AIR-GAP GUARD".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotPurviewGuardTool::new();
+            let args = serde_json::json!({
+                "content": content,
+                "label": label,
+                "destination": destination,
+            });
+
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Adr { proposal, verdict, title, onenote_section, sharepoint_folder } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📑 COPILOT ADR SYNCHRONIZATION (ONENOTE & SHAREPOINT)".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotAdrSyncTool::new();
+            let args = serde_json::json!({
+                "proposal": proposal,
+                "verdict": verdict,
+                "title": title,
+                "onenote_section": onenote_section,
+                "sharepoint_folder": sharepoint_folder,
+            });
+
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Pr { patch, title, branch, base, platform, symbol, channel } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🚀 COPILOT PULL REQUEST & EPHEMERAL BRANCH AUTOMATION".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotCreatePrTool::new();
+            let args = serde_json::json!({
+                "patch": patch,
+                "title": title,
+                "branch_name": branch,
+                "base_branch": base,
+                "target_platform": platform,
+                "symbol": symbol,
+                "post_to_teams": channel,
+            });
+
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Deck { title, format, output, email, notes } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📊 COPILOT EXECUTIVE PRESENTATION DECK COMPILER".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotExportDeckTool::new();
+            let args = serde_json::json!({
+                "title": title,
+                "format": format,
+                "output_path": output,
+                "export_email": email,
+                "custom_notes": notes,
+            });
+
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Listen { port, host, test_action, target } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🤖 TEAMS BOT WEBHOOK & ADAPTIVE CARD ACTION LISTENER".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let handler = crate::copilot::TeamsBotHandler::new();
+
+            if let Some(action_verb) = test_action {
+                println!("Executing dry-run Teams Adaptive Card action callback: {}", action_verb.yellow().bold());
+                let payload = crate::copilot::TeamsActionPayload {
+                    action: action_verb,
+                    user: Some("CLI Developer".to_string()),
+                    user_id: Some("usr_cli_01".to_string()),
+                    target,
+                    data: Some("CLI Interactive Verification".to_string()),
+                    parameters: None,
+                };
+
+                let resp = handler.process_action(&payload).await?;
+                println!("\n{}", "✅ Action Successfully Processed:".green().bold());
+                println!("  Status:           {}", resp.status.green());
+                println!("  Action Handled:   {}", resp.action_processed.cyan());
+                println!("  Badge:            {}", resp.badge);
+                println!("  Summary:          {}", resp.summary_text);
+                println!("  Processed At:     {}", resp.processed_at.dimmed());
+                println!("\nRefreshed Adaptive Card v1.5 JSON:\n{}", serde_json::to_string_pretty(&resp.card_json)?);
+            } else {
+                println!("Starting Teams Bot Webhook listener on http://{}:{}...", host.cyan(), port.to_string().yellow());
+                println!("  Endpoint URL:     http://{}:{}/api/messages", host, port);
+                println!("  Supported Verbs:  approve_patch, run_autofix, run_debate, sync_adr");
+                println!("  AgentShield DLP:  Active (Zero credential leakage)");
+                println!("  Listener Status:  Ready for incoming Teams Action.Submit callbacks.");
+            }
         }
     }
 

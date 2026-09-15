@@ -581,4 +581,125 @@ impl GraphClient {
         let msg_id = format!("outlook_msg_{}", &blake3::hash(subject.as_bytes()).to_hex()[..16]);
         Ok(msg_id)
     }
+
+    /// Sync a page to Microsoft OneNote notebook and section
+    /// Outbound DLP scanned via AgentShield prior to dispatch.
+    pub async fn sync_onenote_page(
+        &self,
+        notebook_name: &str,
+        section_name: &str,
+        title: &str,
+        html_content: &str,
+    ) -> Result<String> {
+        // 1. AgentShield Outbound DLP Interception
+        let dlp_verdict = AgentShieldScanner::scan_outbound_dlp(html_content);
+        if let AgentShieldVerdict::Block { reason, .. } = dlp_verdict {
+            return Err(TagisanError::Security(format!(
+                "AgentShield Outbound DLP blocked OneNote sync: {reason}"
+            )));
+        }
+
+        if self.is_mock() {
+            let page_id = format!(
+                "onenote_pg_{}",
+                &blake3::hash(format!("{title}_{section_name}_{notebook_name}").as_bytes()).to_hex()[..16]
+            );
+            debug!(
+                target: "copilot::graph",
+                "Mock OneNote page synced to {}/{}: ID={}",
+                notebook_name, section_name, page_id
+            );
+            return Ok(page_id);
+        }
+
+        let token = self.auth_manager.get_valid_token().await?;
+        let url = format!("{}/me/onenote/pages", self.base_url.trim_end_matches('/'));
+
+        let full_html = format!(
+            "<!DOCTYPE html><html><head><title>{}</title></head><body>{}</body></html>",
+            title, html_content
+        );
+
+        let res = self
+            .http
+            .post(&url)
+            .bearer_auth(token)
+            .header("Content-Type", "application/xhtml+xml")
+            .body(full_html)
+            .send()
+            .await
+            .map_err(TagisanError::Network)?;
+
+        if !res.status().is_success() {
+            let err = res.text().await.unwrap_or_default();
+            return Err(TagisanError::BadResponse("microsoft_graph".to_string(), err));
+        }
+
+        let resp_json: serde_json::Value = res.json().await.map_err(TagisanError::Network)?;
+        let page_id = resp_json["id"]
+            .as_str()
+            .unwrap_or("onenote_page_created")
+            .to_string();
+        Ok(page_id)
+    }
+
+    /// Upload or update a document file in SharePoint / OneDrive document library or wiki
+    /// Outbound DLP scanned via AgentShield prior to persistence.
+    pub async fn upload_sharepoint_file(
+        &self,
+        folder_path: &str,
+        filename: &str,
+        content: &str,
+    ) -> Result<String> {
+        let dlp_verdict = AgentShieldScanner::scan_outbound_dlp(content);
+        if let AgentShieldVerdict::Block { reason, .. } = dlp_verdict {
+            return Err(TagisanError::Security(format!(
+                "AgentShield Outbound DLP blocked SharePoint upload: {reason}"
+            )));
+        }
+
+        if self.is_mock() {
+            let item_id = format!(
+                "sp_item_{}",
+                &blake3::hash(format!("{folder_path}_{filename}").as_bytes()).to_hex()[..16]
+            );
+            debug!(
+                target: "copilot::graph",
+                "Mock SharePoint file uploaded to {}/{}: ID={}",
+                folder_path, filename, item_id
+            );
+            return Ok(item_id);
+        }
+
+        let token = self.auth_manager.get_valid_token().await?;
+        let clean_folder = folder_path.trim_matches('/');
+        let url = format!(
+            "{}/me/drive/root:/{}/{}:/content",
+            self.base_url.trim_end_matches('/'),
+            clean_folder,
+            filename
+        );
+
+        let res = self
+            .http
+            .put(&url)
+            .bearer_auth(token)
+            .header("Content-Type", "text/plain; charset=utf-8")
+            .body(content.to_string())
+            .send()
+            .await
+            .map_err(TagisanError::Network)?;
+
+        if !res.status().is_success() {
+            let err = res.text().await.unwrap_or_default();
+            return Err(TagisanError::BadResponse("microsoft_graph".to_string(), err));
+        }
+
+        let resp_json: serde_json::Value = res.json().await.map_err(TagisanError::Network)?;
+        let item_id = resp_json["id"]
+            .as_str()
+            .unwrap_or("sp_item_uploaded")
+            .to_string();
+        Ok(item_id)
+    }
 }

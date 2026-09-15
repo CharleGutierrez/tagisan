@@ -57,7 +57,11 @@ pub fn generate_declarative_agent_manifest(_base_url: &str) -> Value {
             { "text": "Calculate the blast radius of refactoring EntraAuthManager" },
             { "text": "Execute meeting-to-code pipeline on our latest sprint sync transcript" },
             { "text": "Generate Teams Adaptive Card for blast radius of refactoring EntraAuthManager" },
-            { "text": "Dispatch 3-round dialectical debate on microservices RFC to Teams" }
+            { "text": "Dispatch 3-round dialectical debate on microservices RFC to Teams" },
+            { "text": "Enforce Microsoft Purview Zero-Egress Air-Gapping on confidential payload" },
+            { "text": "Synthesize Architectural Decision Record (ADR) and sync to OneNote & SharePoint" },
+            { "text": "Create ephemeral Git branch and Azure DevOps PR with blast telemetry" },
+            { "text": "Compile responsive executive briefing slide deck for leadership" }
         ],
         "actions": [
             {
@@ -447,6 +451,170 @@ pub fn generate_openapi_spec(base_url: &str) -> Value {
                                         "properties": {
                                             "verdict": { "type": "string" },
                                             "full_transcript": { "type": "string" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/api/copilot/purview-guard": {
+                "post": {
+                    "operationId": "enforcePurviewZeroEgress",
+                    "summary": "Classify Microsoft Purview sensitivity labels, enforce Zero-Egress Air-Gapping, and issue SHA-256 audit receipts",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "content": { "type": "string" },
+                                        "label": { "type": "string" },
+                                        "destination": { "type": "string" }
+                                    },
+                                    "required": ["content"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Purview evaluation result and cryptographic receipt",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "sensitivity": { "type": "string" },
+                                            "air_gapped": { "type": "boolean" },
+                                            "routing_engine": { "type": "string" },
+                                            "receipt": { "type": "object" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/api/copilot/adr-sync": {
+                "post": {
+                    "operationId": "syncArchitectureDecisionRecord",
+                    "summary": "Synthesize dialectical debate verdicts into MADR Architecture Decision Records and sync to OneNote & SharePoint",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "proposal": { "type": "string" },
+                                        "verdict": { "type": "string" },
+                                        "title": { "type": "string" },
+                                        "invariants": { "type": "array", "items": { "type": "string" } },
+                                        "onenote_section": { "type": "string" },
+                                        "sharepoint_folder": { "type": "string" }
+                                    },
+                                    "required": ["proposal"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "ADR synthesis report and sync identifiers",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "adr_id": { "type": "string" },
+                                            "onenote_page_id": { "type": "string" },
+                                            "sharepoint_item_id": { "type": "string" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/api/copilot/create-pr": {
+                "post": {
+                    "operationId": "createAutonomousPullRequest",
+                    "summary": "Create ephemeral Git branch, generate conventional commit, format PR with blast telemetry, and notify Teams",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "patch": { "type": "string" },
+                                        "title": { "type": "string" },
+                                        "branch_name": { "type": "string" },
+                                        "target_platform": { "type": "string" },
+                                        "symbol": { "type": "string" },
+                                        "post_to_teams": { "type": "string" }
+                                    },
+                                    "required": ["patch"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Created Pull Request report and Adaptive Card telemetry",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "pr_url": { "type": "string" },
+                                            "branch_name": { "type": "string" },
+                                            "commit_message": { "type": "string" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/api/copilot/export-deck": {
+                "post": {
+                    "operationId": "generateExecutiveBriefingDeck",
+                    "summary": "Compile 5-slide executive presentation briefing deck (HTML & Markdown) with KPI counters and blast hotspots",
+                    "requestBody": {
+                        "required": false,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "title": { "type": "string" },
+                                        "format": { "type": "string" },
+                                        "output_path": { "type": "string" },
+                                        "export_email": { "type": "string" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Executive briefing slide deck",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "title": { "type": "string" },
+                                            "slides_count": { "type": "integer" },
+                                            "html_deck": { "type": "string" },
+                                            "markdown_deck": { "type": "string" }
                                         }
                                     }
                                 }

@@ -12,22 +12,32 @@
 //! 9. Codebase Telemetry & Blast Radius Cards (CopilotBlastRadiusReportTool) with Adaptive Card v1.5 JSON & Fluent HTML
 //! 10. Dialectical Debate Dispatch Pipeline (CopilotDebateDispatchTool) with Thesis, Antithesis, Lakandiwa Synthesis & Teams/Outlook dispatch
 //! 11. AgentShield DLP edge cases: API keys, private keys, prompt injections, and obfuscated exfiltration vectors
-//! 12. Full-suite concurrent stress test across all 7 autonomous Copilot tools with 50 parallel worker tasks.
+//! 12. Full-suite concurrent stress test across all 11 autonomous Copilot tools with 50 parallel worker tasks
+//! 13. Microsoft Purview sensitivity classification, Zero-Egress air-gapping, and SHA-256 cryptographic audit receipts
+//! 14. Architecture Decision Record (ADR) synthesis in MADR 3.0 format and OneNote / SharePoint sync
+//! 15. Ephemeral Git branch creation & Pull Request automation with Adaptive Card blast-radius telemetry
+//! 16. Interactive Teams Bot webhook action handler (Action.Submit callbacks: approve_patch, run_autofix, run_debate, sync_adr)
+//! 17. Responsive executive presentation briefing slide deck generator (HTML & Marp Markdown)
 
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
+use tagisan::copilot::adr::{AdrDocument, AdrEngine, CopilotAdrSyncTool};
 use tagisan::copilot::auth::{EntraAuthManager, EntraIdConfig, EntraToken};
+use tagisan::copilot::bot::{TeamsActionPayload, TeamsBotHandler};
 use tagisan::copilot::connector::GraphConnectorEngine;
 use tagisan::copilot::graph::{GraphClient, TranscriptEntry};
 use tagisan::copilot::plugin::{
     export_copilot_package, generate_ai_plugin_json, generate_declarative_agent_manifest,
     generate_openapi_spec, generate_teams_app_manifest, generate_valid_png,
 };
+use tagisan::copilot::purview::{
+    CopilotPurviewGuardTool, PurviewAuditReceipt, PurviewGuardEngine, PurviewSensitivity,
+};
 use tagisan::copilot::tools::{
-    CopilotBlastRadiusReportTool, CopilotDebateDispatchTool, CopilotExportReportTool,
-    CopilotMeetingActionItemsTool, CopilotMeetingToCodeTool, CopilotSharepointGetTool,
-    CopilotTeamsPostTool,
+    CopilotBlastRadiusReportTool, CopilotCreatePrTool, CopilotDebateDispatchTool,
+    CopilotExportDeckTool, CopilotExportReportTool, CopilotMeetingActionItemsTool,
+    CopilotMeetingToCodeTool, CopilotSharepointGetTool, CopilotTeamsPostTool,
 };
 use tagisan::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict, ThreatLevel};
 use tagisan::error::TagisanError;
@@ -985,15 +995,15 @@ async fn test_copilot_agentshield_dlp_edge_cases() {
 }
 
 // =========================================================================
-// Test 12: Full-Suite Concurrent Stress Test across all 7 Autonomous Copilot Tools
+// Test 12: Full-Suite Concurrent Stress Test across all 11 Autonomous Copilot Tools
 // =========================================================================
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 async fn test_full_copilot_suite_concurrent_stress_50_workers() {
-    println!("\n=== [TEST 12] Full-Suite Concurrent Stress Test (7 Tools, 50 Workers) ===");
+    println!("\n=== [TEST 12] Full-Suite Concurrent Stress Test (11 Tools, 50 Workers) ===");
 
     let concurrency = 50;
 
-    // Tools instances wrapped in Arc
+    // All 11 tools instances wrapped in Arc
     let t_teams = Arc::new(CopilotTeamsPostTool::with_client(GraphClient::mock()));
     let t_sp = Arc::new(CopilotSharepointGetTool::with_client(GraphClient::mock()));
     let t_actions = Arc::new(CopilotMeetingActionItemsTool::with_client(GraphClient::mock()));
@@ -1001,6 +1011,10 @@ async fn test_full_copilot_suite_concurrent_stress_50_workers() {
     let t_m2c = Arc::new(CopilotMeetingToCodeTool::with_client(GraphClient::mock()));
     let t_blast = Arc::new(CopilotBlastRadiusReportTool::with_client(GraphClient::mock()));
     let t_debate = Arc::new(CopilotDebateDispatchTool::with_client(GraphClient::mock()));
+    let t_purview = Arc::new(CopilotPurviewGuardTool::new());
+    let t_adr = Arc::new(CopilotAdrSyncTool::with_client(GraphClient::mock()));
+    let t_pr = Arc::new(CopilotCreatePrTool::with_client(GraphClient::mock()));
+    let t_deck = Arc::new(CopilotExportDeckTool::with_client(GraphClient::mock()));
 
     let start_time = Instant::now();
     let mut tasks = Vec::with_capacity(concurrency);
@@ -1013,6 +1027,10 @@ async fn test_full_copilot_suite_concurrent_stress_50_workers() {
         let m2c_clone = t_m2c.clone();
         let blast_clone = t_blast.clone();
         let debate_clone = t_debate.clone();
+        let purview_clone = t_purview.clone();
+        let adr_clone = t_adr.clone();
+        let pr_clone = t_pr.clone();
+        let deck_clone = t_deck.clone();
 
         let task = tokio::spawn(async move {
             // Tool 1: Teams Post
@@ -1065,6 +1083,34 @@ async fn test_full_copilot_suite_concurrent_stress_50_workers() {
             })).await.expect("Tool 7 failed");
             assert!(r7.contains("Dialectical Debate Dispatch"));
 
+            // Tool 8: Purview Guard
+            let r8 = purview_clone.execute(serde_json::json!({
+                "content": format!("Worker {worker_id} proprietary cryptographic telemetry"),
+                "label": "Confidential"
+            })).await.expect("Tool 8 failed");
+            assert!(r8.contains("Microsoft Purview Sensitivity & Zero-Egress Audit"));
+
+            // Tool 9: ADR Sync
+            let r9 = adr_clone.execute(serde_json::json!({
+                "proposal": format!("Worker {worker_id} architecture consensus"),
+                "title": format!("Worker {worker_id} ADR")
+            })).await.expect("Tool 9 failed");
+            assert!(r9.contains("Architecture Decision Record Synced"));
+
+            // Tool 10: Create PR
+            let r10 = pr_clone.execute(serde_json::json!({
+                "patch": format!("diff --git a/worker_{worker_id}.rs b/worker_{worker_id}.rs\n+ // worker patch"),
+                "title": format!("feat(worker): auto patch for worker {worker_id}")
+            })).await.expect("Tool 10 failed");
+            assert!(r10.contains("Pull Request & Ephemeral Branch Created"));
+
+            // Tool 11: Export Deck
+            let r11 = deck_clone.execute(serde_json::json!({
+                "title": format!("Worker {worker_id} Briefing"),
+                "format": "markdown"
+            })).await.expect("Tool 11 failed");
+            assert!(r11.contains("Executive Presentation Deck Compiled"));
+
             worker_id
         });
 
@@ -1080,12 +1126,350 @@ async fn test_full_copilot_suite_concurrent_stress_50_workers() {
         assert_eq!(worker_id, i);
     }
 
-    let total_operations = concurrency * 7;
+    let total_operations = concurrency * 11;
     let ops_per_sec = (total_operations as f64) / elapsed.as_secs_f64();
     println!(
-        "  [✓] 50 Workers x 7 Tools ({} Total Tool Invocations) Completed in {:.2?} ({:.1} ops/sec, 0 deadlocks, 0 race conditions)",
+        "  [✓] 50 Workers x 11 Tools ({} Total Tool Invocations) Completed in {:.2?} ({:.1} ops/sec, 0 deadlocks, 0 race conditions)",
         total_operations, elapsed, ops_per_sec
     );
-    println!("  [✓] Full-suite concurrent stress test PASSED flawlessly!");
+    println!("  [✓] Full-suite concurrent stress test across all 11 tools PASSED flawlessly!");
+}
+
+// =========================================================================
+// Test 13: Microsoft Purview Sensitivity Classification & Zero-Egress Air-Gapping
+// =========================================================================
+#[tokio::test]
+async fn test_purview_sensitivity_classification_and_zero_egress_air_gapping() {
+    println!("\n=== [TEST 13] Microsoft Purview Sensitivity & Zero-Egress Air-Gapping ===");
+
+    // 1. Classification heuristics
+    let general_text = "Standard open source utility function parsing query parameters";
+    let confidential_text = "Internal only non-disclosure agreement regarding Q4 financial projections";
+    let highly_confidential_text = "Strictly confidential PII containing social security number and salary schedule";
+    let secret_text = "TOP SECRET classified defense SCADA master key credentials";
+
+    assert_eq!(PurviewGuardEngine::classify(general_text, None), PurviewSensitivity::General);
+    assert_eq!(PurviewGuardEngine::classify(confidential_text, None), PurviewSensitivity::Confidential);
+    assert_eq!(PurviewGuardEngine::classify(highly_confidential_text, None), PurviewSensitivity::HighlyConfidential);
+    assert_eq!(PurviewGuardEngine::classify(secret_text, None), PurviewSensitivity::Secret);
+
+    // Explicit label override and escalation
+    assert_eq!(
+        PurviewGuardEngine::classify(general_text, Some("Secret")),
+        PurviewSensitivity::Secret
+    );
+    assert_eq!(
+        PurviewGuardEngine::classify(secret_text, Some("General")),
+        PurviewSensitivity::Secret
+    );
+    println!("  [✓] Multi-tier Purview sensitivity classification verified (General -> Secret)");
+
+    // 2. Zero-Egress Air-Gap Evaluation
+    let gen_eval = PurviewGuardEngine::evaluate(general_text, None, None).expect("General evaluation failed");
+    assert!(!gen_eval.air_gapped);
+    assert!(gen_eval.egress_allowed);
+    assert_eq!(gen_eval.routing_engine, "cloud_hybrid_orchestrator");
+
+    let conf_eval = PurviewGuardEngine::evaluate(confidential_text, None, None).expect("Confidential evaluation failed");
+    assert!(conf_eval.air_gapped);
+    assert!(!conf_eval.egress_allowed);
+    assert_eq!(conf_eval.routing_engine, "local_gguf_offline_tensor");
+    assert!(conf_eval.receipt.egress_blocked);
+    println!("  [✓] Zero-Egress Air-Gap enforcement verified: strictly routes to local GGUF engine");
+
+    // 3. Egress Violation Blocking
+    let violation_res = PurviewGuardEngine::evaluate(
+        confidential_text,
+        Some("Confidential"),
+        Some("cloud_openai_endpoint"),
+    );
+    assert!(violation_res.is_err(), "External cloud egress with confidential data must be rejected");
+    if let Err(TagisanError::Security(reason)) = violation_res {
+        assert!(reason.contains("Zero-Egress Air-Gap Violation"));
+        println!("  [✓] Zero-Egress Air-Gap violation intercepted: {}", reason);
+    } else {
+        panic!("Expected TagisanError::Security violation");
+    }
+
+    // 4. Cryptographic SHA-256 Audit Receipt Verification
+    let receipt = &conf_eval.receipt;
+    assert!(receipt.verify_integrity(confidential_text), "Cryptographic receipt must verify against authentic content");
+    assert!(!receipt.verify_integrity("tampered content modifying ledger"), "Tampered content must fail cryptographic verification");
+    println!("  [✓] Cryptographic SHA-256 audit receipt signature verified: {}", receipt.receipt_id);
+
+    // 5. Tool Handler Execution
+    let purview_tool = CopilotPurviewGuardTool::new();
+    let tool_res = purview_tool.execute(serde_json::json!({
+        "content": "Proprietary trading engine weights and financial models",
+        "label": "HighlyConfidential",
+        "destination": "local_gguf"
+    })).await.expect("Tool execution failed");
+    assert!(tool_res.contains("Microsoft Purview Sensitivity & Zero-Egress Audit"));
+    assert!(tool_res.contains("Cryptographic Audit Receipt (SHA-256)"));
+    assert!(tool_res.contains("local_gguf_offline_tensor"));
+    println!("  [✓] CopilotPurviewGuardTool execution verified with full audit trail");
+
+    println!("  [✓] Microsoft Purview Zero-Egress Air-Gapping test PASSED successfully!");
+}
+
+// =========================================================================
+// Test 14: Architecture Decision Record (ADR) Synthesis & Sync
+// =========================================================================
+#[tokio::test]
+async fn test_adr_synthesis_and_onenote_sharepoint_sync() {
+    println!("\n=== [TEST 14] ADR Synthesis & OneNote / SharePoint Synchronization ===");
+
+    let client = GraphClient::mock();
+
+    // 1. Synthesize ADR in MADR format
+    let proposal = "Adopt lock-free concurrent ring buffer for vector synchronizer";
+    let verdict = "Synthesis: Implement bounded lock-free ring buffer with atomic sequence counters to eliminate lock contention under 50-thread concurrent bursts.";
+    let invariants = vec![
+        "Invariant 1: Buffer capacity must be a power of two to allow bitwise masking.".to_string(),
+        "Invariant 2: AgentShield DLP gates must verify zero token leakage prior to persistence.".to_string(),
+    ];
+
+    let adr = AdrEngine::synthesize(
+        proposal,
+        Some(verdict),
+        Some("ADR-0042: High-Throughput Lock-Free Vector Buffer"),
+        Some(&invariants),
+    );
+
+    assert!(adr.id.starts_with("ADR-"));
+    assert_eq!(adr.status, "Accepted");
+    assert_eq!(adr.deciders.len(), 3);
+    assert!(adr.markdown.contains("# ADR-"));
+    assert!(adr.markdown.contains("## Context and Problem Statement"));
+    assert!(adr.markdown.contains("## Considered Options"));
+    assert!(adr.markdown.contains("## Decision Outcome"));
+    assert!(adr.markdown.contains("### Formal Invariants Enforced"));
+    assert!(adr.markdown.contains("### Positive Consequences"));
+    assert!(adr.markdown.contains("### Negative Consequences / Trade-offs"));
+    println!("  [✓] MADR 3.0 document structure synthesized with formal invariants: {}", adr.id);
+
+    // 2. Sync to OneNote & SharePoint via GraphClient
+    let report = AdrEngine::sync_adr(&client, &adr, None, None, None).await.expect("Sync failed");
+    assert!(report.onenote_page_id.is_some());
+    assert!(report.sharepoint_item_id.is_some());
+    let page_id = report.onenote_page_id.unwrap();
+    let sp_id = report.sharepoint_item_id.unwrap();
+    assert!(page_id.starts_with("onenote_pg_"));
+    assert!(sp_id.starts_with("sp_item_"));
+    println!("  [✓] OneNote sync verified: Page ID={}", page_id);
+    println!("  [✓] SharePoint wiki sync verified: Item ID={}", sp_id);
+
+    // 3. Tool Handler Execution
+    let adr_tool = CopilotAdrSyncTool::with_client(client);
+    let out = adr_tool.execute(serde_json::json!({
+        "proposal": "Migrate EntraAuthManager to zero-egress Purview guard",
+        "title": "Purview Zero-Egress Auth Migration",
+        "onenote_section": "Architecture Decisions",
+        "sharepoint_folder": "Engineering/ADRs"
+    })).await.expect("Tool execution failed");
+
+    assert!(out.contains("Architecture Decision Record Synced"));
+    assert!(out.contains("OneNote Page ID:"));
+    assert!(out.contains("SharePoint Item ID:"));
+    assert!(out.contains("## Context and Problem Statement"));
+    println!("  [✓] CopilotAdrSyncTool execution verified with bidirectional Graph sync");
+
+    println!("  [✓] Architecture Decision Record (ADR) Sync test PASSED successfully!");
+}
+
+// =========================================================================
+// Test 15: Direct Git Branch & Pull Request Automation
+// =========================================================================
+#[tokio::test]
+async fn test_copilot_ephemeral_branch_and_pr_automation() {
+    println!("\n=== [TEST 15] Ephemeral Git Branch & Pull Request Automation ===");
+
+    let client = GraphClient::mock();
+    let pr_tool = CopilotCreatePrTool::with_client(client);
+
+    // 1. Create Pull Request with Adaptive Card telemetry
+    let patch = r#"diff --git a/src/copilot/auth.rs b/src/copilot/auth.rs
+--- a/src/copilot/auth.rs
++++ b/src/copilot/auth.rs
+@@ -100,6 +100,10 @@
++    pub fn is_air_gapped(&self) -> bool {
++        self.mock || self.config().mock
++    }
+"#;
+
+    let res = pr_tool.execute(serde_json::json!({
+        "patch": patch,
+        "title": "feat(copilot): add air-gapped query capability to EntraAuthManager",
+        "symbol": "EntraAuthManager",
+        "target_platform": "azure_devops",
+        "base_branch": "main",
+        "post_to_teams": "copilot-ci-cd"
+    })).await.expect("PR creation failed");
+
+    assert!(res.contains("Pull Request & Ephemeral Branch Created"));
+    assert!(res.contains("PR URL:"));
+    assert!(res.contains("tgs/m2c-EntraAuthManager-"));
+    assert!(res.contains("AdaptiveCard"));
+    assert!(res.contains("Teams Dispatch") && res.contains("copilot-ci-cd"));
+    println!("  [✓] Ephemeral branch created and PR formatted with Adaptive Card telemetry");
+
+    // 2. DLP Interception test on PR creation
+    let leaked_patch = "diff --git a/keys.env b/keys.env\n+ OPENAI_API_KEY=sk-ant-api03-1234567890123456789012345";
+    let dlp_res = pr_tool.execute(serde_json::json!({
+        "patch": leaked_patch,
+        "title": "leaked keys test"
+    })).await;
+    assert!(dlp_res.is_err(), "AgentShield must block PR containing credentials");
+    println!("  [✓] AgentShield Outbound DLP intercepted secret in PR patch payload");
+
+    println!("  [✓] Ephemeral Git Branch & PR Automation test PASSED successfully!");
+}
+
+// =========================================================================
+// Test 16: Interactive Teams Bot Webhook Action Handler
+// =========================================================================
+#[tokio::test]
+async fn test_teams_bot_webhook_action_handler() {
+    println!("\n=== [TEST 16] Interactive Teams Bot Webhook Action Handler ===");
+
+    let client = GraphClient::mock();
+    let bot_handler = TeamsBotHandler::with_client(client);
+
+    // 1. approve_patch
+    let p1 = TeamsActionPayload {
+        action: "approve_patch".to_string(),
+        user: Some("Charle Gutierrez".to_string()),
+        user_id: Some("usr_001".to_string()),
+        target: Some("src/copilot/mod.rs".to_string()),
+        data: Some("patch_m2c_042".to_string()),
+        parameters: None,
+    };
+    let r1 = bot_handler.process_action(&p1).await.expect("approve_patch failed");
+    assert_eq!(r1.status, "success");
+    assert_eq!(r1.action_processed, "approve_patch");
+    assert!(r1.badge.contains("APPROVED & MERGED"));
+    assert_eq!(r1.card_json["type"], "AdaptiveCard");
+    assert_eq!(r1.card_json["version"], "1.5");
+    println!("  [✓] Action 'approve_patch' handled: {}", r1.badge);
+
+    // 2. run_autofix
+    let p2 = TeamsActionPayload {
+        action: "run_autofix".to_string(),
+        user: Some("Alex Mercer".to_string()),
+        user_id: Some("usr_002".to_string()),
+        target: Some("src/copilot/graph.rs".to_string()),
+        data: None,
+        parameters: None,
+    };
+    let r2 = bot_handler.process_action(&p2).await.expect("run_autofix failed");
+    assert_eq!(r2.status, "success");
+    assert_eq!(r2.action_processed, "run_autofix");
+    assert!(r2.badge.contains("AUTOFIX COMPLETED"));
+    println!("  [✓] Action 'run_autofix' handled: {}", r2.badge);
+
+    // 3. run_debate
+    let p3 = TeamsActionPayload {
+        action: "run_debate".to_string(),
+        user: Some("Maya Lin".to_string()),
+        user_id: Some("usr_003".to_string()),
+        target: None,
+        data: Some("Microservices vs Modular Monolith".to_string()),
+        parameters: None,
+    };
+    let r3 = bot_handler.process_action(&p3).await.expect("run_debate failed");
+    assert_eq!(r3.status, "success");
+    assert_eq!(r3.action_processed, "run_debate");
+    assert!(r3.badge.contains("DEBATE SYNTHESIZED"));
+    println!("  [✓] Action 'run_debate' handled: {}", r3.badge);
+
+    // 4. sync_adr
+    let p4 = TeamsActionPayload {
+        action: "sync_adr".to_string(),
+        user: Some("Samira Patel".to_string()),
+        user_id: Some("usr_004".to_string()),
+        target: None,
+        data: Some("Lock-Free Vector Synchronizer Architecture".to_string()),
+        parameters: None,
+    };
+    let r4 = bot_handler.process_action(&p4).await.expect("sync_adr failed");
+    assert_eq!(r4.status, "success");
+    assert_eq!(r4.action_processed, "sync_adr");
+    assert!(r4.badge.contains("ADR SYNCED"));
+    println!("  [✓] Action 'sync_adr' handled: {}", r4.badge);
+
+    // 5. Raw Bot Framework Activity JSON callback
+    let raw_activity = serde_json::json!({
+        "type": "message",
+        "id": "teams_msg_activity_981",
+        "channelId": "msteams",
+        "from": {
+            "id": "29:123456789",
+            "name": "Engineering VP"
+        },
+        "value": {
+            "action": "approve_patch",
+            "target": "src/copilot/plugin.rs",
+            "patch_id": "patch_release_v2"
+        }
+    }).to_string();
+
+    let r5 = bot_handler.process_raw_json(&raw_activity).await.expect("Raw activity failed");
+    assert_eq!(r5.status, "success");
+    assert_eq!(r5.action_processed, "approve_patch");
+    assert!(r5.summary_text.contains("Engineering VP"));
+    println!("  [✓] Bot Framework Activity raw JSON webhook processed successfully");
+
+    println!("  [✓] Interactive Teams Bot Webhook Action Handler test PASSED successfully!");
+}
+
+// =========================================================================
+// Test 17: Responsive Executive Presentation Deck Generator
+// =========================================================================
+#[tokio::test]
+async fn test_copilot_executive_presentation_deck_generation() {
+    println!("\n=== [TEST 17] Responsive Executive Presentation Deck Generator ===");
+
+    let client = GraphClient::mock();
+    let deck_tool = CopilotExportDeckTool::with_client(client);
+
+    let temp_dir = PathBuf::from(".tagisan/test_deck_output");
+    let _ = std::fs::create_dir_all(&temp_dir);
+    let output_html_file = temp_dir.join("executive_briefing.html");
+
+    let out = deck_tool.execute(serde_json::json!({
+        "title": "Tagisan Enterprise Architecture Executive Briefing",
+        "format": "all",
+        "output_path": output_html_file.display().to_string(),
+        "export_email": "board@tagisan.ai",
+        "custom_notes": "Formal invariants grounded with 0 regressions. Purview Zero-Egress active."
+    })).await.expect("Deck generation failed");
+
+    // Verify output structure
+    assert!(out.contains("Executive Presentation Deck Compiled"));
+    assert!(out.contains("Slides Compiled") && out.contains("5"));
+    assert!(out.contains("Slide 1: Executive Summary"));
+    assert!(out.contains("Slide 2: High-Risk Blast Hotspots"));
+    assert!(out.contains("Slide 3: Dialectical Invariants"));
+    assert!(out.contains("Slide 4: Cost Savings of Local Compute"));
+    assert!(out.contains("Slide 5: AgentShield Compliance Clearance"));
+    assert!(out.contains("Saved to Disk"));
+    assert!(out.contains("Dispatched via Outlook") && out.contains("board@tagisan.ai"));
+    println!("  [✓] Deck compiled with all 5 required executive briefing slides");
+
+    // Verify file on disk
+    assert!(output_html_file.exists(), "HTML deck file must be written to disk");
+    let saved_html = std::fs::read_to_string(&output_html_file).expect("Failed to read saved deck");
+    assert!(saved_html.contains("<title>Tagisan Enterprise Architecture Executive Briefing</title>"));
+    assert!(saved_html.contains("Executive Summary"));
+    assert!(saved_html.contains("EntraAuthManager"));
+    assert!(saved_html.contains("$18,450"));
+    assert!(saved_html.contains("AgentShield Compliance Clearance"));
+    println!("  [✓] Saved HTML presentation deck verified on disk: {}", output_html_file.display());
+
+    // Clean up
+    let _ = std::fs::remove_file(&output_html_file);
+    let _ = std::fs::remove_dir(&temp_dir);
+
+    println!("  [✓] Responsive Executive Presentation Deck test PASSED successfully!");
 }
 

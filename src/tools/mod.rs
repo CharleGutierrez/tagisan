@@ -65,9 +65,10 @@ pub use crate::vella::{
     VellaSpaceCopilotTool, VellaTradingTool, VellaVectorSyncTool, VellaWeb3GuardianTool,
 };
 pub use crate::copilot::{
-    CopilotBlastRadiusReportTool, CopilotDebateDispatchTool, CopilotExportReportTool,
-    CopilotMeetingActionItemsTool, CopilotMeetingToCodeTool, CopilotSharepointGetTool,
-    CopilotTeamsPostTool,
+    CopilotAdrSyncTool, CopilotBlastRadiusReportTool, CopilotCreatePrTool,
+    CopilotDebateDispatchTool, CopilotExportDeckTool, CopilotExportReportTool,
+    CopilotMeetingActionItemsTool, CopilotMeetingToCodeTool, CopilotPurviewGuardTool,
+    CopilotSharepointGetTool, CopilotTeamsPostTool,
 };
 
 
@@ -202,6 +203,10 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotMeetingToCodeTool::new());
         registry.register_tool(crate::copilot::CopilotBlastRadiusReportTool::new());
         registry.register_tool(crate::copilot::CopilotDebateDispatchTool::new());
+        registry.register_tool(crate::copilot::CopilotPurviewGuardTool::new());
+        registry.register_tool(crate::copilot::CopilotAdrSyncTool::new());
+        registry.register_tool(crate::copilot::CopilotCreatePrTool::new());
+        registry.register_tool(crate::copilot::CopilotExportDeckTool::new());
         registry
     }
 
@@ -306,6 +311,10 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotMeetingToCodeTool::new().with_working_dir(dir.clone()));
         registry.register_tool(crate::copilot::CopilotBlastRadiusReportTool::new().with_working_dir(dir.clone()));
         registry.register_tool(crate::copilot::CopilotDebateDispatchTool::new());
+        registry.register_tool(crate::copilot::CopilotPurviewGuardTool::new());
+        registry.register_tool(crate::copilot::CopilotAdrSyncTool::new());
+        registry.register_tool(crate::copilot::CopilotCreatePrTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(crate::copilot::CopilotExportDeckTool::new().with_working_dir(dir.clone()));
         registry
     }
 
