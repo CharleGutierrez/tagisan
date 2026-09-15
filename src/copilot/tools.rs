@@ -1,6 +1,6 @@
 //! Microsoft 365 Copilot Native Tool Implementations for ToolRegistry & MCP
 //!
-//! Exposes 11 first-class autonomous tools:
+//! Exposes 16 first-class autonomous tools:
 //! - `copilot_teams_post`: Post updates, debate verdicts, and alerts to Teams channels/chats
 //! - `copilot_sharepoint_get`: Ingest documents from SharePoint/OneDrive with AgentShield sanitization
 //! - `copilot_meeting_action_items`: Extract prioritized engineering tasks from meeting transcripts
@@ -12,9 +12,19 @@
 //! - `copilot_adr_sync`: Architectural Decision Record synthesis & OneNote/SharePoint synchronization
 //! - `copilot_create_pr`: Ephemeral Git branch creation, conventional commits, and PR blast telemetry
 //! - `copilot_export_deck`: Responsive executive slide deck generation (HTML & Markdown)
+//! - `copilot_excel_functions`: Native Excel Custom Functions (=TGS.*) evaluation and Add-in packager
+//! - `copilot_stream_gateway`: Live Server-Sent Events (SSE) and NDJSON real-time streaming gateway
+//! - `copilot_planner_sync`: Microsoft Planner & To-Do task synchronizer with Git/PR linkage
+//! - `copilot_incident_debugger`: Teams "@Tagisan" CI/CD incident debugger with surgical autofixes
+//! - `copilot_hardware_telemetry`: Windows Copilot+ PC NPU/DirectML hardware telemetry & carbon efficiency
 
 pub use crate::copilot::adr::CopilotAdrSyncTool;
+pub use crate::copilot::excel::CopilotExcelFunctionsTool;
+pub use crate::copilot::hardware::CopilotHardwareTelemetryTool;
+pub use crate::copilot::incident::CopilotIncidentDebuggerTool;
+pub use crate::copilot::planner::CopilotPlannerSyncTool;
 pub use crate::copilot::purview::CopilotPurviewGuardTool;
+pub use crate::copilot::stream::CopilotStreamGatewayTool;
 
 use crate::copilot::graph::{ActionItem, GraphClient, TranscriptEntry};
 use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};

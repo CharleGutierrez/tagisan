@@ -61,7 +61,12 @@ pub fn generate_declarative_agent_manifest(_base_url: &str) -> Value {
             { "text": "Enforce Microsoft Purview Zero-Egress Air-Gapping on confidential payload" },
             { "text": "Synthesize Architectural Decision Record (ADR) and sync to OneNote & SharePoint" },
             { "text": "Create ephemeral Git branch and Azure DevOps PR with blast telemetry" },
-            { "text": "Compile responsive executive briefing slide deck for leadership" }
+            { "text": "Compile responsive executive briefing slide deck for leadership" },
+            { "text": "Evaluate Excel blast radius custom function for EntraAuthManager" },
+            { "text": "Stream dialectical debate via Copilot Studio SSE gateway" },
+            { "text": "Synchronize meeting action items to Microsoft Planner & To-Do" },
+            { "text": "Debug CI/CD build incident and generate surgical autofix" },
+            { "text": "Compute Windows Copilot+ PC hardware telemetry and carbon efficiency" }
         ],
         "actions": [
             {
@@ -615,6 +620,203 @@ pub fn generate_openapi_spec(base_url: &str) -> Value {
                                             "slides_count": { "type": "integer" },
                                             "html_deck": { "type": "string" },
                                             "markdown_deck": { "type": "string" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/api/copilot/stream": {
+                "post": {
+                    "operationId": "streamCopilotDebate",
+                    "summary": "Live Server-Sent Events (SSE) streaming gateway for dialectical debate, reasoning chunks, and keepalive pulses",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "prompt": { "type": "string" },
+                                        "mode": { "type": "string", "enum": ["debate", "swarm", "reasoning"] },
+                                        "format": { "type": "string", "enum": ["sse", "ndjson"] },
+                                        "include_keepalive": { "type": "boolean" }
+                                    },
+                                    "required": ["prompt"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Real-time SSE event stream chunk stream",
+                            "content": {
+                                "text/event-stream": {
+                                    "schema": { "type": "string" }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/api/copilot/excel/eval": {
+                "post": {
+                    "operationId": "evaluateExcelCustomFunction",
+                    "summary": "Evaluate native Microsoft Excel custom functions (=TGS.BLAST_RADIUS, =TGS.COMPLEXITY, =TGS.COST_SAVINGS, =TGS.INVARIANT_CHECK)",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "formula": { "type": "string" },
+                                        "function": { "type": "string" },
+                                        "symbol": { "type": "string" },
+                                        "path": { "type": "string" },
+                                        "prompt_tokens": { "type": "integer" },
+                                        "completion_tokens": { "type": "integer" },
+                                        "target": { "type": "string" },
+                                        "code": { "type": "string" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Evaluated Excel custom function result",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "formula": { "type": "string" },
+                                            "display_string": { "type": "string" },
+                                            "value": {}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/api/copilot/planner/sync": {
+                "post": {
+                    "operationId": "syncPlannerTasks",
+                    "summary": "Convert meeting action items into Microsoft Planner tasks and Microsoft To-Do items with Git/PR linkage",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "action": { "type": "string" },
+                                        "meeting_id": { "type": "string" },
+                                        "plan_id": { "type": "string" },
+                                        "bucket_id": { "type": "string" },
+                                        "todo_list_id": { "type": "string" },
+                                        "branch_url": { "type": "string" },
+                                        "pr_url": { "type": "string" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Task synchronization report",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "total_synced": { "type": "integer" },
+                                            "summary": { "type": "string" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/api/copilot/incident/debug": {
+                "post": {
+                    "operationId": "debugCiIncident",
+                    "summary": "Ingest CI failure logs, diagnose root cause, and synthesize surgical autofix patch recommendations with Teams Adaptive Card",
+                    "requestBody": {
+                        "required": true,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "logs": { "type": "string" },
+                                        "commit_sha": { "type": "string" },
+                                        "pipeline_id": { "type": "string" },
+                                        "post_to_teams": { "type": "string" }
+                                    },
+                                    "required": ["logs"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Incident debug diagnosis and surgical patch",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "incident_id": { "type": "string" },
+                                            "root_cause": { "type": "string" },
+                                            "patch_diff": { "type": "string" },
+                                            "adaptive_card": { "type": "object" }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/api/copilot/hardware/telemetry": {
+                "post": {
+                    "operationId": "getHardwareTelemetry",
+                    "summary": "Compute Windows Copilot+ PC on-device NPU/DirectML hardware telemetry, energy efficiency, and carbon reduction metrics",
+                    "requestBody": {
+                        "required": false,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "workload_tokens": { "type": "integer" },
+                                        "accelerator": { "type": "string" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Hardware telemetry and energy efficiency report",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "accelerator": { "type": "string" },
+                                            "tops_rating": { "type": "number" },
+                                            "energy_saved_percent": { "type": "number" },
+                                            "co2_avoided_grams": { "type": "number" },
+                                            "hardware_sovereignty_badge": { "type": "string" }
                                         }
                                     }
                                 }

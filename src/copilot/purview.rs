@@ -7,6 +7,7 @@
 //! - Cryptographic SHA-256 Audit Receipts (`PurviewAuditReceipt`) with content digest,
 //!   timestamp, sensitivity classification, routing enforcement proof, and HMAC/signature.
 
+use crate::copilot::graph::GraphClient;
 use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};
 use crate::error::{Result, TagisanError};
 use crate::tools::ToolHandler;
@@ -284,6 +285,10 @@ pub struct CopilotPurviewGuardTool;
 
 impl CopilotPurviewGuardTool {
     pub fn new() -> Self {
+        Self
+    }
+
+    pub fn with_client(_client: GraphClient) -> Self {
         Self
     }
 }

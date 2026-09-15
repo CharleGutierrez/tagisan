@@ -823,6 +823,156 @@ pub enum CopilotAction {
         #[arg(long)]
         target: Option<String>,
     },
+
+    /// Native Excel Custom Functions Engine & Add-in Packager (=TGS.*)
+    Excel {
+        /// Excel formula to evaluate (e.g. '=TGS.BLAST_RADIUS("EntraAuthManager", ".")')
+        #[arg(long)]
+        formula: Option<String>,
+
+        /// Function name to evaluate ('BLAST_RADIUS', 'COMPLEXITY', 'COST_SAVINGS', 'INVARIANT_CHECK')
+        #[arg(long)]
+        function: Option<String>,
+
+        /// Symbol name for BLAST_RADIUS or COMPLEXITY
+        #[arg(long)]
+        symbol: Option<String>,
+
+        /// Root codebase path (defaults to '.')
+        #[arg(long, default_value = ".")]
+        path: String,
+
+        /// Prompt tokens for COST_SAVINGS (default: 100000)
+        #[arg(long, default_value_t = 100000)]
+        prompt_tokens: u64,
+
+        /// Completion tokens for COST_SAVINGS (default: 50000)
+        #[arg(long, default_value_t = 50000)]
+        completion_tokens: u64,
+
+        /// Target module for INVARIANT_CHECK
+        #[arg(long)]
+        target: Option<String>,
+
+        /// Code snippet for INVARIANT_CHECK
+        #[arg(long)]
+        code: Option<String>,
+
+        /// Package Add-in manifest.xml, functions.json, and functions.js to directory
+        #[arg(long)]
+        package: bool,
+
+        /// Output directory for Add-in package (default: '.tagisan/excel_addin')
+        #[arg(long, default_value = ".tagisan/excel_addin")]
+        output_dir: String,
+    },
+
+    /// Live Server-Sent Events (SSE) / NDJSON Streaming Gateway for Copilot Studio & Teams
+    Stream {
+        /// Technical prompt, architecture topic, or question to stream
+        prompt: String,
+
+        /// Output format: 'sse' (default, text/event-stream) or 'ndjson'
+        #[arg(long, default_value = "sse")]
+        format: String,
+
+        /// Streaming mode: 'debate' (default), 'swarm', or 'reasoning'
+        #[arg(long, default_value = "debate")]
+        mode: String,
+
+        /// Disable keepalive heartbeat pulses
+        #[arg(long)]
+        no_keepalive: bool,
+    },
+
+    /// Microsoft Planner & To-Do Task Synchronizer with Git/PR Linkage
+    Planner {
+        /// Synchronization action: 'sync_all' (default), 'sync_planner', 'sync_todo', 'create_single'
+        #[arg(long, default_value = "sync_all")]
+        action: String,
+
+        /// Teams meeting identifier to extract action items from
+        #[arg(long)]
+        meeting: Option<String>,
+
+        /// Raw transcript text
+        #[arg(long)]
+        transcript: Option<String>,
+
+        /// Planner plan ID (default: 'plan_tagisan_core')
+        #[arg(long, default_value = "plan_tagisan_core")]
+        plan_id: String,
+
+        /// Planner bucket ID (default: 'bucket_sprint_backlog')
+        #[arg(long, default_value = "bucket_sprint_backlog")]
+        bucket_id: String,
+
+        /// To-Do list ID (default: 'todo_personal_tasks')
+        #[arg(long, default_value = "todo_personal_tasks")]
+        todo_list_id: String,
+
+        /// Task title for single task creation
+        #[arg(long)]
+        title: Option<String>,
+
+        /// Priority: 'High', 'Medium', 'Low' (default: 'Medium')
+        #[arg(long, default_value = "Medium")]
+        priority: String,
+
+        /// Assignee name or email
+        #[arg(long)]
+        assignee: Option<String>,
+
+        /// Git branch URL to link as reference
+        #[arg(long)]
+        branch_url: Option<String>,
+
+        /// Pull Request URL to link as reference
+        #[arg(long)]
+        pr_url: Option<String>,
+    },
+
+    /// Teams "@Tagisan" CI/CD Incident Debugger & Surgical Autofix Recommender
+    Incident {
+        /// Path to CI failure log file or raw log text
+        #[arg(long)]
+        logs: Option<String>,
+
+        /// Path to log file to read
+        #[arg(long)]
+        file: Option<String>,
+
+        /// Git commit SHA of the failed build
+        #[arg(long)]
+        commit: Option<String>,
+
+        /// Pipeline or job identifier
+        #[arg(long)]
+        pipeline: Option<String>,
+
+        /// Teams channel or chat ID to dispatch the incident alert
+        #[arg(long)]
+        channel: Option<String>,
+
+        /// Output format: 'all' (default), 'text', or 'adaptive_card'
+        #[arg(long, default_value = "all")]
+        format: String,
+    },
+
+    /// Windows Copilot+ PC Hardware Telemetry & Energy Efficiency
+    Hardware {
+        /// Inference workload in tokens (default: 10000)
+        #[arg(long, default_value_t = 10000)]
+        tokens: u64,
+
+        /// Accelerator to evaluate: 'auto' (default), 'npu', 'directml', 'cpu'
+        #[arg(long, default_value = "auto")]
+        accelerator: String,
+
+        /// Output format: 'text' (default), 'json', or 'adaptive_card'
+        #[arg(long, default_value = "text")]
+        format: String,
+    },
 }
 
 
@@ -5096,7 +5246,7 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
             println!("  Graph Execution Mode:  {}", if client.is_mock() { "Deterministic Mock / Sandbox".yellow() } else { "Live Enterprise Graph REST API".green().bold() });
             println!("  Base Endpoint:         https://graph.microsoft.com/v1.0");
 
-            println!("\n[3] Autonomous Copilot Tools in Registry:");
+            println!("\n[3] Autonomous Copilot Tools in Registry (16 Tools):");
             println!("  [✓] copilot_teams_post          (Post updates & debate verdicts to Teams)");
             println!("  [✓] copilot_sharepoint_get      (Ingest SharePoint/OneDrive docs with AgentShield)");
             println!("  [✓] copilot_meeting_action_items(Decompose Teams meeting transcripts into code tasks)");
@@ -5104,6 +5254,15 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
             println!("  [✓] copilot_meeting_to_code     (End-to-end meeting transcript to AST blast radius & code patch)");
             println!("  [✓] copilot_blast_radius_report (Adaptive Cards & executive HTML reports for Teams/Excel/PPT)");
             println!("  [✓] copilot_debate_dispatch     (3-round dialectical debate execution & Teams/Outlook dispatch)");
+            println!("  [✓] copilot_purview_guard       (Microsoft Purview Sensitivity & Zero-Egress Air-Gapping)");
+            println!("  [✓] copilot_adr_sync            (Architecture Decision Record MADR synthesis & OneNote sync)");
+            println!("  [✓] copilot_create_pr           (Ephemeral Git branch & PR automation with blast telemetry)");
+            println!("  [✓] copilot_export_deck         (Responsive executive presentation briefing slide deck)");
+            println!("  [✓] copilot_excel_functions     (Native Excel Custom Functions =TGS.* & Add-in packager)");
+            println!("  [✓] copilot_stream_gateway      (Live SSE / NDJSON streaming gateway for Copilot Studio)");
+            println!("  [✓] copilot_planner_sync        (Microsoft Planner & To-Do synchronizer with Git/PR linkage)");
+            println!("  [✓] copilot_incident_debugger   (Teams '@Tagisan' CI/CD incident debugger & surgical autofix)");
+            println!("  [✓] copilot_hardware_telemetry  (Windows Copilot+ PC NPU/DirectML telemetry & carbon efficiency)");
 
             println!("\n[4] AgentShield Cyber Defense Gate:");
             println!("  Outbound DLP:          {}", "ACTIVE (Zero API key/private key/credential leakage)".green().bold());
@@ -5375,8 +5534,132 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
                 println!("  Endpoint URL:     http://{}:{}/api/messages", host, port);
                 println!("  Supported Verbs:  approve_patch, run_autofix, run_debate, sync_adr");
                 println!("  AgentShield DLP:  Active (Zero credential leakage)");
-                println!("  Listener Status:  Ready for incoming Teams Action.Submit callbacks.");
             }
+        }
+
+        CopilotAction::Excel { formula, function, symbol, path, prompt_tokens, completion_tokens, target, code, package, output_dir } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📊 TAGISAN EXCEL CUSTOM FUNCTIONS & ADD-IN ENGINE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotExcelFunctionsTool::new();
+
+            if package {
+                let args = serde_json::json!({
+                    "action": "package",
+                    "output_dir": output_dir,
+                });
+                let out = tool.execute(args).await?;
+                println!("\n{out}");
+            } else if let Some(f) = formula {
+                let args = serde_json::json!({
+                    "formula": f,
+                });
+                let out = tool.execute(args).await?;
+                println!("\n{out}");
+            } else {
+                let fn_name = function.unwrap_or_else(|| "BLAST_RADIUS".to_string());
+                let args = serde_json::json!({
+                    "function": fn_name,
+                    "symbol": symbol,
+                    "path": path,
+                    "prompt_tokens": prompt_tokens,
+                    "completion_tokens": completion_tokens,
+                    "target": target,
+                    "code": code,
+                });
+                let out = tool.execute(args).await?;
+                println!("\n{out}");
+            }
+        }
+
+        CopilotAction::Stream { prompt, format, mode, no_keepalive } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🌊 COPILOT STUDIO REAL-TIME STREAMING GATEWAY".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotStreamGatewayTool::new();
+            let args = serde_json::json!({
+                "prompt": prompt,
+                "format": format,
+                "mode": mode,
+                "include_keepalive": !no_keepalive,
+            });
+
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Planner { action, meeting, transcript, plan_id, bucket_id, todo_list_id, title, priority, assignee, branch_url, pr_url } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📋 MICROSOFT PLANNER & TO-DO TASK SYNCHRONIZER".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotPlannerSyncTool::new();
+            let args = serde_json::json!({
+                "action": action,
+                "meeting_id": meeting,
+                "transcript_text": transcript,
+                "plan_id": plan_id,
+                "bucket_id": bucket_id,
+                "todo_list_id": todo_list_id,
+                "task_title": title,
+                "priority": priority,
+                "assignee": assignee,
+                "branch_url": branch_url,
+                "pr_url": pr_url,
+            });
+
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Incident { logs, file, commit, pipeline, channel, format } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🚨 TEAMS \"@TAGISAN\" CI/CD INCIDENT DEBUGGER".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let log_content = if let Some(path) = file {
+                std::fs::read_to_string(&path)
+                    .map_err(|e| format!("Failed to read incident log file '{path}': {e}"))?
+            } else if let Some(l) = logs {
+                l
+            } else {
+                "error[E0308]: mismatched types\n  --> src/copilot/excel.rs:42:12\n   |\n42 |     res\n   |     ^^^ expected enum `Result`, found struct `ExcelEvalResult`".to_string()
+            };
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotIncidentDebuggerTool::new();
+            let args = serde_json::json!({
+                "logs": log_content,
+                "commit_sha": commit,
+                "pipeline_id": pipeline,
+                "post_to_teams": channel,
+                "format": format,
+            });
+
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Hardware { tokens, accelerator, format } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🌱 WINDOWS COPILOT+ PC HARDWARE TELEMETRY".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotHardwareTelemetryTool::new();
+            let args = serde_json::json!({
+                "workload_tokens": tokens,
+                "accelerator": accelerator,
+                "format": format,
+            });
+
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
         }
     }
 

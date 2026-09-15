@@ -66,9 +66,11 @@ pub use crate::vella::{
 };
 pub use crate::copilot::{
     CopilotAdrSyncTool, CopilotBlastRadiusReportTool, CopilotCreatePrTool,
-    CopilotDebateDispatchTool, CopilotExportDeckTool, CopilotExportReportTool,
-    CopilotMeetingActionItemsTool, CopilotMeetingToCodeTool, CopilotPurviewGuardTool,
-    CopilotSharepointGetTool, CopilotTeamsPostTool,
+    CopilotDebateDispatchTool, CopilotExcelFunctionsTool, CopilotExportDeckTool,
+    CopilotExportReportTool, CopilotHardwareTelemetryTool, CopilotIncidentDebuggerTool,
+    CopilotMeetingActionItemsTool, CopilotMeetingToCodeTool, CopilotPlannerSyncTool,
+    CopilotPurviewGuardTool, CopilotSharepointGetTool, CopilotStreamGatewayTool,
+    CopilotTeamsPostTool,
 };
 
 
@@ -195,7 +197,7 @@ impl ToolRegistry {
         registry.register_tool(visual::GenerateImageTool::new());
         registry.register_tool(visual::RenderTerminalMediaTool::new());
         registry.register_tool(visual::ExportArtifactHtmlTool::new());
-        // Microsoft 365 Copilot & Microsoft Graph Communication Tools
+        // Microsoft 365 Copilot & Microsoft Graph Communication Tools (16 tools)
         registry.register_tool(crate::copilot::CopilotTeamsPostTool::new());
         registry.register_tool(crate::copilot::CopilotSharepointGetTool::new());
         registry.register_tool(crate::copilot::CopilotMeetingActionItemsTool::new());
@@ -207,6 +209,11 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotAdrSyncTool::new());
         registry.register_tool(crate::copilot::CopilotCreatePrTool::new());
         registry.register_tool(crate::copilot::CopilotExportDeckTool::new());
+        registry.register_tool(crate::copilot::CopilotExcelFunctionsTool::new());
+        registry.register_tool(crate::copilot::CopilotStreamGatewayTool::new());
+        registry.register_tool(crate::copilot::CopilotPlannerSyncTool::new());
+        registry.register_tool(crate::copilot::CopilotIncidentDebuggerTool::new());
+        registry.register_tool(crate::copilot::CopilotHardwareTelemetryTool::new());
         registry
     }
 
@@ -303,7 +310,7 @@ impl ToolRegistry {
         registry.register_tool(visual::GenerateImageTool::new().with_working_dir(dir.clone()));
         registry.register_tool(visual::RenderTerminalMediaTool::new().with_working_dir(dir.clone()));
         registry.register_tool(visual::ExportArtifactHtmlTool::new().with_working_dir(dir.clone()));
-        // Microsoft 365 Copilot & Microsoft Graph Communication Tools
+        // Microsoft 365 Copilot & Microsoft Graph Communication Tools (16 tools)
         registry.register_tool(crate::copilot::CopilotTeamsPostTool::new());
         registry.register_tool(crate::copilot::CopilotSharepointGetTool::new());
         registry.register_tool(crate::copilot::CopilotMeetingActionItemsTool::new());
@@ -315,6 +322,11 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotAdrSyncTool::new());
         registry.register_tool(crate::copilot::CopilotCreatePrTool::new().with_working_dir(dir.clone()));
         registry.register_tool(crate::copilot::CopilotExportDeckTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(crate::copilot::CopilotExcelFunctionsTool::with_working_dir(dir.clone()));
+        registry.register_tool(crate::copilot::CopilotStreamGatewayTool::new());
+        registry.register_tool(crate::copilot::CopilotPlannerSyncTool::new());
+        registry.register_tool(crate::copilot::CopilotIncidentDebuggerTool::new());
+        registry.register_tool(crate::copilot::CopilotHardwareTelemetryTool::new());
         registry
     }
 

@@ -555,7 +555,7 @@ python3 scripts/test_file_crud_superpowers.py
 # Brutal verification: Curated Vibe-Coder Knowledge Canons (ISBN Checksums & Skills)
 python3 scripts/test_forensics_verification.py
 python3 scripts/test_strategic_verification.py
-# Brutal verification: Microsoft 365 Copilot & Microsoft Graph Communication System (12 Tests)
+# Brutal verification: Microsoft 365 Copilot & Microsoft Graph Communication System (23 Tests)
 cargo test --test ms365_copilot_brutal_tests -- --nocapture
 ```
 
@@ -563,7 +563,7 @@ cargo test --test ms365_copilot_brutal_tests -- --nocapture
 
 ## 🏢 Microsoft 365 Copilot & Microsoft Graph Communication System (`tgs copilot`)
 
-Tagisan features a systems-grade, enterprise-hardened integration connecting its dialectical reasoning engine, petgraph AST codebase graph, and formal invariant verification (`tgs ground`) directly into the **Microsoft 365 Enterprise Ecosystem** (Teams, SharePoint, OneDrive, Outlook, Microsoft Search, and Copilot Studio).
+Tagisan features a systems-grade, enterprise-hardened integration connecting its dialectical reasoning engine, petgraph AST codebase graph, and formal invariant verification (`tgs ground`) directly into the **Microsoft 365 Enterprise Ecosystem** (Teams, SharePoint, OneDrive, Outlook, Microsoft Search, Excel, Planner, and Copilot Studio).
 
 ```mermaid
 graph TD
@@ -590,15 +590,21 @@ graph TD
         Engine --> PRAuto["Git Ephemeral Branch & PR Automation"]
         Engine --> DeckGen["Executive Briefing Deck Generator"]
         Engine --> BotHandler["Teams Bot Adaptive Card Action Handler"]
+        Engine --> ExcelAddin["Excel Custom Functions Engine (=TGS.*)"]
+        Engine --> SSEStream["SSE & NDJSON Real-time Streaming Gateway"]
+        Engine --> PlannerSync["Microsoft Planner & To-Do Synchronizer"]
+        Engine --> IncidentDbg["Teams CI/CD Incident Auto-Debugger"]
+        Engine --> HWTelemetry["Copilot+ PC NPU/DirectML Telemetry & CO2"]
     end
     
-    subgraph "Microsoft Graph, OneNote & Identity Plane"
+    subgraph "Microsoft Graph, OneNote, Planner & Identity Plane"
         Engine --> GraphClient["Microsoft Graph REST Client"]
         GraphClient --> Entra["Microsoft Entra ID (OAuth2 Device Code Flow)"]
         GraphClient --> TeamsAPI["Microsoft Teams API (Chat, Channels & Cards)"]
         GraphClient --> SPAPI["SharePoint / OneDrive REST API"]
         GraphClient --> OneNoteAPI["Microsoft OneNote API (ADR Sync)"]
         GraphClient --> MailAPI["Outlook Mail API (HTML Reports & Decks)"]
+        GraphClient --> PlannerAPI["Planner & To-Do Task REST APIs"]
         Engine --> Connector["Microsoft Search Graph Connector Engine"]
     end
 ```
@@ -663,12 +669,37 @@ graph TD
       - `manifest.json` (Teams App manifest v1.16)
       - `declarativeAgent.json` (Microsoft Copilot Declarative Agent v1.0)
       - `ai-plugin.json` (Copilot Studio & ChatGPT Plugin schema)
-      - `openapi.json` (OpenAPI 3.0.3 specification exposing all 11 endpoints)
+      - `openapi.json` (OpenAPI 3.0.3 specification exposing all 16 endpoints)
       - `color.png` & `outline.png` (RFC 2083 valid binary PNG icons generated in-memory)
+
+11. **Native Excel Custom Functions Engine & Add-in Packager (`tgs copilot excel` / `copilot_excel_functions`):**
+    - Evaluates native Excel formula expressions dynamically directly against the Tagisan engine:
+      - `=TGS.BLAST_RADIUS(symbol, path)`: Calculates transitive affected symbol count and risk tier.
+      - `=TGS.COMPLEXITY(symbol, path)`: Computes AST cyclomatic complexity and risk rating.
+      - `=TGS.COST_SAVINGS(prompt_tokens, completion_tokens)`: Models API cost avoidance vs OpenAI GPT-4o pricing.
+      - `=TGS.INVARIANT_CHECK(target, code)`: Formally verifies mathematical and architectural invariants.
+    - Generates complete Office Add-in packages containing `manifest.xml`, `functions.json` schema, and TypeScript bridge `functions.js`.
+
+12. **Live Server-Sent Events (SSE) Streaming Gateway (`tgs copilot stream` / `copilot_stream_gateway`):**
+    - Real-time event streaming protocol for Copilot Studio, Teams bots, and webhooks formatted as standard `text/event-stream` or NDJSON.
+    - Dispatches streaming frames (`round_start`, `token`, `keepalive`, `verdict`, `done`) with 3-second anti-timeout heartbeat pulses, ensuring zero connection drops during heavy reasoning workloads.
+
+13. **Microsoft Planner & To-Do Task Synchronizer (`tgs copilot planner` / `copilot_planner_sync`):**
+    - Synchronizes meeting action items, debate outcomes, and architectural tasks directly to **Microsoft Planner** plan buckets or **Microsoft To-Do** personal task lists.
+    - Supports setting priorities (`Urgent`, `Important`, `Medium`, `Low`), checklist items, assignees, and linking back to Git commit SHAs and pull requests.
+
+14. **Teams "@Tagisan" CI/CD Incident Debugger (`tgs copilot incident` / `copilot_incident_debugger`):**
+    - Ingests raw CI/CD failure logs (rustc errors, stack trace panics, TypeScript diagnostics, pytest failures), extracts root cause lines, and computes symbol blast radius.
+    - Synthesizes automated unified diff patches with confidence scores and emits interactive **Adaptive Cards v1.5** featuring an actionable `[Apply Autofix & Rerun CI]` `Action.Submit` button.
+
+15. **Windows Copilot+ PC Hardware Telemetry & Datacenter Energy Efficiency (`tgs copilot hardware` / `copilot_hardware_telemetry`):**
+    - Detects on-device silicon acceleration (NPU, DirectML GPUs, AVX-512/NEON SIMD) and calculates TOPS capability and local energy consumption (Joules & kWh).
+    - Benchmarks local inference against 8x H100 datacenter clusters, modeling dollars saved and grams of CO2 emissions avoided.
+    - Computes a cryptographic **Data Sovereignty Score (100% Air-Gapped)** and generates an executive Fluent UI Adaptive Card.
 
 ### 🛠️ Registered Autonomous Copilot Tools
 
-All 11 Copilot tools are first-class citizens in Tagisan's `ToolRegistry` and exposed via Model Context Protocol (MCP):
+All 16 Copilot tools are first-class citizens in Tagisan's `ToolRegistry` and exposed via Model Context Protocol (MCP):
 
 | Tool Identifier | Description | DLP & Policy Enforcement |
 | :--- | :--- | :--- |
@@ -683,11 +714,16 @@ All 11 Copilot tools are first-class citizens in Tagisan's `ToolRegistry` and ex
 | `copilot_adr_sync` | Synthesize MADR architecture decision records and sync to OneNote & SharePoint | Outbound Secret Scanned |
 | `copilot_create_pr` | Ephemeral Git branch creation, conventional commit generation, and PR blast telemetry | Outbound Secret Scanned |
 | `copilot_export_deck` | Compile responsive executive briefing slide decks in Fluent HTML and Marp Markdown | Outbound Secret Scanned |
+| `copilot_excel_functions` | Evaluate dynamic `=TGS.*` formulas and package Excel Office Add-in manifests | Formula Sanitized & Scanned |
+| `copilot_stream_gateway` | Live SSE and NDJSON real-time token streaming for Copilot Studio & Teams | Anti-Timeout Heartbeat |
+| `copilot_planner_sync` | Synchronize action items and tasks to Microsoft Planner buckets and To-Do lists | Outbound Secret Scanned |
+| `copilot_incident_debugger` | Ingest CI/CD logs, synthesize autofix diffs, and generate Adaptive Cards with Action.Submit | Patch Sanitized & Verified |
+| `copilot_hardware_telemetry` | Measure Copilot+ PC NPU/DirectML telemetry, energy savings vs H100s, and CO2 avoided | Invariant Verified |
 
 ### 💻 CLI Usage Guide (`tgs copilot`)
 
 ```bash
-# 1. Inspect Copilot Subsystem & Entra ID status
+# 1. Inspect Copilot Subsystem & Entra ID status (all 16 tools active)
 tgs copilot status
 
 # 2. Authenticate with Entra ID via OAuth2 Device Code Flow
@@ -731,7 +767,23 @@ tgs copilot index
 # 14. Export complete Copilot package bundle for sideloading
 tgs copilot package --output-dir ".tagisan/copilot_package" --base-url "https://api.tagisan.ai"
 
-# 15. Run built-in Copilot subsystem self-test suite
+# 15. Evaluate Excel Custom Functions or export Office Add-in package
+tgs copilot excel --formula "=TGS.BLAST_RADIUS(\"EntraAuthManager\", \".\")"
+tgs copilot excel --export-package --output-dir ".tagisan/excel_addin"
+
+# 16. Stream debate or token generation via Server-Sent Events (SSE)
+tgs copilot stream --topic "Lock-free channel architecture" --format sse
+
+# 17. Synchronize tasks to Microsoft Planner or To-Do
+tgs copilot planner --title "Verify Purview Air-Gap Invariants" --plan-id "plan_prod_01" --bucket-id "bucket_security" --priority 1
+
+# 18. Debug CI/CD incident logs and synthesize autofix Adaptive Card
+tgs copilot incident --log-file "ci_failure.log" --channel "incident-response"
+
+# 19. Inspect Windows Copilot+ PC hardware telemetry, NPU acceleration, and CO2 savings
+tgs copilot hardware --prompt-tokens 50000 --completion-tokens 10000
+
+# 20. Run built-in Copilot subsystem self-test suite
 tgs copilot test
 ```
 

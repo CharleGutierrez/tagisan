@@ -994,7 +994,7 @@ impl McpServer {
                     - **Tenant ID:** `{}`\n\
                     - **Client ID:** `{}`\n\
                     - **Token Expired:** {}\n\
-                    - **Registered Copilot Tools:** `copilot_teams_post`, `copilot_sharepoint_get`, `copilot_meeting_action_items`, `copilot_export_report`, `copilot_meeting_to_code`, `copilot_blast_radius_report`, `copilot_debate_dispatch`, `copilot_purview_guard`, `copilot_adr_sync`, `copilot_create_pr`, `copilot_export_deck`\n\
+                    - **Registered Copilot Tools (16):** `copilot_teams_post`, `copilot_sharepoint_get`, `copilot_meeting_action_items`, `copilot_export_report`, `copilot_meeting_to_code`, `copilot_blast_radius_report`, `copilot_debate_dispatch`, `copilot_purview_guard`, `copilot_adr_sync`, `copilot_create_pr`, `copilot_export_deck`, `copilot_excel_functions`, `copilot_stream_gateway`, `copilot_planner_sync`, `copilot_incident_debugger`, `copilot_hardware_telemetry`\n\
                     - **AgentShield Enterprise DLP:** Outbound DLP Active / Inbound Sanitization Active",
                     if status.authenticated { "YES" } else { "NO" },
                     status.auth_mode,
