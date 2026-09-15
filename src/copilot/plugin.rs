@@ -76,16 +76,22 @@ pub fn generate_declarative_agent_manifest(_base_url: &str) -> Value {
         ],
         "capabilities": [
             { "name": "WebSearch" },
-            { "name": "OneDriveAndSharePoint" }
+            { "name": "OneDriveAndSharePoint" },
+            {
+                "name": "GraphConnectors",
+                "connections": [
+                    { "connection_id": "tagisan_skills_connector" }
+                ]
+            }
         ]
     })
 }
 
-/// Generates Microsoft Teams App Package Manifest (manifest.json)
+/// Generates Microsoft Teams App Package Manifest (manifest.json v1.17)
 pub fn generate_teams_app_manifest(_base_url: &str) -> Value {
     json!({
-        "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
-        "manifestVersion": "1.16",
+        "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+        "manifestVersion": "1.17",
         "version": "1.0.0",
         "id": "a981c20e-6f8d-4a11-8a4b-tagisan36501",
         "packageName": "com.tagisan.copilot",
@@ -108,6 +114,10 @@ pub fn generate_teams_app_manifest(_base_url: &str) -> Value {
             "full": "Production-grade multi-model dialectical debate, autonomous coding agents, formal invariant verification, and Copilot tools."
         },
         "accentColor": "#0078D4",
+        "localizationInfo": {
+            "defaultLanguageTag": "en-us",
+            "additionalLanguages": []
+        },
         "copilotAgents": {
             "declarativeAgents": [
                 {

@@ -5326,7 +5326,7 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
             println!("  Graph Execution Mode:  {}", if client.is_mock() { "Deterministic Mock / Sandbox".yellow() } else { "Live Enterprise Graph REST API".green().bold() });
             println!("  Base Endpoint:         https://graph.microsoft.com/v1.0");
 
-            println!("\n[3] Autonomous Copilot Tools in Registry (16 Tools):");
+            println!("\n[3] Autonomous Copilot Tools in Registry (28 Tools):");
             println!("  [✓] copilot_teams_post          (Post updates & debate verdicts to Teams)");
             println!("  [✓] copilot_sharepoint_get      (Ingest SharePoint/OneDrive docs with AgentShield)");
             println!("  [✓] copilot_meeting_action_items(Decompose Teams meeting transcripts into code tasks)");
@@ -5343,6 +5343,18 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
             println!("  [✓] copilot_planner_sync        (Microsoft Planner & To-Do synchronizer with Git/PR linkage)");
             println!("  [✓] copilot_incident_debugger   (Teams '@Tagisan' CI/CD incident debugger & surgical autofix)");
             println!("  [✓] copilot_hardware_telemetry  (Windows Copilot+ PC NPU/DirectML telemetry & carbon efficiency)");
+            println!("  [✓] copilot_obo_exchange        (Entra ID OAuth2 On-Behalf-Of user context token exchange)");
+            println!("  [✓] copilot_subscription_manage (Microsoft Graph webhook subscriptions & challenge handshake)");
+            println!("  [✓] copilot_purview_sync        (Dynamic Microsoft Purview sensitivity taxonomy synchronization)");
+            println!("  [✓] copilot_sentinel_audit      (Microsoft Sentinel CEF:0, RFC 5424 & Azure Monitor SIEM bridge)");
+            println!("  [✓] copilot_certify             (Microsoft 365 Admin Center App Compliance & Attestation)");
+            println!("  [✓] copilot_cae_handler         (Continuous Access Evaluation RFC 8693 claims challenge handler)");
+            println!("  [✓] copilot_jwe_decrypt         (RFC 7516 JWE rich change notification decryption engine)");
+            println!("  [✓] copilot_graph_batch         (Microsoft Graph RFC 2046 JSON Batching & DAG execution)");
+            println!("  [✓] copilot_delta_sync          (Incremental Delta Query change tracking & cache persistence)");
+            println!("  [✓] copilot_universal_action    (Microsoft Teams Adaptive Card 1.6 Universal Actions Execute)");
+            println!("  [✓] copilot_rms_guard           (Azure Information Protection AIP/RMS encryption barrier guard)");
+            println!("  [✓] copilot_workload_identity   (Passwordless Azure Managed Identity & OIDC Federation)");
 
             println!("\n[4] AgentShield Cyber Defense Gate:");
             println!("  Outbound DLP:          {}", "ACTIVE (Zero API key/private key/credential leakage)".green().bold());

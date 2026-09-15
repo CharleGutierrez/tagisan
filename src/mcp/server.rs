@@ -994,7 +994,7 @@ impl McpServer {
                     - **Tenant ID:** `{}`\n\
                     - **Client ID:** `{}`\n\
                     - **Token Expired:** {}\n\
-                    - **Registered Copilot Tools (21):** `copilot_teams_post`, `copilot_sharepoint_get`, `copilot_meeting_action_items`, `copilot_export_report`, `copilot_meeting_to_code`, `copilot_blast_radius_report`, `copilot_debate_dispatch`, `copilot_purview_guard`, `copilot_adr_sync`, `copilot_create_pr`, `copilot_export_deck`, `copilot_excel_functions`, `copilot_stream_gateway`, `copilot_planner_sync`, `copilot_incident_debugger`, `copilot_hardware_telemetry`, `copilot_obo_exchange`, `copilot_subscription_manage`, `copilot_purview_sync`, `copilot_sentinel_audit`, `copilot_certify`\n\
+                    - **Registered Copilot Tools (28):** `copilot_teams_post`, `copilot_sharepoint_get`, `copilot_meeting_action_items`, `copilot_export_report`, `copilot_meeting_to_code`, `copilot_blast_radius_report`, `copilot_debate_dispatch`, `copilot_purview_guard`, `copilot_adr_sync`, `copilot_create_pr`, `copilot_export_deck`, `copilot_excel_functions`, `copilot_stream_gateway`, `copilot_planner_sync`, `copilot_incident_debugger`, `copilot_hardware_telemetry`, `copilot_obo_exchange`, `copilot_subscription_manage`, `copilot_purview_sync`, `copilot_sentinel_audit`, `copilot_certify`, `copilot_cae_handler`, `copilot_jwe_decrypt`, `copilot_graph_batch`, `copilot_delta_sync`, `copilot_universal_action`, `copilot_rms_guard`, `copilot_workload_identity`\n\
                     - **AgentShield Enterprise DLP:** Outbound DLP Active / Inbound Sanitization Active",
                     if status.authenticated { "YES" } else { "NO" },
                     status.auth_mode,

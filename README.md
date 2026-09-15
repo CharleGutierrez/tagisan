@@ -589,7 +589,7 @@ flowchart TD
         AgentShield["AgentShield Enterprise DLP Gate"]
         SIEM["Sentinel CEF / RFC 5424 SIEM Telemetry Bridge"]
         Attestation["App Compliance & Attestation Engine"]
-        Tools21["21 Autonomous Copilot MCP Tools"]
+        Tools28["28 Autonomous Copilot MCP Tools"]
     end
 
     Copilot -->|User JWT| OBO
@@ -714,9 +714,37 @@ flowchart TD
     - Automated compliance generator emitting `compliance.json` for Microsoft Partner Center certification.
     - Attests MPN ID, valid domains, SOC 2 Type II, ISO/IEC 27001:2022, GDPR, HIPAA, and zero-retention ephemeral storage policies.
 
+22. **Continuous Access Evaluation (CAE) Claims-Challenge Negotiation (`copilot_cae_handler`):**
+    - Intercepts HTTP 401 `WWW-Authenticate: Bearer error="insufficient_claims"` challenges per RFC 8693 / MS Graph CAE specification.
+    - Automatically parses base64-encoded JSON claims objects, evaluates step-up authentication requirements, and issues remediation tokens with continuous zero-trust policy enforcement.
+
+23. **Microsoft Graph Rich Notification JWE Decryption (`copilot_jwe_decrypt`):**
+    - Decrypts RFC 7516 JSON Web Encryption (JWE) payloads received via real-time Microsoft Graph webhooks for Teams chats, channel messages, and online meeting transcripts.
+    - Employs AES-256-GCM symmetric authenticated encryption with RSA-OAEP asymmetric key transport and HMAC-SHA256 signature verification.
+
+24. **Microsoft Graph JSON Batching & DAG Dependency Engine (`copilot_graph_batch`):**
+    - Consolidates up to 20 individual Microsoft Graph requests into a single RFC 2046 / OData `$batch` POST envelope, reducing network round-trips by up to 95%.
+    - Formally validates dependencies using topological sort DAG analysis (`dependsOn`), detects cyclic dependencies, and auto-chunks oversized request batches.
+
+25. **Incremental Delta Query & Tombstone Change Tracking (`copilot_delta_sync`):**
+    - Manages stateful change tracking across SharePoint document libraries, Teams messages, and Planner tasks using `/delta` query endpoints.
+    - Caches `@odata.deltaLink` tokens in `.tagisan/copilot_delta_cache.json` and accurately tracks tombstone deletions (`@removed`) and entity updates across synchronization cycles.
+
+26. **Teams Adaptive Cards 1.6 Universal Actions (`copilot_universal_action`):**
+    - Processes Modern Teams Adaptive Cards v1.6 `Action.Execute` callbacks with Single Sign-On (SSO) context validation.
+    - Dispatches surgical actions (`approve_patch`, `run_autofix`, `run_debate`, `sync_adr`) and generates per-user `refresh` views tailored to each viewer's identity and security permissions.
+
+27. **Azure Information Protection (AIP/RMS) Cryptographic Guard (`copilot_rms_guard`):**
+    - Deeply inspects enterprise files protected by Microsoft Purview / Rights Management Services (AIP/RMS), including `.pfile` containers and Compound File Binary (CFB) format streams.
+    - Formally verifies user license capabilities (`VIEW`, `EDIT`, `EXTRACT`) before permitting local ingestion, preventing unauthorized LLM processing of protected enterprise assets.
+
+28. **Sovereign Clouds, Azure Managed Identity & Workload Identity Federation (`copilot_workload_identity`):**
+    - Authenticates across multiple sovereign cloud partitions: Commercial, US Gov GCC High, US Gov DoD, and China (21Vianet), dynamically configuring login and Graph API endpoints.
+    - Natively supports passwordless Azure Instance Metadata Service (IMDS) Managed Identity and RFC 7523 Workload Identity Federation OIDC token exchange for secure Kubernetes / GitHub Actions / Azure DevOps CI/CD runners.
+
 ### 🛠️ Registered Autonomous Copilot Tools
 
-All 21 Copilot tools are first-class citizens in Tagisan's `ToolRegistry` and exposed via Model Context Protocol (MCP):
+All 28 Copilot tools are first-class citizens in Tagisan's `ToolRegistry` and exposed via Model Context Protocol (MCP):
 
 | Tool Identifier | Description | DLP & Policy Enforcement |
 | :--- | :--- | :--- |
@@ -741,11 +769,18 @@ All 21 Copilot tools are first-class citizens in Tagisan's `ToolRegistry` and ex
 | `copilot_purview_sync` | Dynamically synchronize tenant Purview sensitivity taxonomy from Graph API | Tenant Policy Bound |
 | `copilot_sentinel_audit` | Emit structured CEF:0, RFC 5424, and Azure Monitor DCR SIEM security events | Cryptographically Audited |
 | `copilot_certify` | Audit and certify Microsoft 365 Admin Center App Compliance and Publisher Attestation | Partner Center Certified |
+| `copilot_cae_handler` | Intercept HTTP 401 CAE claims challenges, parse step-up requirements, and issue remediation tokens | Continuous Zero-Trust Enforced |
+| `copilot_jwe_decrypt` | Decrypt RFC 7516 JWE payloads for real-time Teams/Graph rich notification webhooks with AES-256-GCM | Cryptographically Decrypted & Verified |
+| `copilot_graph_batch` | Execute high-throughput JSON batch requests ($batch) with topological DAG dependency ordering | Quota Optimized & DAG Validated |
+| `copilot_delta_sync` | Incremental change tracking via /delta with @odata.deltaLink state caching and tombstone detection | Change Tracking & Delta Cached |
+| `copilot_universal_action` | Handle Teams Adaptive Cards 1.6 Action.Execute callbacks, validate SSO context, and refresh views | Universal Action Verified |
+| `copilot_rms_guard` | Cryptographic guard for Azure Information Protection (AIP/RMS) .pfile containers and CFB streams | RMS Rights & Egress Guarded |
+| `copilot_workload_identity` | Authenticate across Azure Managed Identity (IMDS), RFC 7523 Workload Identity Federation, and Sovereign Clouds | Zero-Trust Sovereign Bound |
 
 ### 💻 CLI Usage Guide (`tgs copilot`)
 
 ```bash
-# 1. Inspect Copilot Subsystem & Entra ID status (all 16 tools active)
+# 1. Inspect Copilot Subsystem & Entra ID status (all 28 tools active)
 tgs copilot status
 
 # 2. Authenticate with Entra ID via OAuth2 Device Code Flow

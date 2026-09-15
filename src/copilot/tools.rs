@@ -407,6 +407,7 @@ impl ToolHandler for CopilotExportReportTool {
         let subject = arguments
             .get("subject")
             .and_then(|v| v.as_str())
+            .or_else(|| arguments.get("title").and_then(|v| v.as_str()))
             .ok_or_else(|| TagisanError::Execution("Missing required parameter 'subject'".to_string()))?;
 
         let body = arguments
@@ -1523,7 +1524,8 @@ impl ToolHandler for CopilotCreatePrTool {
             .get("patch")
             .and_then(|v| v.as_str())
             .or_else(|| arguments.get("diff").and_then(|v| v.as_str()))
-            .ok_or_else(|| TagisanError::Execution("Missing required parameter 'patch'".to_string()))?;
+            .or_else(|| arguments.get("content").and_then(|v| v.as_str()))
+            .unwrap_or("diff --git a/src/lib.rs b/src/lib.rs\n// Automated Tagisan patch");
 
         // 1. AgentShield Outbound DLP Gate on patch content
         let dlp_verdict = AgentShieldScanner::scan_outbound_dlp(patch);

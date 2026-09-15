@@ -6,12 +6,16 @@
 
 pub mod adr;
 pub mod auth;
+pub mod batch;
 pub mod bot;
+pub mod cae;
 pub mod connector;
+pub mod delta;
 pub mod excel;
 pub mod graph;
 pub mod hardware;
 pub mod incident;
+pub mod jwe;
 pub mod obo;
 pub mod planner;
 pub mod plugin;
@@ -24,11 +28,24 @@ pub mod tools;
 
 pub use adr::{AdrDocument, AdrEngine, AdrSyncReport, CopilotAdrSyncTool};
 pub use auth::{
-    CopilotAuthStatus, DeviceCodeResponse, EntraAuthManager, EntraIdConfig, EntraToken,
-    DEFAULT_GRAPH_SCOPE, DEFAULT_TOKEN_CACHE_FILE,
+    CopilotAuthStatus, CopilotWorkloadIdentityTool, DeviceCodeResponse, EntraAuthManager,
+    EntraIdConfig, EntraToken, MicrosoftCloud, DEFAULT_GRAPH_SCOPE, DEFAULT_TOKEN_CACHE_FILE,
 };
-pub use bot::{TeamsActionPayload, TeamsBotHandler, TeamsCardResponse};
+pub use batch::{
+    BatchEngine, BatchRequest, BatchResponse, BatchSubRequest, BatchSubResponse,
+    CopilotGraphBatchTool, GRAPH_BATCH_MAX_LIMIT,
+};
+pub use bot::{
+    TeamsActionPayload, TeamsBotHandler, TeamsCardResponse, UniversalActionPayload,
+    CopilotUniversalActionTool,
+};
+pub use cae::{
+    CaeClaimsChallenge, CaeRiskLevel, CopilotCaeHandlerTool,
+};
 pub use connector::{AclEntry, GraphConnectorEngine, IngestionItem};
+pub use delta::{
+    CopilotDeltaSyncTool, DeltaChangeItem, DeltaChangeType, DeltaSyncEngine, DeltaSyncReport,
+};
 pub use excel::{
     export_excel_addin_package, generate_excel_addin_manifest, generate_excel_functions_js,
     generate_excel_functions_json, CopilotExcelFunctionsTool, ExcelAddinPackage, ExcelEvalResult,
@@ -42,6 +59,9 @@ pub use incident::{
     AutofixPatch, CopilotIncidentDebuggerTool, IncidentAnalysis, IncidentCategory,
     IncidentDebuggerEngine, IncidentReport,
 };
+pub use jwe::{
+    CopilotJweDecryptTool, DecryptedGraphResource, GraphEncryptedContent, JweDecryptor,
+};
 pub use obo::{ClientCertificateConfig, CopilotOboExchangeTool, OboEngine, UserSecurityContext};
 pub use planner::{
     CopilotPlannerSyncTool, PlannerAssignment, PlannerReference, PlannerSyncEngine,
@@ -53,8 +73,9 @@ pub use plugin::{
     generate_valid_png, CopilotCertifyTool, CopilotPackageInfo,
 };
 pub use purview::{
-    CopilotPurviewGuardTool, CopilotPurviewSyncTool, PurviewAuditReceipt, PurviewGuardEngine,
-    PurviewGuardResult, PurviewLabelPolicy, PurviewSensitivity,
+    CopilotPurviewGuardTool, CopilotPurviewSyncTool, CopilotRmsGuardTool, PurviewAuditReceipt,
+    PurviewGuardEngine, PurviewGuardResult, PurviewLabelPolicy, PurviewSensitivity,
+    RmsProtectionHandler, RmsProtectionStatus,
 };
 pub use sentinel::{
     CopilotSentinelAuditTool, SentinelAuditEvent, SentinelAuditEngine, SentinelAuditResult,
@@ -73,4 +94,5 @@ pub use tools::{
     CopilotExportDeckTool, CopilotExportReportTool, CopilotMeetingActionItemsTool,
     CopilotMeetingToCodeTool, CopilotSharepointGetTool, CopilotTeamsPostTool,
 };
+
 

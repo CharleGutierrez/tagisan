@@ -301,6 +301,8 @@ impl ToolHandler for CopilotAdrSyncTool {
         let proposal = arguments
             .get("proposal")
             .and_then(|v| v.as_str())
+            .or_else(|| arguments.get("decision").and_then(|v| v.as_str()))
+            .or_else(|| arguments.get("title").and_then(|v| v.as_str()))
             .ok_or_else(|| TagisanError::Execution("Missing required parameter 'proposal'".to_string()))?;
 
         let verdict = arguments.get("verdict").and_then(|v| v.as_str());

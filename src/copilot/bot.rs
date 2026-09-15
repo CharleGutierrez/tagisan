@@ -325,4 +325,155 @@ impl TeamsBotHandler {
 
         self.process_action(&payload).await
     }
+
+    /// Process an Adaptive Card 1.6 Universal Action (Action.Execute) with verified SSO context
+    pub async fn process_universal_action(&self, payload: &UniversalActionPayload) -> Result<TeamsCardResponse> {
+        let action_payload = TeamsActionPayload {
+            action: payload.verb.clone(),
+            user: payload.user.clone(),
+            user_id: payload.user_id.clone(),
+            target: payload.data.get("target").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            data: payload.data.get("data").or_else(|| payload.data.get("patch_id")).and_then(|v| v.as_str()).map(|s| s.to_string()),
+            parameters: payload.data.as_object().cloned(),
+        };
+
+        let mut res = self.process_action(&action_payload).await?;
+        // Attach Universal Action 1.6 refresh metadata
+        if let Some(card_obj) = res.card_json.as_object_mut() {
+            card_obj.insert("version".to_string(), json!("1.6"));
+            card_obj.insert(
+                "refresh".to_string(),
+                json!({
+                    "action": {
+                        "type": "Action.Execute",
+                        "title": "Refresh Status",
+                        "verb": format!("refresh_{}", payload.verb)
+                    },
+                    "userIds": [payload.user_id.as_deref().unwrap_or("current_user")]
+                }),
+            );
+        }
+
+        Ok(res)
+    }
 }
+
+/// Universal Action payload (Action.Execute in Adaptive Cards 1.4/1.6)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UniversalActionPayload {
+    /// Action verb: "approve_patch", "run_autofix", "run_debate", "sync_adr"
+    pub verb: String,
+    /// Associated structured data
+    pub data: Value,
+    /// Invoking user principal name or display name
+    pub user: Option<String>,
+    pub user_id: Option<String>,
+    pub tenant_id: Option<String>,
+    /// Optional SSO token / user assertion
+    pub sso_token: Option<String>,
+}
+
+// =========================================================================
+// Tool 26: CopilotUniversalActionTool (copilot_universal_action)
+// =========================================================================
+
+/// Autonomous tool for Microsoft Teams Adaptive Cards 1.6 Universal Actions (Action.Execute)
+#[derive(Clone)]
+pub struct CopilotUniversalActionTool {
+    handler: std::sync::Arc<TeamsBotHandler>,
+}
+
+impl Default for CopilotUniversalActionTool {
+    fn default() -> Self {
+        Self {
+            handler: std::sync::Arc::new(TeamsBotHandler::new()),
+        }
+    }
+}
+
+impl CopilotUniversalActionTool {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_handler(handler: std::sync::Arc<TeamsBotHandler>) -> Self {
+        Self { handler }
+    }
+}
+
+#[async_trait::async_trait]
+impl crate::tools::ToolHandler for CopilotUniversalActionTool {
+    fn name(&self) -> &'static str {
+        "copilot_universal_action"
+    }
+
+    fn description(&self) -> &'static str {
+        "Process Microsoft Teams Adaptive Card 1.6 Universal Actions (Action.Execute) with SSO user context and per-user refresh views"
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "verb": {
+                    "type": "string",
+                    "enum": ["approve_patch", "run_autofix", "run_debate", "sync_adr"],
+                    "description": "Universal Action verb to execute"
+                },
+                "data": {
+                    "type": "object",
+                    "description": "Associated payload parameters (target, patch_id, proposal, etc.)"
+                },
+                "user": {
+                    "type": "string",
+                    "description": "User display name or UPN"
+                },
+                "user_id": {
+                    "type": "string",
+                    "description": "Entra ID user object ID"
+                }
+            },
+            "required": ["verb"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let verb = arguments
+            .get("verb")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing 'verb' parameter".to_string()))?
+            .to_string();
+
+        let data = arguments.get("data").cloned().unwrap_or(json!({}));
+        let user = arguments.get("user").and_then(|v| v.as_str()).map(|s| s.to_string());
+        let user_id = arguments.get("user_id").and_then(|v| v.as_str()).map(|s| s.to_string());
+
+        let payload = UniversalActionPayload {
+            verb,
+            data,
+            user,
+            user_id,
+            tenant_id: None,
+            sso_token: None,
+        };
+
+        let res = self.handler.process_universal_action(&payload).await?;
+
+        Ok(format!(
+            "### 🎴 Teams Adaptive Card Universal Action Executed\n\n\
+            - **Status**: `{}`\n\
+            - **Action Verb**: `{}`\n\
+            - **Badge**: {}\n\
+            - **Summary**: {}\n\
+            - **Processed At**: {}\n\n\
+            ```json\n{}\n```",
+            res.status,
+            res.action_processed,
+            res.badge,
+            res.summary_text,
+            res.processed_at,
+            serde_json::to_string_pretty(&res.card_json).unwrap_or_default()
+        ))
+    }
+}
+

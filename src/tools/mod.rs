@@ -65,13 +65,14 @@ pub use crate::vella::{
     VellaSpaceCopilotTool, VellaTradingTool, VellaVectorSyncTool, VellaWeb3GuardianTool,
 };
 pub use crate::copilot::{
-    CopilotAdrSyncTool, CopilotBlastRadiusReportTool, CopilotCertifyTool,
-    CopilotCreatePrTool, CopilotDebateDispatchTool, CopilotExcelFunctionsTool,
-    CopilotExportDeckTool, CopilotExportReportTool, CopilotHardwareTelemetryTool,
-    CopilotIncidentDebuggerTool, CopilotMeetingActionItemsTool, CopilotMeetingToCodeTool,
+    CopilotAdrSyncTool, CopilotBlastRadiusReportTool, CopilotCaeHandlerTool, CopilotCertifyTool,
+    CopilotCreatePrTool, CopilotDebateDispatchTool, CopilotDeltaSyncTool, CopilotExcelFunctionsTool,
+    CopilotExportDeckTool, CopilotExportReportTool, CopilotGraphBatchTool, CopilotHardwareTelemetryTool,
+    CopilotIncidentDebuggerTool, CopilotJweDecryptTool, CopilotMeetingActionItemsTool, CopilotMeetingToCodeTool,
     CopilotOboExchangeTool, CopilotPlannerSyncTool, CopilotPurviewGuardTool,
-    CopilotPurviewSyncTool, CopilotSentinelAuditTool, CopilotSharepointGetTool,
-    CopilotStreamGatewayTool, CopilotSubscriptionTool, CopilotTeamsPostTool,
+    CopilotPurviewSyncTool, CopilotRmsGuardTool, CopilotSentinelAuditTool, CopilotSharepointGetTool,
+    CopilotStreamGatewayTool, CopilotSubscriptionTool, CopilotTeamsPostTool, CopilotUniversalActionTool,
+    CopilotWorkloadIdentityTool,
 };
 
 
@@ -198,7 +199,7 @@ impl ToolRegistry {
         registry.register_tool(visual::GenerateImageTool::new());
         registry.register_tool(visual::RenderTerminalMediaTool::new());
         registry.register_tool(visual::ExportArtifactHtmlTool::new());
-        // Microsoft 365 Copilot & Microsoft Graph Communication Tools (21 tools)
+        // Microsoft 365 Copilot & Microsoft Graph Communication Tools (28 tools)
         registry.register_tool(crate::copilot::CopilotTeamsPostTool::new());
         registry.register_tool(crate::copilot::CopilotSharepointGetTool::new());
         registry.register_tool(crate::copilot::CopilotMeetingActionItemsTool::new());
@@ -220,6 +221,13 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotPurviewSyncTool::new());
         registry.register_tool(crate::copilot::CopilotSentinelAuditTool::new());
         registry.register_tool(crate::copilot::CopilotCertifyTool::new());
+        registry.register_tool(crate::copilot::CopilotCaeHandlerTool::new());
+        registry.register_tool(crate::copilot::CopilotJweDecryptTool::new());
+        registry.register_tool(crate::copilot::CopilotGraphBatchTool::new());
+        registry.register_tool(crate::copilot::CopilotDeltaSyncTool::new());
+        registry.register_tool(crate::copilot::CopilotUniversalActionTool::new());
+        registry.register_tool(crate::copilot::CopilotRmsGuardTool::new());
+        registry.register_tool(crate::copilot::CopilotWorkloadIdentityTool::new());
         registry
     }
 
@@ -338,6 +346,13 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotPurviewSyncTool::new());
         registry.register_tool(crate::copilot::CopilotSentinelAuditTool::new());
         registry.register_tool(crate::copilot::CopilotCertifyTool::new());
+        registry.register_tool(crate::copilot::CopilotCaeHandlerTool::new());
+        registry.register_tool(crate::copilot::CopilotJweDecryptTool::new());
+        registry.register_tool(crate::copilot::CopilotGraphBatchTool::new());
+        registry.register_tool(crate::copilot::CopilotDeltaSyncTool::new());
+        registry.register_tool(crate::copilot::CopilotUniversalActionTool::new());
+        registry.register_tool(crate::copilot::CopilotRmsGuardTool::new());
+        registry.register_tool(crate::copilot::CopilotWorkloadIdentityTool::new());
         registry
     }
 

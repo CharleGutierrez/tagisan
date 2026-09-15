@@ -234,7 +234,7 @@ impl ExcelFunctionsEngine {
         let trimmed = formula_str.trim().trim_start_matches('=');
         let upper = trimmed.to_uppercase();
 
-        if upper.starts_with("TGS.BLAST_RADIUS") {
+        if upper.starts_with("TGS.BLAST_RADIUS") || upper.starts_with("TGS.BLASTRADIUS") {
             let (symbol, path) = parse_two_string_args(trimmed)?;
             Ok(self.eval_blast_radius(&symbol, path.as_deref()))
         } else if upper.starts_with("TGS.COMPLEXITY") {

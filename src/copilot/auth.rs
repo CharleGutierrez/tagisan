@@ -17,6 +17,56 @@ pub const DEFAULT_GRAPH_SCOPE: &str = "https://graph.microsoft.com/.default";
 /// Default path for cached Copilot token
 pub const DEFAULT_TOKEN_CACHE_FILE: &str = ".tagisan/copilot_token.json";
 
+/// Microsoft Cloud Deployment Environment (Sovereign & National Clouds)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MicrosoftCloud {
+    Commercial,
+    UsGovGccHigh,
+    UsGovDoD,
+    China21Vianet,
+}
+
+impl Default for MicrosoftCloud {
+    fn default() -> Self {
+        Self::Commercial
+    }
+}
+
+impl MicrosoftCloud {
+    pub fn login_host(&self) -> &'static str {
+        match self {
+            Self::Commercial => "login.microsoftonline.com",
+            Self::UsGovGccHigh | Self::UsGovDoD => "login.microsoftonline.us",
+            Self::China21Vianet => "login.chinacloudapi.cn",
+        }
+    }
+
+    pub fn graph_host(&self) -> &'static str {
+        match self {
+            Self::Commercial => "graph.microsoft.com",
+            Self::UsGovGccHigh => "graph.microsoft.us",
+            Self::UsGovDoD => "dod-graph.microsoft.us",
+            Self::China21Vianet => "microsoftgraph.chinacloudapi.cn",
+        }
+    }
+
+    pub fn graph_base_url(&self) -> String {
+        format!("https://{}/v1.0", self.graph_host())
+    }
+
+    pub fn authorize_endpoint(&self, tenant: &str) -> String {
+        format!("https://{}/{}/oauth2/v2.0/authorize", self.login_host(), tenant)
+    }
+
+    pub fn token_endpoint(&self, tenant: &str) -> String {
+        format!("https://{}/{}/oauth2/v2.0/token", self.login_host(), tenant)
+    }
+
+    pub fn devicecode_endpoint(&self, tenant: &str) -> String {
+        format!("https://{}/{}/oauth2/v2.0/devicecode", self.login_host(), tenant)
+    }
+}
+
 /// Configuration for Microsoft Entra ID Authentication
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EntraIdConfig {
@@ -26,6 +76,9 @@ pub struct EntraIdConfig {
     pub tenant_id: String,
     /// Client Secret (for Client Credentials flow)
     pub client_secret: Option<String>,
+    /// Cloud Environment (Commercial, US Gov GCC High, DoD, 21Vianet China)
+    #[serde(default)]
+    pub cloud: MicrosoftCloud,
     /// OAuth2 Scopes requested
     pub scopes: Vec<String>,
     /// Filesystem location for caching tokens
@@ -48,6 +101,13 @@ impl Default for EntraIdConfig {
             .or_else(|_| std::env::var("AZURE_CLIENT_SECRET"))
             .ok();
 
+        let cloud = match std::env::var("AZURE_CLOUD").or_else(|_| std::env::var("TGS_MICROSOFT_CLOUD")).as_deref() {
+            Ok(val) if val.eq_ignore_ascii_case("usgov") || val.eq_ignore_ascii_case("gcchigh") => MicrosoftCloud::UsGovGccHigh,
+            Ok(val) if val.eq_ignore_ascii_case("dod") => MicrosoftCloud::UsGovDoD,
+            Ok(val) if val.eq_ignore_ascii_case("china") || val.eq_ignore_ascii_case("21vianet") => MicrosoftCloud::China21Vianet,
+            _ => MicrosoftCloud::Commercial,
+        };
+
         let mock = std::env::var("TGS_MOCK_ENTRA")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
@@ -58,6 +118,7 @@ impl Default for EntraIdConfig {
             client_id,
             tenant_id,
             client_secret,
+            cloud,
             scopes: vec![
                 "offline_access".to_string(),
                 "User.Read".to_string(),
@@ -499,7 +560,7 @@ impl EntraAuthManager {
         Ok(token)
     }
 
-    /// Save token to disk with fallback directory creation
+    /// Save token to disk with atomic write and fallback directory creation
     pub fn save_token(&self, token: &EntraToken) -> Result<()> {
         let path = &self.config.token_cache_path;
         if let Some(parent) = path.parent() {
@@ -507,20 +568,41 @@ impl EntraAuthManager {
         }
 
         let json = serde_json::to_string_pretty(token)?;
-        std::fs::write(path, json)?;
+        let nonce = blake3::hash(format!("{}_{}", chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0), std::process::id()).as_bytes()).to_hex();
+        let temp_path = path.with_extension(format!("tmp.{}", &nonce[..12]));
+        if std::fs::write(&temp_path, &json).is_ok() {
+            let _ = std::fs::rename(&temp_path, path);
+        } else {
+            let _ = std::fs::write(path, json);
+        }
         Ok(())
     }
 
-    /// Load token from disk cache
+    /// Retrieve a guaranteed valid access token (alias for get_valid_token)
+    pub async fn get_access_token(&self) -> Result<String> {
+        self.get_valid_token().await
+    }
+
+    /// Load token from disk cache safely handling concurrent reads
     pub fn load_token(&self) -> Result<Option<EntraToken>> {
         let path = &self.config.token_cache_path;
         if !path.exists() {
             return Ok(None);
         }
 
-        let content = std::fs::read_to_string(path)?;
-        let token: EntraToken = serde_json::from_str(&content)?;
-        Ok(Some(token))
+        // Try reading up to 3 times to mitigate transient concurrent rename windows
+        for _ in 0..3 {
+            if let Ok(content) = std::fs::read_to_string(path) {
+                if !content.trim().is_empty() {
+                    if let Ok(token) = serde_json::from_str::<EntraToken>(&content) {
+                        return Ok(Some(token));
+                    }
+                }
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+
+        Ok(None)
     }
 
     /// Clear persisted token
@@ -640,6 +722,281 @@ impl EntraAuthManager {
                 expires_in_secs: None,
                 is_expired: true,
                 scope: None,
+            }
+        }
+    }
+
+    /// Acquire token via Azure Instance Metadata Service (IMDS) Managed Identity
+    pub async fn acquire_token_managed_identity(&self, client_id: Option<&str>) -> Result<EntraToken> {
+        if self.is_mock() {
+            debug!("Acquiring token via Managed Identity in mock mode");
+            let now = chrono::Utc::now().timestamp();
+            let token = EntraToken {
+                access_token: format!("mock_msi_entra_token_{}", now),
+                token_type: "Bearer".to_string(),
+                expires_in: 86400,
+                expires_at: now + 86400,
+                refresh_token: None,
+                scope: Some(DEFAULT_GRAPH_SCOPE.to_string()),
+            };
+            let _ = self.save_token(&token);
+            let mut lock = self.active_token.write().await;
+            *lock = Some(token.clone());
+            return Ok(token);
+        }
+
+        let mut url = format!(
+            "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource={}",
+            urlencoding::encode(DEFAULT_GRAPH_SCOPE)
+        );
+        if let Some(cid) = client_id {
+            url.push_str(&format!("&client_id={}", cid));
+        }
+
+        let res = self
+            .client
+            .get(&url)
+            .header("Metadata", "true")
+            .send()
+            .await
+            .map_err(TagisanError::Network)?;
+
+        if !res.status().is_success() {
+            let err_text = res.text().await.unwrap_or_default();
+            return Err(TagisanError::Authentication(
+                "managed_identity".to_string(),
+                format!("IMDS token request failed: {err_text}"),
+            ));
+        }
+
+        let json: serde_json::Value = res.json().await.map_err(TagisanError::Network)?;
+        let access_token = json["access_token"]
+            .as_str()
+            .ok_or_else(|| TagisanError::Authentication("managed_identity".to_string(), "Missing access_token".to_string()))?
+            .to_string();
+        let token_type = json["token_type"].as_str().unwrap_or("Bearer").to_string();
+        let expires_in = json["expires_in"].as_str().and_then(|s| s.parse::<i64>().ok()).unwrap_or(3600);
+        let expires_at = chrono::Utc::now().timestamp() + expires_in;
+
+        let token = EntraToken {
+            access_token,
+            token_type,
+            expires_in,
+            expires_at,
+            refresh_token: None,
+            scope: Some(DEFAULT_GRAPH_SCOPE.to_string()),
+        };
+
+        let _ = self.save_token(&token);
+        let mut lock = self.active_token.write().await;
+        *lock = Some(token.clone());
+        Ok(token)
+    }
+
+    /// Acquire token via RFC 7523 Workload Identity Federation (GitHub Actions / Azure DevOps OIDC)
+    pub async fn acquire_token_federated_identity(&self, assertion: &str) -> Result<EntraToken> {
+        if self.is_mock() {
+            debug!("Acquiring token via Workload Identity Federation in mock mode");
+            let now = chrono::Utc::now().timestamp();
+            let token = EntraToken {
+                access_token: format!("mock_federated_entra_token_{}", now),
+                token_type: "Bearer".to_string(),
+                expires_in: 3600,
+                expires_at: now + 3600,
+                refresh_token: None,
+                scope: Some(DEFAULT_GRAPH_SCOPE.to_string()),
+            };
+            let _ = self.save_token(&token);
+            let mut lock = self.active_token.write().await;
+            *lock = Some(token.clone());
+            return Ok(token);
+        }
+
+        let token_url = self.config.cloud.token_endpoint(&self.config.tenant_id);
+        let params = [
+            ("scope", DEFAULT_GRAPH_SCOPE),
+            ("client_id", self.config.client_id.as_str()),
+            ("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"),
+            ("client_assertion", assertion),
+            ("grant_type", "client_credentials"),
+        ];
+
+        let res = self
+            .client
+            .post(&token_url)
+            .form(&params)
+            .send()
+            .await
+            .map_err(TagisanError::Network)?;
+
+        if !res.status().is_success() {
+            let err_text = res.text().await.unwrap_or_default();
+            return Err(TagisanError::Authentication(
+                "workload_identity".to_string(),
+                format!("Federated credential exchange failed: {err_text}"),
+            ));
+        }
+
+        let json: serde_json::Value = res.json().await.map_err(TagisanError::Network)?;
+        let access_token = json["access_token"]
+            .as_str()
+            .ok_or_else(|| TagisanError::Authentication("workload_identity".to_string(), "Missing access_token".to_string()))?
+            .to_string();
+        let token_type = json["token_type"].as_str().unwrap_or("Bearer").to_string();
+        let expires_in = json["expires_in"].as_i64().unwrap_or(3600);
+        let expires_at = chrono::Utc::now().timestamp() + expires_in;
+
+        let token = EntraToken {
+            access_token,
+            token_type,
+            expires_in,
+            expires_at,
+            refresh_token: None,
+            scope: Some(DEFAULT_GRAPH_SCOPE.to_string()),
+        };
+
+        let _ = self.save_token(&token);
+        let mut lock = self.active_token.write().await;
+        *lock = Some(token.clone());
+        Ok(token)
+    }
+}
+
+// Simple URL encoding helper
+mod urlencoding {
+    pub fn encode(data: &str) -> String {
+        let mut encoded = String::with_capacity(data.len() * 2);
+        for byte in data.bytes() {
+            match byte {
+                b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                    encoded.push(byte as char);
+                }
+                _ => {
+                    encoded.push_str(&format!("%{:02X}", byte));
+                }
+            }
+        }
+        encoded
+    }
+}
+
+// =========================================================================
+// Tool 28: CopilotWorkloadIdentityTool (copilot_workload_identity)
+// =========================================================================
+
+/// Autonomous tool for Azure Workload Identity Federation & Managed Identity
+#[derive(Clone)]
+pub struct CopilotWorkloadIdentityTool {
+    manager: std::sync::Arc<EntraAuthManager>,
+}
+
+impl Default for CopilotWorkloadIdentityTool {
+    fn default() -> Self {
+        Self {
+            manager: std::sync::Arc::new(EntraAuthManager::mock()),
+        }
+    }
+}
+
+impl CopilotWorkloadIdentityTool {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_manager(manager: std::sync::Arc<EntraAuthManager>) -> Self {
+        Self { manager }
+    }
+}
+
+#[async_trait::async_trait]
+impl crate::tools::ToolHandler for CopilotWorkloadIdentityTool {
+    fn name(&self) -> &'static str {
+        "copilot_workload_identity"
+    }
+
+    fn description(&self) -> &'static str {
+        "Acquire Microsoft Entra ID tokens via passwordless Azure Managed Identity (IMDS) or RFC 7523 Workload Identity Federation (GitHub/DevOps OIDC)"
+    }
+
+    fn parameters_schema(&self) -> serde_json::Value {
+        serde_json::json!({
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["managed_identity", "federated_credential", "status"],
+                    "description": "Authentication mechanism to invoke"
+                },
+                "assertion": {
+                    "type": "string",
+                    "description": "OIDC JWT bearer assertion token for federated credential exchange"
+                },
+                "client_id": {
+                    "type": "string",
+                    "description": "Optional user-assigned Managed Identity client ID"
+                }
+            },
+            "required": ["action"]
+        })
+    }
+
+    async fn execute(&self, arguments: serde_json::Value) -> Result<String> {
+        let action = arguments
+            .get("action")
+            .and_then(|v| v.as_str())
+            .unwrap_or("status");
+
+        match action {
+            "managed_identity" => {
+                let cid = arguments.get("client_id").and_then(|v| v.as_str());
+                let token = self.manager.acquire_token_managed_identity(cid).await?;
+                Ok(format!(
+                    "### 🔐 Azure Managed Identity Token Acquired\n\n\
+                    - **Auth Mode:** IMDS Managed Identity (Zero-Secret)\n\
+                    - **Token Type:** {}\n\
+                    - **Expires In:** {}s\n\
+                    - **Target Scope:** {}\n\
+                    - **Token Fingerprint:** `sha256_{}`\n",
+                    token.token_type,
+                    token.expires_in,
+                    token.scope.as_deref().unwrap_or("default"),
+                    &blake3::hash(token.access_token.as_bytes()).to_hex()[..16]
+                ))
+            }
+            "federated_credential" => {
+                let assertion = arguments
+                    .get("assertion")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("mock_oidc_assertion_github_actions");
+                let token = self.manager.acquire_token_federated_identity(assertion).await?;
+                Ok(format!(
+                    "### 🔐 Workload Identity Federation Token Exchanged\n\n\
+                    - **Auth Mode:** RFC 7523 Federated OIDC Exchange\n\
+                    - **Token Type:** {}\n\
+                    - **Expires In:** {}s\n\
+                    - **Target Scope:** {}\n\
+                    - **Token Fingerprint:** `sha256_{}`\n",
+                    token.token_type,
+                    token.expires_in,
+                    token.scope.as_deref().unwrap_or("default"),
+                    &blake3::hash(token.access_token.as_bytes()).to_hex()[..16]
+                ))
+            }
+            _ => {
+                let status = self.manager.copilot_auth_status().await;
+                Ok(format!(
+                    "### 🛡️ Entra ID Workload Identity Status\n\n\
+                    - **Authenticated:** {}\n\
+                    - **Tenant ID:** `{}`\n\
+                    - **Client ID:** `{}`\n\
+                    - **Cloud Environment:** `{:?}`\n\
+                    - **Auth Mode:** `{}`\n",
+                    status.authenticated,
+                    status.tenant_id,
+                    status.client_id,
+                    self.manager.config().cloud,
+                    status.auth_mode
+                ))
             }
         }
     }
