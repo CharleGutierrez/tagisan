@@ -5,7 +5,8 @@ use crate::types::ContentBlock;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::io::IsTerminal;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
@@ -2283,6 +2284,19 @@ impl ToolHandler for ViewImageTool {
                 "path": {
                     "type": "string",
                     "description": "The local filesystem path to the image file (.png, .jpg, .jpeg, .webp, or .gif)."
+                },
+                "render_terminal": {
+                    "type": "boolean",
+                    "description": "Whether to render a 24-bit Truecolor ANSI terminal preview (default: true)."
+                },
+                "width": {
+                    "type": "integer",
+                    "description": "Optional terminal width in characters (default: 60)."
+                },
+                "mode": {
+                    "type": "string",
+                    "enum": ["half_block", "ascii"],
+                    "description": "Terminal graphics rendering mode (default: 'half_block')."
                 }
             },
             "required": ["path"]
@@ -2300,13 +2314,24 @@ impl ToolHandler for ViewImageTool {
             let byte_count = std::fs::metadata(path_str)
                 .map(|m| m.len())
                 .unwrap_or(0);
-            Ok(format!(
+            let mut res = format!(
                 "Image validated and loaded successfully from '{}'. Format: {}, Size: {} bytes, Base64 payload: {} chars.",
                 path_str,
                 media_type,
                 byte_count,
                 data_base64.len()
-            ))
+            );
+
+            let render_terminal = arguments.get("render_terminal").and_then(|v| v.as_bool()).unwrap_or(true);
+            if render_terminal {
+                let width = arguments.get("width").and_then(|v| v.as_u64()).unwrap_or(60) as usize;
+                let mode = arguments.get("mode").and_then(|v| v.as_str()).unwrap_or("half_block");
+                if let Ok(terminal_preview) = crate::tools::visual::RenderTerminalMediaTool::render_media(Path::new(path_str), width, mode) {
+                    res.push_str("\n\nTerminal Visual Preview:\n");
+                    res.push_str(&terminal_preview);
+                }
+            }
+            Ok(res)
         } else {
             Err(TagisanError::Execution("Failed to process image content block".to_string()))
         }
@@ -9278,6 +9303,1378 @@ impl ToolHandler for TlaConsensusCheckerTool {
     }
 }
 
+// =========================================================================
+// AskQuestionTool & AskUserTool (Interactive Pair-Programming)
+// =========================================================================
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionItem {
+    pub question: String,
+    pub options: Vec<String>,
+    #[serde(default)]
+    pub is_multi_select: bool,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct QuestionAnswer {
+    pub question: String,
+    pub selected: Vec<String>,
+    pub selection_indices: Vec<usize>,
+}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AskQuestionResult {
+    pub status: String,
+    pub answers: Vec<QuestionAnswer>,
+}
+
+#[derive(Debug, Clone)]
+pub struct AskQuestionTool {
+    pub tool_name: &'static str,
+}
+
+impl Default for AskQuestionTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl AskQuestionTool {
+    pub fn new() -> Self {
+        Self {
+            tool_name: "ask_question",
+        }
+    }
+
+    pub fn new_ask_user() -> Self {
+        Self {
+            tool_name: "ask_user",
+        }
+    }
+
+    pub fn with_name(mut self, name: &'static str) -> Self {
+        self.tool_name = name;
+        self
+    }
+
+    pub fn parse_questions(arguments: &Value) -> Result<Vec<QuestionItem>> {
+        if let Some(arr) = arguments.get("questions").and_then(|v| v.as_array()) {
+            let mut questions = Vec::new();
+            for q_val in arr {
+                let question = q_val
+                    .get("question")
+                    .and_then(|v| v.as_str())
+                    .ok_or_else(|| TagisanError::Execution("Missing 'question' in question object".to_string()))?
+                    .to_string();
+
+                let options: Vec<String> = q_val
+                    .get("options")
+                    .and_then(|v| v.as_array())
+                    .ok_or_else(|| TagisanError::Execution("Missing 'options' in question object".to_string()))?
+                    .iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect();
+
+                let is_multi_select = q_val
+                    .get("is_multi_select")
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false);
+
+                questions.push(QuestionItem {
+                    question,
+                    options,
+                    is_multi_select,
+                });
+            }
+            Ok(questions)
+        } else if let Some(question_str) = arguments.get("question").and_then(|v| v.as_str()) {
+            let options: Vec<String> = arguments
+                .get("options")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect())
+                .unwrap_or_default();
+
+            let is_multi_select = arguments
+                .get("is_multi_select")
+                .and_then(|v| v.as_bool())
+                .unwrap_or(false);
+
+            Ok(vec![QuestionItem {
+                question: question_str.to_string(),
+                options,
+                is_multi_select,
+            }])
+        } else {
+            Err(TagisanError::Execution("Missing required parameter: 'questions'".to_string()))
+        }
+    }
+
+    pub fn resolve_mock_answer(mock_str: &str, q_idx: usize, q: &QuestionItem) -> Option<(Vec<String>, Vec<usize>)> {
+        if let Ok(val) = serde_json::from_str::<Value>(mock_str) {
+            if let Some(arr) = val.as_array() {
+                if !arr.is_empty() {
+                    if let Some(obj) = arr.get(q_idx).and_then(|v| v.as_object()) {
+                        if let Some(sel_arr) = obj.get("selected").or_else(|| obj.get("answers")).and_then(|v| v.as_array()) {
+                            let wanted: Vec<String> = sel_arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect();
+                            return Self::match_options(&wanted, &q.options, q.is_multi_select);
+                        }
+                    }
+                    let str_items: Vec<String> = arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect();
+                    if !str_items.is_empty() {
+                        if let Some(res) = Self::match_options(&str_items, &q.options, q.is_multi_select) {
+                            return Some(res);
+                        }
+                        if let Some(item) = arr.get(q_idx).and_then(|v| v.as_str()) {
+                            if let Some(res) = Self::match_options(&[item.to_string()], &q.options, q.is_multi_select) {
+                                return Some(res);
+                            }
+                        }
+                    }
+                }
+            } else if let Some(obj) = val.as_object() {
+                let key = q_idx.to_string();
+                if let Some(sub) = obj.get(&key).or_else(|| obj.get(&q.question)) {
+                    if let Some(arr) = sub.as_array() {
+                        let wanted: Vec<String> = arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect();
+                        return Self::match_options(&wanted, &q.options, q.is_multi_select);
+                    } else if let Some(s) = sub.as_str() {
+                        return Self::match_options(&[s.to_string()], &q.options, q.is_multi_select);
+                    }
+                }
+            } else if let Some(s) = val.as_str() {
+                let parts: Vec<String> = s.split(',').map(|p| p.trim().to_string()).collect();
+                return Self::match_options(&parts, &q.options, q.is_multi_select);
+            }
+        }
+
+        let parts: Vec<String> = mock_str.split(',').map(|p| p.trim().to_string()).collect();
+        Self::match_options(&parts, &q.options, q.is_multi_select)
+    }
+
+    pub fn match_options(wanted: &[String], options: &[String], is_multi: bool) -> Option<(Vec<String>, Vec<usize>)> {
+        let mut selected = Vec::new();
+        let mut indices = Vec::new();
+
+        for (idx, opt) in options.iter().enumerate() {
+            for w in wanted {
+                let w_trimmed = w.trim();
+                let num_match = w_trimmed.parse::<usize>().ok().map(|n| n == idx || (n > 0 && n - 1 == idx)).unwrap_or(false);
+                if opt.eq_ignore_ascii_case(w_trimmed)
+                    || opt.to_lowercase().contains(&w_trimmed.to_lowercase())
+                    || num_match
+                {
+                    if !indices.contains(&idx) {
+                        selected.push(opt.clone());
+                        indices.push(idx);
+                    }
+                    if !is_multi {
+                        return Some((selected, indices));
+                    }
+                }
+            }
+        }
+
+        if !selected.is_empty() {
+            Some((selected, indices))
+        } else {
+            None
+        }
+    }
+
+    pub fn select_recommendation_fallback(q: &QuestionItem) -> (Vec<String>, Vec<usize>) {
+        if q.options.is_empty() {
+            return (Vec::new(), Vec::new());
+        }
+
+        let mut rec_indices = Vec::new();
+        for (idx, opt) in q.options.iter().enumerate() {
+            let lower = opt.to_lowercase();
+            if lower.starts_with("(recommended)")
+                || lower.starts_with("[recommended]")
+                || lower.contains("(recommended)")
+                || lower.contains("[recommended]")
+            {
+                rec_indices.push(idx);
+            }
+        }
+
+        if !rec_indices.is_empty() {
+            if q.is_multi_select {
+                let selected = rec_indices.iter().map(|&i| q.options[i].clone()).collect();
+                (selected, rec_indices)
+            } else {
+                let first_idx = rec_indices[0];
+                (vec![q.options[first_idx].clone()], vec![first_idx])
+            }
+        } else {
+            (vec![q.options[0].clone()], vec![0])
+        }
+    }
+
+    pub fn run_interactive_selection(q: &QuestionItem) -> Option<(Vec<String>, Vec<usize>)> {
+        use crossterm::event::{self, Event, KeyCode, KeyModifiers};
+        use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+        use std::io::Write;
+
+        if q.options.is_empty() {
+            return None;
+        }
+
+        if enable_raw_mode().is_err() {
+            return None;
+        }
+
+        struct RawGuard;
+        impl Drop for RawGuard {
+            fn drop(&mut self) {
+                let _ = disable_raw_mode();
+            }
+        }
+        let _guard = RawGuard;
+
+        let is_multi = q.is_multi_select;
+        let mut current_idx = 0;
+        let mut selected_set = HashSet::new();
+
+        let mut stdout = std::io::stdout();
+        let _ = write!(stdout, "\r\n\x1b[1;36m? \x1b[1;37m{}\x1b[0m\r\n", q.question);
+        if is_multi {
+            let _ = write!(stdout, "\x1b[2m  (Use \u{2191}/\u{2193} arrows to move, Space to toggle, Enter to confirm, 'a' select all, 'c' clear)\x1b[0m\r\n");
+        } else {
+            let _ = write!(stdout, "\x1b[2m  (Use \u{2191}/\u{2193} arrows to move, Enter/Space to select, 1-9 quick-select)\x1b[0m\r\n");
+        }
+
+        let render_options = |current: usize, selected: &HashSet<usize>, out: &mut std::io::Stdout| {
+            for (i, opt) in q.options.iter().enumerate() {
+                let is_cursor = i == current;
+                let cursor_str = if is_cursor { "\x1b[1;32m> \x1b[0m" } else { "  " };
+                if is_multi {
+                    let box_str = if selected.contains(&i) { "\x1b[1;32m[\u{2713}]\x1b[0m " } else { "[ ] " };
+                    let line_str = if is_cursor {
+                        format!("\x1b[1;37m{}{}{}\x1b[0m", cursor_str, box_str, opt)
+                    } else {
+                        format!("{}{}{}", cursor_str, box_str, opt)
+                    };
+                    let _ = write!(out, "{}\r\n", line_str);
+                } else {
+                    let line_str = if is_cursor {
+                        format!("\x1b[1;32m{}(*)\x1b[1;37m {}\x1b[0m", cursor_str, opt)
+                    } else {
+                        format!("{}( ) {}", cursor_str, opt)
+                    };
+                    let _ = write!(out, "{}\r\n", line_str);
+                }
+            }
+            let _ = out.flush();
+        };
+
+        render_options(current_idx, &selected_set, &mut stdout);
+
+        loop {
+            if let Ok(Event::Key(key_event)) = event::read() {
+                if key_event.modifiers.contains(KeyModifiers::CONTROL) && key_event.code == KeyCode::Char('c') {
+                    return None;
+                }
+
+                match key_event.code {
+                    KeyCode::Up | KeyCode::Char('k') => {
+                        if current_idx > 0 {
+                            current_idx -= 1;
+                        } else {
+                            current_idx = q.options.len() - 1;
+                        }
+                    }
+                    KeyCode::Down | KeyCode::Char('j') => {
+                        if current_idx + 1 < q.options.len() {
+                            current_idx += 1;
+                        } else {
+                            current_idx = 0;
+                        }
+                    }
+                    KeyCode::Char(' ') => {
+                        if is_multi {
+                            if selected_set.contains(&current_idx) {
+                                selected_set.remove(&current_idx);
+                            } else {
+                                selected_set.insert(current_idx);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    KeyCode::Char('a') if is_multi => {
+                        for i in 0..q.options.len() {
+                            selected_set.insert(i);
+                        }
+                    }
+                    KeyCode::Char('c') if is_multi => {
+                        selected_set.clear();
+                    }
+                    KeyCode::Char(c) if c.is_ascii_digit() && c != '0' => {
+                        let digit = c.to_digit(10).unwrap() as usize;
+                        if digit >= 1 && digit <= q.options.len() {
+                            current_idx = digit - 1;
+                            if is_multi {
+                                if selected_set.contains(&current_idx) {
+                                    selected_set.remove(&current_idx);
+                                } else {
+                                    selected_set.insert(current_idx);
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    KeyCode::Enter => {
+                        if is_multi && selected_set.is_empty() {
+                            selected_set.insert(current_idx);
+                        }
+                        break;
+                    }
+                    KeyCode::Esc | KeyCode::Char('q') => {
+                        break;
+                    }
+                    _ => {}
+                }
+
+                let _ = write!(stdout, "\x1b[{}A", q.options.len());
+                render_options(current_idx, &selected_set, &mut stdout);
+            }
+        }
+
+        drop(_guard);
+
+        if is_multi {
+            let mut indices: Vec<usize> = selected_set.into_iter().collect();
+            indices.sort();
+            if indices.is_empty() {
+                indices.push(current_idx);
+            }
+            let selected = indices.iter().map(|&i| q.options[i].clone()).collect();
+            Some((selected, indices))
+        } else {
+            let selected = vec![q.options[current_idx].clone()];
+            let indices = vec![current_idx];
+            Some((selected, indices))
+        }
+    }
+}
+
+#[async_trait]
+impl ToolHandler for AskQuestionTool {
+    fn name(&self) -> &str {
+        self.tool_name
+    }
+
+    fn description(&self) -> &str {
+        "Interactive pair-programming question tool for clarifying requirements, soliciting design feedback, and presenting multiple-choice selections with recommendation fallbacks."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "questions": {
+                    "type": "array",
+                    "description": "List of question objects to present to the user.",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "question": {
+                                "type": "string",
+                                "description": "The question prompt to present to the user."
+                            },
+                            "options": {
+                                "type": "array",
+                                "items": { "type": "string" },
+                                "description": "Selectable choices for the question."
+                            },
+                            "is_multi_select": {
+                                "type": "boolean",
+                                "description": "Whether multiple choices can be selected (default: false)."
+                            }
+                        },
+                        "required": ["question", "options"]
+                    }
+                }
+            },
+            "required": ["questions"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let parsed_questions = Self::parse_questions(&arguments)?;
+        if parsed_questions.is_empty() {
+            return Err(TagisanError::Execution("No questions provided to ask_question".to_string()));
+        }
+
+        let mut answers = Vec::new();
+        let mock_env = arguments
+            .get("mock_answer")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .or_else(|| std::env::var("TGS_MOCK_ANSWER").ok());
+
+        let is_interactive = std::io::stdin().is_terminal()
+            && std::io::stdout().is_terminal()
+            && std::env::var("CI").is_err()
+            && std::env::var("TGS_NON_INTERACTIVE").is_err()
+            && mock_env.is_none();
+
+        for (q_idx, q) in parsed_questions.iter().enumerate() {
+            let (selected, selection_indices) = if let Some(ref mock_str) = mock_env {
+                if let Some(res) = Self::resolve_mock_answer(mock_str, q_idx, q) {
+                    res
+                } else {
+                    Self::select_recommendation_fallback(q)
+                }
+            } else if is_interactive {
+                if let Some(res) = Self::run_interactive_selection(q) {
+                    res
+                } else {
+                    Self::select_recommendation_fallback(q)
+                }
+            } else {
+                Self::select_recommendation_fallback(q)
+            };
+
+            answers.push(QuestionAnswer {
+                question: q.question.clone(),
+                selected,
+                selection_indices,
+            });
+        }
+
+        let result = AskQuestionResult {
+            status: "answered".to_string(),
+            answers,
+        };
+
+        Ok(serde_json::to_string_pretty(&result).unwrap_or_else(|_| json!(result).to_string()))
+    }
+}
+
+/// Alias for AskQuestionTool under the 'ask_user' name
+#[derive(Debug, Default, Clone)]
+pub struct AskUserTool {
+    pub inner: AskQuestionTool,
+}
+
+impl AskUserTool {
+    pub fn new() -> Self {
+        Self {
+            inner: AskQuestionTool::new_ask_user(),
+        }
+    }
+}
+
+#[async_trait]
+impl ToolHandler for AskUserTool {
+    fn name(&self) -> &str {
+        "ask_user"
+    }
+
+    fn description(&self) -> &str {
+        "Interactive question prompt for pair-programming and requirements elicitation (alias for ask_question)."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        self.inner.parameters_schema()
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        self.inner.execute(arguments).await
+    }
+}
+
+// =========================================================================
+// ValidateMermaidTool (Mermaid Diagram Validation)
+// =========================================================================
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MermaidValidationResult {
+    pub is_valid: bool,
+    pub diagram_type: String,
+    pub warnings: Vec<String>,
+    pub errors: Vec<String>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ValidateMermaidTool;
+
+impl ValidateMermaidTool {
+    pub fn new() -> Self {
+        Self
+    }
+
+    pub fn validate_diagram(diagram: &str) -> MermaidValidationResult {
+        let trimmed = diagram.trim();
+        if trimmed.is_empty() {
+            return MermaidValidationResult {
+                is_valid: false,
+                diagram_type: "unknown".to_string(),
+                warnings: Vec::new(),
+                errors: vec!["Empty Mermaid diagram".to_string()],
+            };
+        }
+
+        let mut warnings = Vec::new();
+        let mut errors = Vec::new();
+        let lines: Vec<&str> = trimmed.lines().collect();
+
+        // 1. Determine diagram type from the first non-comment, non-empty line
+        let mut diagram_type = "unknown".to_string();
+        let mut header_found = false;
+
+        for (idx, line) in lines.iter().enumerate() {
+            let l = line.trim();
+            if l.is_empty() || l.starts_with("%%") {
+                continue;
+            }
+
+            if l.starts_with("flowchart") || l.starts_with("graph") {
+                diagram_type = "flowchart".to_string();
+                header_found = true;
+                break;
+            } else if l.starts_with("sequenceDiagram") {
+                diagram_type = "sequenceDiagram".to_string();
+                header_found = true;
+                break;
+            } else if l.starts_with("stateDiagram-v2") || l.starts_with("stateDiagram") {
+                diagram_type = "stateDiagram".to_string();
+                header_found = true;
+                break;
+            } else if l.starts_with("classDiagram-v2") || l.starts_with("classDiagram") {
+                diagram_type = "classDiagram".to_string();
+                header_found = true;
+                break;
+            } else if l.starts_with("erDiagram") {
+                diagram_type = "erDiagram".to_string();
+                header_found = true;
+                break;
+            } else if l.starts_with("xychart-beta") || l.starts_with("xychart") {
+                diagram_type = "xychart-beta".to_string();
+                header_found = true;
+                break;
+            } else {
+                errors.push(format!(
+                    "Line {}: Unsupported or invalid Mermaid diagram type: '{}'",
+                    idx + 1,
+                    l
+                ));
+                return MermaidValidationResult {
+                    is_valid: false,
+                    diagram_type: "unsupported".to_string(),
+                    warnings,
+                    errors,
+                };
+            }
+        }
+
+        if !header_found {
+            errors.push("No valid Mermaid diagram header found".to_string());
+            return MermaidValidationResult {
+                is_valid: false,
+                diagram_type: "unknown".to_string(),
+                warnings,
+                errors,
+            };
+        }
+
+        // 2. Syntax balance, quotes, HTML tags, and edge checks
+        let mut sq_brackets = 0isize;
+        let mut round_brackets = 0isize;
+        let mut curly_braces = 0isize;
+        let mut seq_block_depth = 0isize;
+
+        for (idx, raw_line) in lines.iter().enumerate() {
+            let line_num = idx + 1;
+            let line = raw_line.trim();
+            if line.is_empty() || line.starts_with("%%") {
+                continue;
+            }
+
+            // String quote balance check per line
+            let mut quote_count = 0;
+            let chars: Vec<char> = line.chars().collect();
+            for i in 0..chars.len() {
+                if chars[i] == '"' && (i == 0 || chars[i - 1] != '\\') {
+                    quote_count += 1;
+                }
+            }
+            if quote_count % 2 != 0 {
+                errors.push(format!("Line {}: Unclosed string literal quote: '{}'", line_num, line));
+            }
+
+            // HTML tags check
+            let lower = line.to_lowercase();
+            if lower.contains("<div") || lower.contains("<span") || lower.contains("<br>") || lower.contains("<br/>") || lower.contains("<p>") {
+                warnings.push(format!("Line {}: HTML tags detected in Mermaid diagram. Avoid HTML tags in labels.", line_num));
+            }
+
+            // Diagram-type specific checks
+            match diagram_type.as_str() {
+                "sequenceDiagram" => {
+                    let words: Vec<&str> = line.split_whitespace().collect();
+                    if let Some(&first_word) = words.first() {
+                        match first_word {
+                            "loop" | "alt" | "opt" | "critical" | "rect" | "par" => {
+                                seq_block_depth += 1;
+                            }
+                            "end" => {
+                                seq_block_depth -= 1;
+                                if seq_block_depth < 0 {
+                                    errors.push(format!("Line {}: Unexpected 'end' without matching block in sequence diagram", line_num));
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                "flowchart" => {
+                    let is_header = line.starts_with("flowchart") || line.starts_with("graph") || line.starts_with("subgraph") || line == "end";
+                    if !is_header {
+                        if line.starts_with("-->") || line.starts_with("---") || line.starts_with("-.->") || line.starts_with("==>") {
+                            errors.push(format!("Line {}: Dangling edge without source node: '{}'", line_num, line));
+                        }
+                        if line.ends_with("-->") || line.ends_with("---") || line.ends_with("-.->") || line.ends_with("==>") {
+                            errors.push(format!("Line {}: Dangling edge without target node: '{}'", line_num, line));
+                        }
+
+                        if let Some(start_bracket) = line.find('[') {
+                            if let Some(end_bracket) = line.rfind(']') {
+                                if end_bracket > start_bracket + 1 {
+                                    let inner = line[start_bracket + 1..end_bracket].trim();
+                                    let is_quoted = inner.starts_with('"') && inner.ends_with('"');
+                                    if !is_quoted && (inner.contains('(') || inner.contains(')') || inner.contains('[') || inner.contains(']')) {
+                                        warnings.push(format!(
+                                            "Line {}: Node label contains unquoted parentheses or brackets: '{}'. Quote node labels containing special characters, e.g. id[\"{}\"]",
+                                            line_num, inner, inner
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+
+            // Global bracket balance outside quotes
+            let mut inside_str = false;
+            for (ci, &ch) in chars.iter().enumerate() {
+                if ch == '"' && (ci == 0 || chars[ci - 1] != '\\') {
+                    inside_str = !inside_str;
+                    continue;
+                }
+                if !inside_str {
+                    match ch {
+                        '[' => sq_brackets += 1,
+                        ']' => sq_brackets -= 1,
+                        '(' => round_brackets += 1,
+                        ')' => round_brackets -= 1,
+                        '{' => curly_braces += 1,
+                        '}' => curly_braces -= 1,
+                        _ => {}
+                    }
+                }
+            }
+        }
+
+        if diagram_type == "sequenceDiagram" && seq_block_depth > 0 {
+            errors.push(format!("Unclosed sequence block: missing {} 'end' statement(s)", seq_block_depth));
+        }
+
+        if sq_brackets != 0 {
+            errors.push(format!("Unbalanced square brackets '[' and ']': delta is {}", sq_brackets));
+        }
+        if round_brackets != 0 {
+            errors.push(format!("Unbalanced parentheses '(' and ')': delta is {}", round_brackets));
+        }
+        if diagram_type != "erDiagram" && curly_braces != 0 {
+            errors.push(format!("Unbalanced curly braces '{{' and '}}': delta is {}", curly_braces));
+        }
+
+        let is_valid = errors.is_empty();
+        MermaidValidationResult {
+            is_valid,
+            diagram_type,
+            warnings,
+            errors,
+        }
+    }
+}
+
+#[async_trait]
+impl ToolHandler for ValidateMermaidTool {
+    fn name(&self) -> &str {
+        "validate_mermaid"
+    }
+
+    fn description(&self) -> &str {
+        "Validate Mermaid diagram syntax, checking diagram type, bracket balance, node label quoting, sequence block pairings, and edge connectivity."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "diagram": {
+                    "type": "string",
+                    "description": "Mermaid diagram definition string to validate."
+                }
+            },
+            "required": ["diagram"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let diagram = arguments
+            .get("diagram")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing 'diagram' parameter in validate_mermaid".to_string()))?;
+
+        let verdict = Self::validate_diagram(diagram);
+        Ok(serde_json::to_string_pretty(&verdict).unwrap_or_else(|_| json!(verdict).to_string()))
+    }
+}
+
+// =========================================================================
+// CreateArtifactTool & GenerateArtifactTool (Specs, Architecture & Planning)
+// =========================================================================
+
+static MANIFEST_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+#[derive(Debug, Clone)]
+pub struct CreateArtifactTool {
+    pub working_dir: Option<PathBuf>,
+    pub tool_name: &'static str,
+}
+
+impl Default for CreateArtifactTool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl CreateArtifactTool {
+    pub fn new() -> Self {
+        Self {
+            working_dir: None,
+            tool_name: "create_artifact",
+        }
+    }
+
+    pub fn new_generate_artifact() -> Self {
+        Self {
+            working_dir: None,
+            tool_name: "generate_artifact",
+        }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+
+    pub fn with_name(mut self, name: &'static str) -> Self {
+        self.tool_name = name;
+        self
+    }
+
+    pub fn scan_and_validate_mermaid(content: &str) -> Vec<MermaidValidationResult> {
+        let mut results = Vec::new();
+        let marker = "```mermaid";
+        let mut search_idx = 0;
+
+        while let Some(start_pos) = content[search_idx..].find(marker) {
+            let block_start = search_idx + start_pos + marker.len();
+            if let Some(end_pos) = content[block_start..].find("```") {
+                let diagram_content = &content[block_start..block_start + end_pos];
+                let verdict = ValidateMermaidTool::validate_diagram(diagram_content);
+                results.push(verdict);
+                search_idx = block_start + end_pos + 3;
+            } else {
+                break;
+            }
+        }
+        results
+    }
+}
+
+#[async_trait]
+impl ToolHandler for CreateArtifactTool {
+    fn name(&self) -> &str {
+        self.tool_name
+    }
+
+    fn description(&self) -> &str {
+        "Create, validate, and catalog architecture, design, and planning artifacts in .tagisan/artifacts with atomic manifest tracking and automatic Mermaid diagram validation."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Artifact filename or relative path (e.g. 'architecture_plan.md')."
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Markdown content containing architecture, specs, plans, diffs, carousels, or diagrams."
+                },
+                "artifact_type": {
+                    "type": "string",
+                    "description": "Optional artifact type ('plan', 'architecture', 'diff', 'spec', 'report'). Default: 'plan'."
+                },
+                "metadata": {
+                    "type": "object",
+                    "description": "Optional metadata for artifact indexing.",
+                    "properties": {
+                        "summary": { "type": "string", "description": "High-level summary of the artifact." },
+                        "user_facing": { "type": "boolean", "description": "Whether this artifact is intended for direct user consumption." },
+                        "request_feedback": { "type": "boolean", "description": "Whether user feedback is requested on this artifact." }
+                    }
+                }
+            },
+            "required": ["name", "content"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let name = arguments
+            .get("name")
+            .or_else(|| arguments.get("filename"))
+            .or_else(|| arguments.get("path"))
+            .or_else(|| arguments.get("TargetFile"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'name'".to_string()))?;
+
+        let content = arguments
+            .get("content")
+            .or_else(|| arguments.get("CodeContent"))
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing required parameter: 'content'".to_string()))?;
+
+        let artifact_type = arguments
+            .get("artifact_type")
+            .and_then(|v| v.as_str())
+            .unwrap_or("plan");
+
+        let metadata_obj = arguments.get("metadata").or_else(|| arguments.get("ArtifactMetadata"));
+        let summary = metadata_obj
+            .and_then(|m| m.get("summary").or_else(|| m.get("Summary")))
+            .and_then(|v| v.as_str())
+            .unwrap_or_else(|| {
+                content.lines().next().unwrap_or("Artifact Document").trim_start_matches('#').trim()
+            });
+
+        let user_facing = metadata_obj
+            .and_then(|m| m.get("user_facing").or_else(|| m.get("UserFacing")))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(true);
+
+        let request_feedback = metadata_obj
+            .and_then(|m| m.get("request_feedback").or_else(|| m.get("RequestFeedback")))
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
+        let clean_name = name.trim().replace('\\', "/");
+        let clean_name = clean_name.trim_start_matches('/').to_string();
+
+        if clean_name.contains("..") || clean_name.is_empty() {
+            return Err(TagisanError::Execution(format!("Invalid or traversing artifact name: '{name}'")));
+        }
+
+        let artifacts_dir = resolve_target_path(&self.working_dir, Path::new(".tagisan/artifacts"));
+        tokio::fs::create_dir_all(&artifacts_dir).await.map_err(|e| {
+            TagisanError::Execution(format!("Failed to create artifacts directory: {e}"))
+        })?;
+
+        let target_path = artifacts_dir.join(&clean_name);
+        if let Some(parent) = target_path.parent() {
+            tokio::fs::create_dir_all(parent).await.map_err(|e| {
+                TagisanError::Execution(format!("Failed to create parent directory: {e}"))
+            })?;
+        }
+
+        // Atomic write via temporary file
+        let temp_name = format!(
+            "{}.tmp.{}",
+            target_path.file_name().unwrap_or_default().to_string_lossy(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
+        let temp_path = artifacts_dir.join(temp_name);
+        tokio::fs::write(&temp_path, content.as_bytes()).await.map_err(|e| {
+            TagisanError::Execution(format!("Failed to write temporary artifact file: {e}"))
+        })?;
+
+        #[cfg(windows)]
+        {
+            if target_path.exists() {
+                let _ = tokio::fs::remove_file(&target_path).await;
+            }
+        }
+        tokio::fs::rename(&temp_path, &target_path).await.map_err(|e| {
+            TagisanError::Execution(format!("Failed to atomically commit artifact file: {e}"))
+        })?;
+
+        // Scan for Mermaid diagrams and validate
+        let mermaid_validations = Self::scan_and_validate_mermaid(content);
+        let mermaid_blocks_count = mermaid_validations.len();
+        let mermaid_valid = mermaid_validations.iter().all(|v| v.is_valid);
+
+        // Maintain manifest.json atomically with mutex synchronization
+        let manifest_path = artifacts_dir.join("manifest.json");
+        let relative_artifact_path = format!(".tagisan/artifacts/{clean_name}");
+        let byte_size = content.len();
+
+        {
+            let _lock = MANIFEST_LOCK.lock().await;
+            let mut manifest_data = if manifest_path.exists() {
+                match tokio::fs::read_to_string(&manifest_path).await {
+                    Ok(s) => serde_json::from_str::<Value>(&s).unwrap_or_else(|_| json!({ "version": "1.0", "artifacts": [] })),
+                    Err(_) => json!({ "version": "1.0", "artifacts": [] }),
+                }
+            } else {
+                json!({ "version": "1.0", "artifacts": [] })
+            };
+
+            let entry = json!({
+                "name": clean_name,
+                "path": relative_artifact_path,
+                "artifact_type": artifact_type,
+                "summary": summary,
+                "user_facing": user_facing,
+                "request_feedback": request_feedback,
+                "size_bytes": byte_size,
+                "timestamp": chrono::Utc::now().to_rfc3339(),
+                "mermaid_valid": mermaid_valid,
+                "mermaid_blocks_count": mermaid_blocks_count
+            });
+
+            if let Some(arr) = manifest_data.get_mut("artifacts").and_then(|v| v.as_array_mut()) {
+                let mut updated = false;
+                for item in arr.iter_mut() {
+                    if item.get("name").and_then(|v| v.as_str()) == Some(&clean_name) {
+                        *item = entry.clone();
+                        updated = true;
+                        break;
+                    }
+                }
+                if !updated {
+                    arr.push(entry);
+                }
+            }
+
+            manifest_data["updated_at"] = json!(chrono::Utc::now().to_rfc3339());
+
+            let manifest_temp = artifacts_dir.join(format!(
+                "manifest.tmp.{}",
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            ));
+
+            let manifest_json_bytes = serde_json::to_vec_pretty(&manifest_data).unwrap_or_default();
+            let _ = tokio::fs::write(&manifest_temp, &manifest_json_bytes).await;
+            #[cfg(windows)]
+            {
+                if manifest_path.exists() {
+                    let _ = tokio::fs::remove_file(&manifest_path).await;
+                }
+            }
+            let _ = tokio::fs::rename(&manifest_temp, &manifest_path).await;
+        }
+
+        let verification_status = if !mermaid_valid && mermaid_blocks_count > 0 {
+            "mermaid_syntax_warning"
+        } else {
+            "verified"
+        };
+
+        let response = json!({
+            "status": "created",
+            "name": clean_name,
+            "path": format!(".tagisan/artifacts/{clean_name}"),
+            "byte_size": byte_size,
+            "artifact_type": artifact_type,
+            "summary": summary,
+            "verification_status": verification_status,
+            "mermaid_valid": mermaid_valid,
+            "mermaid_blocks_detected": mermaid_blocks_count
+        });
+
+        Ok(serde_json::to_string_pretty(&response).unwrap_or_else(|_| response.to_string()))
+    }
+}
+
+/// Alias for CreateArtifactTool under the 'generate_artifact' name
+#[derive(Debug, Default, Clone)]
+pub struct GenerateArtifactTool {
+    pub inner: CreateArtifactTool,
+}
+
+impl GenerateArtifactTool {
+    pub fn new() -> Self {
+        Self {
+            inner: CreateArtifactTool::new_generate_artifact(),
+        }
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.inner = self.inner.with_working_dir(dir);
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for GenerateArtifactTool {
+    fn name(&self) -> &str {
+        "generate_artifact"
+    }
+
+    fn description(&self) -> &str {
+        "Create, validate, and catalog architecture, design, and planning artifacts (alias for create_artifact)."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        self.inner.parameters_schema()
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        self.inner.execute(arguments).await
+    }
+}
+
+// =========================================================================
+// RenderDiffTool (Code Diff Generation)
+// =========================================================================
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum DiffOp<'a> {
+    Equal(&'a str),
+    Delete(&'a str),
+    Insert(&'a str),
+}
+
+fn compute_myers_diff<'a>(orig: &'a [&'a str], modified: &'a [&'a str]) -> Vec<DiffOp<'a>> {
+    let n = orig.len();
+    let m = modified.len();
+
+    if orig == modified {
+        return orig.iter().map(|&s| DiffOp::Equal(s)).collect();
+    }
+    if n == 0 {
+        return modified.iter().map(|&s| DiffOp::Insert(s)).collect();
+    }
+    if m == 0 {
+        return orig.iter().map(|&s| DiffOp::Delete(s)).collect();
+    }
+
+    let max = n + m;
+    let offset = max as isize;
+    let mut v = vec![0isize; 2 * max + 1];
+    let mut trace: Vec<Vec<isize>> = Vec::new();
+
+    let mut found = false;
+    for d in 0..=max {
+        let mut v_copy = v.clone();
+        for k in (- (d as isize)..=(d as isize)).step_by(2) {
+            let idx = (k + offset) as usize;
+            let mut x = if k == -(d as isize) || (k != (d as isize) && v[idx - 1] < v[idx + 1]) {
+                v[idx + 1]
+            } else {
+                v[idx - 1] + 1
+            };
+            let mut y = x - k;
+            while (x as usize) < n && (y as usize) < m && orig[x as usize] == modified[y as usize] {
+                x += 1;
+                y += 1;
+            }
+            v_copy[idx] = x;
+            if (x as usize) >= n && (y as usize) >= m {
+                found = true;
+                break;
+            }
+        }
+        trace.push(v_copy.clone());
+        v = v_copy;
+        if found {
+            break;
+        }
+    }
+
+    let mut ops = Vec::new();
+    let mut x = n as isize;
+    let mut y = m as isize;
+
+    for d in (0..trace.len()).rev() {
+        let k = x - y;
+        let prev_k = if k == -(d as isize) || (d > 0 && k != (d as isize) && trace[d - 1][(k - 1 + offset) as usize] < trace[d - 1][(k + 1 + offset) as usize]) {
+            k + 1
+        } else {
+            k - 1
+        };
+
+        let prev_idx = (prev_k + offset) as usize;
+        let prev_x = if d == 0 { 0 } else { trace[d - 1][prev_idx] };
+        let prev_y = prev_x - prev_k;
+
+        while x > prev_x && y > prev_y {
+            x -= 1;
+            y -= 1;
+            ops.push(DiffOp::Equal(orig[x as usize]));
+        }
+
+        if d > 0 {
+            if x == prev_x {
+                y -= 1;
+                ops.push(DiffOp::Insert(modified[y as usize]));
+            } else if y == prev_y {
+                x -= 1;
+                ops.push(DiffOp::Delete(orig[x as usize]));
+            }
+        }
+    }
+
+    ops.reverse();
+    ops
+}
+
+struct DiffHunk {
+    orig_start: usize,
+    orig_count: usize,
+    mod_start: usize,
+    mod_count: usize,
+    lines: Vec<String>,
+}
+
+fn build_diff_hunks<'a>(ops: &[DiffOp<'a>], context: usize) -> Vec<DiffHunk> {
+    let mut change_indices = Vec::new();
+    for (i, op) in ops.iter().enumerate() {
+        if !matches!(op, DiffOp::Equal(_)) {
+            change_indices.push(i);
+        }
+    }
+
+    if change_indices.is_empty() {
+        return Vec::new();
+    }
+
+    let mut groups: Vec<(usize, usize)> = Vec::new();
+    let mut group_start = change_indices[0];
+    let mut group_end = change_indices[0];
+
+    for &idx in &change_indices[1..] {
+        if idx <= group_end + 2 * context {
+            group_end = idx;
+        } else {
+            groups.push((group_start, group_end));
+            group_start = idx;
+            group_end = idx;
+        }
+    }
+    groups.push((group_start, group_end));
+
+    let mut hunks = Vec::new();
+
+    for (g_start, g_end) in groups {
+        let h_start = if g_start >= context { g_start - context } else { 0 };
+        let h_end = (g_end + context + 1).min(ops.len());
+
+        let mut orig_line = 1;
+        let mut mod_line = 1;
+        for i in 0..h_start {
+            match ops[i] {
+                DiffOp::Equal(_) => {
+                    orig_line += 1;
+                    mod_line += 1;
+                }
+                DiffOp::Delete(_) => {
+                    orig_line += 1;
+                }
+                DiffOp::Insert(_) => {
+                    mod_line += 1;
+                }
+            }
+        }
+
+        let orig_start_hunk = orig_line;
+        let mod_start_hunk = mod_line;
+        let mut orig_count = 0;
+        let mut mod_count = 0;
+        let mut lines = Vec::new();
+
+        for i in h_start..h_end {
+            match ops[i] {
+                DiffOp::Equal(s) => {
+                    orig_count += 1;
+                    mod_count += 1;
+                    lines.push(format!(" {s}"));
+                }
+                DiffOp::Delete(s) => {
+                    orig_count += 1;
+                    lines.push(format!("-{s}"));
+                }
+                DiffOp::Insert(s) => {
+                    mod_count += 1;
+                    lines.push(format!("+{s}"));
+                }
+            }
+        }
+
+        hunks.push(DiffHunk {
+            orig_start: orig_start_hunk,
+            orig_count,
+            mod_start: mod_start_hunk,
+            mod_count,
+            lines,
+        });
+    }
+
+    hunks
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct RenderDiffTool;
+
+impl RenderDiffTool {
+    pub fn new() -> Self {
+        Self
+    }
+
+    pub fn generate_unified_diff(
+        original: &str,
+        modified: &str,
+        filename: &str,
+        context_lines: usize,
+    ) -> (String, usize, usize, i64, usize) {
+        let orig_lines: Vec<&str> = original.lines().collect();
+        let mod_lines: Vec<&str> = modified.lines().collect();
+
+        if orig_lines == mod_lines {
+            return (String::new(), 0, 0, 0, 0);
+        }
+
+        let ops = compute_myers_diff(&orig_lines, &mod_lines);
+
+        let mut lines_added = 0;
+        let mut lines_removed = 0;
+
+        for op in &ops {
+            match op {
+                DiffOp::Insert(_) => lines_added += 1,
+                DiffOp::Delete(_) => lines_removed += 1,
+                DiffOp::Equal(_) => {}
+            }
+        }
+
+        let net_delta = (lines_added as i64) - (lines_removed as i64);
+        let hunks = build_diff_hunks(&ops, context_lines);
+        let hunks_count = hunks.len();
+
+        let mut diff_output = String::new();
+        diff_output.push_str(&format!("--- a/{filename}\n"));
+        diff_output.push_str(&format!("+++ b/{filename}\n"));
+
+        for hunk in hunks {
+            diff_output.push_str(&format!(
+                "@@ -{},{} +{},{} @@\n",
+                hunk.orig_start, hunk.orig_count, hunk.mod_start, hunk.mod_count
+            ));
+            for line in hunk.lines {
+                diff_output.push_str(&line);
+                diff_output.push('\n');
+            }
+        }
+
+        (diff_output, lines_added, lines_removed, net_delta, hunks_count)
+    }
+}
+
+#[async_trait]
+impl ToolHandler for RenderDiffTool {
+    fn name(&self) -> &str {
+        "render_diff"
+    }
+
+    fn description(&self) -> &str {
+        "Generate unified diffs between original and modified text with line numbers, additions (+), deletions (-), and summary statistics."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "original": {
+                    "type": "string",
+                    "description": "Original text content."
+                },
+                "modified": {
+                    "type": "string",
+                    "description": "Modified text content."
+                },
+                "filename": {
+                    "type": "string",
+                    "description": "Optional filename for diff header (default: 'file')."
+                },
+                "context_lines": {
+                    "type": "integer",
+                    "description": "Surrounding context lines for each hunk (default: 3)."
+                }
+            },
+            "required": ["original", "modified"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let original = arguments
+            .get("original")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing 'original' parameter in render_diff".to_string()))?;
+
+        let modified = arguments
+            .get("modified")
+            .and_then(|v| v.as_str())
+            .ok_or_else(|| TagisanError::Execution("Missing 'modified' parameter in render_diff".to_string()))?;
+
+        let filename = arguments
+            .get("filename")
+            .and_then(|v| v.as_str())
+            .unwrap_or("file");
+
+        let context_lines = arguments
+            .get("context_lines")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(3) as usize;
+
+        let (diff, lines_added, lines_removed, net_delta, hunks_count) =
+            Self::generate_unified_diff(original, modified, filename, context_lines);
+
+        let res = json!({
+            "filename": filename,
+            "lines_added": lines_added,
+            "lines_removed": lines_removed,
+            "net_delta": net_delta,
+            "hunks_count": hunks_count,
+            "diff": diff
+        });
+
+        Ok(serde_json::to_string_pretty(&res).unwrap_or_else(|_| res.to_string()))
+    }
+}
+
+// =========================================================================
+// Visual Rendering & Rich Media Engineering Tools
+// =========================================================================
+
+pub use super::visual::{
+    ExportArtifactHtmlTool, GenerateImageTool, RenderCarouselTool, RenderMermaidTool,
+    RenderTerminalMediaTool,
+};

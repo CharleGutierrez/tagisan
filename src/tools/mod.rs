@@ -4,6 +4,7 @@ pub mod bun_compile;
 pub mod bun_serve;
 pub mod perl;
 pub mod python;
+pub mod visual;
 pub mod wasm;
 pub mod web_search;
 
@@ -33,6 +34,15 @@ pub use builtin::{
     EbpfTelemetryTracerTool, KaniFormalVerifierTool, TritonKernelFuserTool,
     FpgaVerilogSynthesizerTool, XdpPacketFilterTool, SpdkNvmeStorageTool,
     Z3SmtSolverTool, RrTimeTravelDebuggerTool, QemuBaremetalEmulatorTool, TlaConsensusCheckerTool,
+    AskQuestionTool, AskUserTool, CreateArtifactTool, GenerateArtifactTool, ValidateMermaidTool, RenderDiffTool,
+    RenderMermaidTool, RenderCarouselTool, GenerateImageTool, RenderTerminalMediaTool, ExportArtifactHtmlTool,
+};
+pub use visual::{
+    ExportArtifactHtmlTool as VisualExportArtifactHtmlTool,
+    GenerateImageTool as VisualGenerateImageTool,
+    RenderCarouselTool as VisualRenderCarouselTool,
+    RenderMermaidTool as VisualRenderMermaidTool,
+    RenderTerminalMediaTool as VisualRenderTerminalMediaTool,
 };
 pub use bun::{
     extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,
@@ -165,6 +175,19 @@ impl ToolRegistry {
         registry.register_tool(builtin::QemuBaremetalEmulatorTool::new());
         registry.register_tool(builtin::TlaConsensusCheckerTool::new());
         registry.register_tool(web_search::WebSearchTool::new());
+        // Interactive Pair-Programming, Specs, Architecture & Planning
+        registry.register_tool(builtin::AskQuestionTool::new());
+        registry.register_tool(builtin::AskUserTool::new());
+        registry.register_tool(builtin::CreateArtifactTool::new());
+        registry.register_tool(builtin::GenerateArtifactTool::new());
+        registry.register_tool(builtin::ValidateMermaidTool::new());
+        registry.register_tool(builtin::RenderDiffTool::new());
+        // Visual Rendering & Rich Media Engineering Tools
+        registry.register_tool(visual::RenderMermaidTool::new());
+        registry.register_tool(visual::RenderCarouselTool::new());
+        registry.register_tool(visual::GenerateImageTool::new());
+        registry.register_tool(visual::RenderTerminalMediaTool::new());
+        registry.register_tool(visual::ExportArtifactHtmlTool::new());
         registry
     }
 
@@ -248,6 +271,19 @@ impl ToolRegistry {
         registry.register_tool(builtin::QemuBaremetalEmulatorTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::TlaConsensusCheckerTool::new().with_working_dir(dir.clone()));
         registry.register_tool(web_search::WebSearchTool::new());
+        // Interactive Pair-Programming, Specs, Architecture & Planning
+        registry.register_tool(builtin::AskQuestionTool::new());
+        registry.register_tool(builtin::AskUserTool::new());
+        registry.register_tool(builtin::CreateArtifactTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::GenerateArtifactTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::ValidateMermaidTool::new());
+        registry.register_tool(builtin::RenderDiffTool::new());
+        // Visual Rendering & Rich Media Engineering Tools
+        registry.register_tool(visual::RenderMermaidTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(visual::RenderCarouselTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(visual::GenerateImageTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(visual::RenderTerminalMediaTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(visual::ExportArtifactHtmlTool::new().with_working_dir(dir.clone()));
         registry
     }
 

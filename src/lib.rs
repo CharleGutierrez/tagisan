@@ -122,6 +122,7 @@ pub use tools::builtin::{
     EbpfTelemetryTracerTool, KaniFormalVerifierTool, TritonKernelFuserTool,
     FpgaVerilogSynthesizerTool, XdpPacketFilterTool, SpdkNvmeStorageTool,
     Z3SmtSolverTool, RrTimeTravelDebuggerTool, QemuBaremetalEmulatorTool, TlaConsensusCheckerTool,
+    ExportArtifactHtmlTool, GenerateImageTool, RenderCarouselTool, RenderMermaidTool, RenderTerminalMediaTool,
 };
 pub use tools::bun::{
     extract_missing_package, BunAutoResolveTool, BunBuildTool, BunEvalTool, BunHmrTool,

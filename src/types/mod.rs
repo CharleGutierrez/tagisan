@@ -67,9 +67,10 @@ impl ContentBlock {
             "jpg" | "jpeg" => "image/jpeg",
             "webp" => "image/webp",
             "gif" => "image/gif",
+            "svg" => "image/svg+xml",
             other => {
                 return Err(crate::error::TagisanError::Execution(format!(
-                    "Unsupported image format '.{}'. Supported formats: .png, .jpg, .jpeg, .webp, .gif",
+                    "Unsupported image format '.{}'. Supported formats: .png, .jpg, .jpeg, .webp, .gif, .svg",
                     other
                 )));
             }

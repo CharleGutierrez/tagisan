@@ -401,6 +401,8 @@ impl AgentShieldScanner {
         let hijack_phrases = [
             "ignore previous instructions",
             "ignore all previous instructions",
+            "ignore previous rules",
+            "ignore all previous rules",
             "disregard previous instructions",
             "disregard all previous instructions",
             "disregard system instructions",
@@ -596,6 +598,186 @@ impl AgentShieldScanner {
                     }
                 }
 
+                AgentShieldVerdict::Allow
+            }
+            "create_artifact" | "generate_artifact" => {
+                let path = arguments
+                    .get("name")
+                    .or_else(|| arguments.get("filename"))
+                    .or_else(|| arguments.get("path"))
+                    .or_else(|| arguments.get("TargetFile"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+
+                if !path.is_empty() {
+                    let path_verdict = Self::scan_file_path(path);
+                    if let AgentShieldVerdict::Block { .. } = path_verdict {
+                        return path_verdict;
+                    }
+                }
+
+                let content = arguments
+                    .get("content")
+                    .or_else(|| arguments.get("CodeContent"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+
+                if !content.is_empty() {
+                    let pi_verdict = Self::scan_prompt_injection(content);
+                    if let AgentShieldVerdict::Block { .. } = pi_verdict {
+                        return pi_verdict;
+                    }
+                }
+
+                let summary = arguments
+                    .get("metadata")
+                    .or_else(|| arguments.get("ArtifactMetadata"))
+                    .and_then(|m| m.get("summary").or_else(|| m.get("Summary")))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+
+                if !summary.is_empty() {
+                    let pi_verdict = Self::scan_prompt_injection(summary);
+                    if let AgentShieldVerdict::Block { .. } = pi_verdict {
+                        return pi_verdict;
+                    }
+                }
+
+                AgentShieldVerdict::Allow
+            }
+            "ask_question" | "ask_user" => {
+                if let Some(questions) = arguments.get("questions").and_then(|v| v.as_array()) {
+                    for q in questions {
+                        if let Some(prompt) = q.get("question").and_then(|v| v.as_str()) {
+                            let verdict = Self::scan_prompt_injection(prompt);
+                            if let AgentShieldVerdict::Block { .. } = verdict {
+                                return verdict;
+                            }
+                        }
+                        if let Some(opts) = q.get("options").and_then(|v| v.as_array()) {
+                            for opt in opts {
+                                if let Some(opt_str) = opt.as_str() {
+                                    let verdict = Self::scan_prompt_injection(opt_str);
+                                    if let AgentShieldVerdict::Block { .. } = verdict {
+                                        return verdict;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if let Some(prompt) = arguments.get("question").and_then(|v| v.as_str()) {
+                    let verdict = Self::scan_prompt_injection(prompt);
+                    if let AgentShieldVerdict::Block { .. } = verdict {
+                        return verdict;
+                    }
+                }
+                AgentShieldVerdict::Allow
+            }
+            "render_diff" => {
+                let filename = arguments
+                    .get("filename")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+
+                if !filename.is_empty() {
+                    let path_verdict = Self::scan_file_path(filename);
+                    if let AgentShieldVerdict::Block { .. } = path_verdict {
+                        return path_verdict;
+                    }
+                }
+
+                if let Some(orig) = arguments.get("original").and_then(|v| v.as_str()) {
+                    let verdict = Self::scan_prompt_injection(orig);
+                    if let AgentShieldVerdict::Block { .. } = verdict {
+                        return verdict;
+                    }
+                }
+
+                if let Some(modified) = arguments.get("modified").and_then(|v| v.as_str()) {
+                    let verdict = Self::scan_prompt_injection(modified);
+                    if let AgentShieldVerdict::Block { .. } = verdict {
+                        return verdict;
+                    }
+                }
+
+                AgentShieldVerdict::Allow
+            }
+            "validate_mermaid" => {
+                if let Some(diagram) = arguments.get("diagram").and_then(|v| v.as_str()) {
+                    let verdict = Self::scan_prompt_injection(diagram);
+                    if let AgentShieldVerdict::Block { .. } = verdict {
+                        return verdict;
+                    }
+                }
+                AgentShieldVerdict::Allow
+            }
+            "render_mermaid" => {
+                if let Some(diagram) = arguments.get("diagram").and_then(|v| v.as_str()) {
+                    let verdict = Self::scan_prompt_injection(diagram);
+                    if let AgentShieldVerdict::Block { .. } = verdict {
+                        return verdict;
+                    }
+                }
+                if let Some(title) = arguments.get("title").and_then(|v| v.as_str()) {
+                    let path_verdict = Self::scan_file_path(title);
+                    if let AgentShieldVerdict::Block { .. } = path_verdict {
+                        return path_verdict;
+                    }
+                    let pi_verdict = Self::scan_prompt_injection(title);
+                    if let AgentShieldVerdict::Block { .. } = pi_verdict {
+                        return pi_verdict;
+                    }
+                }
+                AgentShieldVerdict::Allow
+            }
+            "render_carousel" => {
+                if let Some(content) = arguments.get("content").and_then(|v| v.as_str()) {
+                    let verdict = Self::scan_prompt_injection(content);
+                    if let AgentShieldVerdict::Block { .. } = verdict {
+                        return verdict;
+                    }
+                }
+                AgentShieldVerdict::Allow
+            }
+            "generate_image" => {
+                if let Some(prompt) = arguments.get("prompt").and_then(|v| v.as_str()) {
+                    let verdict = Self::scan_prompt_injection(prompt);
+                    if let AgentShieldVerdict::Block { .. } = verdict {
+                        return verdict;
+                    }
+                }
+                if let Some(image_name) = arguments.get("image_name").and_then(|v| v.as_str()) {
+                    let path_verdict = Self::scan_file_path(image_name);
+                    if let AgentShieldVerdict::Block { .. } = path_verdict {
+                        return path_verdict;
+                    }
+                }
+                AgentShieldVerdict::Allow
+            }
+            "render_terminal_media" => {
+                if let Some(path) = arguments.get("path").and_then(|v| v.as_str()) {
+                    let path_verdict = Self::scan_file_path(path);
+                    if let AgentShieldVerdict::Block { .. } = path_verdict {
+                        return path_verdict;
+                    }
+                }
+                AgentShieldVerdict::Allow
+            }
+            "export_artifact_html" => {
+                let name = arguments
+                    .get("name")
+                    .or_else(|| arguments.get("filename"))
+                    .or_else(|| arguments.get("path"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or_default();
+
+                if !name.is_empty() {
+                    let path_verdict = Self::scan_file_path(name);
+                    if let AgentShieldVerdict::Block { .. } = path_verdict {
+                        return path_verdict;
+                    }
+                }
                 AgentShieldVerdict::Allow
             }
             _ => AgentShieldVerdict::Allow,
