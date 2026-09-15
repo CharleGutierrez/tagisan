@@ -537,6 +537,33 @@ enum Commands {
         #[command(subcommand)]
         action: GleamAction,
     },
+    /// IDE Ecosystem Embedding: Setup editor configurations, run Language Server Protocol (LSP), and inspect status
+    Ide {
+        #[command(subcommand)]
+        action: IdeAction,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum IdeAction {
+    /// Generate IDE configuration bundles for VS Code, Cursor, Windsurf, Claude Desktop, Zed, and JetBrains
+    Setup {
+        /// Target IDE: all, vscode, cursor, windsurf, claude, zed, jetbrains (default: all)
+        #[arg(short, long, default_value = "all")]
+        target: String,
+
+        /// Output directory (defaults to current directory ".")
+        #[arg(short, long, default_value = ".")]
+        path: String,
+    },
+    /// Run the Language Server Protocol (LSP) engine over stdio
+    Lsp,
+    /// Inspect IDE configurations and detect active editor integrations
+    Status {
+        /// Workspace directory to inspect (defaults to current directory ".")
+        #[arg(short, long, default_value = ".")]
+        path: String,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -4615,8 +4642,51 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Gleam { action } => {
             handle_gleam_command(action).await?;
         }
+
+        Commands::Ide { action } => {
+            handle_ide_command(action).await?;
+        }
     }
 
+    Ok(())
+}
+
+async fn handle_ide_command(action: IdeAction) -> Result<(), Box<dyn std::error::Error>> {
+    match action {
+        IdeAction::Setup { target, path } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🛠️  TAGISAN IDE ECOSYSTEM CONFIGURATION GENERATOR".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+            let generator = crate::ide::config::IdeConfigGenerator::new(&path);
+            let written_files = generator.generate_target(&target)?;
+            println!("\n✅ Successfully generated {} IDE configuration file(s) for target '{}':", written_files.len(), target);
+            for f in &written_files {
+                println!("  [✓] {}", f.display().to_string().green());
+            }
+        }
+        IdeAction::Lsp => {
+            let server = crate::ide::lsp::LspServer::new();
+            server.run_default_stdio().await?;
+        }
+        IdeAction::Status { path } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🔍 TAGISAN IDE ECOSYSTEM INTEGRATION STATUS".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+            let status = crate::ide::config::inspect_ide_status(&path);
+            println!("  Workspace Directory:  {}", path.yellow());
+            println!("  VS Code Configured:   {}", if status.vscode_configured { "YES".green().bold() } else { "NO".dimmed() });
+            println!("  Cursor Configured:    {}", if status.cursor_configured { "YES".green().bold() } else { "NO".dimmed() });
+            println!("  Windsurf Configured:  {}", if status.windsurf_configured { "YES".green().bold() } else { "NO".dimmed() });
+            println!("  Claude Desktop:       {}", if status.claude_configured { "YES".green().bold() } else { "NO".dimmed() });
+            println!("  Zed Configured:       {}", if status.zed_configured { "YES".green().bold() } else { "NO".dimmed() });
+            println!("  JetBrains Configured: {}", if status.jetbrains_configured { "YES".green().bold() } else { "NO".dimmed() });
+            if !status.detected_editors.is_empty() {
+                println!("\n  Active Integrations:  {}", status.detected_editors.join(", ").cyan().bold());
+            } else {
+                println!("\n  No active IDE integrations detected in this workspace. Run 'tgs ide setup' to configure.");
+            }
+        }
+    }
     Ok(())
 }
 

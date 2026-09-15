@@ -1,7 +1,7 @@
 use crate::agent::AutonomousAgent;
 use crate::dag::planner::WorkflowPlanner;
 use crate::dag::scheduler::DagScheduler;
-use crate::ecc::build_ecc_pipeline;
+use crate::ecc::{build_ecc_pipeline, AgentShieldScanner, AgentShieldVerdict};
 use crate::engine::EngineContext;
 use crate::error::Result;
 use crate::mcp::protocol::{
@@ -44,9 +44,15 @@ impl McpServer {
         memory_store: Arc<VectorStore>,
         embedding_provider: Arc<dyn EmbeddingProvider>,
     ) -> Self {
+        let mut merged_tools = ToolRegistry::with_builtins();
+        for name in tools.names() {
+            if let Some(tool) = tools.get(&name) {
+                merged_tools.register(tool);
+            }
+        }
         Self {
             ctx,
-            tools,
+            tools: merged_tools,
             memory_store,
             embedding_provider,
         }
@@ -294,13 +300,20 @@ impl McpServer {
             },
         ];
 
-        // Also expose any registered built-in tools
+        // Deduplicate and expose all registered built-in tools
+        let mut seen = std::collections::HashSet::new();
+        for def in &defs {
+            seen.insert(def.name.clone());
+        }
+
         for def in self.tools.definitions() {
-            defs.push(McpToolDefinition {
-                name: def.name,
-                description: Some(def.description),
-                input_schema: def.parameters,
-            });
+            if seen.insert(def.name.clone()) {
+                defs.push(McpToolDefinition {
+                    name: def.name,
+                    description: Some(def.description),
+                    input_schema: def.parameters,
+                });
+            }
         }
 
         defs
@@ -351,8 +364,19 @@ impl McpServer {
         Ok(("ollama".to_string(), model, prov))
     }
 
-    /// Execute an MCP tool call by name
-    pub async fn execute_tool(&self, name: &str, arguments: Value) -> McpToolCallResult {
+    /// Dispatches an MCP tool call with AgentShield cyber defense interception
+    pub async fn handle_tool_call(&self, name: &str, arguments: Value) -> McpToolCallResult {
+        // AgentShield cyber defense interception on ALL tool calls
+        let verdict = AgentShieldScanner::scan_tool_call(name, &arguments);
+        if let AgentShieldVerdict::Block { reason, threat_level } = verdict {
+            return McpToolCallResult {
+                content: vec![McpContentBlock::Text {
+                    text: format!("Execution Blocked by AgentShield [{:?}]: {}", threat_level, reason),
+                }],
+                is_error: true,
+            };
+        }
+
         match name {
             "tagisan_debate" => {
                 let prompt = match arguments.get("prompt").and_then(|v| v.as_str()) {
@@ -977,6 +1001,11 @@ impl McpServer {
         }
     }
 
+    /// Execute an MCP tool call by name (alias for handle_tool_call)
+    pub async fn execute_tool(&self, name: &str, arguments: Value) -> McpToolCallResult {
+        self.handle_tool_call(name, arguments).await
+    }
+
     /// Process a single incoming JSON-RPC 2.0 request and generate response
     pub async fn handle_request(&self, req: JsonRpcRequest) -> Option<JsonRpcResponse> {
         match req.method.as_str() {
@@ -1013,7 +1042,7 @@ impl McpServer {
                 let tool_name = params.get("name").and_then(|v| v.as_str()).unwrap_or_default();
                 let arguments = params.get("arguments").cloned().unwrap_or(json!({}));
 
-                let call_result = self.execute_tool(tool_name, arguments).await;
+                let call_result = self.handle_tool_call(tool_name, arguments).await;
                 Some(JsonRpcResponse::success(req.id, json!(call_result)))
             }
 

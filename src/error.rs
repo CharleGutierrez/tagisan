@@ -35,6 +35,9 @@ pub enum TagisanError {
     #[error("Execution error: {0}")]
     Execution(String),
 
+    #[error("Security error: {0}")]
+    Security(String),
+
     #[error("No local LLM models are installed in Ollama. Run 'ollama pull <model>' to install one (e.g., 'ollama pull smollm2:1.7b').")]
     NoModelsInstalled,
 
@@ -57,6 +60,7 @@ impl TagisanError {
             Self::BadResponse(..) => true,
             Self::Serialization(..) => false,
             Self::Execution(..) => false,
+            Self::Security(..) => false,
             Self::Io(..) => false,
         }
     }
