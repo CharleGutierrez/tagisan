@@ -6,6 +6,7 @@
 //!   completely prohibiting external cloud API egress when data is marked Confidential/Secret.
 //! - Cryptographic SHA-256 Audit Receipts (`PurviewAuditReceipt`) with content digest,
 //!   timestamp, sensitivity classification, routing enforcement proof, and HMAC/signature.
+//! - Dynamic Tenant Label Taxonomy Synchronization via Microsoft Graph `/informationProtection/policy/labels`.
 
 use crate::copilot::graph::GraphClient;
 use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};
@@ -16,10 +17,12 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 use std::fmt;
+use std::sync::Arc;
 
 /// Microsoft Purview Sensitivity Labels
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PurviewSensitivity {
     General = 0,
@@ -168,7 +171,6 @@ impl PurviewGuardEngine {
             PurviewSensitivity::General
         };
 
-        // Escalate to highest detected sensitivity
         std::cmp::max(explicit, auto_detected)
     }
 
@@ -178,7 +180,6 @@ impl PurviewGuardEngine {
         declared_label: Option<&str>,
         target_destination: Option<&str>,
     ) -> Result<PurviewGuardResult> {
-        // AgentShield outbound check
         let dlp_verdict = AgentShieldScanner::scan_outbound_dlp(content);
         if let AgentShieldVerdict::Block { reason, threat_level } = dlp_verdict {
             return Err(TagisanError::Security(format!(
@@ -191,7 +192,6 @@ impl PurviewGuardEngine {
         let air_gapped = sensitivity.is_air_gapped();
 
         let (egress_allowed, routing_engine, policy_applied) = if air_gapped {
-            // If caller explicitly requested external cloud egress with confidential data, reject it immediately
             if let Some(dest) = target_destination {
                 let dest_lower = dest.to_lowercase();
                 if dest_lower.contains("cloud")
@@ -221,7 +221,6 @@ impl PurviewGuardEngine {
             )
         };
 
-        // Compute SHA-256 content hash
         let mut hasher = Sha256::new();
         hasher.update(content.as_bytes());
         let content_sha256 = format!("{:x}", hasher.finalize());
@@ -368,5 +367,328 @@ impl ToolHandler for CopilotPurviewGuardTool {
             serde_json::to_string_pretty(&result.receipt).unwrap_or_default(),
             result.message
         ))
+    }
+}
+
+// =========================================================================
+// Dynamic Purview Policy & Label Taxonomy Synchronization
+// =========================================================================
+
+/// Tenant-specific Microsoft Purview Sensitivity Label definition
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PurviewLabel {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub color: Option<String>,
+    pub sensitivity_tier: PurviewSensitivity,
+    pub priority: u32,
+    pub is_active: bool,
+    pub parent_id: Option<String>,
+}
+
+pub type PurviewLabelPolicy = PurviewLabel;
+
+/// Dynamic Purview Policy Taxonomy Manager
+pub struct PurviewTaxonomyManager {
+    labels: tokio::sync::RwLock<HashMap<String, PurviewLabel>>,
+    tier_bindings: tokio::sync::RwLock<HashMap<PurviewSensitivity, String>>,
+}
+
+impl Default for PurviewTaxonomyManager {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl PurviewTaxonomyManager {
+    pub fn new() -> Self {
+        let mut initial_labels = HashMap::new();
+        let mut initial_bindings = HashMap::new();
+
+        let l_gen = PurviewLabel {
+            id: "e44d57c2-8bb4-469b-9860-244bb46e5073".to_string(),
+            name: "General".to_string(),
+            description: "Standard business data for unrestricted enterprise collaboration.".to_string(),
+            color: Some("#00B050".to_string()),
+            sensitivity_tier: PurviewSensitivity::General,
+            priority: 0,
+            is_active: true,
+            parent_id: None,
+        };
+
+        let l_conf = PurviewLabel {
+            id: "c76b1305-0d7d-4158-aeff-10f1d6302338".to_string(),
+            name: "Confidential - Internal Engineering".to_string(),
+            description: "Sensitive technical documentation and internal source code. Zero-Egress Air-Gap Enforced.".to_string(),
+            color: Some("#FFC000".to_string()),
+            sensitivity_tier: PurviewSensitivity::Confidential,
+            priority: 1,
+            is_active: true,
+            parent_id: None,
+        };
+
+        let l_hconf = PurviewLabel {
+            id: "f883995e-92b3-4971-8839-95e92b3971c0".to_string(),
+            name: "Highly Confidential - Executive & PII".to_string(),
+            description: "PII, financial statements, and zero-day threat intelligence. Offline GGUF only.".to_string(),
+            color: Some("#ED7D31".to_string()),
+            sensitivity_tier: PurviewSensitivity::HighlyConfidential,
+            priority: 2,
+            is_active: true,
+            parent_id: None,
+        };
+
+        let l_sec = PurviewLabel {
+            id: "a981c20e-6f8d-4a11-8a4b-tagisan36501".to_string(),
+            name: "Secret - Cryptographic Core".to_string(),
+            description: "Private keys, FHE homomorphic polynomials, and air-gapped sovereign secrets.".to_string(),
+            color: Some("#C00000".to_string()),
+            sensitivity_tier: PurviewSensitivity::Secret,
+            priority: 3,
+            is_active: true,
+            parent_id: None,
+        };
+
+        initial_bindings.insert(PurviewSensitivity::General, l_gen.id.clone());
+        initial_bindings.insert(PurviewSensitivity::Confidential, l_conf.id.clone());
+        initial_bindings.insert(PurviewSensitivity::HighlyConfidential, l_hconf.id.clone());
+        initial_bindings.insert(PurviewSensitivity::Secret, l_sec.id.clone());
+
+        initial_labels.insert(l_gen.id.clone(), l_gen);
+        initial_labels.insert(l_conf.id.clone(), l_conf);
+        initial_labels.insert(l_hconf.id.clone(), l_hconf);
+        initial_labels.insert(l_sec.id.clone(), l_sec);
+
+        Self {
+            labels: tokio::sync::RwLock::new(initial_labels),
+            tier_bindings: tokio::sync::RwLock::new(initial_bindings),
+        }
+    }
+
+    pub async fn sync_from_graph(&self, client: &GraphClient) -> Result<Vec<PurviewLabel>> {
+        if client.is_mock() {
+            let lock = self.labels.read().await;
+            return Ok(lock.values().cloned().collect());
+        }
+
+        let token = client.auth_manager().get_valid_token().await?;
+        let url = "https://graph.microsoft.com/v1.0/informationProtection/policy/labels";
+
+        let http = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .unwrap_or_default();
+
+        let res = http
+            .get(url)
+            .bearer_auth(token)
+            .send()
+            .await
+            .map_err(TagisanError::Network)?;
+
+        if !res.status().is_success() {
+            let err = res.text().await.unwrap_or_default();
+            return Err(TagisanError::BadResponse("purview_label_sync".to_string(), err));
+        }
+
+        let json_val: Value = res.json().await.map_err(TagisanError::Network)?;
+        let mut fetched_labels = Vec::new();
+
+        if let Some(items) = json_val.get("value").and_then(|v| v.as_array()) {
+            for item in items {
+                let id = item["id"].as_str().unwrap_or("").to_string();
+                let name = item["name"].as_str().unwrap_or("Unnamed Label").to_string();
+                let description = item["description"].as_str().unwrap_or("").to_string();
+                let color = item["color"].as_str().map(|s| s.to_string());
+                let is_active = item["isActive"].as_bool().unwrap_or(true);
+                let priority = item["priority"].as_u64().unwrap_or(0) as u32;
+                let parent_id = item["parent"]["id"].as_str().map(|s| s.to_string());
+
+                let sensitivity_tier = PurviewSensitivity::from_str_lossy(&name);
+
+                let label = PurviewLabel {
+                    id,
+                    name,
+                    description,
+                    color,
+                    sensitivity_tier,
+                    priority,
+                    is_active,
+                    parent_id,
+                };
+                fetched_labels.push(label);
+            }
+        }
+
+        let mut labels_lock = self.labels.write().await;
+        let mut bindings_lock = self.tier_bindings.write().await;
+
+        for label in &fetched_labels {
+            bindings_lock.insert(label.sensitivity_tier, label.id.clone());
+            labels_lock.insert(label.id.clone(), label.clone());
+        }
+
+        Ok(fetched_labels)
+    }
+
+    pub async fn get_label_id_for_tier(&self, tier: PurviewSensitivity) -> Option<String> {
+        let lock = self.tier_bindings.read().await;
+        lock.get(&tier).cloned()
+    }
+
+    pub async fn resolve_by_guid(&self, guid: &str) -> Option<PurviewLabel> {
+        let lock = self.labels.read().await;
+        lock.get(guid).cloned()
+    }
+
+    pub async fn list_labels(&self) -> Vec<PurviewLabel> {
+        let lock = self.labels.read().await;
+        let mut list: Vec<PurviewLabel> = lock.values().cloned().collect();
+        list.sort_by_key(|l| l.priority);
+        list
+    }
+}
+
+// =========================================================================
+// CopilotPurviewSyncTool (copilot_purview_sync)
+// =========================================================================
+
+/// Autonomous tool for synchronizing Microsoft Purview sensitivity label taxonomy
+#[derive(Clone)]
+pub struct CopilotPurviewSyncTool {
+    manager: Arc<PurviewTaxonomyManager>,
+    client: Arc<GraphClient>,
+}
+
+impl Default for CopilotPurviewSyncTool {
+    fn default() -> Self {
+        Self {
+            manager: Arc::new(PurviewTaxonomyManager::new()),
+            client: Arc::new(GraphClient::mock()),
+        }
+    }
+}
+
+impl CopilotPurviewSyncTool {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_manager_and_client(
+        manager: Arc<PurviewTaxonomyManager>,
+        client: Arc<GraphClient>,
+    ) -> Self {
+        Self { manager, client }
+    }
+}
+
+#[async_trait]
+impl ToolHandler for CopilotPurviewSyncTool {
+    fn name(&self) -> &str {
+        "copilot_purview_sync"
+    }
+
+    fn description(&self) -> &str {
+        "Dynamically synchronizes Microsoft Purview sensitivity label taxonomy from Microsoft Graph (/informationProtection/policy/labels), binding tenant custom sensitivity GUIDs to local Zero-Egress policies."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["sync", "list", "resolve"],
+                    "description": "Taxonomy action: 'sync' (fetch from Graph), 'list' (show cached bindings), 'resolve' (inspect label by GUID)"
+                },
+                "label_id": {
+                    "type": "string",
+                    "description": "Tenant label GUID to inspect for 'resolve' action"
+                },
+                "sensitivity": {
+                    "type": "string",
+                    "description": "Sensitivity tier name ('General', 'Confidential', 'HighlyConfidential', 'Secret')"
+                }
+            }
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let action = arguments
+            .get("action")
+            .and_then(|v| v.as_str())
+            .unwrap_or("sync");
+
+        match action {
+            "sync" => {
+                let labels = self.manager.sync_from_graph(&self.client).await?;
+                let mut table = format!(
+                    "### 🏷️ Microsoft Purview Sensitivity Label Taxonomy Synchronized\n\n\
+                    - **Total Tenant Labels:** {}\n\
+                    - **Status:** Dynamic Graph Binding Active\n\n\
+                    | Priority | Label Name | GUID | Tier | Zero-Egress Air-Gap |\n\
+                    |---|---|---|---|---|\n",
+                    labels.len()
+                );
+
+                for l in &labels {
+                    let air_gap = if l.sensitivity_tier.is_air_gapped() {
+                        "🔒 YES (Local Offline GGUF)"
+                    } else {
+                        "🌐 NO (Permissive)"
+                    };
+                    table.push_str(&format!(
+                        "| {} | **{}** | `{}` | {} | {} |\n",
+                        l.priority, l.name, l.id, l.sensitivity_tier.as_str(), air_gap
+                    ));
+                }
+
+                Ok(table)
+            }
+
+            "list" => {
+                let labels = self.manager.list_labels().await;
+                let mut out = format!("### 📋 Cached Purview Sensitivity Labels ({})\n\n", labels.len());
+                for l in &labels {
+                    out.push_str(&format!(
+                        "- **{}** (`{}`)\n  - Tier: {}\n  - Air-Gapped: {}\n  - Description: {}\n",
+                        l.name, l.id, l.sensitivity_tier.badge(),
+                        l.sensitivity_tier.is_air_gapped(), l.description
+                    ));
+                }
+                Ok(out)
+            }
+
+            "resolve" => {
+                let label_id = arguments
+                    .get("label_id")
+                    .and_then(|v| v.as_str())
+                    .ok_or_else(|| TagisanError::Execution("Missing 'label_id' for resolve action".to_string()))?;
+
+                if let Some(l) = self.manager.resolve_by_guid(label_id).await {
+                    Ok(format!(
+                        "### 🔍 Purview Label Resolved: `{}`\n\n\
+                        - **Name:** {}\n\
+                        - **Tier:** {}\n\
+                        - **Air-Gapped:** {}\n\
+                        - **Priority:** {}\n\
+                        - **Active:** {}\n\
+                        - **Description:** {}\n\n\
+                        ```json\n{}\n```",
+                        l.id, l.name, l.sensitivity_tier.badge(),
+                        l.sensitivity_tier.is_air_gapped(), l.priority, l.is_active,
+                        l.description,
+                        serde_json::to_string_pretty(&l).unwrap_or_default()
+                    ))
+                } else {
+                    Err(TagisanError::Execution(format!("Label GUID '{label_id}' not found in taxonomy")))
+                }
+            }
+
+            other => Err(TagisanError::Execution(format!(
+                "Unknown purview sync action '{other}'. Valid actions: sync, list, resolve"
+            ))),
+        }
     }
 }

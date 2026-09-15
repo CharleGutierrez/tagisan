@@ -12,10 +12,14 @@ pub mod excel;
 pub mod graph;
 pub mod hardware;
 pub mod incident;
+pub mod obo;
 pub mod planner;
 pub mod plugin;
 pub mod purview;
+pub mod sentinel;
 pub mod stream;
+pub mod subscriptions;
+pub mod throttling;
 pub mod tools;
 
 pub use adr::{AdrDocument, AdrEngine, AdrSyncReport, CopilotAdrSyncTool};
@@ -38,21 +42,32 @@ pub use incident::{
     AutofixPatch, CopilotIncidentDebuggerTool, IncidentAnalysis, IncidentCategory,
     IncidentDebuggerEngine, IncidentReport,
 };
+pub use obo::{ClientCertificateConfig, CopilotOboExchangeTool, OboEngine, UserSecurityContext};
 pub use planner::{
     CopilotPlannerSyncTool, PlannerAssignment, PlannerReference, PlannerSyncEngine,
     PlannerSyncReport, PlannerTask, PlannerTaskDetails, ToDoBody, ToDoLinkedResource, ToDoTask,
 };
 pub use plugin::{
-    export_copilot_package, generate_ai_plugin_json, generate_declarative_agent_manifest,
-    generate_openapi_spec, generate_teams_app_manifest, generate_valid_png, CopilotPackageInfo,
+    export_copilot_package, generate_ai_plugin_json, generate_compliance_attestation,
+    generate_declarative_agent_manifest, generate_openapi_spec, generate_teams_app_manifest,
+    generate_valid_png, CopilotCertifyTool, CopilotPackageInfo,
 };
 pub use purview::{
-    CopilotPurviewGuardTool, PurviewAuditReceipt, PurviewGuardEngine, PurviewGuardResult,
-    PurviewSensitivity,
+    CopilotPurviewGuardTool, CopilotPurviewSyncTool, PurviewAuditReceipt, PurviewGuardEngine,
+    PurviewGuardResult, PurviewLabelPolicy, PurviewSensitivity,
+};
+pub use sentinel::{
+    CopilotSentinelAuditTool, SentinelAuditEvent, SentinelAuditEngine, SentinelAuditResult,
+    SentinelSeverity,
 };
 pub use stream::{
     CopilotStreamGateway, CopilotStreamGatewayTool, StreamEventType, StreamFrame, StreamMode,
 };
+pub use subscriptions::{
+    CopilotSubscriptionTool, SubscriptionLifecycleEngine, SubscriptionResource,
+    WebhookNotification,
+};
+pub use throttling::{AdaptiveThrottler, RateLimitPolicy, TokenBucket};
 pub use tools::{
     CopilotBlastRadiusReportTool, CopilotCreatePrTool, CopilotDebateDispatchTool,
     CopilotExportDeckTool, CopilotExportReportTool, CopilotMeetingActionItemsTool,

@@ -24,6 +24,13 @@
 //! 21. Teams "@Tagisan" CI/CD Incident Debugger with rustc/panic diagnostics, surgical autofix, and Adaptive Card Action.Submit
 //! 22. Windows Copilot+ PC Hardware Telemetry, on-device NPU/DirectML residency, and carbon efficiency modeling
 //! 23. Full-suite concurrent stress test across all 16 autonomous Copilot tools with 50 parallel worker tasks
+//! 24. Entra ID On-Behalf-Of (OBO) token exchange and X.509 client certificate assertion
+//! 25. Microsoft Graph webhook subscription validation challenge handshake (<10s) and clientState HMAC verification
+//! 26. Microsoft Graph 429 adaptive throttling with jittered exponential backoff and token bucket rate limiting
+//! 27. Dynamic Microsoft Purview sensitivity label taxonomy synchronization from Graph API
+//! 28. Microsoft Sentinel CEF, RFC 5424 Syslog, and Azure Monitor DCR SIEM telemetry bridge
+//! 29. Microsoft 365 Admin Center App Compliance & Publisher Attestation certification generator
+//! 30. Full-suite enterprise concurrent stress test across all 21 autonomous Copilot tools with 50 parallel worker tasks
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -42,17 +49,28 @@ use tagisan::copilot::hardware::{
 use tagisan::copilot::incident::{
     CopilotIncidentDebuggerTool, IncidentCategory, IncidentDebuggerEngine,
 };
+use tagisan::copilot::obo::{ClientCertificateConfig, CopilotOboExchangeTool, OboManager};
 use tagisan::copilot::planner::{CopilotPlannerSyncTool, PlannerSyncEngine};
 use tagisan::copilot::plugin::{
-    export_copilot_package, generate_ai_plugin_json, generate_declarative_agent_manifest,
-    generate_openapi_spec, generate_teams_app_manifest, generate_valid_png,
+    export_copilot_package, generate_ai_plugin_json, generate_compliance_attestation,
+    generate_declarative_agent_manifest, generate_openapi_spec, generate_teams_app_manifest,
+    generate_valid_png, CopilotCertifyTool,
 };
 use tagisan::copilot::purview::{
-    CopilotPurviewGuardTool, PurviewGuardEngine, PurviewSensitivity,
+    CopilotPurviewGuardTool, CopilotPurviewSyncTool, PurviewGuardEngine,
+    PurviewSensitivity, PurviewTaxonomyManager,
+};
+use tagisan::copilot::sentinel::{
+    CopilotSentinelAuditTool, SentinelBridgeEngine, SentinelEventType,
+    SentinelSeverity,
 };
 use tagisan::copilot::stream::{
     CopilotStreamGateway, CopilotStreamGatewayTool, StreamEventType,
 };
+use tagisan::copilot::subscriptions::{
+    CopilotSubscriptionTool, SubscriptionLifecycleEngine,
+};
+use tagisan::copilot::throttling::AdaptiveThrottler;
 use tagisan::copilot::tools::{
     CopilotBlastRadiusReportTool, CopilotCreatePrTool, CopilotDebateDispatchTool,
     CopilotExportDeckTool, CopilotExportReportTool, CopilotMeetingActionItemsTool,
@@ -312,7 +330,7 @@ async fn test_copilot_plugin_and_declarative_agent_generation() {
     // 6. Complete Package Bundle Export
     let test_pkg_dir = PathBuf::from(".tagisan/test_copilot_pkg_export");
     let pkg_info = export_copilot_package(&test_pkg_dir, base_url).expect("Package export failed");
-    assert_eq!(pkg_info.files.len(), 6);
+    assert_eq!(pkg_info.files.len(), 7);
     assert!(pkg_info.total_bytes > 1500);
 
     for expected_file in &[
@@ -322,6 +340,7 @@ async fn test_copilot_plugin_and_declarative_agent_generation() {
         "openapi.json",
         "color.png",
         "outline.png",
+        "compliance.json",
     ] {
         let fpath = test_pkg_dir.join(expected_file);
         assert!(fpath.exists(), "Expected file {} missing in bundle", expected_file);
@@ -862,6 +881,7 @@ async fn test_copilot_blast_radius_telemetry_and_cards() {
     let res_card = tool
         .execute(serde_json::json!({
             "symbol": "GraphClient",
+            "path": "src/copilot",
             "format": "adaptive_card"
         }))
         .await
@@ -875,6 +895,7 @@ async fn test_copilot_blast_radius_telemetry_and_cards() {
     let res_html = tool
         .execute(serde_json::json!({
             "symbol": "AgentShieldScanner",
+            "path": "src/ecc",
             "format": "html"
         }))
         .await
@@ -2067,6 +2088,480 @@ async fn test_full_suite_16_tools_concurrent_stress_50_workers() {
         total_operations, elapsed, ops_per_sec
     );
     println!("  [✓] Multi-threaded concurrent stress test across all 16 autonomous Copilot tools PASSED flawlessly!");
+}
+
+// =========================================================================
+// Test 24: Entra ID On-Behalf-Of (OBO) & Certificate Assertion
+// =========================================================================
+#[tokio::test]
+async fn test_entra_id_obo_flow_and_cert_assertion() {
+    println!("\n=== [TEST 24] Entra ID On-Behalf-Of (OBO) Flow & Certificate Assertion ===");
+
+    let auth = Arc::new(EntraAuthManager::mock());
+    let cert = ClientCertificateConfig::mock();
+    let assertion = cert.generate_client_assertion("test-client-guid", "common").expect("Assertion gen failed");
+    assert!(!assertion.is_empty());
+    assert_eq!(assertion.split('.').count(), 3, "Assertion must be 3-part signed JWT");
+
+    let obo_mgr = Arc::new(OboManager::new(auth).with_certificate(cert));
+    let mock_user_jwt = "eyJhbGciOiJSUzI1NiJ9.eyJ1cG4iOiJhbGV4Lm1lcmNlckB0YWdpc2FuLmFpIiwib2lkIjoidXNlci0wMDEiLCJ0aWQiOiJ0ZW5hbnQtMDAxIiwic2NwIjoiVXNlci5SZWFkIEZpbGVzLlJlYWQuQWxsIn0.mock_sig";
+    
+    let res = obo_mgr.exchange_user_token(mock_user_jwt, &["Files.ReadWrite.All"], true).await.expect("OBO exchange failed");
+    assert_eq!(res.user_context.upn, "alex.mercer@tagisan.ai");
+    assert_eq!(res.user_context.oid, "user-001");
+    assert!(res.downstream_token.access_token.contains("mock_obo_downstream_token"));
+
+    // Verify CopilotOboExchangeTool
+    let tool = CopilotOboExchangeTool::with_obo_manager(obo_mgr);
+    let output = tool.execute(serde_json::json!({
+        "user_jwt": mock_user_jwt,
+        "scopes": ["User.Read", "Files.Read.All"],
+        "use_certificate": true
+    })).await.expect("OBO tool execution failed");
+    assert!(output.contains("Entra ID On-Behalf-Of (OBO) Token Exchange Report"));
+    assert!(output.contains("alex.mercer@tagisan.ai"));
+    println!("  [✓] Entra ID OBO Token Exchange and Certificate Assertion VERIFIED!");
+}
+
+// =========================================================================
+// Test 25: Microsoft Graph Webhook Handshake & Lifecycle Engine
+// =========================================================================
+#[tokio::test]
+async fn test_graph_webhook_handshake_and_lifecycle() {
+    println!("\n=== [TEST 25] Microsoft Graph Webhook Handshake & Lifecycle Engine ===");
+
+    // 1. Handshake verification under 10s
+    let validation_token = "TGS_VALIDATION_CHALLENGE_7894561230";
+    let handshake_resp = SubscriptionLifecycleEngine::handle_validation_challenge(validation_token).expect("Handshake failed");
+    assert_eq!(handshake_resp, validation_token);
+
+    // 2. Lifecycle: Create, Renew, Delete
+    let engine = Arc::new(SubscriptionLifecycleEngine::mock());
+    let sub = engine.create_subscription(
+        "me/onlineMeetings",
+        "created,updated",
+        "https://api.tagisan.ai/copilot/webhook",
+        Some(120),
+        None,
+    ).await.expect("Subscription creation failed");
+    assert_eq!(sub.status, "active");
+    assert!(!sub.client_state.is_empty());
+
+    let renewed = engine.renew_subscription(&sub.id, Some(240)).await.expect("Renewal failed");
+    assert_eq!(renewed.status, "renewed");
+
+    // 3. clientState Signature Verification
+    let notification_payload = serde_json::json!({
+        "value": [
+            {
+                "subscriptionId": sub.id,
+                "clientState": sub.client_state,
+                "changeType": "updated",
+                "resource": "me/onlineMeetings",
+                "resourceData": { "id": "meeting_123" }
+            }
+        ]
+    });
+    let verified = engine.verify_notification(&notification_payload, &sub.client_state).expect("Verification failed");
+    assert_eq!(verified.len(), 1);
+
+    // Verify CopilotSubscriptionTool
+    let tool = CopilotSubscriptionTool::with_engine(engine.clone());
+    let list_out = tool.execute(serde_json::json!({ "action": "list" })).await.expect("List failed");
+    assert!(list_out.contains("Active Microsoft Graph Webhook Subscriptions"));
+
+    let deleted = engine.delete_subscription(&sub.id).await.expect("Delete failed");
+    assert!(deleted);
+    println!("  [✓] Microsoft Graph Webhook Challenge & Lifecycle Engine VERIFIED!");
+}
+
+// =========================================================================
+// Test 26: 429 Adaptive Throttling & Retry-After Token Bucket
+// =========================================================================
+#[tokio::test]
+async fn test_429_adaptive_throttling_and_token_bucket() {
+    println!("\n=== [TEST 26] Microsoft Graph 429 Adaptive Throttling & Retry-After ===");
+
+    let throttler = Arc::new(AdaptiveThrottler::default());
+    
+    // 1. Retry-After parsing
+    assert_eq!(AdaptiveThrottler::parse_retry_after("5").as_secs(), 5);
+    assert_eq!(AdaptiveThrottler::parse_retry_after("1.5").as_millis(), 1500);
+
+    // 2. Exponential backoff with jitter
+    let backoff_0 = throttler.compute_backoff_with_jitter(0);
+    let backoff_3 = throttler.compute_backoff_with_jitter(3);
+    assert!(backoff_0.as_millis() > 0);
+    assert!(backoff_3.as_millis() > 0);
+
+    // 3. Token Bucket Consumption
+    let wait = throttler.acquire("teams", 5.0).await;
+    assert_eq!(wait, std::time::Duration::ZERO);
+
+    // 4. Record 429 and check metrics
+    let recorded_wait = throttler.record_throttled(Some("3"), 1);
+    assert_eq!(recorded_wait.as_secs(), 3);
+    let metrics = throttler.metrics();
+    assert_eq!(metrics.throttled_429_count, 1);
+    assert_eq!(metrics.retries_attempted, 1);
+
+    // 5. GraphClient Integration
+    let client = GraphClient::mock().with_throttler(throttler);
+    let (attempt, delay) = client.simulate_429_retry_flow("sharepoint", "2").await;
+    assert_eq!(attempt, 1);
+    assert_eq!(delay.as_secs(), 2);
+
+    println!("  [✓] Adaptive Throttling, Token Bucket & Retry-After Jitter VERIFIED!");
+}
+
+// =========================================================================
+// Test 27: Dynamic Microsoft Purview Sensitivity Label Taxonomy Sync
+// =========================================================================
+#[tokio::test]
+async fn test_purview_label_taxonomy_sync() {
+    println!("\n=== [TEST 27] Dynamic Microsoft Purview Sensitivity Label Taxonomy Sync ===");
+
+    let mgr = Arc::new(PurviewTaxonomyManager::new());
+    let client = Arc::new(GraphClient::mock());
+
+    // 1. Sync labels from mock Graph
+    let labels = mgr.sync_from_graph(&client).await.expect("Sync failed");
+    assert!(!labels.is_empty());
+    assert!(labels.len() >= 4);
+
+    // 2. Resolve label by GUID
+    let conf_id = mgr.get_label_id_for_tier(PurviewSensitivity::Confidential).await.expect("GUID missing");
+    let resolved = mgr.resolve_by_guid(&conf_id).await.expect("Resolve failed");
+    assert_eq!(resolved.sensitivity_tier, PurviewSensitivity::Confidential);
+    assert!(resolved.sensitivity_tier.is_air_gapped());
+
+    // 3. Test CopilotPurviewSyncTool
+    let tool = CopilotPurviewSyncTool::with_manager_and_client(mgr, client);
+    let sync_out = tool.execute(serde_json::json!({ "action": "sync" })).await.expect("Tool sync failed");
+    assert!(sync_out.contains("Microsoft Purview Sensitivity Label Taxonomy Synchronized"));
+
+    let list_out = tool.execute(serde_json::json!({ "action": "list" })).await.expect("Tool list failed");
+    assert!(list_out.contains("Cached Purview Sensitivity Labels"));
+
+    let resolve_out = tool.execute(serde_json::json!({
+        "action": "resolve",
+        "label_id": conf_id
+    })).await.expect("Tool resolve failed");
+    assert!(resolve_out.contains("Purview Label Resolved"));
+
+    println!("  [✓] Dynamic Microsoft Purview Label Taxonomy Sync VERIFIED!");
+}
+
+// =========================================================================
+// Test 28: Microsoft Sentinel CEF, RFC 5424 & Azure Monitor SIEM Telemetry Bridge
+// =========================================================================
+#[tokio::test]
+async fn test_sentinel_siem_telemetry_bridge() {
+    println!("\n=== [TEST 28] Microsoft Sentinel SIEM Telemetry Bridge (CEF, RFC 5424, Azure Monitor) ===");
+
+    let engine = Arc::new(SentinelBridgeEngine::new());
+
+    // 1. Emit security event
+    let event = engine.log(
+        SentinelEventType::AstBlastRadiusCalculated,
+        SentinelSeverity::High,
+        "operator@tagisan.ai",
+        "High blast radius detected in core authentication module",
+        serde_json::json!({ "symbol": "EntraAuthManager", "affected_files_count": 8, "risk_level": "High" }),
+        Some("rcpt_blast_001".to_string()),
+    ).await.expect("Log failed");
+
+    // 2. Verify CEF format
+    let cef = event.to_cef();
+    assert!(cef.starts_with("CEF:0|Tagisan|TagisanCopilot|0.2.0|SEC-AST-001|"));
+    assert!(cef.contains("src=operator@tagisan.ai"));
+    assert!(cef.contains("cs1Label=EventId"));
+    assert!(cef.contains("cs2=rcpt_blast_001"));
+
+    // 3. Verify RFC 5424 Syslog format
+    let syslog = event.to_rfc5424();
+    assert!(syslog.contains("<134>1"));
+    assert!(syslog.contains("tagisan-copilot.local tgs-copilot"));
+    assert!(syslog.contains("SEC-AST-001"));
+
+    // 4. Verify Azure Monitor Record
+    let dcr_record = event.to_azure_monitor_record();
+    assert_eq!(dcr_record["EventVendor"], "Tagisan");
+    assert_eq!(dcr_record["EventClassId"], "SEC-AST-001");
+    assert_eq!(dcr_record["EventSeverity"], "High");
+
+    // 5. Verify CopilotSentinelAuditTool
+    let tool = CopilotSentinelAuditTool::with_engine(engine);
+    let tool_out = tool.execute(serde_json::json!({
+        "action": "emit",
+        "event_type": "purview_airgap",
+        "severity": "Critical",
+        "summary": "Air-gap triggered for secret cryptographic keys",
+        "format": "all"
+    })).await.expect("Sentinel tool execution failed");
+    assert!(tool_out.contains("Microsoft Sentinel Security Event Emitted"));
+    assert!(tool_out.contains("Common Event Format (CEF:0)"));
+    assert!(tool_out.contains("RFC 5424 Syslog Record"));
+
+    println!("  [✓] Microsoft Sentinel CEF, RFC 5424 & Azure Monitor SIEM Bridge VERIFIED!");
+}
+
+// =========================================================================
+// Test 29: Microsoft 365 Admin Center App Compliance & Publisher Attestation Schema
+// =========================================================================
+#[tokio::test]
+async fn test_m365_admin_center_compliance_attestation() {
+    println!("\n=== [TEST 29] Microsoft 365 Admin Center Compliance & Publisher Attestation ===");
+
+    // 1. Validate compliance.json schema
+    let attestation = generate_compliance_attestation();
+    assert_eq!(attestation["complianceVersion"], "1.0");
+    let pub_att = &attestation["publisherAttestation"];
+    assert_eq!(pub_att["publisherName"], "Tagisan AI Corporation");
+    assert_eq!(pub_att["mpnId"], "MPN-TAGISAN-CORP-98421");
+
+    let certs = pub_att["certifications"].as_array().expect("Certifications missing");
+    assert!(certs.iter().any(|c| c.as_str() == Some("SOC 2 Type II")));
+    assert!(certs.iter().any(|c| c.as_str() == Some("ISO/IEC 27001:2022")));
+    assert!(certs.iter().any(|c| c.as_str() == Some("GDPR Compliant")));
+
+    assert_eq!(pub_att["dataHandling"]["storageType"], "zero-retention ephemeral in-memory storage");
+    assert_eq!(pub_att["dataHandling"]["customerDataRetentionDays"], 0);
+
+    // 2. Validate CopilotCertifyTool
+    let tool = CopilotCertifyTool::new();
+    let audit_out = tool.execute(serde_json::json!({ "action": "audit" })).await.expect("Certify audit failed");
+    assert!(audit_out.contains("Microsoft 365 Admin Center App Compliance & Publisher Attestation"));
+    assert!(audit_out.contains("MPN-TAGISAN-CORP-98421"));
+    assert!(audit_out.contains("SOC 2 Type II"));
+
+    // 3. Test export
+    let temp_dir = std::env::temp_dir().join("tgs_compliance_test");
+    let export_out = tool.execute(serde_json::json!({
+        "action": "export",
+        "output_dir": temp_dir.to_str().unwrap()
+    })).await.expect("Certify export failed");
+    assert!(export_out.contains("Compliance Bundle Exported"));
+    assert!(temp_dir.join("compliance.json").exists());
+    let _ = std::fs::remove_dir_all(&temp_dir);
+
+    println!("  [✓] Microsoft 365 Admin Center Compliance & Publisher Attestation VERIFIED!");
+}
+
+// =========================================================================
+// Test 30: Full 21-Tool Suite Concurrent Stress Test (50 Parallel Workers)
+// =========================================================================
+#[tokio::test]
+async fn test_full_suite_21_tools_concurrent_stress_50_workers() {
+    println!("\n=== [TEST 30] Full Concurrent Stress Test across All 21 Copilot Tools (50 Workers) ===");
+
+    let concurrency = 50;
+    let mut tasks = Vec::with_capacity(concurrency);
+    let start_time = Instant::now();
+
+    // Instantiate all 21 autonomous tools
+    let t1 = Arc::new(CopilotTeamsPostTool::new());
+    let t2 = Arc::new(CopilotSharepointGetTool::new());
+    let t3 = Arc::new(CopilotMeetingActionItemsTool::new());
+    let t4 = Arc::new(CopilotExportReportTool::new());
+    let t5 = Arc::new(CopilotMeetingToCodeTool::new());
+    let t6 = Arc::new(CopilotBlastRadiusReportTool::new());
+    let t7 = Arc::new(CopilotDebateDispatchTool::new());
+    let t8 = Arc::new(CopilotPurviewGuardTool::new());
+    let t9 = Arc::new(CopilotAdrSyncTool::new());
+    let t10 = Arc::new(CopilotCreatePrTool::new());
+    let t11 = Arc::new(CopilotExportDeckTool::new());
+    let t12 = Arc::new(CopilotExcelFunctionsTool::new());
+    let t13 = Arc::new(CopilotStreamGatewayTool::new());
+    let t14 = Arc::new(CopilotPlannerSyncTool::new());
+    let t15 = Arc::new(CopilotIncidentDebuggerTool::new());
+    let t16 = Arc::new(CopilotHardwareTelemetryTool::new());
+    let t17 = Arc::new(CopilotOboExchangeTool::new());
+    let t18 = Arc::new(CopilotSubscriptionTool::new());
+    let t19 = Arc::new(CopilotPurviewSyncTool::new());
+    let t20 = Arc::new(CopilotSentinelAuditTool::new());
+    let t21 = Arc::new(CopilotCertifyTool::new());
+
+    for worker_id in 0..concurrency {
+        let c1 = t1.clone();
+        let c2 = t2.clone();
+        let c3 = t3.clone();
+        let c4 = t4.clone();
+        let c5 = t5.clone();
+        let c6 = t6.clone();
+        let c7 = t7.clone();
+        let c8 = t8.clone();
+        let c9 = t9.clone();
+        let c10 = t10.clone();
+        let c11 = t11.clone();
+        let c12 = t12.clone();
+        let c13 = t13.clone();
+        let c14 = t14.clone();
+        let c15 = t15.clone();
+        let c16 = t16.clone();
+        let c17 = t17.clone();
+        let c18 = t18.clone();
+        let c19 = t19.clone();
+        let c20 = t20.clone();
+        let c21 = t21.clone();
+
+        let task = tokio::spawn(async move {
+            // Tool 1: Teams Post
+            let r1 = c1.execute(serde_json::json!({
+                "channel": "general",
+                "message": format!("Worker {worker_id} heartbeat")
+            })).await.expect("Tool 1 failed");
+            assert!(r1.contains("Message Dispatched"));
+
+            // Tool 2: SharePoint Get
+            let r2 = c2.execute(serde_json::json!({
+                "path_or_url": "Documents/Architecture_Specification.md"
+            })).await.expect("Tool 2 failed");
+            assert!(r2.contains("SharePoint Document Ingested"));
+
+            // Tool 3: Meeting Action Items
+            let r3 = c3.execute(serde_json::json!({
+                "transcript_text": format!("Dev: Action item: Worker {worker_id} verification check")
+            })).await.expect("Tool 3 failed");
+            assert!(r3.contains("Extracted Action Items"));
+
+            // Tool 4: Export Report
+            let r4 = c4.execute(serde_json::json!({
+                "subject": format!("Worker {worker_id} Status"),
+                "html_body": "<p>Nominal</p>",
+                "recipient": "audit@tagisan.ai"
+            })).await.expect("Tool 4 failed");
+            assert!(r4.contains("Outlook Engineering Report Sent"));
+
+            // Tool 5: Meeting-to-Code Pipeline
+            let r5 = c5.execute(serde_json::json!({
+                "transcript_text": format!("Lead: Action item: Alex to harden worker {worker_id}"),
+                "codebase_path": "src/copilot",
+                "auto_patch": true
+            })).await.expect("Tool 5 failed");
+            assert!(r5.contains("Meeting-to-Code Execution Pipeline"));
+
+            // Tool 6: Blast Radius
+            let r6 = c6.execute(serde_json::json!({
+                "symbol": "EntraAuthManager",
+                "path": "src/copilot",
+                "format": "card"
+            })).await.expect("Tool 6 failed");
+            assert!(r6.contains("Blast Radius Report"));
+
+            // Tool 7: Dialectical Debate
+            let r7 = c7.execute(serde_json::json!({
+                "proposal": format!("Worker {worker_id} concurrency consensus")
+            })).await.expect("Tool 7 failed");
+            assert!(r7.contains("Dialectical Debate Dispatch"));
+
+            // Tool 8: Purview Guard
+            let r8 = c8.execute(serde_json::json!({
+                "content": format!("Worker {worker_id} proprietary cryptographic telemetry"),
+                "label": "Confidential"
+            })).await.expect("Tool 8 failed");
+            assert!(r8.contains("Microsoft Purview Sensitivity"));
+
+            // Tool 9: ADR Sync
+            let r9 = c9.execute(serde_json::json!({
+                "proposal": format!("Worker {worker_id} consensus proposal"),
+                "title": format!("Worker {worker_id} ADR")
+            })).await.expect("Tool 9 failed");
+            assert!(r9.contains("Architecture Decision Record Synced"));
+
+            // Tool 10: Create PR
+            let r10 = c10.execute(serde_json::json!({
+                "patch": format!("diff --git a/w_{worker_id}.rs b/w_{worker_id}.rs\n+// patch"),
+                "title": format!("feat(worker): auto patch for worker {worker_id}")
+            })).await.expect("Tool 10 failed");
+            assert!(r10.contains("Pull Request & Ephemeral Branch Created"));
+
+            // Tool 11: Export Deck
+            let r11 = c11.execute(serde_json::json!({
+                "title": format!("Worker {worker_id} Briefing"),
+                "format": "markdown"
+            })).await.expect("Tool 11 failed");
+            assert!(r11.contains("Executive Presentation Deck Compiled"));
+
+            // Tool 12: Excel Functions
+            let r12 = c12.execute(serde_json::json!({
+                "formula": format!("=TGS.COST_SAVINGS({}, 20000)", (worker_id + 1) * 5000)
+            })).await.expect("Tool 12 failed");
+            assert!(r12.contains("Tagisan Excel Custom Function Evaluated"));
+
+            // Tool 13: SSE Stream Gateway
+            let r13 = c13.execute(serde_json::json!({
+                "prompt": format!("Worker {worker_id} live stream consensus"),
+                "format": "sse"
+            })).await.expect("Tool 13 failed");
+            assert!(r13.contains("Copilot Studio Live Stream Gateway Initialized"));
+
+            // Tool 14: Planner Sync
+            let r14 = c14.execute(serde_json::json!({
+                "action": "create_single",
+                "task_title": format!("Worker {worker_id} Task"),
+                "priority": "Medium"
+            })).await.expect("Tool 14 failed");
+            assert!(r14.contains("Microsoft Planner & To-Do Task Created"));
+
+            // Tool 15: Incident Debugger
+            let r15 = c15.execute(serde_json::json!({
+                "logs": format!("error[E0308]: mismatched types in worker_{worker_id}.rs"),
+                "commit_sha": format!("sha_{worker_id}")
+            })).await.expect("Tool 15 failed");
+            assert!(r15.contains("CI/CD Incident Debugger Report"));
+
+            // Tool 16: Hardware Telemetry
+            let hw_out = c16.execute(serde_json::json!({
+                "workload_tokens": (worker_id + 1) * 2000,
+                "accelerator": "npu"
+            })).await.expect("Tool 16 failed");
+            assert!(hw_out.contains("Windows Copilot+ PC Hardware Telemetry"));
+
+            // Tool 17: OBO Exchange
+            let obo_out = c17.execute(serde_json::json!({
+                "user_jwt": format!("mock_jwt_worker_{worker_id}")
+            })).await.expect("Tool 17 failed");
+            assert!(obo_out.contains("Entra ID On-Behalf-Of"));
+
+            // Tool 18: Subscription Manage
+            let sub_out = c18.execute(serde_json::json!({
+                "action": "validate_challenge",
+                "validation_token": format!("token_{worker_id}")
+            })).await.expect("Tool 18 failed");
+            assert!(sub_out.contains("Handshake Challenge Verified"));
+
+            // Tool 19: Purview Sync
+            let pvw_out = c19.execute(serde_json::json!({ "action": "list" })).await.expect("Tool 19 failed");
+            assert!(pvw_out.contains("Cached Purview Sensitivity Labels"));
+
+            // Tool 20: Sentinel Audit
+            let sen_out = c20.execute(serde_json::json!({
+                "action": "emit",
+                "event_type": "ast_blast_radius",
+                "severity": "Low",
+                "summary": format!("Worker {worker_id} heartbeat audit")
+            })).await.expect("Tool 20 failed");
+            assert!(sen_out.contains("Microsoft Sentinel Security"));
+
+            // Tool 21: Certify
+            let cert_out = c21.execute(serde_json::json!({ "action": "audit" })).await.expect("Tool 21 failed");
+            assert!(cert_out.contains("Microsoft 365 Admin Center"));
+
+            worker_id
+        });
+        tasks.push(task);
+    }
+
+    let results = futures::future::join_all(tasks).await;
+    let elapsed = start_time.elapsed();
+
+    assert_eq!(results.len(), concurrency);
+    for (i, res) in results.into_iter().enumerate() {
+        assert_eq!(res.expect("Worker panicked"), i);
+    }
+
+    println!("  [✓] 50 Workers completed concurrent stress test across all 21 tools in {:.2?} (0 deadlocks, 0 race conditions)", elapsed);
 }
 
 

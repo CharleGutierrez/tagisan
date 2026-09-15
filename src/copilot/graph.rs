@@ -67,6 +67,7 @@ pub struct GraphClient {
     http: reqwest::Client,
     base_url: String,
     mock: bool,
+    throttler: Arc<crate::copilot::throttling::AdaptiveThrottler>,
 }
 
 impl GraphClient {
@@ -81,6 +82,7 @@ impl GraphClient {
                 .unwrap_or_default(),
             base_url: "https://graph.microsoft.com/v1.0".to_string(),
             mock: is_mock,
+            throttler: Arc::new(crate::copilot::throttling::AdaptiveThrottler::default()),
         }
     }
 
@@ -90,6 +92,24 @@ impl GraphClient {
         let mut client = Self::new(auth);
         client.mock = true;
         client
+    }
+
+    /// Access the adaptive throttler
+    pub fn throttler(&self) -> &Arc<crate::copilot::throttling::AdaptiveThrottler> {
+        &self.throttler
+    }
+
+    /// Set a custom adaptive throttler
+    pub fn with_throttler(mut self, throttler: Arc<crate::copilot::throttling::AdaptiveThrottler>) -> Self {
+        self.throttler = throttler;
+        self
+    }
+
+    /// Simulate handling an HTTP 429 response with Retry-After header
+    pub async fn simulate_429_retry_flow(&self, resource: &str, simulated_retry_after: &str) -> (u32, std::time::Duration) {
+        let _ = self.throttler.acquire(resource, 1.0).await;
+        let backoff = self.throttler.record_throttled(Some(simulated_retry_after), 1);
+        (1, backoff)
     }
 
     /// Override the base API URL (e.g. for custom proxies or testing)

@@ -555,7 +555,7 @@ python3 scripts/test_file_crud_superpowers.py
 # Brutal verification: Curated Vibe-Coder Knowledge Canons (ISBN Checksums & Skills)
 python3 scripts/test_forensics_verification.py
 python3 scripts/test_strategic_verification.py
-# Brutal verification: Microsoft 365 Copilot & Microsoft Graph Communication System (23 Tests)
+# Brutal verification: Microsoft 365 Copilot & Microsoft Graph Communication System (30 Tests)
 cargo test --test ms365_copilot_brutal_tests -- --nocapture
 ```
 
@@ -566,47 +566,41 @@ cargo test --test ms365_copilot_brutal_tests -- --nocapture
 Tagisan features a systems-grade, enterprise-hardened integration connecting its dialectical reasoning engine, petgraph AST codebase graph, and formal invariant verification (`tgs ground`) directly into the **Microsoft 365 Enterprise Ecosystem** (Teams, SharePoint, OneDrive, Outlook, Microsoft Search, Excel, Planner, and Copilot Studio).
 
 ```mermaid
-graph TD
-    M365["Microsoft 365 Copilot & Teams"] --> DA["Declarative Agent (declarativeAgent.json)"]
-    DA --> Spec["OpenAPI 3.0.3 Spec Gateway (/api/copilot/*)"]
-    
-    subgraph "Tagisan Enterprise Integration Plane"
-        Spec --> Gate["AgentShield Cyber Defense Gate"]
-        Gate --> DLP["Outbound DLP (Zero Secret Leaks)"]
-        Gate --> Sanitize["Inbound Prompt Injection Sanitization"]
-        Gate --> PurviewGate["Microsoft Purview Zero-Egress Gate"]
-        
-        PurviewGate -->|Confidential / Secret| AirGap["Local Offline GGUF / Tensor Engine (Zero Egress)"]
-        PurviewGate -->|General| Engine["Tagisan Core Multi-Model Subsystems"]
-        
-        DLP --> Engine
-        Sanitize --> Engine
-        
-        Engine --> M2C["Meeting-to-Code Pipeline"]
-        Engine --> AST["AST Codebase Graph & Blast Radius"]
-        Engine --> Debate["3-Round Dialectical Debate (Lakandiwa)"]
-        Engine --> Ground["Formal Invariant Verification (tgs ground)"]
-        Engine --> ADR["ADR Synthesizer (MADR Format)"]
-        Engine --> PRAuto["Git Ephemeral Branch & PR Automation"]
-        Engine --> DeckGen["Executive Briefing Deck Generator"]
-        Engine --> BotHandler["Teams Bot Adaptive Card Action Handler"]
-        Engine --> ExcelAddin["Excel Custom Functions Engine (=TGS.*)"]
-        Engine --> SSEStream["SSE & NDJSON Real-time Streaming Gateway"]
-        Engine --> PlannerSync["Microsoft Planner & To-Do Synchronizer"]
-        Engine --> IncidentDbg["Teams CI/CD Incident Auto-Debugger"]
-        Engine --> HWTelemetry["Copilot+ PC NPU/DirectML Telemetry & CO2"]
+flowchart TD
+    subgraph M365["Microsoft 365 Enterprise Ecosystem"]
+        Teams["Microsoft Teams / Bot Webhook"]
+        Copilot["M365 Copilot Studio / Declarative Agent"]
+        SharePoint["SharePoint & OneDrive"]
+        Planner["Microsoft Planner & To-Do"]
+        Sentinel["Microsoft Sentinel / Azure Monitor SIEM"]
+        AdminCenter["M365 Admin Center / Marketplace"]
     end
-    
-    subgraph "Microsoft Graph, OneNote, Planner & Identity Plane"
-        Engine --> GraphClient["Microsoft Graph REST Client"]
-        GraphClient --> Entra["Microsoft Entra ID (OAuth2 Device Code Flow)"]
-        GraphClient --> TeamsAPI["Microsoft Teams API (Chat, Channels & Cards)"]
-        GraphClient --> SPAPI["SharePoint / OneDrive REST API"]
-        GraphClient --> OneNoteAPI["Microsoft OneNote API (ADR Sync)"]
-        GraphClient --> MailAPI["Outlook Mail API (HTML Reports & Decks)"]
-        GraphClient --> PlannerAPI["Planner & To-Do Task REST APIs"]
-        Engine --> Connector["Microsoft Search Graph Connector Engine"]
+
+    subgraph AuthLayer["Enterprise Identity & Governance"]
+        Entra["Entra ID / MSAL"]
+        OBO["On-Behalf-Of (OBO) JWT Bearer Flow"]
+        X509["X.509 Client Certificate Assertion"]
+        Purview["Microsoft Purview Dynamic Label Taxonomy"]
     end
+
+    subgraph TagisanCore["Tagisan Copilot Subsystem (tgs)"]
+        Throttler["429 Adaptive Throttler & Token Bucket"]
+        Webhook["Graph Webhook Subscription Lifecycle Engine"]
+        AgentShield["AgentShield Enterprise DLP Gate"]
+        SIEM["Sentinel CEF / RFC 5424 SIEM Telemetry Bridge"]
+        Attestation["App Compliance & Attestation Engine"]
+        Tools21["21 Autonomous Copilot MCP Tools"]
+    end
+
+    Copilot -->|User JWT| OBO
+    OBO -->|Graph Bearer Token| Throttler
+    X509 -->|Client Assertion| Entra
+    Throttler -->|Rate-Limited API Requests| Teams
+    Throttler -->|Ingestion & Sanitization| SharePoint
+    Webhook -->|Validation Handshake (<10s)| Teams
+    TagisanCore -->|CEF / RFC 5424 Security Events| Sentinel
+    Purview -->|GUID Policy Binding| AgentShield
+    Attestation -->|compliance.json & Attestation| AdminCenter
 ```
 
 ### 🚀 Core Enterprise Scenarios & Autonomous Pipelines
@@ -697,9 +691,32 @@ graph TD
     - Benchmarks local inference against 8x H100 datacenter clusters, modeling dollars saved and grams of CO2 emissions avoided.
     - Computes a cryptographic **Data Sovereignty Score (100% Air-Gapped)** and generates an executive Fluent UI Adaptive Card.
 
+16. **Entra ID On-Behalf-Of (OBO) Flow & Certificate Assertions (`tgs copilot obo` / `copilot_obo_exchange`):**
+    - RFC 7523 OAuth2 JWT bearer token exchange preserving user security context (UPN, OID, tenant, roles, scopes) across downstream Microsoft Graph calls.
+    - X.509 client certificate assertion with SHA-1/SHA-256 thumbprints for zero-password production daemon authentication.
+
+17. **Microsoft Graph Webhook Subscriptions & Handshake Engine (`tgs copilot subscribe` / `copilot_subscription_manage`):**
+    - High-speed validation challenge handler responding to `validationToken` in <10 seconds.
+    - Full lifecycle management (create, renew, delete, list) for online meetings, SharePoint drives, and Teams chats with HMAC-SHA256 `clientState` signature verification.
+
+18. **Microsoft Graph 429 Adaptive Throttling & Token Bucket Rate Limiting:**
+    - Per-resource token bucket rate limiters intercepting HTTP 429 status codes.
+    - Parses integer, float, and RFC 2822/3339 `Retry-After` headers with truncated exponential backoff and full jitter to eliminate thundering herds.
+
+19. **Dynamic Microsoft Purview Sensitivity Taxonomy Synchronization (`tgs copilot sync-labels` / `copilot_purview_sync`):**
+    - Queries `/informationProtection/policy/labels` to synchronize tenant custom sensitivity labels and GUIDs directly to local Zero-Egress air-gap policies.
+
+20. **Microsoft Sentinel CEF, RFC 5424 & Azure Monitor SIEM Telemetry Bridge (`tgs copilot sentinel` / `copilot_sentinel_audit`):**
+    - Structured security event telemetry formatted in Common Event Format (CEF:0), RFC 5424 Syslog, and Azure Monitor DCR custom log formats.
+    - Emits real-time audit events for AST blast-radius calculations, DLP blocks, Purview air-gap triggers, and autonomous PR commits.
+
+21. **M365 Admin Center App Compliance & Publisher Attestation (`tgs copilot certify` / `copilot_certify`):**
+    - Automated compliance generator emitting `compliance.json` for Microsoft Partner Center certification.
+    - Attests MPN ID, valid domains, SOC 2 Type II, ISO/IEC 27001:2022, GDPR, HIPAA, and zero-retention ephemeral storage policies.
+
 ### 🛠️ Registered Autonomous Copilot Tools
 
-All 16 Copilot tools are first-class citizens in Tagisan's `ToolRegistry` and exposed via Model Context Protocol (MCP):
+All 21 Copilot tools are first-class citizens in Tagisan's `ToolRegistry` and exposed via Model Context Protocol (MCP):
 
 | Tool Identifier | Description | DLP & Policy Enforcement |
 | :--- | :--- | :--- |
@@ -719,6 +736,11 @@ All 16 Copilot tools are first-class citizens in Tagisan's `ToolRegistry` and ex
 | `copilot_planner_sync` | Synchronize action items and tasks to Microsoft Planner buckets and To-Do lists | Outbound Secret Scanned |
 | `copilot_incident_debugger` | Ingest CI/CD logs, synthesize autofix diffs, and generate Adaptive Cards with Action.Submit | Patch Sanitized & Verified |
 | `copilot_hardware_telemetry` | Measure Copilot+ PC NPU/DirectML telemetry, energy savings vs H100s, and CO2 avoided | Invariant Verified |
+| `copilot_obo_exchange` | Exchange incoming Copilot user JWT for downstream Graph token via OBO flow | User Security Context Preserved |
+| `copilot_subscription_manage` | Manage Graph webhook subscriptions and handle validation challenge handshakes (<10s) | HMAC-SHA256 Verified |
+| `copilot_purview_sync` | Dynamically synchronize tenant Purview sensitivity taxonomy from Graph API | Tenant Policy Bound |
+| `copilot_sentinel_audit` | Emit structured CEF:0, RFC 5424, and Azure Monitor DCR SIEM security events | Cryptographically Audited |
+| `copilot_certify` | Audit and certify Microsoft 365 Admin Center App Compliance and Publisher Attestation | Partner Center Certified |
 
 ### 💻 CLI Usage Guide (`tgs copilot`)
 
@@ -783,7 +805,26 @@ tgs copilot incident --log-file "ci_failure.log" --channel "incident-response"
 # 19. Inspect Windows Copilot+ PC hardware telemetry, NPU acceleration, and CO2 savings
 tgs copilot hardware --prompt-tokens 50000 --completion-tokens 10000
 
-# 20. Run built-in Copilot subsystem self-test suite
+# 20. On-Behalf-Of (OBO) Token Exchange with downstream Graph scopes
+tgs copilot obo --assertion "eyJhbGciOiJSUzI1NiIs..." --scopes "User.Read Files.Read.All" --use-cert
+
+# 21. Manage Microsoft Graph Webhook Subscriptions & Handle Challenge
+tgs copilot subscribe --action create --resource "me/onlineMeetings" --notification-url "https://api.tagisan.ai/copilot/webhook"
+tgs copilot subscribe --action list
+tgs copilot subscribe --action validate_challenge --validation-token "CHALLENGE_TOKEN_XYZ"
+
+# 22. Emit Microsoft Sentinel & Azure Monitor SIEM Telemetry
+tgs copilot sentinel --event-type ast_blast_radius --severity High --message "Refactoring EntraAuthManager impacts 14 dependents" --format cef
+
+# 23. Synchronize Tenant Purview Sensitivity Label Taxonomy
+tgs copilot sync-labels --action sync
+tgs copilot sync-labels --action list
+
+# 24. Certify and Export M365 Admin Center Compliance Bundle
+tgs copilot certify --action audit
+tgs copilot certify --action export --output-dir ".tagisan/copilot_package"
+
+# 25. Run built-in Copilot subsystem self-test suite
 tgs copilot test
 ```
 

@@ -973,6 +973,86 @@ pub enum CopilotAction {
         #[arg(long, default_value = "text")]
         format: String,
     },
+
+    /// Audit and certify Microsoft 365 Admin Center App Compliance & Publisher Attestation
+    Certify {
+        /// Target directory to export compliance.json (default: '.tagisan/copilot_package')
+        #[arg(long, default_value = ".tagisan/copilot_package")]
+        output_dir: String,
+
+        /// Format of report: 'text', 'json', or 'all' (default: 'all')
+        #[arg(long, default_value = "all")]
+        format: String,
+    },
+
+    /// Exchange incoming Copilot user JWT for downstream Microsoft Graph token via On-Behalf-Of (OBO) flow
+    Obo {
+        /// Incoming Microsoft 365 Copilot Bearer user JWT assertion
+        #[arg(long)]
+        assertion: String,
+
+        /// Downstream Microsoft Graph scopes to acquire
+        #[arg(long, value_delimiter = ' ')]
+        scopes: Option<Vec<String>>,
+
+        /// Use X.509 client certificate assertion instead of client secret
+        #[arg(long)]
+        use_cert: bool,
+    },
+
+    /// Manage Microsoft Graph webhook subscriptions and handle challenge handshakes
+    Subscribe {
+        /// Lifecycle action: 'create', 'renew', 'delete', 'list', 'validate_challenge'
+        #[arg(long, default_value = "list")]
+        action: String,
+
+        /// Target resource (e.g. 'me/onlineMeetings', 'chats/getAllMessages', 'drives/root')
+        #[arg(long)]
+        resource: Option<String>,
+
+        /// Webhook callback HTTPS URL
+        #[arg(long)]
+        notification_url: Option<String>,
+
+        /// Subscription GUID for renewal or deletion
+        #[arg(long)]
+        subscription_id: Option<String>,
+
+        /// Validation token from Graph challenge
+        #[arg(long)]
+        validation_token: Option<String>,
+
+        /// Custom clientState string or secret
+        #[arg(long)]
+        client_state: Option<String>,
+    },
+
+    /// Emit and query Microsoft Sentinel & Azure Monitor SIEM security telemetry events
+    Sentinel {
+        /// Security event type: 'ast_blast_radius', 'dlp_interception', 'purview_airgap', 'patch_commit'
+        #[arg(long, default_value = "ast_blast_radius")]
+        event_type: String,
+
+        /// Severity level: 'Low', 'Medium', 'High', 'Critical' (default: 'Medium')
+        #[arg(long, default_value = "Medium")]
+        severity: String,
+
+        /// Human-readable event summary
+        #[arg(long)]
+        message: Option<String>,
+
+        /// Log format: 'cef', 'rfc5424', 'azure_monitor', 'all' (default: 'cef')
+        #[arg(long, default_value = "cef")]
+        format: String,
+    },
+
+    /// Synchronize tenant Microsoft Purview sensitivity label taxonomy from Microsoft Graph
+    #[command(name = "sync-labels")]
+    SyncLabels {
+        /// Action to perform: 'sync', 'list', or 'resolve'
+        #[arg(long, default_value = "sync")]
+        action: String,
+    },
 }
 
 
@@ -5658,6 +5738,86 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
                 "format": format,
             });
 
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Certify { output_dir, format: _ } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🏅 MICROSOFT 365 ADMIN CENTER APP COMPLIANCE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::plugin::CopilotCertifyTool::new();
+            let args = serde_json::json!({
+                "action": "export",
+                "output_dir": output_dir,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Obo { assertion, scopes, use_cert } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🔑 ENTRA ID ON-BEHALF-OF (OBO) TOKEN EXCHANGE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::obo::CopilotOboExchangeTool::new();
+            let args = serde_json::json!({
+                "user_jwt": assertion,
+                "scopes": scopes,
+                "use_certificate": use_cert,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Subscribe { action, resource, notification_url, subscription_id, validation_token, client_state } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📡 MICROSOFT GRAPH WEBHOOK SUBSCRIPTIONS".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::subscriptions::CopilotSubscriptionTool::new();
+            let args = serde_json::json!({
+                "action": action,
+                "resource": resource,
+                "notification_url": notification_url,
+                "subscription_id": subscription_id,
+                "validation_token": validation_token,
+                "client_state": client_state,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Sentinel { event_type, severity, message, format } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🛡️ MICROSOFT SENTINEL SIEM TELEMETRY BRIDGE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::sentinel::CopilotSentinelAuditTool::new();
+            let args = serde_json::json!({
+                "action": "emit",
+                "event_type": event_type,
+                "severity": severity,
+                "summary": message,
+                "format": format,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::SyncLabels { action } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🏷️ MICROSOFT PURVIEW SENSITIVITY TAXONOMY SYNC".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::purview::CopilotPurviewSyncTool::new();
+            let args = serde_json::json!({ "action": action });
             let out = tool.execute(args).await?;
             println!("\n{out}");
         }
