@@ -1116,6 +1116,87 @@ pub enum CopilotAction {
         #[arg(long, default_value = "briefing")]
         base_name: String,
     },
+
+    /// Synchronize Work Items, queries, and PR policy links with Microsoft Azure DevOps (dev.azure.com)
+    Ado {
+        /// Action: 'create_work_item', 'query_work_items', 'link_pr', 'sync_action_items'
+        #[arg(long, default_value = "query_work_items")]
+        action: String,
+
+        /// Title for work item
+        #[arg(long)]
+        title: Option<String>,
+
+        /// WIQL query
+        #[arg(long)]
+        wiql: Option<String>,
+    },
+
+    /// Ingest repository documentation, ADRs, and blast radius into Microsoft Substrate & Copilot Semantic Index
+    Substrate {
+        /// Action: 'register_schema', 'ingest_item', 'index_repo'
+        #[arg(long, default_value = "index_repo")]
+        action: String,
+
+        /// Connection ID
+        #[arg(long, default_value = "tagisan_enterprise_codebase")]
+        connection_id: String,
+    },
+
+    /// Windows Web Account Manager (WAM) silent SSO & Primary Refresh Token (PRT) broker
+    Wam {
+        /// Action: 'get_status', 'acquire_token_silent', 'stepup_auth'
+        #[arg(long, default_value = "get_status")]
+        action: String,
+    },
+
+    /// Microsoft IcM (Incident Management) bridge: ingest incidents, correlate Git commits, generate PIRs
+    Icm {
+        /// Action: 'ingest', 'generate_pir', 'war_room_card'
+        #[arg(long, default_value = "generate_pir")]
+        action: String,
+
+        /// Incident ID
+        #[arg(long, default_value_t = 384729104)]
+        incident_id: u64,
+
+        /// Severity level (1, 2, 3)
+        #[arg(long, default_value_t = 2)]
+        severity: u32,
+    },
+
+    /// Microsoft 1ES Security Development Lifecycle (SDL) CredScan, PoliCheck, and SPDX SBOM
+    Sdl {
+        /// Action: 'credscan', 'policheck', 'sbom', 'full_sdl'
+        #[arg(long, default_value = "full_sdl")]
+        action: String,
+
+        /// Target file path to audit
+        #[arg(long, default_value = "src/lib.rs")]
+        file_path: String,
+    },
+
+    /// Generate Microsoft Copilot Studio OpenAPI 3.0 specification and build 1-click plugin ZIP bundle
+    Studio {
+        /// Action: 'generate_openapi', 'package_zip'
+        #[arg(long, default_value = "package_zip")]
+        action: String,
+
+        /// Output directory for ZIP bundle
+        #[arg(long, default_value = ".tagisan/copilot_studio_export")]
+        output_dir: String,
+    },
+
+    /// Synchronize metrics to Microsoft Viva Goals (OKRs) and generate Viva Insights 1:1 agendas
+    Viva {
+        /// Action: 'sync_okr', 'generate_1on1', 'viva_card'
+        #[arg(long, default_value = "sync_okr")]
+        action: String,
+
+        /// Goal ID
+        #[arg(long, default_value = "Copilot-Test-Pass-Rate")]
+        goal_id: String,
+    },
 }
 
 
@@ -6060,6 +6141,114 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
                 "title": title,
                 "output_dir": output_dir,
                 "base_name": base_name,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Ado { action, title, wiql } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🎯 AZURE DEVOPS (ADO / 1ES) WORK ITEMS & PR POLICY".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::ado::CopilotAdoSyncTool::default();
+            let mut args = serde_json::json!({ "action": action });
+            if let Some(t) = title {
+                args["title"] = serde_json::Value::String(t);
+            }
+            if let Some(w) = wiql {
+                args["wiql"] = serde_json::Value::String(w);
+            }
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Substrate { action, connection_id } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🌐 MICROSOFT SUBSTRATE COPILOT SEMANTIC INDEX INGESTOR".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::substrate::CopilotSubstrateIngestTool::default();
+            let args = serde_json::json!({
+                "action": action,
+                "connection_id": connection_id,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Wam { action } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🪟 WINDOWS WEB ACCOUNT MANAGER (WAM) SILENT SSO BROKER".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::wam::CopilotWamAuthTool::default();
+            let args = serde_json::json!({ "action": action });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Icm { action, incident_id, severity } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🚨 MICROSOFT ICM INCIDENT & WAR ROOM BRIDGE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::icm::CopilotIcmBridgeTool::default();
+            let args = serde_json::json!({
+                "action": action,
+                "incident_id": incident_id,
+                "severity": severity,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Sdl { action, file_path } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🛡️ MICROSOFT 1ES SDL (CREDSCAN, POLICHECK & SPDX SBOM)".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::sdl::CopilotSdlAuditTool::default();
+            let content = std::fs::read_to_string(&file_path).unwrap_or_else(|_| "// Empty or virtual content\n".to_string());
+            let args = serde_json::json!({
+                "action": action,
+                "file_path": file_path,
+                "content": content,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Studio { action, output_dir } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📦 MICROSOFT COPILOT STUDIO OPENAPI 3.0 & PLUGIN PACKAGER".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::studio::CopilotStudioPackagerTool::default();
+            let args = serde_json::json!({
+                "action": action,
+                "output_dir": output_dir,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Viva { action, goal_id } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🎯 MICROSOFT VIVA GOALS & INSIGHTS 1:1 SYNC".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::viva::CopilotVivaSyncTool::default();
+            let args = serde_json::json!({
+                "action": action,
+                "goal_id": goal_id,
             });
             let out = tool.execute(args).await?;
             println!("\n{out}");

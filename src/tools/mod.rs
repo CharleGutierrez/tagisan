@@ -237,6 +237,14 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotOutlookDraftTool::default());
         registry.register_tool(crate::copilot::CopilotFabricQueryTool::default());
         registry.register_tool(crate::copilot::CopilotPermsAuditorTool::default());
+        // Phase 6 Microsoft Employee & CorpNet Enterprise Copilot Expansion Tools (7 tools -> 43 total)
+        registry.register_tool(crate::copilot::CopilotAdoSyncTool::default());
+        registry.register_tool(crate::copilot::CopilotSubstrateIngestTool::default());
+        registry.register_tool(crate::copilot::CopilotWamAuthTool::default());
+        registry.register_tool(crate::copilot::CopilotIcmBridgeTool::default());
+        registry.register_tool(crate::copilot::CopilotSdlAuditTool::default());
+        registry.register_tool(crate::copilot::CopilotStudioPackagerTool::default());
+        registry.register_tool(crate::copilot::CopilotVivaSyncTool::default());
         registry
     }
 
@@ -371,6 +379,14 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotOutlookDraftTool::default());
         registry.register_tool(crate::copilot::CopilotFabricQueryTool::default());
         registry.register_tool(crate::copilot::CopilotPermsAuditorTool::default());
+        // Phase 6 Microsoft Employee & CorpNet Enterprise Copilot Expansion Tools (7 tools -> 43 total)
+        registry.register_tool(crate::copilot::CopilotAdoSyncTool::default());
+        registry.register_tool(crate::copilot::CopilotSubstrateIngestTool::default());
+        registry.register_tool(crate::copilot::CopilotWamAuthTool::default());
+        registry.register_tool(crate::copilot::CopilotIcmBridgeTool::default());
+        registry.register_tool(crate::copilot::CopilotSdlAuditTool::default());
+        registry.register_tool(crate::copilot::CopilotStudioPackagerTool::default());
+        registry.register_tool(crate::copilot::CopilotVivaSyncTool::default());
         registry
     }
 

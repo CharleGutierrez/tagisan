@@ -101,6 +101,16 @@ use tagisan::copilot::perms_auditor::{
 use tagisan::copilot::sharepoint_crawler::{
     CopilotSharepointCrawlerTool, SharePointCrawlerEngine, SharePointSiteCrawlerConfig,
 };
+use tagisan::copilot::ado::{AdoEngine, CopilotAdoSyncTool};
+use tagisan::copilot::icm::{IcmEngine, CopilotIcmBridgeTool};
+use tagisan::copilot::sdl::{SdlEngine, CopilotSdlAuditTool};
+use tagisan::copilot::studio::{CopilotStudioEngine, CopilotStudioPackagerTool};
+use tagisan::copilot::substrate::{
+    SubstrateAcl, SubstrateContent, SubstrateEngine, SubstrateItem, SubstratePropertySchema,
+    CopilotSubstrateIngestTool,
+};
+use tagisan::copilot::viva::{VivaEngine, CopilotVivaSyncTool};
+use tagisan::copilot::wam::{WamBrokerEngine, WamTokenRequest, CopilotWamAuthTool};
 
 
 // =========================================================================
@@ -3524,6 +3534,383 @@ async fn test_full_suite_all_36_tools_concurrent_stress_50_workers() {
 
     println!("  [✓] 50 Workers completed concurrent stress test across ALL 36 Copilot tools in {:.2?} (0 deadlocks, 0 race conditions, 100% reliable)", elapsed);
 }
+
+// =========================================================================
+// Test 50: Azure DevOps (ADO / 1ES) Work Items, Sprints & PR Policy Sync
+// =========================================================================
+#[tokio::test]
+async fn test_azure_devops_work_items_and_pr_policy_sync() {
+    println!("\n=== [TEST 50] Azure DevOps (ADO / 1ES) Work Items & PR Policy Sync ===");
+
+    let engine = AdoEngine::default();
+
+    // 1. Direct Engine: Create Work Item
+    let wi = engine.create_work_item(
+        "User Story",
+        "Enforce zero-cloud-egress hardware airgap",
+        "Local NPU execution without WAN egress",
+        1,
+        Some("1ES-Tagisan\\Security"),
+        Some("1ES-Tagisan\\Sprint 42"),
+        &["Security".to_string(), "Purview".to_string()],
+    ).await.expect("Create work item failed");
+
+    assert_eq!(wi.work_item_type, "User Story");
+    assert_eq!(wi.priority, 1);
+    assert!(wi.area_path.contains("Security"));
+    assert!(wi.iteration_path.contains("Sprint 42"));
+
+    // 2. Direct Engine: Link PR to Work Item
+    let linked_wi = engine.link_pr_to_work_item(wi.id, 104, "Tagisan").await.expect("Link PR failed");
+    assert_eq!(linked_wi.relations.len(), 1);
+    assert_eq!(linked_wi.relations[0].rel, "ArtifactLink");
+    assert!(linked_wi.relations[0].url.contains("vstfs:///Git/PullRequestId"));
+
+    // 3. Autonomous Tool: CopilotAdoSyncTool
+    let tool = CopilotAdoSyncTool::default();
+
+    // 3a. Action: create_work_item
+    let out_create = tool.execute(serde_json::json!({
+        "action": "create_work_item",
+        "work_item_type": "Bug",
+        "title": "Fix Purview sensitivity label in OOXML exports",
+        "priority": 1
+    })).await.expect("Tool create_work_item failed");
+    assert!(out_create.contains("Azure DevOps Work Item Created"));
+    assert!(out_create.contains("Fix Purview sensitivity label"));
+
+    // 3b. Action: query_work_items
+    let out_query = tool.execute(serde_json::json!({
+        "action": "query_work_items"
+    })).await.expect("Tool query_work_items failed");
+    assert!(out_query.contains("Azure DevOps Query Results"));
+    assert!(out_query.contains("1948201"));
+
+    // 3c. Action: link_pr
+    let out_link = tool.execute(serde_json::json!({
+        "action": "link_pr",
+        "work_item_id": 1948201,
+        "pr_id": 42
+    })).await.expect("Tool link_pr failed");
+    assert!(out_link.contains("Azure DevOps Pull Request Linked to Work Item"));
+    assert!(out_link.contains("Resolved"));
+
+    // 3d. Action: sync_action_items
+    let out_sync = tool.execute(serde_json::json!({
+        "action": "sync_action_items"
+    })).await.expect("Tool sync_action_items failed");
+    assert!(out_sync.contains("Azure DevOps Action Items Synced to Backlog"));
+    println!("  [✓] Azure DevOps (ADO / 1ES) Work Item and PR policy linkage verified!");
+}
+
+// =========================================================================
+// Test 51: Microsoft Substrate Copilot Semantic Index Ingestion
+// =========================================================================
+#[tokio::test]
+async fn test_substrate_copilot_semantic_index_ingestion() {
+    println!("\n=== [TEST 51] Microsoft Substrate Copilot Semantic Index Ingestion ===");
+
+    let engine = SubstrateEngine::default();
+
+    // 1. Direct Engine: Register Schema
+    let schema = vec![
+        SubstratePropertySchema {
+            name: "title".to_string(),
+            property_type: "String".to_string(),
+            is_searchable: true,
+            is_queryable: true,
+            is_retrievable: true,
+            is_refinable: false,
+        },
+        SubstratePropertySchema {
+            name: "blastRisk".to_string(),
+            property_type: "String".to_string(),
+            is_searchable: true,
+            is_queryable: true,
+            is_retrievable: true,
+            is_refinable: true,
+        },
+    ];
+    let schema_res = engine.register_schema(&schema).await.expect("Schema registration failed");
+    assert!(schema_res.contains("registered successfully"));
+
+    // 2. Direct Engine: Ingest Item
+    let mut props = std::collections::HashMap::new();
+    props.insert("title".to_string(), serde_json::json!("Zero-Cloud-Egress Specification"));
+    props.insert("blastRisk".to_string(), serde_json::json!("Low"));
+    let item = SubstrateItem {
+        id: "tgs-spec-airgap-01".to_string(),
+        properties: props,
+        content: SubstrateContent {
+            content_type: "text".to_string(),
+            value: "Hardware airgap isolation rules for TopSecret workloads.".to_string(),
+        },
+        acl: vec![SubstrateAcl {
+            access_type: "grant".to_string(),
+            identity_type: "everyone".to_string(),
+            value: "everyone".to_string(),
+        }],
+    };
+    let ingest_res = engine.ingest_item(&item).await.expect("Ingest item failed");
+    assert!(ingest_res.contains("successfully indexed into Microsoft Substrate"));
+
+    // 3. Autonomous Tool: CopilotSubstrateIngestTool
+    let tool = CopilotSubstrateIngestTool::default();
+
+    let out_index = tool.execute(serde_json::json!({
+        "action": "index_repo"
+    })).await.expect("Tool index_repo failed");
+    assert!(out_index.contains("Microsoft Substrate Semantic Indexing Complete"));
+    assert!(out_index.contains("tgs-doc-arch-001"));
+    assert!(out_index.contains("Ambient Discovery Active"));
+    println!("  [✓] Microsoft Substrate Semantic Index ingestion and Copilot BizChat grounding verified!");
+}
+
+// =========================================================================
+// Test 52: Windows Web Account Manager (WAM) Silent SSO & CAE Step-up
+// =========================================================================
+#[tokio::test]
+async fn test_windows_wam_prt_sso_and_cae_stepup() {
+    println!("\n=== [TEST 52] Windows Web Account Manager (WAM) Silent SSO & CAE Step-Up ===");
+
+    let engine = WamBrokerEngine::default();
+
+    // 1. Direct Engine: Discover Account
+    let account = engine.get_default_account().expect("Discover account failed");
+    assert!(account.is_aad_joined);
+    assert!(account.has_prt);
+    assert_eq!(account.device_compliance_state, "Compliant");
+
+    // 2. Direct Engine: Acquire Token Silent
+    let req = WamTokenRequest {
+        client_id: engine.default_client_id.clone(),
+        tenant_id: engine.default_tenant.clone(),
+        scopes: vec!["https://graph.microsoft.com/.default".to_string()],
+        claims_challenge: None,
+        force_refresh: false,
+    };
+    let token_resp = engine.acquire_token_silent(&req).await.expect("Silent token acquisition failed");
+    assert!(token_resp.is_silent);
+    assert!(token_resp.prt_backed);
+    assert!(token_resp.access_token.starts_with("wam_prt_ey0e_"));
+
+    // 3. Direct Engine: Handle CAE Step-up
+    let stepup_resp = engine.handle_cae_stepup("eyJhY2NycyI6eyJ4bXNfY2FlIjp7InZhbCI6IjEifX19").await.expect("Stepup failed");
+    assert!(stepup_resp.biometric_verified);
+    assert!(stepup_resp.device_compliance_state.contains("Windows Hello"));
+
+    // 4. Autonomous Tool: CopilotWamAuthTool
+    let tool = CopilotWamAuthTool::default();
+
+    let out_status = tool.execute(serde_json::json!({ "action": "get_status" })).await.expect("Tool status failed");
+    assert!(out_status.contains("Windows Web Account Manager (WAM) Identity Status"));
+    assert!(out_status.contains("Primary Refresh Token (PRT)"));
+
+    let out_token = tool.execute(serde_json::json!({ "action": "acquire_token_silent" })).await.expect("Tool acquire_token failed");
+    assert!(out_token.contains("WAM Silent SSO Token Acquired (Zero Prompts)"));
+    assert!(out_token.contains("TPM Hardware PRT"));
+    println!("  [✓] Windows Web Account Manager (WAM) silent PRT SSO and CAE step-up verified!");
+}
+
+// =========================================================================
+// Test 53: Microsoft IcM Live-Site Incident & War Room Bridge
+// =========================================================================
+#[tokio::test]
+async fn test_microsoft_icm_incident_and_pir_war_room_bridge() {
+    println!("\n=== [TEST 53] Microsoft IcM Incident & War Room Bridge ===");
+
+    let engine = IcmEngine::default();
+
+    // 1. Direct Engine: Ingest Incident
+    let mut incident = engine.ingest_incident(r#"{
+        "incident_id": 384729104,
+        "severity": 1,
+        "title": "Authentication Token Exchange Gateway 429 Spikes",
+        "summary": "Severe customer throttling detected across East US 2.",
+        "owning_service": "Entra-Core-Auth",
+        "owning_team": "Identity-Foundations",
+        "status": "Active",
+        "occurred_at": "2026-09-16T00:00:00Z",
+        "impacted_regions": ["East US 2", "West Europe"],
+        "correlated_commit": null
+    }"#).expect("Ingest incident failed");
+    assert_eq!(incident.incident_id, 384729104);
+    assert_eq!(incident.severity, 1);
+
+    // 2. Correlate with Git Commit
+    let commit = engine.correlate_with_git(&mut incident, std::path::Path::new(".")).expect("Correlation failed");
+    assert!(commit.is_some());
+    assert_eq!(incident.correlated_commit, commit);
+
+    // 3. Generate PIR (5 Whys Analysis)
+    let pir = engine.generate_pir(&incident, None).expect("Generate PIR failed");
+    assert_eq!(pir.root_cause_5_whys.len(), 5);
+    assert!(!pir.timeline.is_empty());
+    assert!(!pir.mitigation_steps.is_empty());
+
+    // 4. Generate Teams War Room Adaptive Card
+    let card = engine.generate_war_room_adaptive_card(&incident, Some(&pir)).expect("Generate card failed");
+    assert_eq!(card["type"], "AdaptiveCard");
+    assert_eq!(card["version"], "1.5");
+
+    // 5. Autonomous Tool: CopilotIcmBridgeTool
+    let tool = CopilotIcmBridgeTool::default();
+    let out_pir = tool.execute(serde_json::json!({
+        "action": "generate_pir",
+        "incident_id": 384729104,
+        "severity": 1
+    })).await.expect("Tool generate_pir failed");
+    assert!(out_pir.contains("Microsoft IcM Post-Incident Review (PIR)"));
+    assert!(out_pir.contains("Root Cause (5 Whys Analysis)"));
+
+    let out_card = tool.execute(serde_json::json!({
+        "action": "war_room_card"
+    })).await.expect("Tool war_room_card failed");
+    assert!(out_card.contains("Teams Incident Bridge Adaptive Card v1.5 Generated"));
+    println!("  [✓] Microsoft IcM incident correlation, PIR drafting, and Teams War Room card verified!");
+}
+
+// =========================================================================
+// Test 54: Microsoft 1ES SDL CredScan, PoliCheck & SPDX SBOM Engine
+// =========================================================================
+#[tokio::test]
+async fn test_1es_sdl_credscan_policheck_and_spdx_sbom_engine() {
+    println!("\n=== [TEST 54] Microsoft 1ES SDL CredScan, PoliCheck & SPDX SBOM Engine ===");
+
+    let engine = SdlEngine::default();
+
+    // 1. Direct Engine: CredScan Detection
+    let dirty_code = r#"
+        let conn_str = "DefaultEndpointsProtocol=https;AccountName=prodstorage;AccountKey=dGhpcyBpcyBhIHZhbGlkIGtleSBmb3IgdGVzdGluZyByZWFsaXNtMQ==";
+        let priv_key = "-----BEGIN RSA PRIVATE KEY-----";
+        let sas_token = "sv=2024-08-04&ss=b&srt=sco&sp=rwdlac&se=2026-09-16T12:00:00Z&st=2026-09-16T04:00:00Z&spr=https&sig=abc123def456";
+    "#;
+    let creds = engine.scan_credentials(dirty_code, "test_file.rs");
+    assert!(creds.len() >= 3);
+    assert!(creds.iter().any(|c| c.rule_id == "SEC-CS-001"));
+    assert!(creds.iter().any(|c| c.rule_id == "SEC-CS-002"));
+    assert!(creds.iter().any(|c| c.rule_id == "SEC-CS-003"));
+
+    // 2. Direct Engine: PoliCheck Detection
+    let non_inclusive_code = "fn check_nodes() { let whitelist = vec![\"node1\"]; let master = true; }";
+    let poli = engine.scan_policheck(non_inclusive_code, "nodes.rs");
+    assert!(poli.len() >= 2);
+    assert!(poli.iter().any(|p| p.term == "whitelist"));
+    assert!(poli.iter().any(|p| p.term == "master"));
+
+    // 3. Direct Engine: SPDX 2.3 SBOM
+    let lock_mock = "name = \"tagisan\"\nname = \"tokio\"\nname = \"serde\"\n";
+    let (sbom_json, pkg_count) = engine.generate_spdx_sbom(lock_mock);
+    assert_eq!(sbom_json["spdxVersion"], "SPDX-2.3");
+    assert_eq!(pkg_count, 3);
+
+    // 4. Autonomous Tool: CopilotSdlAuditTool
+    let tool = CopilotSdlAuditTool::default();
+
+    // Clean code test
+    let clean_out = tool.execute(serde_json::json!({
+        "action": "full_sdl",
+        "file_path": "src/copilot/mod.rs",
+        "content": "// Tagisan production code\npub fn verify_formal_invariants() -> bool { true }\n"
+    })).await.expect("Tool full_sdl failed");
+    assert!(clean_out.contains("PASSED"));
+    assert!(clean_out.contains("Merge Approved"));
+
+    // Dirty code test (CredScan failure)
+    let dirty_out = tool.execute(serde_json::json!({
+        "action": "credscan",
+        "file_path": "test.rs",
+        "content": "let k = \"DefaultEndpointsProtocol=https;AccountName=secret;AccountKey=YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY3ODkw\";"
+    })).await.expect("Tool credscan failed");
+    assert!(dirty_out.contains("Violations Detected"));
+    println!("  [✓] Microsoft 1ES SDL CredScan, PoliCheck, and SPDX 2.3 SBOM verified!");
+}
+
+// =========================================================================
+// Test 55: Microsoft Copilot Studio OpenAPI 3.0 & Plugin Packager
+// =========================================================================
+#[tokio::test]
+async fn test_copilot_studio_openapi_plugin_packager_zip() {
+    println!("\n=== [TEST 55] Microsoft Copilot Studio OpenAPI 3.0 & Plugin Packager ===");
+
+    let engine = CopilotStudioEngine::default();
+
+    // 1. Direct Engine: Generate OpenAPI 3.0 Spec
+    let (spec, count) = engine.generate_openapi_3_0_spec("https://tagisan.microsoft.com/api/v1");
+    assert_eq!(spec["openapi"], "3.0.3");
+    assert!(count >= 6);
+    assert!(spec["paths"]["/copilot/ado/sync"].is_object());
+    assert!(spec["paths"]["/copilot/substrate/ingest"].is_object());
+    assert!(spec["components"]["securitySchemes"]["OAuth2"].is_object());
+
+    // 2. Direct Engine: Package Plugin ZIP
+    let export_dir = std::path::PathBuf::from(".tagisan/test_copilot_studio_export");
+    let report = engine.package_plugin_zip(&export_dir).expect("Package plugin failed");
+    assert!(report.ready_for_copilot_studio);
+    assert!(report.total_bytes > 0);
+
+    // Verify PKZIP local file header
+    let zip_bytes = std::fs::read(&report.package_path).expect("Read zip bytes failed");
+    assert_eq!(&zip_bytes[0..4], b"PK\x03\x04", "Plugin bundle must have valid PKZIP header");
+
+    // 3. Autonomous Tool: CopilotStudioPackagerTool
+    let tool = CopilotStudioPackagerTool::default();
+    let out_pack = tool.execute(serde_json::json!({
+        "action": "package_zip",
+        "output_dir": ".tagisan/test_copilot_studio_tool_export"
+    })).await.expect("Tool package_zip failed");
+    assert!(out_pack.contains("Microsoft Copilot Studio Plugin ZIP Packaged"));
+    assert!(out_pack.contains("ai-plugin.json"));
+    assert!(out_pack.contains("1-Click Import"));
+    println!("  [✓] Microsoft Copilot Studio OpenAPI 3.0 spec and valid PKZIP bundle verified!");
+}
+
+// =========================================================================
+// Test 56: Microsoft Viva Goals OKR & Viva Insights 1:1 Sync
+// =========================================================================
+#[tokio::test]
+async fn test_viva_goals_okr_and_insights_sync() {
+    println!("\n=== [TEST 56] Microsoft Viva Goals OKR & Viva Insights 1:1 Sync ===");
+
+    let engine = VivaEngine::default();
+
+    // 1. Direct Engine: Sync OKR
+    let goal = engine.sync_okr("Copilot-Tool-Suite-Expansion", 43.0, 43.0, "Tools").expect("Sync OKR failed");
+    assert_eq!(goal.status, "OnTrack");
+    assert_eq!(goal.progress_percentage, 100.0);
+
+    // 2. Direct Engine: Generate 1:1 Prep
+    let briefing = engine.generate_1on1_prep("Principal Engineer", "Partner Director").expect("Generate 1:1 failed");
+    assert_eq!(briefing.engineer_name, "Principal Engineer");
+    assert!(!briefing.recent_deliverables.is_empty());
+    assert!(!briefing.suggested_discussion_topics.is_empty());
+
+    // 3. Direct Engine: Generate Adaptive Card
+    let card = engine.generate_viva_adaptive_card(&goal).expect("Generate card failed");
+    assert_eq!(card["type"], "AdaptiveCard");
+
+    // 4. Autonomous Tool: CopilotVivaSyncTool
+    let tool = CopilotVivaSyncTool::default();
+    let out_sync = tool.execute(serde_json::json!({
+        "action": "sync_okr",
+        "goal_id": "Copilot-Reliability-1000x",
+        "current_value": 100.0,
+        "target_value": 100.0,
+        "metric_unit": "%"
+    })).await.expect("Tool sync_okr failed");
+    assert!(out_sync.contains("Microsoft Viva Goals Key Result Synced"));
+    assert!(out_sync.contains("100.0%"));
+
+    let out_1on1 = tool.execute(serde_json::json!({
+        "action": "generate_1on1",
+        "engineer_name": "Lead Architect",
+        "lead_name": "VP of Engineering"
+    })).await.expect("Tool generate_1on1 failed");
+    assert!(out_1on1.contains("Microsoft Viva Insights 1:1 Briefing Prepared"));
+    assert!(out_1on1.contains("Recent Engineering Deliverables"));
+    println!("  [✓] Microsoft Viva Goals OKR synchronization and Viva Insights 1:1 briefings verified!");
+}
+
 
 
 

@@ -5,6 +5,7 @@
 //! Enterprise Ecosystem (Teams, SharePoint/OneDrive, Outlook, Microsoft Search, and Copilot Studio).
 
 pub mod adr;
+pub mod ado;
 pub mod airgap;
 pub mod auth;
 pub mod batch;
@@ -17,6 +18,7 @@ pub mod excel;
 pub mod fabric;
 pub mod graph;
 pub mod hardware;
+pub mod icm;
 pub mod incident;
 pub mod jwe;
 pub mod loop_pages;
@@ -26,12 +28,17 @@ pub mod perms_auditor;
 pub mod planner;
 pub mod plugin;
 pub mod purview;
+pub mod sdl;
 pub mod sentinel;
 pub mod sharepoint_crawler;
 pub mod stream;
+pub mod studio;
 pub mod subscriptions;
+pub mod substrate;
 pub mod throttling;
 pub mod tools;
+pub mod viva;
+pub mod wam;
 
 pub use adr::{AdrDocument, AdrEngine, AdrSyncReport, CopilotAdrSyncTool};
 pub use auth::{
@@ -127,6 +134,23 @@ pub use sharepoint_crawler::{
     CopilotSharepointCrawlerTool, CrawlReport, CrawledDocument, DocumentChunk,
     SharePointCrawlerEngine, SharePointSiteCrawlerConfig,
 };
+
+pub use ado::{AdoConfig, AdoEngine, AdoPullRequest, AdoRelation, AdoWorkItem, CopilotAdoSyncTool};
+pub use icm::{
+    IcmEngine, IcmIncident, IcmSeverity, PirTimelineEntry, PostIncidentReview,
+    CopilotIcmBridgeTool,
+};
+pub use sdl::{
+    CredScanFinding, PoliCheckFinding, SbomPackage, SdlAuditReport, SdlEngine,
+    CopilotSdlAuditTool,
+};
+pub use studio::{CopilotStudioEngine, CopilotStudioPackageReport, CopilotStudioPackagerTool};
+pub use substrate::{
+    SubstrateAcl, SubstrateConnection, SubstrateContent, SubstrateEngine, SubstrateIngestReport,
+    SubstrateItem, SubstratePropertySchema, CopilotSubstrateIngestTool,
+};
+pub use viva::{Viva1on1Briefing, VivaEngine, VivaGoal, CopilotVivaSyncTool};
+pub use wam::{WamAccount, WamBrokerEngine, WamTokenRequest, WamTokenResponse, CopilotWamAuthTool};
 
 
 
