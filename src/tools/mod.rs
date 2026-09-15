@@ -64,6 +64,12 @@ pub use crate::vella::{
     VellaMedicineTool, VellaRoboticsTool, VellaScadaTool, VellaScaffolderTool,
     VellaSpaceCopilotTool, VellaTradingTool, VellaVectorSyncTool, VellaWeb3GuardianTool,
 };
+pub use crate::copilot::{
+    CopilotBlastRadiusReportTool, CopilotDebateDispatchTool, CopilotExportReportTool,
+    CopilotMeetingActionItemsTool, CopilotMeetingToCodeTool, CopilotSharepointGetTool,
+    CopilotTeamsPostTool,
+};
+
 
 /// Trait implemented by all tools executable by autonomous agents
 #[async_trait]
@@ -188,6 +194,14 @@ impl ToolRegistry {
         registry.register_tool(visual::GenerateImageTool::new());
         registry.register_tool(visual::RenderTerminalMediaTool::new());
         registry.register_tool(visual::ExportArtifactHtmlTool::new());
+        // Microsoft 365 Copilot & Microsoft Graph Communication Tools
+        registry.register_tool(crate::copilot::CopilotTeamsPostTool::new());
+        registry.register_tool(crate::copilot::CopilotSharepointGetTool::new());
+        registry.register_tool(crate::copilot::CopilotMeetingActionItemsTool::new());
+        registry.register_tool(crate::copilot::CopilotExportReportTool::new());
+        registry.register_tool(crate::copilot::CopilotMeetingToCodeTool::new());
+        registry.register_tool(crate::copilot::CopilotBlastRadiusReportTool::new());
+        registry.register_tool(crate::copilot::CopilotDebateDispatchTool::new());
         registry
     }
 
@@ -284,6 +298,14 @@ impl ToolRegistry {
         registry.register_tool(visual::GenerateImageTool::new().with_working_dir(dir.clone()));
         registry.register_tool(visual::RenderTerminalMediaTool::new().with_working_dir(dir.clone()));
         registry.register_tool(visual::ExportArtifactHtmlTool::new().with_working_dir(dir.clone()));
+        // Microsoft 365 Copilot & Microsoft Graph Communication Tools
+        registry.register_tool(crate::copilot::CopilotTeamsPostTool::new());
+        registry.register_tool(crate::copilot::CopilotSharepointGetTool::new());
+        registry.register_tool(crate::copilot::CopilotMeetingActionItemsTool::new());
+        registry.register_tool(crate::copilot::CopilotExportReportTool::new());
+        registry.register_tool(crate::copilot::CopilotMeetingToCodeTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(crate::copilot::CopilotBlastRadiusReportTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(crate::copilot::CopilotDebateDispatchTool::new());
         registry
     }
 

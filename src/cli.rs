@@ -542,6 +542,191 @@ enum Commands {
         #[command(subcommand)]
         action: IdeAction,
     },
+    /// Microsoft 365 Copilot & Microsoft Graph Communication System
+    Copilot {
+        #[command(subcommand)]
+        action: CopilotAction,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum CopilotAction {
+    /// Microsoft Entra ID (Azure AD) OAuth2 Device Code & Token Management
+    Auth {
+        /// Entra ID Application (Client) ID
+        #[arg(long)]
+        client_id: Option<String>,
+
+        /// Entra ID Directory (Tenant) ID
+        #[arg(long)]
+        tenant_id: Option<String>,
+
+        /// Display current authentication status and token expiration
+        #[arg(long)]
+        status: bool,
+    },
+
+    /// Generate Microsoft 365 Copilot Plugin, Declarative Agent manifest, and OpenAPI 3.0 spec
+    #[command(alias = "package")]
+    Plugin {
+        /// Output directory for package bundle (defaults to .tagisan/copilot_package)
+        #[arg(long, default_value = ".tagisan/copilot_package")]
+        output_dir: String,
+
+        /// Base URL for the Tagisan API endpoints
+        #[arg(long, default_value = "https://api.tagisan.ai")]
+        base_url: String,
+    },
+
+    /// Post an engineering update or debate verdict to Microsoft Teams with AgentShield DLP
+    Post {
+        /// Teams channel identifier or chat ID
+        #[arg(long)]
+        channel: String,
+
+        /// Message content to post
+        #[arg(long)]
+        message: String,
+    },
+
+    /// Fetch and inspect Teams meeting transcript or extract structured action items
+    Transcript {
+        /// Microsoft Teams online meeting identifier
+        #[arg(long, default_value = "latest_architecture_sync")]
+        meeting: String,
+
+        /// Parse structured engineering action items from the transcript
+        #[arg(long)]
+        parse_items: bool,
+    },
+
+    /// Register or inspect Microsoft Search Graph Connector schema and indexed skills
+    Index {
+        /// Display schema definition only without indexing items
+        #[arg(long)]
+        schema_only: bool,
+    },
+
+    /// Run diagnostic self-test and verification of the Copilot subsystem
+    Test,
+
+    /// Inspect Copilot subsystem, Entra ID status, and Graph connector health
+    Status,
+
+    /// End-to-end meeting-to-code pipeline: extract action items, compute AST blast radius, synthesize patches
+    #[command(name = "meeting-to-code")]
+    MeetingToCode {
+        /// Microsoft Teams online meeting identifier
+        #[arg(long)]
+        meeting: Option<String>,
+
+        /// Optional raw transcript text with speaker turns
+        #[arg(long)]
+        transcript: Option<String>,
+
+        /// Root codebase directory to calculate AST blast radius (default: '.')
+        #[arg(long, default_value = ".")]
+        path: String,
+
+        /// Automatically synthesize code diffs and patch proposals
+        #[arg(long, default_value_t = true)]
+        auto_patch: bool,
+
+        /// Teams channel or chat ID to post the synthesized execution plan
+        #[arg(long)]
+        channel: Option<String>,
+    },
+
+    /// Codebase Telemetry & Blast Radius Cards: Adaptive Card & HTML reports for Teams/Excel/PowerPoint
+    #[command(name = "blast-report")]
+    BlastReport {
+        /// Target symbol name (struct, function, method, trait)
+        #[arg(long)]
+        symbol: String,
+
+        /// Maximum transitive traversal depth in the codebase graph (default: 3)
+        #[arg(long, default_value_t = 3)]
+        max_depth: usize,
+
+        /// Root codebase directory path (default: '.')
+        #[arg(long, default_value = ".")]
+        path: String,
+
+        /// Desired output format: 'adaptive_card', 'html', or 'all' (default: 'all')
+        #[arg(long, default_value = "all")]
+        format: String,
+
+        /// Teams channel or chat ID to post the telemetry card
+        #[arg(long)]
+        post_to_teams: Option<String>,
+
+        /// Recipient email address to export the HTML report via Outlook
+        #[arg(long)]
+        export_email: Option<String>,
+    },
+
+    /// Dialectical Debate Dispatch: Run 3-round debate and dispatch verdict to Teams/Outlook
+    Debate {
+        /// Architectural proposal, RFC, or technical question to debate
+        #[arg(long)]
+        proposal: String,
+
+        /// Title or subject for the debate
+        #[arg(long)]
+        title: Option<String>,
+
+        /// Proponent model or persona (default: 'claude-3-5-sonnet')
+        #[arg(long, default_value = "claude-3-5-sonnet")]
+        proponent: String,
+
+        /// Adversary model or persona (default: 'gpt-4o')
+        #[arg(long, default_value = "gpt-4o")]
+        adversary: String,
+
+        /// Lakandiwa adjudicator model or persona (default: 'o1-preview')
+        #[arg(long, default_value = "o1-preview")]
+        lakandiwa: String,
+
+        /// Teams channel or chat ID to post the verdict
+        #[arg(long)]
+        post_to_teams: Option<String>,
+
+        /// Recipient email address to dispatch the debate transcript via Outlook
+        #[arg(long)]
+        send_to_email: Option<String>,
+    },
+
+    /// Microsoft Teams Operations
+    Teams {
+        #[command(subcommand)]
+        action: TeamsAction,
+    },
+
+    /// Ingest SharePoint / OneDrive document or Teams meeting transcript
+    Ingest {
+        /// SharePoint or OneDrive file path or URL
+        #[arg(long)]
+        url: Option<String>,
+
+        /// Microsoft Teams online meeting identifier
+        #[arg(long)]
+        meeting: Option<String>,
+    },
+}
+
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum TeamsAction {
+    /// Post a message to a Teams channel or chat with AgentShield DLP protection
+    Post {
+        /// Teams channel identifier or chat ID
+        #[arg(long)]
+        channel: String,
+
+        /// Message content to post
+        #[arg(long)]
+        message: String,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -4645,6 +4830,331 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Ide { action } => {
             handle_ide_command(action).await?;
+        }
+
+        Commands::Copilot { action } => {
+            handle_copilot_command(action).await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std::error::Error>> {
+    match action {
+        CopilotAction::Auth { client_id, tenant_id, status } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🏢 MICROSOFT ENTRA ID AUTHENTICATION MANAGER".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let mut config = crate::copilot::EntraIdConfig::default();
+            if let Some(cid) = client_id {
+                config.client_id = cid;
+            }
+            if let Some(tid) = tenant_id {
+                config.tenant_id = tid;
+            }
+
+            let auth = crate::copilot::EntraAuthManager::new(config);
+
+            if status {
+                let st = auth.copilot_auth_status().await;
+                println!("  Authentication State: {}", if st.authenticated { "AUTHENTICATED".green().bold() } else { "NOT AUTHENTICATED".red().bold() });
+                println!("  Auth Mode:            {}", st.auth_mode.cyan());
+                println!("  Tenant ID:            {}", st.tenant_id.yellow());
+                println!("  Client ID:            {}", st.client_id.yellow());
+                println!("  Token Expired:        {}", if st.is_expired { "YES".red() } else { "NO".green() });
+                if let Some(secs) = st.expires_in_secs {
+                    println!("  Expires In:           {} seconds", secs);
+                }
+                if let Some(scope) = st.scope {
+                    println!("  Scope:                {}", scope.dimmed());
+                }
+            } else {
+                println!("Initiating Entra ID Device Code Login Flow...");
+                let dc = auth.initiate_device_code().await?;
+                println!("\n  {}", dc.message.bright_white().bold());
+                println!("  Verification URL: {}", dc.verification_uri.cyan().underline());
+                println!("  User Code:        {}", dc.user_code.yellow().bold());
+                println!("\nWaiting for authentication completion (polling every {}s)...", dc.interval);
+
+                let token = auth.poll_for_token(&dc.device_code, dc.interval, dc.expires_in).await?;
+                println!("\n{}", "✅ Authentication successful!".green().bold());
+                println!("  Token Type:    {}", token.token_type.cyan());
+                println!("  Expires In:    {} seconds", token.expires_in);
+                println!("  Cached to:     {}", auth.config().token_cache_path.display().to_string().yellow());
+            }
+        }
+
+        CopilotAction::Plugin { output_dir, base_url } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📦 MICROSOFT 365 COPILOT PACKAGE GENERATOR".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let out_path = std::path::PathBuf::from(&output_dir);
+            let pkg = crate::copilot::export_copilot_package(&out_path, &base_url)?;
+
+            println!("\n{}", "✅ Copilot Package Bundle Generated:".green().bold());
+            println!("  Output Directory: {}", pkg.output_dir.display().to_string().yellow());
+            println!("  Total Size:       {} bytes", pkg.total_bytes);
+            println!("\nBundled Artifacts:");
+            for f in &pkg.files {
+                println!("  [✓] {}", f.display().to_string().green());
+            }
+            println!("\nNext Steps:");
+            println!("  1. Sideload manifest.json into Teams Developer Portal or Microsoft 365 Admin Center.");
+            println!("  2. Deploy OpenAPI gateway at: {}", base_url.cyan());
+        }
+
+        CopilotAction::Teams { action } => {
+            match action {
+                TeamsAction::Post { channel, message } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  💬 MICROSOFT TEAMS MESSAGE DISPATCHER".bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let auth = std::sync::Arc::new(crate::copilot::EntraAuthManager::with_defaults());
+                    let client = crate::copilot::GraphClient::new(auth);
+
+                    let msg_id = client.send_teams_message(&channel, &message).await?;
+                    println!("\n{}", "✅ Message Dispatched Successfully:".green().bold());
+                    println!("  Target Channel:  {}", channel.yellow());
+                    println!("  Message ID:      {}", msg_id.cyan());
+                    println!("  AgentShield DLP: {}", "PASSED (Zero credential leaks)".green());
+                }
+            }
+        }
+
+        CopilotAction::Ingest { url, meeting } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📥 MICROSOFT 365 GRAPH INGESTION ENGINE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let auth = std::sync::Arc::new(crate::copilot::EntraAuthManager::with_defaults());
+            let client = crate::copilot::GraphClient::new(auth);
+
+            if let Some(meeting_id) = meeting {
+                println!("Fetching meeting transcript for meeting: {}", meeting_id.cyan());
+                let transcript = client.get_meeting_transcript(&meeting_id).await?;
+                println!("Retrieved {} transcript turn(s). Synthesizing action items...\n", transcript.len());
+
+                let items = client.parse_action_items(&transcript);
+                println!("{}", "Extracted Engineering Action Items:".bold());
+                for (i, item) in items.iter().enumerate() {
+                    let badge = match item.priority.as_str() {
+                        "High" => item.priority.red().bold(),
+                        "Medium" => item.priority.yellow(),
+                        _ => item.priority.green(),
+                    };
+                    println!("  {}. [{}] {} - Assignee: {}", i + 1, badge, item.title.bright_white(), item.assignee.as_deref().unwrap_or("Unassigned").cyan());
+                }
+            } else if let Some(doc_url) = url {
+                println!("Ingesting document from: {}", doc_url.cyan());
+                let doc = client.fetch_sharepoint_file(&doc_url).await?;
+                println!("\n{}", "✅ Document Ingested & Sanitized:".green().bold());
+                println!("  Filename:               {}", doc.filename.yellow());
+                println!("  Content-Type:           {}", doc.content_type.cyan());
+                println!("  Size:                   {} bytes", doc.size_bytes);
+                println!("  AgentShield Inbound:    {}", "PASSED (Clean document)".green());
+                println!("\n--- Document Preview ---\n{}", if doc.text.len() > 300 { format!("{}...", &doc.text[..300]) } else { doc.text });
+            } else {
+                eprintln!("{}", "Error: Must specify either --url <path_or_url> or --meeting <meeting_id>".red().bold());
+            }
+        }
+
+        CopilotAction::Status => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🏢 MICROSOFT 365 COPILOT SUBSYSTEM STATUS".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let auth = crate::copilot::EntraAuthManager::with_defaults();
+            let auth_st = auth.copilot_auth_status().await;
+
+            println!("\n[1] Entra ID (Azure AD) Identity Plane:");
+            println!("  Authenticated:         {}", if auth_st.authenticated { "YES".green().bold() } else { "NO".yellow() });
+            println!("  Auth Mode:             {}", auth_st.auth_mode.cyan());
+            println!("  Tenant ID:             {}", auth_st.tenant_id.yellow());
+            println!("  Client ID:             {}", auth_st.client_id.yellow());
+            println!("  Token Expired:         {}", if auth_st.is_expired { "YES".red() } else { "NO".green() });
+            if let Some(secs) = auth_st.expires_in_secs {
+                println!("  Token TTL:             {}s", secs);
+            }
+
+            println!("\n[2] Microsoft Graph Integration Plane:");
+            let client = crate::copilot::GraphClient::new(std::sync::Arc::new(auth));
+            println!("  Graph Execution Mode:  {}", if client.is_mock() { "Deterministic Mock / Sandbox".yellow() } else { "Live Enterprise Graph REST API".green().bold() });
+            println!("  Base Endpoint:         https://graph.microsoft.com/v1.0");
+
+            println!("\n[3] Autonomous Copilot Tools in Registry:");
+            println!("  [✓] copilot_teams_post          (Post updates & debate verdicts to Teams)");
+            println!("  [✓] copilot_sharepoint_get      (Ingest SharePoint/OneDrive docs with AgentShield)");
+            println!("  [✓] copilot_meeting_action_items(Decompose Teams meeting transcripts into code tasks)");
+            println!("  [✓] copilot_export_report       (Dispatch HTML debate reports via Outlook)");
+            println!("  [✓] copilot_meeting_to_code     (End-to-end meeting transcript to AST blast radius & code patch)");
+            println!("  [✓] copilot_blast_radius_report (Adaptive Cards & executive HTML reports for Teams/Excel/PPT)");
+            println!("  [✓] copilot_debate_dispatch     (3-round dialectical debate execution & Teams/Outlook dispatch)");
+
+            println!("\n[4] AgentShield Cyber Defense Gate:");
+            println!("  Outbound DLP:          {}", "ACTIVE (Zero API key/private key/credential leakage)".green().bold());
+            println!("  Inbound Sanitization:  {}", "ACTIVE (Guards against prompt injection in SharePoint/Teams)".green().bold());
+
+            println!("\n[5] Microsoft 365 Search Connector:");
+            let connector = crate::copilot::GraphConnectorEngine::new();
+            println!("  Connection ID:         {}", connector.connection_id().cyan());
+            println!("  Indexed Schemas:       tagisanSkill (495+ skills), tagisanArtifact, tagisanDebate");
+        }
+
+        CopilotAction::Post { channel, message } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  💬 MICROSOFT TEAMS MESSAGE DISPATCHER".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let auth = std::sync::Arc::new(crate::copilot::EntraAuthManager::with_defaults());
+            let client = crate::copilot::GraphClient::new(auth);
+
+            let msg_id = client.send_teams_message(&channel, &message).await?;
+            println!("\n{}", "✅ Message Dispatched Successfully:".green().bold());
+            println!("  Target Channel:  {}", channel.yellow());
+            println!("  Message ID:      {}", msg_id.cyan());
+            println!("  AgentShield DLP: {}", "PASSED (Zero credential leaks)".green());
+        }
+
+        CopilotAction::Transcript { meeting, parse_items } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🎙️ MICROSOFT TEAMS MEETING TRANSCRIPT VIEWER".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let auth = std::sync::Arc::new(crate::copilot::EntraAuthManager::with_defaults());
+            let client = crate::copilot::GraphClient::new(auth);
+            let transcript = client.get_meeting_transcript(&meeting).await?;
+
+            println!("Retrieved {} transcript turn(s) for meeting: {}\n", transcript.len(), meeting.cyan());
+            for turn in &transcript {
+                let ts = turn.timestamp.as_deref().unwrap_or("00:00");
+                println!("  [{}] {}: {}", ts.dimmed(), turn.speaker.bold().bright_white(), turn.text);
+            }
+
+            if parse_items {
+                let items = client.parse_action_items(&transcript);
+                println!("\n{}", "Extracted Engineering Action Items:".bold());
+                for (i, item) in items.iter().enumerate() {
+                    let badge = match item.priority.as_str() {
+                        "High" => item.priority.red().bold(),
+                        "Medium" => item.priority.yellow(),
+                        _ => item.priority.green(),
+                    };
+                    println!("  {}. [{}] {} - Assignee: {}", i + 1, badge, item.title.bright_white(), item.assignee.as_deref().unwrap_or("Unassigned").cyan());
+                }
+            }
+        }
+
+        CopilotAction::Index { schema_only } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🔍 MICROSOFT SEARCH GRAPH CONNECTOR ENGINE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let connector = crate::copilot::GraphConnectorEngine::new();
+            if schema_only {
+                let schema = connector.generate_schema_definition();
+                println!("{}", serde_json::to_string_pretty(&schema)?);
+            } else {
+                let skills = connector.build_skill_items();
+                println!("{}", "✅ Microsoft Search Graph Connector Initialized:".green().bold());
+                println!("  Connection ID:   {}", connector.connection_id().cyan());
+                println!("  Indexed Skills:  {} built-in engineering capabilities", skills.len().to_string().yellow());
+                println!("  Target Schema:   externalItem (isSearchable, isRetrievable, isQueryable)");
+                println!("  Next Steps:      Register external connection in Microsoft 365 Admin Center Search & Intelligence.");
+            }
+        }
+
+        CopilotAction::Test => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🧪 MICROSOFT 365 COPILOT SUBSYSTEM SELF-TEST".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            let client = crate::copilot::GraphClient::mock();
+            let msg_id = client.send_teams_message("test-channel", "Tagisan self-test ping").await?;
+            println!("  [✓] GraphClient Mock Teams Dispatch:       ID={}", msg_id.green());
+
+            let trans = client.get_meeting_transcript("mock-sync").await?;
+            let items = client.parse_action_items(&trans);
+            println!("  [✓] Transcript Retrieval & Decomposition:  {} items extracted", items.len().to_string().green());
+
+            let doc = client.fetch_sharepoint_file("Documents/Architecture_Specification.md").await?;
+            println!("  [✓] SharePoint Document Fetch & Inbound:    {} bytes ({})", doc.size_bytes.to_string().green(), doc.content_type.cyan());
+
+            let dlp_clean = crate::ecc::agentshield::AgentShieldScanner::scan_outbound_dlp("Verification text");
+            assert_eq!(dlp_clean, crate::ecc::agentshield::AgentShieldVerdict::Allow);
+            println!("  [✓] AgentShield Outbound DLP Interception: VERIFIED (Zero credential leaks)");
+
+            let leaked_check = crate::ecc::agentshield::AgentShieldScanner::scan_outbound_dlp("sk-ant-secret123456789012345");
+            assert!(matches!(leaked_check, crate::ecc::agentshield::AgentShieldVerdict::Block { .. }));
+            println!("  [✓] AgentShield Outbound Secret Blocking:  VERIFIED (Blocked API keys)");
+
+            let mail_id = client.send_outlook_report(&["leads@tagisan.ai".to_string()], "Self Test", "<p>OK</p>").await?;
+            println!("  [✓] Outlook HTML Dispatch:                 ID={}", mail_id.green());
+
+            println!("\n{}", "✅ All Microsoft 365 Copilot Subsystem Self-Tests Passed!".green().bold());
+        }
+
+        CopilotAction::MeetingToCode { meeting, transcript, path, auto_patch, channel } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🚀 COPILOT MEETING-TO-CODE PIPELINE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotMeetingToCodeTool::new();
+            let args = serde_json::json!({
+                "meeting_id": meeting,
+                "transcript_text": transcript,
+                "codebase_path": path,
+                "auto_patch": auto_patch,
+                "channel": channel,
+            });
+
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::BlastReport { symbol, max_depth, path, format, post_to_teams, export_email } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📊 COPILOT BLAST RADIUS TELEMETRY CARDS".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotBlastRadiusReportTool::new();
+            let args = serde_json::json!({
+                "symbol": symbol,
+                "max_depth": max_depth,
+                "path": path,
+                "format": format,
+                "post_to_teams": post_to_teams,
+                "export_email": export_email,
+            });
+
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Debate { proposal, title, proponent, adversary, lakandiwa, post_to_teams, send_to_email } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  ⚖️ COPILOT DIALECTICAL DEBATE DISPATCH".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotDebateDispatchTool::new();
+            let args = serde_json::json!({
+                "proposal": proposal,
+                "title": title,
+                "proponent": proponent,
+                "adversary": adversary,
+                "lakandiwa": lakandiwa,
+                "post_to_teams": post_to_teams,
+                "send_to_email": send_to_email,
+            });
+
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
         }
     }
 

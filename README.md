@@ -555,12 +555,131 @@ python3 scripts/test_file_crud_superpowers.py
 # Brutal verification: Curated Vibe-Coder Knowledge Canons (ISBN Checksums & Skills)
 python3 scripts/test_forensics_verification.py
 python3 scripts/test_strategic_verification.py
-python3 scripts/test_crypto_market_verification.py
+# Brutal verification: Microsoft 365 Copilot & Microsoft Graph Communication System (12 Tests)
+cargo test --test ms365_copilot_brutal_tests -- --nocapture
+```
+
+---
+
+## 🏢 Microsoft 365 Copilot & Microsoft Graph Communication System (`tgs copilot`)
+
+Tagisan features a systems-grade, enterprise-hardened integration connecting its dialectical reasoning engine, petgraph AST codebase graph, and formal invariant verification (`tgs ground`) directly into the **Microsoft 365 Enterprise Ecosystem** (Teams, SharePoint, OneDrive, Outlook, Microsoft Search, and Copilot Studio).
+
+```mermaid
+graph TD
+    M365["Microsoft 365 Copilot & Teams"] --> DA["Declarative Agent (declarativeAgent.json)"]
+    DA --> Spec["OpenAPI 3.0.3 Spec Gateway (/api/copilot/*)"]
+    
+    subgraph "Tagisan Enterprise Integration Plane"
+        Spec --> Gate["AgentShield Cyber Defense Gate"]
+        Gate --> DLP["Outbound DLP (Zero Secret Leaks)"]
+        Gate --> Sanitize["Inbound Prompt Injection Sanitization"]
+        
+        DLP --> Engine["Tagisan Core Subsystems"]
+        Sanitize --> Engine
+        
+        Engine --> M2C["Meeting-to-Code Pipeline"]
+        Engine --> AST["AST Codebase Graph & Blast Radius"]
+        Engine --> Debate["3-Round Dialectical Debate (Lakandiwa)"]
+        Engine --> Ground["Formal Invariant Verification (tgs ground)"]
+        Engine --> Connector["Microsoft Search Graph Connector Engine"]
+    end
+    
+    subgraph "Microsoft Graph & Identity Plane"
+        Engine --> GraphClient["Microsoft Graph REST Client"]
+        GraphClient --> Entra["Microsoft Entra ID (OAuth2 Device Code Flow)"]
+        GraphClient --> TeamsAPI["Microsoft Teams API (Chat & Channels)"]
+        GraphClient --> SPAPI["SharePoint / OneDrive REST API"]
+        GraphClient --> MailAPI["Outlook Mail API (HTML Reports)"]
+        Connector --> SearchAPI["Microsoft Search External Items API"]
+    end
+```
+
+### 🚀 Core Enterprise Scenarios & Autonomous Pipelines
+
+1. **Meeting-to-Code Pipeline (`tgs copilot meeting-to-code` / `copilot_meeting_to_code`):**
+   - Ingests raw or live Microsoft Teams meeting transcripts via Microsoft Graph.
+   - Automatically decomposes dialogue into prioritized engineering action items (`High`/`Medium`/`Low`), assigning owners and categories.
+   - Maps each task to concrete symbols in the codebase and computes the **AST transitive blast radius** and ripple-effect risk level.
+   - Synthesizes automated, surgical code patches and diffs with **AgentShield DLP security clearance**, and optionally dispatches the execution plan directly back to Teams.
+
+2. **Codebase Telemetry & Blast Radius Cards (`tgs copilot blast-report` / `copilot_blast_radius_report`):**
+   - Evaluates the transitive call graph and architectural depth for any struct, function, method, or trait.
+   - Emits **Microsoft Teams Adaptive Card v1.5 JSON** with interactive action buttons and color-coded risk indicators (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
+   - Produces executive **Microsoft Fluent UI HTML reports** optimized for copying into Outlook emails, PowerPoint decks, and Excel spreadsheets.
+
+3. **Dialectical Debate Dispatch (`tgs copilot debate` / `copilot_debate_dispatch`):**
+   - Orchestrates Tagisan's 3-round adversarial debate on technical RFCs, architecture decisions, and bug hypotheses:
+     - **Round 1 (Thesis):** Rigorous proposal detailing throughput, zero-copy safety, and latency wins.
+     - **Round 2 (Antithesis):** Adversarial attack on edge cases, lock contention, token invalidation, and memory overhead.
+     - **Round 3 (Lakandiwa Synthesis):** Definitive binding consensus and formal invariant constraints.
+   - Enforces pre-flight AgentShield DLP scanning and broadcasts the verdict directly to Microsoft Teams channels or Outlook stakeholders.
+
+4. **Microsoft Search Graph Connector (`tgs copilot index`):**
+   - Registers external connection schema (`tagisan_enterprise_index`) with searchable, queryable, and retrievable properties.
+   - Ingests 495+ built-in engineering skills, debate transcripts, and architecture diagrams into Microsoft Search so users can query Tagisan intelligence natively within Microsoft 365 Copilot.
+
+5. **Declarative Agent Manifest & Plugin Generator (`tgs copilot package` / `plugin`):**
+   - Emits a complete, sideloadable Teams App package bundle:
+     - `manifest.json` (Teams App manifest v1.16)
+     - `declarativeAgent.json` (Microsoft Copilot Declarative Agent v1.0)
+     - `ai-plugin.json` (Copilot Studio & ChatGPT Plugin schema)
+     - `openapi.json` (OpenAPI 3.0.3 specification exposing all endpoints)
+     - `color.png` & `outline.png` (RFC 2083 valid binary PNG icons generated in-memory)
+
+### 🛠️ Registered Autonomous Copilot Tools
+
+All 7 Copilot tools are first-class citizens in Tagisan's `ToolRegistry` and exposed via Model Context Protocol (MCP):
+
+| Tool Identifier | Description | DLP Enforcement |
+| :--- | :--- | :--- |
+| `copilot_teams_post` | Post engineering alerts, debate verdicts, and status updates to Teams | Outbound Secret Scanned |
+| `copilot_sharepoint_get` | Ingest Markdown, text, and DOCX files from SharePoint/OneDrive | Inbound Prompt Sanitized |
+| `copilot_meeting_action_items` | Extract prioritized action items from Teams meeting transcripts | Inbound Prompt Sanitized |
+| `copilot_export_report` | Dispatch styled HTML engineering reports via Outlook | Outbound Secret Scanned |
+| `copilot_meeting_to_code` | End-to-end transcript extraction, AST blast radius checking, and code patch synthesis | Dual Inbound & Outbound |
+| `copilot_blast_radius_report` | Generate Adaptive Card v1.5 and Fluent HTML reports for symbol blast radius | Outbound Secret Scanned |
+| `copilot_debate_dispatch` | Execute 3-round dialectical debate and dispatch verdict to Teams or Outlook | Outbound Secret Scanned |
+
+### 💻 CLI Usage Guide (`tgs copilot`)
+
+```bash
+# 1. Inspect Copilot Subsystem & Entra ID status
+tgs copilot status
+
+# 2. Authenticate with Entra ID via OAuth2 Device Code Flow
+tgs copilot auth
+tgs copilot auth --status
+
+# 3. Execute Meeting-to-Code Pipeline on Teams Transcript
+tgs copilot meeting-to-code --meeting "sprint_42_sync" --path "." --channel "general"
+
+# 4. Generate Codebase Blast Radius Telemetry & Adaptive Cards
+tgs copilot blast-report --symbol "EntraAuthManager" --max-depth 3 --format all
+
+# 5. Dispatch 3-Round Dialectical Debate on Architecture Proposal
+tgs copilot debate --proposal "Adopt lock-free concurrent channels for vector sync" --post-to-teams "architecture-channel"
+
+# 6. Post an update directly to Teams
+tgs copilot post --channel "engineering-alerts" --message "Tagisan grounding invariants verified: 0 regressions."
+
+# 7. Ingest and inspect meeting transcript
+tgs copilot transcript --meeting "latest_sync" --parse-items
+
+# 8. Index skills and architecture diagrams into Microsoft Search Connector
+tgs copilot index
+
+# 9. Export complete Copilot package bundle for sideloading
+tgs copilot package --output-dir ".tagisan/copilot_package" --base-url "https://api.tagisan.ai"
+
+# 10. Run built-in Copilot subsystem self-test suite
+tgs copilot test
 ```
 
 ---
 
 ## 🗺️ Architectural Specifications & Roadmaps
+
 
 - 🛡️ **[Cyber Defense & AgentShield Specification](docs/SPEC_AGENTSHIELD_CYBER_DEFENSE.md)** — Architectural specification for zero ambient authority sandboxing, nation-state APT mitigation (Lazarus Group / APT38), pre-execution command auditing, and real-time notification alerts.
 - ⚡ **[Top 50 Essential Skills for TGS Ecosystem](docs/TOP_50_ESSENTIAL_SKILLS_FOR_TGS_ECOSYSTEM.md)** — The authoritative canon of 50 open-source engineering capabilities, protocols, and architectures powering the Tagisan runtime.

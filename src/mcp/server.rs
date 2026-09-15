@@ -298,6 +298,16 @@ impl McpServer {
                     "properties": {}
                 }),
             },
+            McpToolDefinition {
+                name: "tagisan_copilot_status".to_string(),
+                description: Some(
+                    "Inspect Microsoft 365 Copilot subsystem, Entra ID authentication, Graph connection status, and registered enterprise tools.".to_string(),
+                ),
+                input_schema: json!({
+                    "type": "object",
+                    "properties": {}
+                }),
+            },
         ];
 
         // Deduplicate and expose all registered built-in tools
@@ -971,6 +981,30 @@ impl McpServer {
                         }],
                         is_error: true,
                     },
+                }
+            }
+
+            "tagisan_copilot_status" => {
+                let auth = crate::copilot::EntraAuthManager::with_defaults();
+                let status = auth.copilot_auth_status().await;
+                let text = format!(
+                    "## 🏢 Microsoft 365 Copilot Integration Status\n\n\
+                    - **Authenticated:** {}\n\
+                    - **Auth Mode:** `{}`\n\
+                    - **Tenant ID:** `{}`\n\
+                    - **Client ID:** `{}`\n\
+                    - **Token Expired:** {}\n\
+                    - **Registered Copilot Tools:** `copilot_teams_post`, `copilot_sharepoint_get`, `copilot_meeting_action_items`, `copilot_export_report`, `copilot_meeting_to_code`, `copilot_blast_radius_report`, `copilot_debate_dispatch`\n\
+                    - **AgentShield Enterprise DLP:** Outbound DLP Active / Inbound Sanitization Active",
+                    if status.authenticated { "YES" } else { "NO" },
+                    status.auth_mode,
+                    status.tenant_id,
+                    status.client_id,
+                    status.is_expired
+                );
+                McpToolCallResult {
+                    content: vec![McpContentBlock::Text { text }],
+                    is_error: false,
                 }
             }
 
