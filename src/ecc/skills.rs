@@ -592,6 +592,107 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         rr_time_travel_deterministic_debugger(),
         qemu_baremetal_firmware_emulator(),
         tla_consensus_formal_model_checker(),
+        // Top 100 Books for Agentic Engineering & Vibe Code Developers
+        agentic_wooldridge_multiagent_systems(),
+        agentic_shoham_multiagent_foundations(),
+        agentic_weiss_distributed_ai(),
+        agentic_ferber_reactive_agents(),
+        agentic_kennedy_swarm_intelligence(),
+        agentic_bonabeau_swarm_stigmergy(),
+        agentic_camazine_self_organization(),
+        agentic_reynolds_autonomous_agents(),
+        agentic_dorigo_ant_colony(),
+        agentic_murray_consensus_cooperation(),
+        agentic_alammar_transformer_mechanics(),
+        agentic_huyen_ai_engineering(),
+        agentic_rothman_transformers_nlp(),
+        agentic_tunstall_nlp_transformers(),
+        agentic_jurafsky_slp_language_models(),
+        agentic_goldberg_nn_nlp(),
+        agentic_ravichandiran_llm_engineering(),
+        agentic_briggs_prompt_engineering(),
+        agentic_kamphuis_in_context_reasoning(),
+        agentic_chollet_deep_learning_intuition(),
+        agentic_russell_norvig_aima(),
+        agentic_ghallab_automated_planning(),
+        agentic_geffner_heuristic_search_planning(),
+        agentic_sutton_barto_reinforcement_learning(),
+        agentic_pearl_heuristic_search(),
+        agentic_kaelbling_pomdp_planning(),
+        agentic_thrun_probabilistic_robotics(),
+        agentic_silver_mcts_decision_trees(),
+        agentic_yao_react_interleaved_reasoning(),
+        agentic_shinn_reflexion_self_correction(),
+        agentic_karpathy_vibe_coding_paradigm(),
+        agentic_csikszentmihalyi_flow_state(),
+        agentic_hunt_pragmatic_programmer(),
+        agentic_raymond_cathedral_bazaar(),
+        agentic_graham_hackers_painters(),
+        agentic_beck_extreme_programming(),
+        agentic_ries_lean_mvp_feedback(),
+        agentic_knapp_design_sprint_prototyping(),
+        agentic_norman_human_centered_interfaces(),
+        agentic_krug_intuitive_interaction(),
+        agentic_lewis_rag_foundations(),
+        agentic_manning_information_retrieval(),
+        agentic_baeza_yates_vector_retrieval(),
+        agentic_malkov_hnsw_vector_indexing(),
+        agentic_anderson_actr_cognitive_memory(),
+        agentic_baddeley_working_memory_buffers(),
+        agentic_tulving_episodic_memory_retrieval(),
+        agentic_sowa_knowledge_representation(),
+        agentic_baader_description_logics_ontologies(),
+        agentic_robinson_graph_rag_knowledge(),
+        agentic_gulwani_program_synthesis(),
+        agentic_aho_dragon_compiler_parsing(),
+        agentic_cooper_compiler_ir_optimization(),
+        agentic_muchnick_cfg_dataflow_analysis(),
+        agentic_nystrom_crafting_interpreters(),
+        agentic_fowler_domain_specific_languages(),
+        agentic_parr_antlr4_grammar_dsl(),
+        agentic_pierce_type_systems_soundness(),
+        agentic_harper_practical_foundations_pl(),
+        agentic_sicp_evaluator_metacircular(),
+        agentic_amodei_concrete_ai_safety(),
+        agentic_hendrycks_benchmarking_evals(),
+        agentic_perez_red_teaming_adversarial(),
+        agentic_anthropic_constitutional_ai(),
+        agentic_ozkaya_llm_software_evals(),
+        agentic_beck_tdd_verifiable_contracts(),
+        agentic_claessen_property_based_testing(),
+        agentic_maciver_invariant_shrinking(),
+        agentic_clarke_model_checking_invariants(),
+        agentic_baier_temporal_logic_ltl_ctl(),
+        agentic_kleppmann_distributed_consistency(),
+        agentic_tanenbaum_distributed_systems(),
+        agentic_lamport_logical_clocks(),
+        agentic_ongaro_raft_distributed_consensus(),
+        agentic_hohpe_enterprise_integration_patterns(),
+        agentic_newman_microservices_tool_isolation(),
+        agentic_richards_software_architecture_tradeoffs(),
+        agentic_fielding_rest_agent_apis(),
+        agentic_henning_rpc_schema_contracts(),
+        agentic_mcp_protocol_specification(),
+        agentic_laird_soar_cognitive_architecture(),
+        agentic_minsky_society_of_mind(),
+        agentic_kahneman_dual_process_thinking(),
+        agentic_hofstadter_strange_loops_recursion(),
+        agentic_simon_bounded_rationality_heuristics(),
+        agentic_newell_unified_cognition(),
+        agentic_sun_clarion_implicit_explicit(),
+        agentic_lake_cognitive_concept_learning(),
+        agentic_schmidhuber_intrinsic_curiosity(),
+        agentic_wang_nars_non_axiomatic_reasoning(),
+        agentic_shneiderman_human_centered_ai(),
+        agentic_brooks_mythical_man_month(),
+        agentic_ousterhout_philosophy_software_design(),
+        agentic_martin_clean_architecture_boundaries(),
+        agentic_feathers_legacy_code_refactoring(),
+        agentic_forsgren_accelerate_dora_metrics(),
+        agentic_kim_phoenix_project_flow_theory(),
+        agentic_evans_domain_driven_design(),
+        agentic_meadows_systems_thinking_feedback(),
+        agentic_kelly_autonomous_cognition_flows(),
     ]
 }
 
@@ -600,6 +701,307 @@ static BUILT_IN_SKILLS_CACHE: OnceLock<HashMap<String, EccSkill>> = OnceLock::ne
 /// Retrieve a built-in skill by name
 pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     let lower = name.to_lowercase().replace('_', "-");
+    // Top 100 Books for Agentic Engineering & Vibe Coding Aliases
+    if lower == "wooldridge" || lower == "multiagent-systems" || lower == "bdi" || lower == "bdi-architecture" || lower == "fipa-acl" || lower == "contract-net-protocol" {
+        return find_built_in_skill("agentic-wooldridge-multiagent-systems");
+    }
+    if lower == "shoham" || lower == "leyton-brown" || lower == "discsp" || lower == "mechanism-design" {
+        return find_built_in_skill("agentic-shoham-multiagent-foundations");
+    }
+    if lower == "weiss" || lower == "distributed-ai" || lower == "blackboard-architecture" {
+        return find_built_in_skill("agentic-weiss-distributed-ai");
+    }
+    if lower == "ferber" || lower == "reactive-agents" || lower == "subsumption" {
+        return find_built_in_skill("agentic-ferber-reactive-agents");
+    }
+    if lower == "kennedy" || lower == "eberhart" || lower == "pso" || lower == "particle-swarm" {
+        return find_built_in_skill("agentic-kennedy-swarm-intelligence");
+    }
+    if lower == "bonabeau" || lower == "stigmergy" || lower == "digital-pheromones" {
+        return find_built_in_skill("agentic-bonabeau-swarm-stigmergy");
+    }
+    if lower == "camazine" || lower == "self-organization" || lower == "quorum-sensing" {
+        return find_built_in_skill("agentic-camazine-self-organization");
+    }
+    if lower == "reynolds" || lower == "reynolds-steering" || lower == "autonomous-steering-agents" {
+        return find_built_in_skill("agentic-reynolds-autonomous-agents");
+    }
+    if lower == "dorigo" || lower == "aco" || lower == "ant-colony" {
+        return find_built_in_skill("agentic-dorigo-ant-colony");
+    }
+    if lower == "murray" || lower == "olfati-saber" || lower == "graph-laplacian" || lower == "consensus-cooperation" {
+        return find_built_in_skill("agentic-murray-consensus-cooperation");
+    }
+    if lower == "alammar" || lower == "illustrated-transformer" || lower == "transformer-mechanics" || lower == "kv-cache" {
+        return find_built_in_skill("agentic-alammar-transformer-mechanics");
+    }
+    if lower == "chip-huyen" || lower == "huyen" || lower == "ai-engineering" {
+        return find_built_in_skill("agentic-huyen-ai-engineering");
+    }
+    if lower == "rothman" || lower == "transformers-nlp" {
+        return find_built_in_skill("agentic-rothman-transformers-nlp");
+    }
+    if lower == "tunstall" || lower == "von-werra" || lower == "peft-lora" || lower == "nlp-transformers" {
+        return find_built_in_skill("agentic-tunstall-nlp-transformers");
+    }
+    if lower == "jurafsky" || lower == "slp" || lower == "speech-and-language-processing" {
+        return find_built_in_skill("agentic-jurafsky-slp-language-models");
+    }
+    if lower == "goldberg" || lower == "neural-nlp" {
+        return find_built_in_skill("agentic-goldberg-nn-nlp");
+    }
+    if lower == "ravichandiran" || lower == "llm-engineering" {
+        return find_built_in_skill("agentic-ravichandiran-llm-engineering");
+    }
+    if lower == "briggs" || lower == "chain-of-thought" || lower == "prompt-engineering" {
+        return find_built_in_skill("agentic-briggs-prompt-engineering");
+    }
+    if lower == "kamphuis" || lower == "in-context-reasoning" {
+        return find_built_in_skill("agentic-kamphuis-in-context-reasoning");
+    }
+    if lower == "chollet" || lower == "deep-learning-intuition" {
+        return find_built_in_skill("agentic-chollet-deep-learning-intuition");
+    }
+    if lower == "russell-norvig" || lower == "aima" || lower == "rational-agents" || lower == "peas-framework" {
+        return find_built_in_skill("agentic-russell-norvig-aima");
+    }
+    if lower == "ghallab" || lower == "automated-planning" || lower == "strips" || lower == "pddl" || lower == "htn" {
+        return find_built_in_skill("agentic-ghallab-automated-planning");
+    }
+    if lower == "geffner" || lower == "heuristic-planning" || lower == "delete-relaxation" {
+        return find_built_in_skill("agentic-geffner-heuristic-search-planning");
+    }
+    if lower == "sutton-barto" || lower == "sutton" || lower == "reinforcement-learning" || lower == "bellman-equation" {
+        return find_built_in_skill("agentic-sutton-barto-reinforcement-learning");
+    }
+    if lower == "pearl-search" || lower == "a-star" || lower == "heuristic-search" {
+        return find_built_in_skill("agentic-pearl-heuristic-search");
+    }
+    if lower == "kaelbling" || lower == "pomdp" || lower == "belief-state" {
+        return find_built_in_skill("agentic-kaelbling-pomdp-planning");
+    }
+    if lower == "thrun" || lower == "probabilistic-robotics" || lower == "slam" || lower == "kalman-filter" {
+        return find_built_in_skill("agentic-thrun-probabilistic-robotics");
+    }
+    if lower == "silver" || lower == "mcts" || lower == "alphazero" || lower == "monte-carlo-tree-search" {
+        return find_built_in_skill("agentic-silver-mcts-decision-trees");
+    }
+    if lower == "yao" || lower == "react" || lower == "thought-action-observation" {
+        return find_built_in_skill("agentic-yao-react-interleaved-reasoning");
+    }
+    if lower == "shinn" || lower == "reflexion" || lower == "verbal-reinforcement" {
+        return find_built_in_skill("agentic-shinn-reflexion-self-correction");
+    }
+    if lower == "karpathy" || lower == "vibe-coding" || lower == "conversational-programming" {
+        return find_built_in_skill("agentic-karpathy-vibe-coding-paradigm");
+    }
+    if lower == "csikszentmihalyi" || lower == "flow-state" || lower == "developer-flow" {
+        return find_built_in_skill("agentic-csikszentmihalyi-flow-state");
+    }
+    if lower == "pragmatic-programmer" || lower == "tracer-bullets" || lower == "dry-principle" || lower == "broken-windows" {
+        return find_built_in_skill("agentic-hunt-pragmatic-programmer");
+    }
+    if lower == "cathedral-bazaar" || lower == "linus-law" || lower == "release-early-often" {
+        return find_built_in_skill("agentic-raymond-cathedral-bazaar");
+    }
+    if lower == "paul-graham" || lower == "hackers-painters" {
+        return find_built_in_skill("agentic-graham-hackers-painters");
+    }
+    if lower == "extreme-programming" || lower == "pair-programming" {
+        return find_built_in_skill("agentic-beck-extreme-programming");
+    }
+    if lower == "eric-ries" || lower == "lean-startup" || lower == "mvp" || lower == "build-measure-learn" {
+        return find_built_in_skill("agentic-ries-lean-mvp-feedback");
+    }
+    if lower == "design-sprint" || lower == "knapp" || lower == "facade-prototyping" {
+        return find_built_in_skill("agentic-knapp-design-sprint-prototyping");
+    }
+    if lower == "don-norman" || lower == "human-centered-design" {
+        return find_built_in_skill("agentic-norman-human-centered-interfaces");
+    }
+    if lower == "krug" || lower == "dont-make-me-think" {
+        return find_built_in_skill("agentic-krug-intuitive-interaction");
+    }
+    if lower == "patrick-lewis" || lower == "rag" || lower == "retrieval-augmented-generation" {
+        return find_built_in_skill("agentic-lewis-rag-foundations");
+    }
+    if lower == "manning" || lower == "inverted-index" || lower == "bm25" {
+        return find_built_in_skill("agentic-manning-information-retrieval");
+    }
+    if lower == "baeza-yates" || lower == "modern-retrieval" || lower == "ndcg" {
+        return find_built_in_skill("agentic-baeza-yates-vector-retrieval");
+    }
+    if lower == "malkov" || lower == "hnsw" || lower == "ann-search" {
+        return find_built_in_skill("agentic-malkov-hnsw-vector-indexing");
+    }
+    if lower == "anderson" || lower == "act-r" || lower == "declarative-procedural" {
+        return find_built_in_skill("agentic-anderson-actr-cognitive-memory");
+    }
+    if lower == "baddeley" || lower == "working-memory" || lower == "central-executive" {
+        return find_built_in_skill("agentic-baddeley-working-memory-buffers");
+    }
+    if lower == "tulving" || lower == "episodic-memory" || lower == "autonoetic-consciousness" {
+        return find_built_in_skill("agentic-tulving-episodic-memory-retrieval");
+    }
+    if lower == "sowa" || lower == "conceptual-graphs" {
+        return find_built_in_skill("agentic-sowa-knowledge-representation");
+    }
+    if lower == "baader" || lower == "description-logics" || lower == "tbox-abox" {
+        return find_built_in_skill("agentic-baader-description-logics-ontologies");
+    }
+    if lower == "graph-rag" || lower == "neo4j-patterns" || lower == "property-graphs" {
+        return find_built_in_skill("agentic-robinson-graph-rag-knowledge");
+    }
+    if lower == "gulwani" || lower == "program-synthesis" || lower == "programming-by-example" {
+        return find_built_in_skill("agentic-gulwani-program-synthesis");
+    }
+    if lower == "dragon-book" || lower == "compiler-parsing" {
+        return find_built_in_skill("agentic-aho-dragon-compiler-parsing");
+    }
+    if lower == "cooper-torczon" || lower == "compiler-optimization" || lower == "ssa-form" {
+        return find_built_in_skill("agentic-cooper-compiler-ir-optimization");
+    }
+    if lower == "muchnick" || lower == "dataflow-analysis" || lower == "live-variables" {
+        return find_built_in_skill("agentic-muchnick-cfg-dataflow-analysis");
+    }
+    if lower == "nystrom" || lower == "crafting-interpreters" || lower == "bytecode-vm" || lower == "pratt-parsing" {
+        return find_built_in_skill("agentic-nystrom-crafting-interpreters");
+    }
+    if lower == "fowler-dsl" || lower == "domain-specific-languages" || lower == "fluent-interface" {
+        return find_built_in_skill("agentic-fowler-domain-specific-languages");
+    }
+    if lower == "antlr4" || lower == "parr" || lower == "grammar-dsl" {
+        return find_built_in_skill("agentic-parr-antlr4-grammar-dsl");
+    }
+    if lower == "tapl" || lower == "pierce" || lower == "type-systems" || lower == "type-soundness" {
+        return find_built_in_skill("agentic-pierce-type-systems-soundness");
+    }
+    if lower == "harper" || lower == "pfpl" || lower == "operational-semantics" {
+        return find_built_in_skill("agentic-harper-practical-foundations-pl");
+    }
+    if lower == "sicp" || lower == "abelson-sussman" || lower == "metacircular-evaluator" {
+        return find_built_in_skill("agentic-sicp-evaluator-metacircular");
+    }
+    if lower == "amodei" || lower == "ai-safety" || lower == "reward-hacking" {
+        return find_built_in_skill("agentic-amodei-concrete-ai-safety");
+    }
+    if lower == "hendrycks" || lower == "mmlu" || lower == "llm-benchmarking" {
+        return find_built_in_skill("agentic-hendrycks-benchmarking-evals");
+    }
+    if lower == "perez" || lower == "red-teaming" || lower == "adversarial-fuzzing" {
+        return find_built_in_skill("agentic-perez-red-teaming-adversarial");
+    }
+    if lower == "constitutional-ai" || lower == "rlaif" || lower == "anthropic-constitutional" {
+        return find_built_in_skill("agentic-anthropic-constitutional-ai");
+    }
+    if lower == "ozkaya" || lower == "swe-bench" || lower == "software-evals" || lower == "pass-at-k" {
+        return find_built_in_skill("agentic-ozkaya-llm-software-evals");
+    }
+    if lower == "tdd-contracts" || lower == "triangulation" {
+        return find_built_in_skill("agentic-beck-tdd-verifiable-contracts");
+    }
+    if lower == "claessen" || lower == "hughes" || lower == "quickcheck" || lower == "property-based-testing" {
+        return find_built_in_skill("agentic-claessen-property-based-testing");
+    }
+    if lower == "maciver" || lower == "hypothesis-testing" || lower == "test-shrinking" {
+        return find_built_in_skill("agentic-maciver-invariant-shrinking");
+    }
+    if lower == "clarke" || lower == "model-checking" || lower == "temporal-logic" {
+        return find_built_in_skill("agentic-clarke-model-checking-invariants");
+    }
+    if lower == "baier-katoen" || lower == "ltl" || lower == "ctl" || lower == "buchi-automata" {
+        return find_built_in_skill("agentic-baier-temporal-logic-ltl-ctl");
+    }
+    if lower == "kleppmann" || lower == "ddia" || lower == "distributed-consistency" || lower == "linearizability" {
+        return find_built_in_skill("agentic-kleppmann-distributed-consistency");
+    }
+    if lower == "tanenbaum" || lower == "distributed-systems" || lower == "rpc-middleware" {
+        return find_built_in_skill("agentic-tanenbaum-distributed-systems");
+    }
+    if lower == "lamport" || lower == "logical-clocks" || lower == "happens-before" || lower == "vector-clocks" {
+        return find_built_in_skill("agentic-lamport-logical-clocks");
+    }
+    if lower == "ongaro" || lower == "raft" || lower == "raft-consensus" {
+        return find_built_in_skill("agentic-ongaro-raft-distributed-consensus");
+    }
+    if lower == "hohpe" || lower == "enterprise-integration" || lower == "pipes-and-filters" {
+        return find_built_in_skill("agentic-hohpe-enterprise-integration-patterns");
+    }
+    if lower == "sam-newman" || lower == "microservices-isolation" || lower == "circuit-breakers" {
+        return find_built_in_skill("agentic-newman-microservices-tool-isolation");
+    }
+    if lower == "software-architecture" || lower == "fitness-functions" {
+        return find_built_in_skill("agentic-richards-software-architecture-tradeoffs");
+    }
+    if lower == "fielding" || lower == "rest" || lower == "hateoas" {
+        return find_built_in_skill("agentic-fielding-rest-agent-apis");
+    }
+    if lower == "henning" || lower == "protocol-buffers" || lower == "rpc-contracts" {
+        return find_built_in_skill("agentic-henning-rpc-schema-contracts");
+    }
+    if lower == "mcp-protocol" || lower == "model-context-protocol" || lower == "mcp-server" {
+        return find_built_in_skill("agentic-mcp-protocol-specification");
+    }
+    if lower == "soar" || lower == "soar-architecture" || lower == "laird" {
+        return find_built_in_skill("agentic-laird-soar-cognitive-architecture");
+    }
+    if lower == "minsky" || lower == "society-of-mind" || lower == "censors-suppressors" {
+        return find_built_in_skill("agentic-minsky-society-of-mind");
+    }
+    if lower == "kahneman" || lower == "system-1-system-2" || lower == "thinking-fast-and-slow" {
+        return find_built_in_skill("agentic-kahneman-dual-process-thinking");
+    }
+    if lower == "hofstadter" || lower == "geb" || lower == "strange-loops" {
+        return find_built_in_skill("agentic-hofstadter-strange-loops-recursion");
+    }
+    if lower == "herbert-simon" || lower == "bounded-rationality" || lower == "satisficing" {
+        return find_built_in_skill("agentic-simon-bounded-rationality-heuristics");
+    }
+    if lower == "newell" || lower == "unified-cognition" || lower == "problem-space" {
+        return find_built_in_skill("agentic-newell-unified-cognition");
+    }
+    if lower == "clarion" || lower == "ron-sun" || lower == "implicit-explicit" {
+        return find_built_in_skill("agentic-sun-clarion-implicit-explicit");
+    }
+    if lower == "brenden-lake" || lower == "concept-learning" || lower == "meta-learning" {
+        return find_built_in_skill("agentic-lake-cognitive-concept-learning");
+    }
+    if lower == "schmidhuber" || lower == "godel-machine" || lower == "artificial-curiosity" {
+        return find_built_in_skill("agentic-schmidhuber-intrinsic-curiosity");
+    }
+    if lower == "pei-wang" || lower == "nars" || lower == "non-axiomatic-logic" {
+        return find_built_in_skill("agentic-wang-nars-non-axiomatic-reasoning");
+    }
+    if lower == "shneiderman" || lower == "human-centered-ai" || lower == "hcai" {
+        return find_built_in_skill("agentic-shneiderman-human-centered-ai");
+    }
+    if lower == "brooks-law" || lower == "mythical-man-month" || lower == "conceptual-integrity" {
+        return find_built_in_skill("agentic-brooks-mythical-man-month");
+    }
+    if lower == "ousterhout" || lower == "philosophy-software-design" || lower == "deep-modules" {
+        return find_built_in_skill("agentic-ousterhout-philosophy-software-design");
+    }
+    if lower == "clean-architecture" || lower == "uncle-bob" || lower == "dependency-inversion" {
+        return find_built_in_skill("agentic-martin-clean-architecture-boundaries");
+    }
+    if lower == "feathers" || lower == "legacy-code" || lower == "characterization-tests" {
+        return find_built_in_skill("agentic-feathers-legacy-code-refactoring");
+    }
+    if lower == "accelerate" || lower == "dora-metrics" || lower == "continuous-delivery" {
+        return find_built_in_skill("agentic-forsgren-accelerate-dora-metrics");
+    }
+    if lower == "phoenix-project" || lower == "three-ways" || lower == "theory-of-constraints" {
+        return find_built_in_skill("agentic-kim-phoenix-project-flow-theory");
+    }
+    if lower == "domain-driven-design" || lower == "eric-evans" || lower == "bounded-context" || lower == "ubiquitous-language" {
+        return find_built_in_skill("agentic-evans-domain-driven-design");
+    }
+    if lower == "donella-meadows" || lower == "systems-thinking" || lower == "stocks-and-flows" {
+        return find_built_in_skill("agentic-meadows-systems-thinking-feedback");
+    }
+    if lower == "kevin-kelly" || lower == "the-inevitable" || lower == "cognifying" {
+        return find_built_in_skill("agentic-kelly-autonomous-cognition-flows");
+    }
     // Math Vibe Skills Aliases
     if lower == "nature-of-code" || lower == "boids" || lower == "flocking" || lower == "autonomous-steering" {
         return find_built_in_skill("math-nature-of-code");
@@ -1896,11 +2298,30 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
         return Some(skill);
     }
 
-    // Dynamic on-disk fallback: probe .ecc/skills/<lower>/SKILL.md
-    let candidate = Path::new(".ecc/skills").join(&lower).join("SKILL.md");
-    if candidate.is_file() {
-        if let Ok(skill) = EccSkill::from_file(&candidate) {
-            return Some(skill);
+    // Dynamic on-disk fallback: probe .ecc/skills/<lower>/SKILL.md with cached directory index
+    static DISK_SKILLS_SET: OnceLock<HashSet<String>> = OnceLock::new();
+    let disk_set = DISK_SKILLS_SET.get_or_init(|| {
+        let mut s = HashSet::new();
+        if let Ok(entries) = fs::read_dir(".ecc/skills") {
+            for entry in entries.flatten() {
+                if let Ok(ft) = entry.file_type() {
+                    if ft.is_dir() {
+                        if let Some(name) = entry.file_name().to_str() {
+                            s.insert(name.to_lowercase());
+                        }
+                    }
+                }
+            }
+        }
+        s
+    });
+
+    if disk_set.contains(&lower) {
+        let candidate = Path::new(".ecc/skills").join(&lower).join("SKILL.md");
+        if candidate.is_file() {
+            if let Ok(skill) = EccSkill::from_file(&candidate) {
+                return Some(skill);
+            }
         }
     }
 
@@ -11626,6 +12047,9 @@ fn tokenize(text: &str) -> Vec<String> {
 fn infer_domain(name: &str) -> String {
     let lower = name.to_lowercase();
     let prefixes = [
+        ("agentic-", "agentic"),
+        ("agentic", "agentic"),
+        ("vibe", "vibe"),
         ("fin-", "finance"),
         ("fin", "finance"),
         ("qual-", "behavioral"),
@@ -20417,6 +20841,4407 @@ pub fn tla_consensus_formal_model_checker() -> EccSkill {
         ))
 }
 
+// =========================================================================
+// Top 100 Books for Agentic Engineering & Vibe Code Developers
+// =========================================================================
 
+/// 1. agentic-wooldridge-multiagent-systems Skill
+pub fn agentic_wooldridge_multiagent_systems() -> EccSkill {
+    EccSkill::new(
+        "agentic-wooldridge-multiagent-systems",
+        "BDI (Belief-Desire-Intention) agent architecture, FIPA-ACL communicative acts, contract net protocol, coalition formation, and multi-agent coordination for autonomous software engineering swarms.",
+        r#"---
+name: agentic-wooldridge-multiagent-systems
+description: "BDI (Belief-Desire-Intention) agent architecture, FIPA-ACL communicative acts, contract net protocol, coalition formation, and multi-agent coordination for autonomous software engineering swarms."
+triggers: ["wooldridge", "multiagent-systems", "bdi-architecture", "belief-desire-intention", "fipa-acl", "contract-net-protocol", "agent-negotiation", "swarm-coordination"]
+---
 
+# agentic-wooldridge-multiagent-systems
+> Based on **An Introduction to MultiAgent Systems (2nd ed) - Michael Wooldridge**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **BDI Architecture: Beliefs represent epistemic state, Desires represent motivational goals, and Intentions represent committed computational action plans.**
+2. **Speech Act Theory & FIPA-ACL: Every message between agents MUST define performative acts (request, propose, accept-proposal, reject-proposal, inform) with formal pre- and post-conditions.**
+3. **Contract Net Protocol (CNP): Task allocation proceeds through Announcement -> Bidding -> Awarding -> Execution -> Result Reporting.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement autonomous multi-agent systems using explicit BDI state loops. Decouple agent communication via strongly typed ACL protocols. Structure task distribution using Contract Net Protocol with timeout guarantees and fallback bids.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Free-form unstructured chatter between agents leading to unbounded conversational divergence.**
+- **Conflating desires (potential goals) with intentions (committed executable tasks), causing thrashing.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "wooldridge"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 2. agentic-shoham-multiagent-foundations Skill
+pub fn agentic_shoham_multiagent_foundations() -> EccSkill {
+    EccSkill::new(
+        "agentic-shoham-multiagent-foundations",
+        "Game-theoretic equilibria, Nash equilibrium, mechanism design, distributed constraint satisfaction (DisCSP), and social choice rules for multi-agent resource allocation.",
+        r#"---
+name: agentic-shoham-multiagent-foundations
+description: "Game-theoretic equilibria, Nash equilibrium, mechanism design, distributed constraint satisfaction (DisCSP), and social choice rules for multi-agent resource allocation."
+triggers: ["shoham", "leyton-brown", "game-theory", "nash-equilibrium", "discsp", "mechanism-design", "social-choice", "distributed-constraint"]
+---
+
+# agentic-shoham-multiagent-foundations
+> Based on **Multiagent Systems: Algorithmic, Game-Theoretic, and Logical Foundations - Yoav Shoham & Kevin Leyton-Brown**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Nash Equilibrium: Strategy profile where no agent has incentive to unilaterally deviate given others' strategies: u_i(s_i^*, s_{-i}^*) >= u_i(s_i, s_{-i}^*).**
+2. **Distributed Constraint Satisfaction (DisCSP): Agents solve local constraints while communicating state via Asynchronous Backtracking (ABT) or Asynchronous Weak-Commitment (AWC).**
+3. **Vickrey-Clarke-Groves (VCG) Mechanism: Truthful dominant-strategy mechanism design aligning private incentives with global system utility.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Structure multi-agent resource allocation and arbitration using game-theoretic mechanism design. Enforce incentive compatibility so truthful reporting is the dominant strategy. Solve distributed resource conflicts via DisCSP constraint propagation.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming cooperative agents without aligning individual utility functions, inviting tragedy of the commons.**
+- **Naive priority-based arbitration prone to starvation and cyclic bidding wars.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "shoham"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 3. agentic-weiss-distributed-ai Skill
+pub fn agentic_weiss_distributed_ai() -> EccSkill {
+    EccSkill::new(
+        "agentic-weiss-distributed-ai",
+        "Distributed problem solving, multi-agent reinforcement learning, blackboard architectures, decentralized task allocation, and organizational structures for cooperative agents.",
+        r#"---
+name: agentic-weiss-distributed-ai
+description: "Distributed problem solving, multi-agent reinforcement learning, blackboard architectures, decentralized task allocation, and organizational structures for cooperative agents."
+triggers: ["weiss", "distributed-ai", "blackboard-architecture", "distributed-problem-solving", "cooperative-agents", "coalition-formation"]
+---
+
+# agentic-weiss-distributed-ai
+> Based on **Multiagent Systems: A Modern Approach to Distributed Artificial Intelligence - Gerhard Weiss**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Blackboard Architecture: Knowledge sources post hypotheses, partial solutions, and activations to a shared structured blackboard managed by a controller.**
+2. **Multi-Agent Reinforcement Learning (MARL): Agents learn concurrently in non-stationary environments using value-function approximation or actor-critic policies.**
+3. **Organizational Topologies: Hierarchy, flat market, federation, and holonic structures governing agent authority, scope, and communication channels.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design complex distributed problem solvers using a blackboard pattern for decoupled knowledge fusion. Define explicit organizational boundaries and escalation paths across specialist subagents.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Monolithic agent controllers creating single points of failure and throughput bottlenecks.**
+- **Shared blackboard state without optimistic locking or transactional concurrency guards.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "weiss"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 4. agentic-ferber-reactive-agents Skill
+pub fn agentic_ferber_reactive_agents() -> EccSkill {
+    EccSkill::new(
+        "agentic-ferber-reactive-agents",
+        "Situated and reactive agents, stimulus-response architectures, subsumption hierarchy, environmental affordances, and emergence in physical and virtual spaces.",
+        r#"---
+name: agentic-ferber-reactive-agents
+description: "Situated and reactive agents, stimulus-response architectures, subsumption hierarchy, environmental affordances, and emergence in physical and virtual spaces."
+triggers: ["ferber", "reactive-agents", "subsumption-architecture", "situated-agents", "stimulus-response", "environmental-affordances"]
+---
+
+# agentic-ferber-reactive-agents
+> Based on **Multi-Agent Systems: An Introduction to Distributed Artificial Intelligence - Jacques Ferber**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Stimulus-Response Invariant: Action a = f(s) is computed directly from sensor observation s without complex intermediate deliberative planning.**
+2. **Subsumption Layering: Higher-level competence layers subsume (suppress or inhibit) lower-level reactive behaviors without modifying lower layers.**
+3. **Affordance Landscape: The environment encodes cues that directly trigger agent actions, minimizing internal state overhead.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Build ultra-low-latency agents using layered stimulus-response architectures. Use subsumption to handle reflex responses (e.g. rate limit backoff, syntax error retries) while higher layers execute strategic flows.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Over-engineering simple reactive tasks into multi-turn deliberative LLM chains.**
+- **Cyclic subsumption inhibition loops resulting in behavioral freeze.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "ferber"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 5. agentic-kennedy-swarm-intelligence Skill
+pub fn agentic_kennedy_swarm_intelligence() -> EccSkill {
+    EccSkill::new(
+        "agentic-kennedy-swarm-intelligence",
+        "Particle Swarm Optimization (PSO), socio-cognitive velocity updates, inertia weight, cognitive vs social components, and fitness landscape exploration for swarms.",
+        r#"---
+name: agentic-kennedy-swarm-intelligence
+description: "Particle Swarm Optimization (PSO), socio-cognitive velocity updates, inertia weight, cognitive vs social components, and fitness landscape exploration for swarms."
+triggers: ["kennedy", "eberhart", "particle-swarm", "pso-optimization", "swarm-intelligence", "fitness-landscape", "velocity-update"]
+---
+
+# agentic-kennedy-swarm-intelligence
+> Based on **Swarm Intelligence - James Kennedy & Russell Eberhart**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **PSO Velocity Update: v_i(t+1) = w*v_i(t) + c_1*r_1*(pbest_i - x_i(t)) + c_2*r_2*(gbest - x_i(t)).**
+2. **Inertia Weight w: Balances exploration (high w) vs exploitation (low w), typically decayed dynamically over iterations.**
+3. **Socio-Cognitive Duality: Individual cognitive memory (pbest) balances social consensus (gbest) to escape local optima in solution space.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Optimize agent hyper-parameters, prompt candidates, or architecture topology using Particle Swarm dynamics. Balance autonomous exploration with flock-wide best solution exploitation.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Premature convergence to suboptimal local minima due to excessive social attraction weight.**
+- **Static velocity parameters causing particles to oscillate wildly across fitness boundaries.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "kennedy"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 6. agentic-bonabeau-swarm-stigmergy Skill
+pub fn agentic_bonabeau_swarm_stigmergy() -> EccSkill {
+    EccSkill::new(
+        "agentic-bonabeau-swarm-stigmergy",
+        "Stigmergic coordination, indirect communication via digital traces, division of labor, threshold response models, and collective ant trail algorithms.",
+        r#"---
+name: agentic-bonabeau-swarm-stigmergy
+description: "Stigmergic coordination, indirect communication via digital traces, division of labor, threshold response models, and collective ant trail algorithms."
+triggers: ["bonabeau", "dorigo", "theraulaz", "stigmergy", "digital-pheromones", "ant-algorithms", "division-of-labor", "threshold-response"]
+---
+
+# agentic-bonabeau-swarm-stigmergy
+> Based on **Swarm Intelligence: From Natural to Artificial Systems - Eric Bonabeau, Marco Dorigo & Guy Theraulaz**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Sematectonic Stigmergy: Environmental modification itself directs future actions (e.g. code artifacts and test results guide subsequent agent steps).**
+2. **Sign-based Stigmergy: Specialized signals (digital pheromones, cache tags, event logs) guide collective agent routing.**
+3. **Response Threshold Model: Agent i undertakes task j when stimulus s_j exceeds internal threshold theta_ij: P(perform) = s_j^2 / (s_j^2 + theta_ij^2).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Coordinate large agent swarms via stigmergic environmental traces rather than point-to-point RPCs. Let repository state, error logs, and build artifacts act as pheromones driving agent task pickup.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Flooding agents with synchronous point-to-point messages instead of reading environmental cues.**
+- **Pheromone buildup without evaporation, leading to stale historical artifacts dominating decisions.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "bonabeau"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 7. agentic-camazine-self-organization Skill
+pub fn agentic_camazine_self_organization() -> EccSkill {
+    EccSkill::new(
+        "agentic-camazine-self-organization",
+        "Positive and negative feedback loops, symmetry breaking, quorum sensing, and spontaneous pattern formation in biological and software multi-agent swarms.",
+        r#"---
+name: agentic-camazine-self-organization
+description: "Positive and negative feedback loops, symmetry breaking, quorum sensing, and spontaneous pattern formation in biological and software multi-agent swarms."
+triggers: ["camazine", "self-organization", "quorum-sensing", "symmetry-breaking", "feedback-loops", "spontaneous-order"]
+---
+
+# agentic-camazine-self-organization
+> Based on **Self-Organization in Biological Systems - Scott Camazine et al.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Feedback Balance: Positive feedback amplifies micro-perturbations (innovation); negative feedback enforces stability and resource bounds.**
+2. **Quorum Sensing: Collective transitions trigger only when local interaction density exceeds a critical concentration threshold.**
+3. **Symmetry Breaking: Homogeneous agents differentiate into specialized functional roles through stochastic fluctuations and local reinforcement.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design resilient self-organizing agent networks where global order emerges from simple local rules. Implement quorum sensing for distributed consensus before committing major refactors.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Unchecked positive feedback causing runaway compute loops or cascading agent hallucinations.**
+- **Rigid top-down assignment of roles that cannot adapt to dynamic workload fluctuations.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "camazine"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 8. agentic-reynolds-autonomous-agents Skill
+pub fn agentic_reynolds_autonomous_agents() -> EccSkill {
+    EccSkill::new(
+        "agentic-reynolds-autonomous-agents",
+        "Autonomous steering behaviors, separation, alignment, cohesion, obstacle avoidance, and decentralized crowd dynamics for autonomous software agents.",
+        r#"---
+name: agentic-reynolds-autonomous-agents
+description: "Autonomous steering behaviors, separation, alignment, cohesion, obstacle avoidance, and decentralized crowd dynamics for autonomous software agents."
+triggers: ["reynolds", "boids", "steering-behaviors", "separation-alignment-cohesion", "autonomous-flocking", "flocking-agents"]
+---
+
+# agentic-reynolds-autonomous-agents
+> Based on **Flocks, Herds, and Schools: A Distributed Behavioral Model - Craig Reynolds**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Separation: Steer to avoid crowding local flockmates: F_sep = sum((x_i - x_j) / ||x_i - x_j||^2).**
+2. **Alignment: Steer towards the average heading of local flockmates: F_align = mean(v_j) - v_i.**
+3. **Cohesion: Steer to move toward the average position (center of mass) of local flockmates: F_coh = mean(x_j) - x_i.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Use Reynolds flocking forces to coordinate concurrent code generation tasks. Keep agents separated in code scopes, aligned on architectural standards, and cohesive around the project vision.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Overlapping code edits causing git merge conflicts (separation failure).**
+- **Incompatible architectural decisions across modules (alignment failure).**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "reynolds"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 9. agentic-dorigo-ant-colony Skill
+pub fn agentic_dorigo_ant_colony() -> EccSkill {
+    EccSkill::new(
+        "agentic-dorigo-ant-colony",
+        "Pheromone deposition, evaporation dynamics, artificial ant graph routing, combinatorial optimization, and heuristic search across solution spaces.",
+        r#"---
+name: agentic-dorigo-ant-colony
+description: "Pheromone deposition, evaporation dynamics, artificial ant graph routing, combinatorial optimization, and heuristic search across solution spaces."
+triggers: ["dorigo", "ant-colony", "aco-optimization", "pheromone-evaporation", "graph-routing", "combinatorial-search"]
+---
+
+# agentic-dorigo-ant-colony
+> Based on **Ant Colony Optimization - Marco Dorigo & Thomas Stützle**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Pheromone Evaporation: tau_ij(t+1) = (1 - rho) * tau_ij(t) + sum(Delta_tau_ij^k), where rho in (0, 1] is evaporation rate.**
+2. **Probabilistic Transition Rule: p_ij^k = [tau_ij]^alpha * [eta_ij]^beta / sum([tau_il]^alpha * [eta_il]^beta), trading off trail history vs local heuristic.**
+3. **Pheromone Reinforcement: Successful solution paths deposit reinforcement inversely proportional to path length or compilation cost.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Route agent problem solving through complex call graphs and dependency trees using Ant Colony Optimization. Evaporate failed solution attempts and reinforce verified green test paths.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Zero evaporation rate causing premature lock-in on suboptimal legacy code paths.**
+- **Ignoring local heuristic eta_ij (e.g. type checking error count), relying blindly on pheromones.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "dorigo"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 10. agentic-murray-consensus-cooperation Skill
+pub fn agentic_murray_consensus_cooperation() -> EccSkill {
+    EccSkill::new(
+        "agentic-murray-consensus-cooperation",
+        "Graph Laplacians, algebraic connectivity, consensus protocols, agreement algorithms under directed delay topologies, and distributed swarm formation control.",
+        r#"---
+name: agentic-murray-consensus-cooperation
+description: "Graph Laplacians, algebraic connectivity, consensus protocols, agreement algorithms under directed delay topologies, and distributed swarm formation control."
+triggers: ["murray", "olfati-saber", "consensus-cooperation", "graph-laplacian", "algebraic-connectivity", "agreement-protocol", "swarm-consensus"]
+---
+
+# agentic-murray-consensus-cooperation
+> Based on **Consensus and Cooperation in Networked Multi-Agent Systems - Reza Olfati-Saber, J. Alex Fax & Richard M. Murray**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Continuous-time Consensus: dx_i/dt = - sum_j a_ij * (x_i - x_j) = - [L * x]_i, where L = D - A is the graph Laplacian matrix.**
+2. **Algebraic Connectivity lambda_2(L): Consensus is achieved asymptotically if and only if the communication network graph has a spanning tree (lambda_2 > 0).**
+3. **Delay Robustness: Nyquist criteria bounds the maximum allowable communication delay tau < pi / (2 * lambda_max(L)) for stability.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Enforce distributed state consensus across agent swarms using Laplacian feedback. Verify algebraic connectivity of the communication graph to guarantee synchronization before execution.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Partitioned communication graphs where disconnected agent clusters diverge into incompatible states.**
+- **Network message latency exceeding theoretical stability bounds, triggering oscillation.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "murray"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 11. agentic-alammar-transformer-mechanics Skill
+pub fn agentic_alammar_transformer_mechanics() -> EccSkill {
+    EccSkill::new(
+        "agentic-alammar-transformer-mechanics",
+        "Multi-head self-attention mechanics, KV-cache management, rotary positional embeddings (RoPE), token logits, and internal transformer layer projections.",
+        r#"---
+name: agentic-alammar-transformer-mechanics
+description: "Multi-head self-attention mechanics, KV-cache management, rotary positional embeddings (RoPE), token logits, and internal transformer layer projections."
+triggers: ["alammar", "illustrated-transformer", "transformer-mechanics", "multi-head-attention", "kv-cache", "rope-embeddings", "token-logits"]
+---
+
+# agentic-alammar-transformer-mechanics
+> Based on **Hands-On Large Language Models / The Illustrated Transformer - Jay Alammar & Maarten Grootendorst**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Scaled Dot-Product Attention: Attention(Q, K, V) = softmax(Q * K^T / sqrt(d_k)) * V.**
+2. **KV-Cache Memory Footprint: Memory = 2 * n_layers * n_heads * d_head * seq_len * batch_size * precision_bytes.**
+3. **Rotary Positional Embeddings (RoPE): Embeds positional information through complex rotation matrices preserving relative token distances.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Optimize agent prompts for KV-cache reuse by placing static system prompts and tools at the absolute beginning of context. Manage token budget strictly relative to context window limits.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Dynamic prefix mutation that breaks KV-cache prefix sharing across turns, multiplying inference latency.**
+- **Exceeding attention budget leading to needle-in-a-haystack retrieval degradation.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "alammar"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 12. agentic-huyen-ai-engineering Skill
+pub fn agentic_huyen_ai_engineering() -> EccSkill {
+    EccSkill::new(
+        "agentic-huyen-ai-engineering",
+        "Production AI systems, prompt chaining, structured outputs (JSON schema), latency/cost trade-offs, evaluation cascades, and enterprise agent deployment.",
+        r#"---
+name: agentic-huyen-ai-engineering
+description: "Production AI systems, prompt chaining, structured outputs (JSON schema), latency/cost trade-offs, evaluation cascades, and enterprise agent deployment."
+triggers: ["huyen", "chip-huyen", "ai-engineering", "structured-outputs", "evaluation-cascades", "prompt-chaining", "foundation-models"]
+---
+
+# agentic-huyen-ai-engineering
+> Based on **AI Engineering: Building Applications with Foundation Models - Chip Huyen**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Structured Output Enforcement: Guarantee valid JSON/Pydantic schemas via grammar-constrained sampling or JSON mode.**
+2. **Cost-Latency-Quality Frontier: Route queries across small local models (fast/cheap) and frontier cloud models based on task complexity.**
+3. **Evaluation Cascades: Multi-stage evaluation combining regex unit tests, AST parsers, and LLM-as-a-judge rubrics.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement strict JSON schema contracts for all agent tool calls. Route routine code tasks to local LLMs and escalate architectural refactoring to frontier models.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Allowing unconstrained free-text output when deterministic JSON schemas are required by downstream tools.**
+- **Using expensive frontier models for trivial regex extractions or boilerplate formatting.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "huyen"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 13. agentic-rothman-transformers-nlp Skill
+pub fn agentic_rothman_transformers_nlp() -> EccSkill {
+    EccSkill::new(
+        "agentic-rothman-transformers-nlp",
+        "Transformer tokenization, attention visualization, encoder-decoder vs decoder-only routing, few-shot conditioning, and downstream agent specialization.",
+        r#"---
+name: agentic-rothman-transformers-nlp
+description: "Transformer tokenization, attention visualization, encoder-decoder vs decoder-only routing, few-shot conditioning, and downstream agent specialization."
+triggers: ["rothman", "transformers-nlp", "attention-visualization", "encoder-decoder", "decoder-only", "few-shot-conditioning"]
+---
+
+# agentic-rothman-transformers-nlp
+> Based on **Transformers for Natural Language Processing and Computer Vision - Denis Rothman**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Subword Tokenization (BPE/WordPiece): Text tokenization maps vocabulary IDs preserving morphological subword units.**
+2. **Attention Map Analysis: Inspecting cross-attention weights to audit whether the agent attends to relevant codebase context.**
+3. **Few-Shot Exemplar Anchoring: Injecting input-output exemplars with explicit reasoning traces to constrain output variance.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Provide 2-3 precise input/output exemplars within agent instructions to anchor tone, formatting, and structural invariants. Verify tokenization boundaries on specialized code syntax.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming word-level tokenization for code identifiers, causing token fragmentation in camelCase/snake_case.**
+- **Providing conflicting few-shot examples that induce high epistemic entropy.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "rothman"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 14. agentic-tunstall-nlp-transformers Skill
+pub fn agentic_tunstall_nlp_transformers() -> EccSkill {
+    EccSkill::new(
+        "agentic-tunstall-nlp-transformers",
+        "Parameter-efficient fine-tuning (PEFT/LoRA), quantization (int8/int4), model deployment pipelines, instruction tuning, and local LLM execution.",
+        r#"---
+name: agentic-tunstall-nlp-transformers
+description: "Parameter-efficient fine-tuning (PEFT/LoRA), quantization (int8/int4), model deployment pipelines, instruction tuning, and local LLM execution."
+triggers: ["tunstall", "von-werra", "wolf", "huggingface", "peft-lora", "quantization", "instruction-tuning", "local-llm"]
+---
+
+# agentic-tunstall-nlp-transformers
+> Based on **Natural Language Processing with Transformers - Lewis Tunstall, Leandro von Werra & Thomas Wolf**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Low-Rank Adaptation (LoRA): W_updated = W_0 + (alpha / r) * B * A, where rank r << min(d_in, d_out).**
+2. **Quantization Trade-offs: Quantizing weights to 4-bit (AWQ/GPTQ) reduces VRAM by ~70% with negligible perplexity penalty on code tasks.**
+3. **Instruction Dataset Curation: Clean, deduplicated, verified test-passing code samples maximize transfer learning during alignment.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Deploy quantized local models for offline agent coding loops. Use LoRA adapters tailored to specific internal frameworks and domain-specific APIs.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Deploying unquantized 32-bit float models for CLI agents, causing GPU out-of-memory crashes.**
+- **Fine-tuning on unverified code containing syntax errors and security vulnerabilities.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "tunstall"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 15. agentic-jurafsky-slp-language-models Skill
+pub fn agentic_jurafsky_slp_language_models() -> EccSkill {
+    EccSkill::new(
+        "agentic-jurafsky-slp-language-models",
+        "Autoregressive language modeling, perplexity, beam search decoding, temperature and top-p sampling, semantic parsing, and linguistic foundations.",
+        r#"---
+name: agentic-jurafsky-slp-language-models
+description: "Autoregressive language modeling, perplexity, beam search decoding, temperature and top-p sampling, semantic parsing, and linguistic foundations."
+triggers: ["jurafsky", "martin", "speech-language-processing", "beam-search", "nucleus-sampling", "semantic-parsing", "perplexity"]
+---
+
+# agentic-jurafsky-slp-language-models
+> Based on **Speech and Language Processing (3rd ed) - Daniel Jurafsky & James H. Martin**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Autoregressive Probability Chain: P(w_1, ..., w_n) = prod_{i=1}^n P(w_i | w_1, ..., w_{i-1}).**
+2. **Nucleus (Top-p) Sampling: Restricts generation candidate set to smallest subset V^(p) where sum_{w in V^(p)} P(w) >= p.**
+3. **Perplexity (PPL): PPL(W) = exp(- 1/N * sum_{i=1}^N ln P(w_i | w_{<i})), measuring model uncertainty.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Set temperature to 0.0 for deterministic code generation and property verification. Tune top-p to 0.95 for exploratory architecture brainstorming.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **High temperature (> 0.7) during syntax-critical refactoring, inducing hallucinated import statements.**
+- **Using greedy search when multi-candidate beam search is required for complex constraint satisfaction.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "jurafsky"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 16. agentic-goldberg-nn-nlp Skill
+pub fn agentic_goldberg_nn_nlp() -> EccSkill {
+    EccSkill::new(
+        "agentic-goldberg-nn-nlp",
+        "Continuous vector representations, dense embeddings, compositional semantics, feedforward and recurrent networks, and geometric embedding spaces.",
+        r#"---
+name: agentic-goldberg-nn-nlp
+description: "Continuous vector representations, dense embeddings, compositional semantics, feedforward and recurrent networks, and geometric embedding spaces."
+triggers: ["goldberg", "neural-nlp", "dense-embeddings", "vector-representations", "compositional-semantics", "embedding-geometry"]
+---
+
+# agentic-goldberg-nn-nlp
+> Based on **Neural Network Methods for Natural Language Processing - Yoav Goldberg**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Distributional Hypothesis: Words occurring in similar contexts share similar semantic representations in vector space.**
+2. **Vector Cosine Similarity: sim(u, v) = (u . v) / (||u|| * ||v||), invariant to vector magnitude.**
+3. **Compositionality: Representing complex phrases or code blocks as geometric compositions of their atomic token vectors.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Index codebases in high-dimensional vector spaces using semantic embeddings. Compute cosine similarity against user problem statements to retrieve relevant source files.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Relying solely on vector embeddings for exact identifier search where inverted lexical search is required.**
+- **Comparing embeddings across heterogeneous vector spaces without shared alignment.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "goldberg"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 17. agentic-ravichandiran-llm-engineering Skill
+pub fn agentic_ravichandiran_llm_engineering() -> EccSkill {
+    EccSkill::new(
+        "agentic-ravichandiran-llm-engineering",
+        "LangChain & LlamaIndex internals, agent chains, tool use integrations, prompt templates, memory buffers, and orchestration pipelines.",
+        r#"---
+name: agentic-ravichandiran-llm-engineering
+description: "LangChain & LlamaIndex internals, agent chains, tool use integrations, prompt templates, memory buffers, and orchestration pipelines."
+triggers: ["ravichandiran", "llm-chains", "tool-integration", "prompt-templates", "agent-orchestration", "memory-buffers"]
+---
+
+# agentic-ravichandiran-llm-engineering
+> Based on **Getting Started with Large Language Models - Sudharsan Ravichandiran**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Tool Calling Protocol: The LLM emits structured tool invocation tokens which the runtime executes and returns as tool result messages.**
+2. **Conversational Buffer Memory: Rolling memory buffers prune historical messages to prevent context exhaustion while retaining core directives.**
+3. **Chaining Paradigm: Composable pipeline execution where output of step N feeds input of step N+1 under invariant assertions.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Construct agent workflows as deterministic Directed Acyclic Graphs (DAGs). Isolate tool execution in sandboxed environments with strict timeouts and error handling.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Unbounded memory buffers growing until the context window overflows and triggers runtime crashes.**
+- **Allowing tools to execute destructive shell commands without human-in-the-loop verification.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "ravichandiran"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 18. agentic-briggs-prompt-engineering Skill
+pub fn agentic_briggs_prompt_engineering() -> EccSkill {
+    EccSkill::new(
+        "agentic-briggs-prompt-engineering",
+        "Chain-of-Thought (CoT), Tree-of-Thoughts (ToT), directional stimulus prompting, few-shot exemplars, prompt injection defenses, and system prompt hardening.",
+        r#"---
+name: agentic-briggs-prompt-engineering
+description: "Chain-of-Thought (CoT), Tree-of-Thoughts (ToT), directional stimulus prompting, few-shot exemplars, prompt injection defenses, and system prompt hardening."
+triggers: ["briggs", "ingham", "prompt-engineering", "chain-of-thought", "tree-of-thoughts", "prompt-injection-defense", "system-prompt-hardening"]
+---
+
+# agentic-briggs-prompt-engineering
+> Based on **Prompt Engineering for Generative AI - James Briggs & Francisco Ingham**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Chain-of-Thought Reasoning: Eliciting intermediate reasoning steps significantly boosts performance on multi-step algorithmic deduction.**
+2. **Tree-of-Thoughts (ToT): Exploration of branching thought trajectories evaluated by self-assessment scoring and backtracking.**
+3. **Prompt Injection Boundary Delimiters: Enclosing user inputs in strict XML/Markdown fences (<user_input>...</user_input>) to prevent instruction hijacking.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Enforce explicit 'Thinking' blocks before code synthesis. Sanitize and isolate all untrusted inputs with boundary tags and anti-injection instructions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Permitting raw user text to concatenate directly with system instructions without sanitization delimiters.**
+- **Skipping scratchpad reasoning on non-trivial algorithmic tasks, leading to logic flaws.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "briggs"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 19. agentic-kamphuis-in-context-reasoning Skill
+pub fn agentic_kamphuis_in_context_reasoning() -> EccSkill {
+    EccSkill::new(
+        "agentic-kamphuis-in-context-reasoning",
+        "In-context scaffolding, role and persona definition, iterative conversational steering, constraint anchoring, and cognitive scaffolding for coding agents.",
+        r#"---
+name: agentic-kamphuis-in-context-reasoning
+description: "In-context scaffolding, role and persona definition, iterative conversational steering, constraint anchoring, and cognitive scaffolding for coding agents."
+triggers: ["kamphuis", "in-context-reasoning", "cognitive-scaffolding", "persona-definition", "conversational-steering", "constraint-anchoring"]
+---
+
+# agentic-kamphuis-in-context-reasoning
+> Based on **The Art of Asking AI - Nathan Kamphuis**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Persona Anchoring: Priming the agent as an elite principal systems engineer focuses the conditional probability distribution toward robust code patterns.**
+2. **Negative Constraint Priming: Explicitly enumerating forbidden patterns ('DO NOT use deprecated API X') reduces error rates.**
+3. **Iterative Narrowing: Guiding the agent from high-level architectural specification down to function-level implementation.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Anchor the agent's persona with precise domain expertise. Clearly state architectural invariants, performance targets, and forbidden dependencies upfront.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Vague, generic prompts ('write code for X') that yield superficial or incomplete implementations.**
+- **Stating what to do without stating what NOT to do, allowing anti-patterns to seep in.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "kamphuis"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 20. agentic-chollet-deep-learning-intuition Skill
+pub fn agentic_chollet_deep_learning_intuition() -> EccSkill {
+    EccSkill::new(
+        "agentic-chollet-deep-learning-intuition",
+        "Representation learning, geometric transformations, generalization vs memorization, gradient descent intuition, and foundational deep learning mechanics.",
+        r#"---
+name: agentic-chollet-deep-learning-intuition
+description: "Representation learning, geometric transformations, generalization vs memorization, gradient descent intuition, and foundational deep learning mechanics."
+triggers: ["chollet", "representation-learning", "generalization-memorization", "geometric-transformations", "deep-learning-intuition", "manifold-hypothesis"]
+---
+
+# agentic-chollet-deep-learning-intuition
+> Based on **Deep Learning with Python - François Chollet**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Manifold Hypothesis: Real-world high-dimensional data concentrates near low-dimensional non-linear manifolds in embedding space.**
+2. **Generalization vs Memorization: True intelligence is the ability to adapt to new situations using compact abstraction models rather than memorizing training data.**
+3. **Differentiable Programming: Composing differentiable computational graphs optimized via chain-rule backpropagation.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design agent reasoning architectures that build generalized mental models of codebases rather than memorizing brittle surface strings. Verify zero-shot edge cases.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Overfitting agent prompts to narrow test inputs, failing on unseen user scenarios.**
+- **Treating neural models as infallible databases rather than probabilistic statistical representations.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "chollet"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 21. agentic-russell-norvig-aima Skill
+pub fn agentic_russell_norvig_aima() -> EccSkill {
+    EccSkill::new(
+        "agentic-russell-norvig-aima",
+        "Rational agent framework, PEAS (Performance, Environment, Actuators, Sensors), utility theory, adversarial search, Markov decision processes, and knowledge representation.",
+        r#"---
+name: agentic-russell-norvig-aima
+description: "Rational agent framework, PEAS (Performance, Environment, Actuators, Sensors), utility theory, adversarial search, Markov decision processes, and knowledge representation."
+triggers: ["russell-norvig", "aima", "rational-agents", "peas-framework", "utility-theory", "adversarial-search", "markov-decision-process"]
+---
+
+# agentic-russell-norvig-aima
+> Based on **Artificial Intelligence: A Modern Approach (4th ed) - Stuart Russell & Peter Norvig**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **PEAS Formalization: Define agent's Performance measure, Environment properties (deterministic vs stochastic, fully vs partially observable), Actuators, and Sensors.**
+2. **Principle of Maximum Expected Utility (MEU): A rational agent chooses action a* = argmax_a sum_s' P(s' | s, a) * U(s').**
+3. **State-Space Search Graph: Representing problem states as nodes and transitions as edges traversed via admissibility-guaranteed algorithms.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Define explicit PEAS boundaries for every software engineering agent. Calculate expected utility over potential refactor strategies before modifying core files.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Building agents without defining measurable performance metrics or success predicates.**
+- **Assuming a fully observable deterministic environment when dealing with distributed networks or asynchronous compilers.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "russell-norvig"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 22. agentic-ghallab-automated-planning Skill
+pub fn agentic_ghallab_automated_planning() -> EccSkill {
+    EccSkill::new(
+        "agentic-ghallab-automated-planning",
+        "STRIPS and PDDL state representations, preconditions/effects, forward/backward state-space search, and Hierarchical Task Networks (HTN) for multi-step engineering.",
+        r#"---
+name: agentic-ghallab-automated-planning
+description: "STRIPS and PDDL state representations, preconditions/effects, forward/backward state-space search, and Hierarchical Task Networks (HTN) for multi-step engineering."
+triggers: ["ghallab", "automated-planning", "strips", "pddl", "htn-planning", "preconditions-effects", "state-space-search"]
+---
+
+# agentic-ghallab-automated-planning
+> Based on **Automated Planning: Theory and Practice - Malik Ghallab, Dana Nau & Paolo Traverso**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **STRIPS Action Representation: Action a = (pre(a), add(a), del(a)), updating world state S' = (S \ del(a)) union add(a).**
+2. **Hierarchical Task Networks (HTN): Decomposing high-level abstract tasks into partially ordered networks of primitive executable actions.**
+3. **Plan Soundness & Completeness: A plan is sound if every action precondition is satisfied and the terminal state satisfies the goal condition.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Formalize complex multi-step coding plans as HTN task trees. Guard every tool invocation with explicit precondition checks (e.g. file exists, git branch clean).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Executing destructive write actions without verifying preconditions, causing irrecoverable workspace corruption.**
+- **Flat unorganized task lists that fail to model dependencies between compilation, testing, and deployment.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "ghallab"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 23. agentic-geffner-heuristic-search-planning Skill
+pub fn agentic_geffner_heuristic_search_planning() -> EccSkill {
+    EccSkill::new(
+        "agentic-geffner-heuristic-search-planning",
+        "Delete-relaxation heuristics, landmark heuristics, state-space reduction, and satisficing vs optimal search in complex task graphs.",
+        r#"---
+name: agentic-geffner-heuristic-search-planning
+description: "Delete-relaxation heuristics, landmark heuristics, state-space reduction, and satisficing vs optimal search in complex task graphs."
+triggers: ["geffner", "bonet", "heuristic-search-planning", "delete-relaxation", "landmark-heuristics", "satisficing-planning"]
+---
+
+# agentic-geffner-heuristic-search-planning
+> Based on **A Concise Introduction to Models and Methods for Automated Planning - Hector Geffner & Blai Bonet**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Delete-Relaxation Heuristic (h+): Ignoring negative effects of actions yields an admissible relaxation of the true distance to the goal.**
+2. **Fact & Action Landmarks: Subgoals that must be true at some point in every valid plan, providing mandatory stepping stones.**
+3. **Satisficing Search: Trading bounded suboptimality for polynomial-time planning speed using Enforced Hill-Climbing or Greedy Best-First Search.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Identify architectural landmarks (e.g. database schema migrated, interface trait compiled) before writing implementation code. Use satisficing heuristics for rapid iteration.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Exhaustive brute-force search over massive solution spaces when satisficing greedy search suffices.**
+- **Abandoning landmark milestones, leading to circular refactoring with no measurable progress.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "geffner"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 24. agentic-sutton-barto-reinforcement-learning Skill
+pub fn agentic_sutton_barto_reinforcement_learning() -> EccSkill {
+    EccSkill::new(
+        "agentic-sutton-barto-reinforcement-learning",
+        "Bellman equations, Markov Decision Processes (MDP), temporal-difference learning, policy gradients, exploration-exploitation trade-off, and credit assignment.",
+        r#"---
+name: agentic-sutton-barto-reinforcement-learning
+description: "Bellman equations, Markov Decision Processes (MDP), temporal-difference learning, policy gradients, exploration-exploitation trade-off, and credit assignment."
+triggers: ["sutton-barto", "reinforcement-learning", "bellman-equation", "markov-decision-process", "temporal-difference", "policy-gradient", "exploration-exploitation"]
+---
+
+# agentic-sutton-barto-reinforcement-learning
+> Based on **Reinforcement Learning: An Introduction (2nd ed) - Richard S. Sutton & Andrew G. Barto**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Bellman Optimality Equation: V*(s) = max_a sum_{s', r} p(s', r | s, a) * [r + gamma * V*(s')].**
+2. **Temporal-Difference Error: delta_t = R_{t+1} + gamma * V(S_{t+1}) - V(S_t), enabling learning without complete episode rollout.**
+3. **Epsilon-Greedy Exploration: Balance exploiting known green test paths with epsilon probability of exploring novel architectural approaches.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Score agent code modifications using explicit reward functions (compiler clean = +10, test pass = +50, regression = -100). Apply credit assignment to isolate failing commits.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Setting discount factor gamma too low, causing myopic fixes that break future extensibility.**
+- **Reward hacking where an agent comments out tests to falsely achieve a 100% pass rate.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "sutton-barto"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 25. agentic-pearl-heuristic-search Skill
+pub fn agentic_pearl_heuristic_search() -> EccSkill {
+    EccSkill::new(
+        "agentic-pearl-heuristic-search",
+        "A* search admissibility, monotone consistency, branch-and-bound, heuristic pruning, minimax game trees, and computational complexity of heuristics.",
+        r#"---
+name: agentic-pearl-heuristic-search
+description: "A* search admissibility, monotone consistency, branch-and-bound, heuristic pruning, minimax game trees, and computational complexity of heuristics."
+triggers: ["pearl", "heuristic-search", "a-star-algorithm", "admissible-heuristic", "monotone-consistency", "branch-and-bound"]
+---
+
+# agentic-pearl-heuristic-search
+> Based on **Heuristics: Intelligent Search Strategies for Computer Problem Solving - Judea Pearl**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **A* Algorithm Evaluation: f(n) = g(n) + h(n), where g(n) is exact cost from start to n, and h(n) is estimated cost to goal.**
+2. **Admissibility & Optimality: If h(n) <= h*(n) (never overestimates true cost), A* is guaranteed to find the optimal path without expanding redundant nodes.**
+3. **Consistency (Monotonicity): h(n) <= c(n, a, n') + h(n'), guaranteeing that f-scores along any path never decrease.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement code refactor planners using A* search over AST modification graphs. Ensure the distance heuristic to passing test suites is strictly admissible.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Inadmissible heuristics that prune the true optimal code fix in favor of shallow hacks.**
+- **Ignoring duplicate state detection, resulting in infinite loops in cyclic code graphs.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "pearl"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 26. agentic-kaelbling-pomdp-planning Skill
+pub fn agentic_kaelbling_pomdp_planning() -> EccSkill {
+    EccSkill::new(
+        "agentic-kaelbling-pomdp-planning",
+        "Belief state updates, observation uncertainty, policy trees, value iteration in continuous probability simplex, and active sensing in partially observable environments.",
+        r#"---
+name: agentic-kaelbling-pomdp-planning
+description: "Belief state updates, observation uncertainty, policy trees, value iteration in continuous probability simplex, and active sensing in partially observable environments."
+triggers: ["kaelbling", "littman", "pomdp", "partially-observable", "belief-state", "observation-probability", "active-sensing"]
+---
+
+# agentic-kaelbling-pomdp-planning
+> Based on **Planning and Acting in Partially Observable Stochastic Domains (POMDPs) - Leslie Pack Kaelbling, Michael L. Littman & Anthony R. Cassandra**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Belief State Update: b'(s') = P(o | s', a) * sum_s P(s' | s, a) * b(s) / P(o | b, a).**
+2. **POMDP Tuple: Defined as (S, A, T, R, Omega, O, gamma), where Omega is observation space and O is observation probability.**
+3. **Active Information Gathering: Selecting actions whose primary utility is reducing epistemic entropy over system state (e.g. running diagnostics).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model unseen third-party API states and legacy systems as POMDPs. Execute active probe queries (diagnostics, logs, dry-runs) to collapse belief state uncertainty before mutating code.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming complete observability of production systems, leading to blind overwrites of hidden state.**
+- **Ignoring observation noise (flaky tests) and misclassifying system health.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "kaelbling"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 27. agentic-thrun-probabilistic-robotics Skill
+pub fn agentic_thrun_probabilistic_robotics() -> EccSkill {
+    EccSkill::new(
+        "agentic-thrun-probabilistic-robotics",
+        "Recursive Bayesian state estimation, Kalman filters, particle filters, SLAM (Simultaneous Localization and Mapping), and sensor fusion for autonomous agents.",
+        r#"---
+name: agentic-thrun-probabilistic-robotics
+description: "Recursive Bayesian state estimation, Kalman filters, particle filters, SLAM (Simultaneous Localization and Mapping), and sensor fusion for autonomous agents."
+triggers: ["thrun", "burgard", "fox", "probabilistic-robotics", "bayesian-estimation", "kalman-filter", "particle-filter", "slam"]
+---
+
+# agentic-thrun-probabilistic-robotics
+> Based on **Probabilistic Robotics - Sebastian Thrun, Wolfram Burgard & Dieter Fox**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Bayes Filter Loop: Prediction: bel_bar(x_t) = int p(x_t | u_t, x_{t-1}) * bel(x_{t-1}) dx_{t-1}; Correction: bel(x_t) = eta * p(z_t | x_t) * bel_bar(x_t).**
+2. **Particle Filtering: Representing arbitrary multimodal belief distributions via sets of weighted hypotheses (particles).**
+3. **Sensor Fusion: Combining telemetry from unit tests, linter outputs, and runtime metrics to estimate system reliability.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Maintain a Bayesian belief distribution over possible root causes during debugging. Update probabilities as compiler errors and diagnostic logs arrive.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Single-hypothesis fixation during debugging, ignoring contradictory diagnostic signals.**
+- **Treating noisy runtime metrics as absolute ground truth without Bayesian filtering.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "thrun"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 28. agentic-silver-mcts-decision-trees Skill
+pub fn agentic_silver_mcts_decision_trees() -> EccSkill {
+    EccSkill::new(
+        "agentic-silver-mcts-decision-trees",
+        "Monte Carlo Tree Search (MCTS), Upper Confidence Bound for Trees (UCT), selection-expansion-simulation-backpropagation loop, and self-play reasoning.",
+        r#"---
+name: agentic-silver-mcts-decision-trees
+description: "Monte Carlo Tree Search (MCTS), Upper Confidence Bound for Trees (UCT), selection-expansion-simulation-backpropagation loop, and self-play reasoning."
+triggers: ["silver", "alphazero", "mcts", "monte-carlo-tree-search", "uct-algorithm", "policy-value-networks", "self-play"]
+---
+
+# agentic-silver-mcts-decision-trees
+> Based on **Mastering the Game of Go without Human Knowledge / AlphaZero MCTS - David Silver et al.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **UCT Formula: UCT(v) = Q(v) + c * sqrt(ln(N(parent)) / N(v)), balancing historical win-rate Q with exploration bonus.**
+2. **MCTS 4-Phase Loop: 1. Selection (traverse tree via UCT) -> 2. Expansion (add child node) -> 3. Simulation/Evaluation (rollout or value net) -> 4. Backpropagation (update visits and scores).**
+3. **Self-Play Alignment: Generating adversarial test cases against synthetic code implementations to discover edge-case regressions.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Explore alternative code refactoring branches using MCTS. Rank candidate implementations via automated test-run rollouts and select the branch with the highest cumulative reward.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Greedy depth-first exploration without backtracking, getting stuck in irrecoverable compilation traps.**
+- **Zero exploration coefficient (c = 0), preventing the discovery of superior refactoring solutions.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "silver"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 29. agentic-yao-react-interleaved-reasoning Skill
+pub fn agentic_yao_react_interleaved_reasoning() -> EccSkill {
+    EccSkill::new(
+        "agentic-yao-react-interleaved-reasoning",
+        "Interleaved Thought-Action-Observation loops, external knowledge grounding, hallucination interruption, and dynamic trajectory adjustment in language agents.",
+        r#"---
+name: agentic-yao-react-interleaved-reasoning
+description: "Interleaved Thought-Action-Observation loops, external knowledge grounding, hallucination interruption, and dynamic trajectory adjustment in language agents."
+triggers: ["yao", "react-framework", "thought-action-observation", "interleaved-reasoning", "tool-grounding", "hallucination-interruption"]
+---
+
+# agentic-yao-react-interleaved-reasoning
+> Based on **ReAct: Synergizing Reasoning and Acting in Language Models - Shunyu Yao et al.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **ReAct Triad: Thought_t -> Action_t -> Observation_t sequence where reasoning guides action and observation grounds reasoning.**
+2. **External Grounding Invariant: The agent MUST NOT hallucinate the results of tool calls; all state transitions depend strictly on Observation_t.**
+3. **Hallucination Interruption: If Observation_t contradicts Thought_t, the agent immediately enters a corrective Thought_{t+1} phase.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Execute all autonomous actions in a strict Thought -> Action -> Observation loop. Never combine multiple unverified actions into a single ungrounded assumption.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Emitting speculative observations instead of awaiting true tool return payloads.**
+- **Skipping the Thought phase, devolving into unguided random tool thrashing.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "yao"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 30. agentic-shinn-reflexion-self-correction Skill
+pub fn agentic_shinn_reflexion_self_correction() -> EccSkill {
+    EccSkill::new(
+        "agentic-shinn-reflexion-self-correction",
+        "Verbal memory reflection, self-evaluative scalar rewards, error retrospective analysis, trial-and-error retry loops, and episodic memory persistence.",
+        r#"---
+name: agentic-shinn-reflexion-self-correction
+description: "Verbal memory reflection, self-evaluative scalar rewards, error retrospective analysis, trial-and-error retry loops, and episodic memory persistence."
+triggers: ["shinn", "reflexion", "verbal-reinforcement", "self-correction", "episodic-reflection", "error-retrospective"]
+---
+
+# agentic-shinn-reflexion-self-correction
+> Based on **Reflexion: Language Agents with Verbal Reinforcement Learning - Noah Shinn et al.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Verbal Memory Buffer: Storing structured retrospectives: 'Attempt failed because X. In next attempt, avoid Y and implement Z.'**
+2. **Self-Evaluative Heuristic: Evaluating final code artifacts against a scalar rubric (0-100) before presenting them to the user.**
+3. **Iterative Correction Loop: Persisting reflection logs across agent iterations to prevent repeating identical failure trajectories.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+When a build or test suite fails, generate an explicit verbal reflection diagnosing the exact failure mechanism before attempting code edits. Store this reflection in episodic memory.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Repeatedly applying the same failing patch across multiple turns without verbal reflection.**
+- **Discarding error retrospectives between attempts, losing hard-won debugging context.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "shinn"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 31. agentic-karpathy-vibe-coding-paradigm Skill
+pub fn agentic_karpathy_vibe_coding_paradigm() -> EccSkill {
+    EccSkill::new(
+        "agentic-karpathy-vibe-coding-paradigm",
+        "Conversational code iteration, human-as-director, AI-as-synthesizer, high-velocity feedback loops, intuitive flow state, and prompt-first software engineering.",
+        r#"---
+name: agentic-karpathy-vibe-coding-paradigm
+description: "Conversational code iteration, human-as-director, AI-as-synthesizer, high-velocity feedback loops, intuitive flow state, and prompt-first software engineering."
+triggers: ["karpathy", "vibe-coding", "conversational-programming", "human-as-director", "intuitive-iteration", "prompt-first-development"]
+---
+
+# agentic-karpathy-vibe-coding-paradigm
+> Based on **Vibe Coding: The Paradigm of Intuitive Autonomous AI Software Creation - Andrej Karpathy**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Prompt-Code Symbiosis: Natural language is the primary design syntax; generated code is an ephemeral compiler target verified by tests.**
+2. **Velocity Maximization: Minimize the feedback loop latency between human architectural intent and executable running artifacts.**
+3. **Director-Synthesizer Dualism: The human provides domain taste, aesthetic judgment, and safety boundaries; the AI agent synthesizes boilerplate and tests.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Enable rapid vibe coding loops. Let the developer specify high-level vibes and system boundaries; synthesize complete, fully functioning implementations with instant test validation.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Forcing the user to write tedious boilerplate syntax when intent is crystal clear.**
+- **Interrupting the user's flow state with unnecessary pedantic confirmations on trivial details.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "karpathy"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 32. agentic-csikszentmihalyi-flow-state Skill
+pub fn agentic_csikszentmihalyi_flow_state() -> EccSkill {
+    EccSkill::new(
+        "agentic-csikszentmihalyi-flow-state",
+        "Challenge-skill equilibrium, clear proximal goals, unambiguous feedback, deep immersion, distortion of temporal perception, and cognitive ergonomics for developers.",
+        r#"---
+name: agentic-csikszentmihalyi-flow-state
+description: "Challenge-skill equilibrium, clear proximal goals, unambiguous feedback, deep immersion, distortion of temporal perception, and cognitive ergonomics for developers."
+triggers: ["csikszentmihalyi", "flow-state", "challenge-skill-balance", "unambiguous-feedback", "cognitive-ergonomics", "developer-immersion"]
+---
+
+# agentic-csikszentmihalyi-flow-state
+> Based on **Flow: The Psychology of Optimal Experience - Mihaly Csikszentmihalyi**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Flow Channel Condition: Task challenge C and operator skill S must remain balanced: C approx S. If C >> S -> anxiety; if S >> C -> boredom.**
+2. **Immediate Feedback Invariant: System responses must arrive within sub-second thresholds to prevent breaking the developer's working memory.**
+3. **Clear Proximal Subgoals: Deconstruct ambiguous epic goals into clear, incremental milestones achievable in minutes.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Preserve developer flow state at all costs. Provide immediate, deterministic feedback for every code edit and break daunting tasks into bite-sized achievable steps.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Unresponsive tools or long silent pauses without progress telemetry.**
+- **Presenting overwhelming 50-step plans that induce cognitive overload and anxiety.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "csikszentmihalyi"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 33. agentic-hunt-pragmatic-programmer Skill
+pub fn agentic_hunt_pragmatic_programmer() -> EccSkill {
+    EccSkill::new(
+        "agentic-hunt-pragmatic-programmer",
+        "Don't Repeat Yourself (DRY), orthogonality, tracer bullets, broken windows theory, stone soup, pragmatic paranoia, and engineering craftsmanship.",
+        r#"---
+name: agentic-hunt-pragmatic-programmer
+description: "Don't Repeat Yourself (DRY), orthogonality, tracer bullets, broken windows theory, stone soup, pragmatic paranoia, and engineering craftsmanship."
+triggers: ["hunt", "pragmatic-programmer", "dry-principle", "orthogonality", "tracer-bullets", "broken-windows", "pragmatic-paranoia"]
+---
+
+# agentic-hunt-pragmatic-programmer
+> Based on **The Pragmatic Programmer: Your Journey to Mastery - David Thomas & Andrew Hunt**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **DRY Principle: Every piece of knowledge must have a single, unambiguous, authoritative representation within a system.**
+2. **Orthogonality: Eliminate side-effects between unrelated components so modifying module A cannot break module B.**
+3. **Tracer Bullets: Implement end-to-end thin vertical slices that connect all architectural layers before fleshing out bulk features.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Build vertical tracer bullets to validate end-to-end integration immediately. Never tolerate 'broken windows' (commented-out tests, unaddressed linter warnings).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Copy-pasting duplicate logic across multiple files, violating DRY.**
+- **Building elaborate horizontal layers (data models, UI) without ever running end-to-end tracer tests.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "hunt"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 34. agentic-raymond-cathedral-bazaar Skill
+pub fn agentic_raymond_cathedral_bazaar() -> EccSkill {
+    EccSkill::new(
+        "agentic-raymond-cathedral-bazaar",
+        "Release early and often, Linus's Law (many eyeballs make bugs shallow), treating users as co-developers, decentralized design, and open-source dynamics.",
+        r#"---
+name: agentic-raymond-cathedral-bazaar
+description: "Release early and often, Linus's Law (many eyeballs make bugs shallow), treating users as co-developers, decentralized design, and open-source dynamics."
+triggers: ["raymond", "cathedral-bazaar", "release-early-often", "linus-law", "decentralized-development", "open-source-patterns"]
+---
+
+# agentic-raymond-cathedral-bazaar
+> Based on **The Cathedral and the Bazaar - Eric S. Raymond**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Linus's Law: Given enough eyeballs, all bugs are shallow (deploying automated testing and multi-agent review sweeps).**
+2. **Release Early, Release Often: Short release cadences minimize integration divergence and accelerate empirical feedback.**
+3. **Smart Data Structures: Smart data structures and dumb code work a lot better than the other way around.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Commit small, frequent, atomic changes that keep the build green. Use automated multi-agent code reviews to uncover hidden edge cases.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Massive multi-week PRs that are impossible to review or debug.**
+- **Hoarding uncommitted changes locally, risking devastating merge conflicts.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "raymond"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 35. agentic-graham-hackers-painters Skill
+pub fn agentic_graham_hackers_painters() -> EccSkill {
+    EccSkill::new(
+        "agentic-graham-hackers-painters",
+        "Software as creative craft, bottom-up design, sketch-driven prototyping, expressive language power, and rapid iterative hacking as thinking.",
+        r#"---
+name: agentic-graham-hackers-painters
+description: "Software as creative craft, bottom-up design, sketch-driven prototyping, expressive language power, and rapid iterative hacking as thinking."
+triggers: ["graham", "hackers-painters", "software-craftsmanship", "bottom-up-design", "expressive-power", "rapid-prototyping"]
+---
+
+# agentic-graham-hackers-painters
+> Based on **Hackers & Painters: Big Ideas from the Computer Age - Paul Graham**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Sketching in Code: Software design is an empirical discovery process where coding directly reveals architectural possibilities.**
+2. **Bottom-Up Design: Build a layered domain language upward from primitives until solving the target problem becomes natural and concise.**
+3. **Succinctness is Power: High expressive density reduces cognitive surface area and the statistical probability of bugs.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Support bottom-up development by synthesizing clean domain primitives first. Enable exploratory prototyping that clarifies requirements through running software.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Overly bureaucratic top-down waterfall planning before writing any running code.**
+- **Verbose, ceremonial boilerplate that obscures core business logic.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "graham"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 36. agentic-beck-extreme-programming Skill
+pub fn agentic_beck_extreme_programming() -> EccSkill {
+    EccSkill::new(
+        "agentic-beck-extreme-programming",
+        "Pair programming, continuous integration, collective code ownership, small release increments, ruthless refactoring, and rapid user feedback loops.",
+        r#"---
+name: agentic-beck-extreme-programming
+description: "Pair programming, continuous integration, collective code ownership, small release increments, ruthless refactoring, and rapid user feedback loops."
+triggers: ["beck", "extreme-programming", "pair-programming", "continuous-integration", "collective-ownership", "ruthless-refactoring"]
+---
+
+# agentic-beck-extreme-programming
+> Based on **Extreme Programming Explained: Embrace Change - Kent Beck**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Extreme Pair Programming: AI agent acts as the active navigator or driver in real-time pairing with the developer.**
+2. **Continuous Integration: Code is integrated into the trunk multiple times per day, validated by automated test suites.**
+3. **Ruthless Refactoring: Continuously simplify design, remove dead code, and improve readability without altering observable behavior.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Act as an indefatigable XP pair programmer. Suggest proactive refactorings, write missing regression tests, and maintain trunk health continuously.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Letting technical debt accumulate without refactoring.**
+- **Treating code as private unchangeable property rather than collective shared assets.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "beck"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 37. agentic-ries-lean-mvp-feedback Skill
+pub fn agentic_ries_lean_mvp_feedback() -> EccSkill {
+    EccSkill::new(
+        "agentic-ries-lean-mvp-feedback",
+        "Build-Measure-Learn feedback loops, Minimum Viable Product (MVP), pivot vs persevere, validated learning, and vanity vs actionable metrics.",
+        r#"---
+name: agentic-ries-lean-mvp-feedback
+description: "Build-Measure-Learn feedback loops, Minimum Viable Product (MVP), pivot vs persevere, validated learning, and vanity vs actionable metrics."
+triggers: ["ries", "lean-startup", "build-measure-learn", "minimum-viable-product", "mvp", "validated-learning", "pivot-persevere"]
+---
+
+# agentic-ries-lean-mvp-feedback
+> Based on **The Lean Startup - Eric Ries**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Build-Measure-Learn Cycle: The fundamental feedback loop of high-velocity engineering; minimize total time through this loop.**
+2. **Minimum Viable Product (MVP): The version of a new product which allows a team to collect the maximum amount of validated learning with the least effort.**
+3. **Actionable vs Vanity Metrics: Measure real system behavior (latency, conversion, test pass rate) rather than superficial vanity stats.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Help vibe coders ship MVPs rapidly to test core product hypotheses. Measure performance with actionable telemetry before investing in heavy infrastructure.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Premature scaling and over-engineering infrastructure for hypothetical future traffic.**
+- **Building complex features without defining measurable validation criteria.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "ries"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 38. agentic-knapp-design-sprint-prototyping Skill
+pub fn agentic_knapp_design_sprint_prototyping() -> EccSkill {
+    EccSkill::new(
+        "agentic-knapp-design-sprint-prototyping",
+        "Timeboxed prototyping sprints, storyboarding, customer validation, facade prototypes, and rapid hypothesis testing without production code.",
+        r#"---
+name: agentic-knapp-design-sprint-prototyping
+description: "Timeboxed prototyping sprints, storyboarding, customer validation, facade prototypes, and rapid hypothesis testing without production code."
+triggers: ["knapp", "zeratsky", "design-sprint", "facade-prototyping", "storyboard-validation", "timeboxed-sprints", "rapid-hypothesis"]
+---
+
+# agentic-knapp-design-sprint-prototyping
+> Based on **Sprint: How to Solve Big Problems and Test New Ideas in Just Five Days - Jake Knapp, John Zeratsky & Braden Kowitz**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Facade Prototyping: Build the illusion of a finished system (using mock APIs and synthetic fixtures) to validate UX and business value in hours.**
+2. **Timeboxing Discipline: Strict time limits force decision-making and prevent bikeshedding over non-critical edge cases.**
+3. **Storyboard Mapping: Map critical user journeys end-to-end before implementing backend plumbing.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Rapidly scaffold interactive UI mockups and realistic API stubs so developers can test real product workflows before writing complex backend databases.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Spending days configuring backend databases before validating whether anyone wants the feature.**
+- **Endless open-ended meetings without timeboxed prototype deliverables.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "knapp"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 39. agentic-norman-human-centered-interfaces Skill
+pub fn agentic_norman_human_centered_interfaces() -> EccSkill {
+    EccSkill::new(
+        "agentic-norman-human-centered-interfaces",
+        "Affordances, signifiers, conceptual models, feedback visibility, error tolerance, and bridging the gulf of execution and evaluation.",
+        r#"---
+name: agentic-norman-human-centered-interfaces
+description: "Affordances, signifiers, conceptual models, feedback visibility, error tolerance, and bridging the gulf of execution and evaluation."
+triggers: ["norman", "don-norman", "affordances-signifiers", "conceptual-models", "gulf-of-execution", "human-centered-design", "error-tolerance"]
+---
+
+# agentic-norman-human-centered-interfaces
+> Based on **The Design of Everyday Things - Don Norman**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Gulf of Execution & Evaluation: Execution: how easily can the user figure out what to do; Evaluation: how easily can the user interpret system state.**
+2. **Affordances & Signifiers: Affordances represent possible actions; signifiers communicate where and how action should take place.**
+3. **Forcing Functions: Design constraints that make it physically or logically impossible to make destructive mistakes.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design developer CLI and UI experiences with intuitive affordances and explicit signifiers. Implement confirmation forcing functions for destructive actions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Cryptic CLI tool flags with zero affordance or help feedback.**
+- **Silent failures where operations complete with errors but return zero exit codes.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "norman"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 40. agentic-krug-intuitive-interaction Skill
+pub fn agentic_krug_intuitive_interaction() -> EccSkill {
+    EccSkill::new(
+        "agentic-krug-intuitive-interaction",
+        "Cognitive load minimization, visual hierarchy, self-evident interfaces, mindless navigation, and ruthless omission of needless words in developer tools.",
+        r#"---
+name: agentic-krug-intuitive-interaction
+description: "Cognitive load minimization, visual hierarchy, self-evident interfaces, mindless navigation, and ruthless omission of needless words in developer tools."
+triggers: ["krug", "dont-make-me-think", "cognitive-load-minimization", "visual-hierarchy", "self-evident-design", "frictionless-interaction"]
+---
+
+# agentic-krug-intuitive-interaction
+> Based on **Don't Make Me Think - Steve Krug**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **First Law of Usability: As far as humanly possible, interfaces should be self-evident and obvious without requiring a manual.**
+2. **Muddle vs Clarity: Clear visual hierarchy: things that are related visually belong together; primary actions dominate secondary actions.**
+3. **Omission of Needless Elements: Strip away boilerplate, extraneous text, and cognitive clutter from developer prompts and terminal outputs.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Format terminal and chat outputs with clean visual hierarchy, clear headings, and zero useless chatter. Make next steps completely obvious.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Dumping walls of unformatted markdown text that drown key warnings.**
+- **Burying critical error remedies in verbose paragraph explanations.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "krug"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 41. agentic-lewis-rag-foundations Skill
+pub fn agentic_lewis_rag_foundations() -> EccSkill {
+    EccSkill::new(
+        "agentic-lewis-rag-foundations",
+        "Dense passage retrieval, parametric vs non-parametric memory, cross-entropy loss over retrieved docs, and hybrid generation architecture.",
+        r#"---
+name: agentic-lewis-rag-foundations
+description: "Dense passage retrieval, parametric vs non-parametric memory, cross-entropy loss over retrieved docs, and hybrid generation architecture."
+triggers: ["lewis", "rag-foundations", "retrieval-augmented-generation", "dense-passage-retrieval", "non-parametric-memory", "hybrid-retrieval"]
+---
+
+# agentic-lewis-rag-foundations
+> Based on **Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks - Patrick Lewis et al.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **RAG Generation Probability: P(y | x) = sum_{z in top-k} P(z | x) * P(y | x, z), marginalizing over retrieved document passages z.**
+2. **Dual-Memory Paradigm: Parametric memory (frozen LLM neural weights) augmented with non-parametric memory (vector database of source documents).**
+3. **Context Chunk Size Optimization: Finding the balance between semantic completeness (large chunks) and embedding retrieval precision (small chunks).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Augment agent generation with dense vector retrieval over codebase docs and history. Always cite specific file and line-number references for retrieved context.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Relying purely on parametric memory for internal codebase APIs, generating hallucinated methods.**
+- **Injecting massive irrelevantly retrieved chunks that pollute context and cause hallucination.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "lewis"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 42. agentic-manning-information-retrieval Skill
+pub fn agentic_manning_information_retrieval() -> EccSkill {
+    EccSkill::new(
+        "agentic-manning-information-retrieval",
+        "Inverted indices, BM25 scoring, TF-IDF vector space model, cosine similarity, precision/recall curves, and text normalization.",
+        r#"---
+name: agentic-manning-information-retrieval
+description: "Inverted indices, BM25 scoring, TF-IDF vector space model, cosine similarity, precision/recall curves, and text normalization."
+triggers: ["manning", "raghavan", "schutze", "information-retrieval", "inverted-index", "bm25-scoring", "tf-idf", "precision-recall"]
+---
+
+# agentic-manning-information-retrieval
+> Based on **Introduction to Information Retrieval - Christopher D. Manning, Prabhakar Raghavan & Hinrich Schütze**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **BM25 Scoring Formula: score(D, Q) = sum_{i=1}^n IDF(q_i) * (f(q_i, D) * (k_1 + 1)) / (f(q_i, D) + k_1 * (1 - b + b * (|D| / avgdl))).**
+2. **Inverted Index Invariant: O(1) post-list lookup mapping term tokens directly to document frequency and document IDs.**
+3. **Precision vs Recall Trade-off: Precision = TP / (TP + FP); Recall = TP / (TP + FN); optimize F1 score for code search.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Use hybrid search combining BM25 keyword matching (for exact variable/function names) with vector search (for conceptual semantic queries).
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using vector similarity alone to find exact identifier definitions (e.g. `UserAuthenticationHandler`).**
+- **Failing to normalize code tokens (casing, camelCase splitting), leading to index misses.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "manning"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 43. agentic-baeza-yates-vector-retrieval Skill
+pub fn agentic_baeza_yates_vector_retrieval() -> EccSkill {
+    EccSkill::new(
+        "agentic-baeza-yates-vector-retrieval",
+        "Vector ranking models, probabilistic retrieval, index compression, evaluation metrics (MAP, NDCG), and query expansion algorithms.",
+        r#"---
+name: agentic-baeza-yates-vector-retrieval
+description: "Vector ranking models, probabilistic retrieval, index compression, evaluation metrics (MAP, NDCG), and query expansion algorithms."
+triggers: ["baeza-yates", "ribeiro-neto", "modern-retrieval", "ndcg-ranking", "query-expansion", "vector-ranking", "probabilistic-retrieval"]
+---
+
+# agentic-baeza-yates-vector-retrieval
+> Based on **Modern Information Retrieval - Ricardo Baeza-Yates & Berthier Ribeiro-Neto**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Normalized Discounted Cumulative Gain (NDCG): NDCG_p = DCG_p / IDCG_p, where DCG_p = sum_{i=1}^p (2^{rel_i} - 1) / log_2(i + 1).**
+2. **Query Expansion: Augmenting short user queries with related synonyms, types, and compiler error signatures to improve retrieval recall.**
+3. **Rank Fusion (RRF): Reciprocal Rank Fusion: RRF(d) = sum_{m in models} 1 / (k + rank_m(d)), merging disparate retrieval rankings.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement Reciprocal Rank Fusion to combine lexical AST search, git blame logs, and vector embeddings. Score results using NDCG metrics.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming top-1 retrieval is always accurate; always feed top-K diversified context chunks.**
+- **Evaluating search pipelines without standard ground-truth relevance benchmarks.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "baeza-yates"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 44. agentic-malkov-hnsw-vector-indexing Skill
+pub fn agentic_malkov_hnsw_vector_indexing() -> EccSkill {
+    EccSkill::new(
+        "agentic-malkov-hnsw-vector-indexing",
+        "Hierarchical Navigable Small World (HNSW) graphs, skip-list topology, logarithmic search complexity, edge pruning heuristics, and vector index scaling.",
+        r#"---
+name: agentic-malkov-hnsw-vector-indexing
+description: "Hierarchical Navigable Small World (HNSW) graphs, skip-list topology, logarithmic search complexity, edge pruning heuristics, and vector index scaling."
+triggers: ["malkov", "yashunin", "hnsw-graphs", "approximate-nearest-neighbors", "ann-search", "vector-indexing", "skip-list-topology"]
+---
+
+# agentic-malkov-hnsw-vector-indexing
+> Based on **Efficient and Robust Approximate Nearest Neighbor Search using HNSW Graphs - Yu. A. Malkov & D. A. Yashunin**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Hierarchical Multilayer Graph: Multi-layer structure where top layers contain long-range skip edges and layer 0 contains dense local connectivity.**
+2. **Logarithmic Search Complexity: Search navigates greedy local minima across layers with average time complexity O(log N).**
+3. **Heuristic Edge Selection: Balances distance to candidates with angular diversity to prevent clustering and maintain navigability.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Configure HNSW index parameters (M, efConstruction, efSearch) for sub-10ms similarity queries across millions of code embeddings in local vector stores.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using brute-force flat L2 search in production, causing unacceptable latency as codebase grows.**
+- **Setting efSearch too low, degrading recall below acceptable thresholds for critical code retrieval.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "malkov"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 45. agentic-anderson-actr-cognitive-memory Skill
+pub fn agentic_anderson_actr_cognitive_memory() -> EccSkill {
+    EccSkill::new(
+        "agentic-anderson-actr-cognitive-memory",
+        "Declarative vs procedural memory, chunk activation equation, base-level learning, production rules, pattern matching, and cognitive memory retrieval.",
+        r#"---
+name: agentic-anderson-actr-cognitive-memory
+description: "Declarative vs procedural memory, chunk activation equation, base-level learning, production rules, pattern matching, and cognitive memory retrieval."
+triggers: ["anderson", "act-r", "declarative-procedural-memory", "chunk-activation", "base-level-learning", "cognitive-architecture-memory"]
+---
+
+# agentic-anderson-actr-cognitive-memory
+> Based on **The Architecture of Cognition (ACT-R Memory) - John R. Anderson**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Base-Level Activation Equation: A_i = B_i + sum_j W_j * S_{ji} + epsilon, where B_i = ln(sum_{k=1}^n t_k^{-d}) decays as a power law of time.**
+2. **Declarative Chunks vs Production Rules: Facts/schemas reside in declarative memory; executable cognitive actions reside in procedural IF-THEN rules.**
+3. **Conflict Resolution: Selecting the production rule with the highest expected utility when multiple rules match the current goal buffer.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model long-term agent memory using ACT-R activation equations. Decay historical conversation turns while boosting recently and frequently accessed code modules.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Treating all historical memories as equally relevant regardless of age or frequency of use.**
+- **Mixing procedural execution logic with static declarative schemas.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "anderson"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 46. agentic-baddeley-working-memory-buffers Skill
+pub fn agentic_baddeley_working_memory_buffers() -> EccSkill {
+    EccSkill::new(
+        "agentic-baddeley-working-memory-buffers",
+        "Central executive, phonological loop, visuospatial sketchpad, episodic buffer, capacity limits in context windows, and cognitive load distribution.",
+        r#"---
+name: agentic-baddeley-working-memory-buffers
+description: "Central executive, phonological loop, visuospatial sketchpad, episodic buffer, capacity limits in context windows, and cognitive load distribution."
+triggers: ["baddeley", "working-memory", "central-executive", "episodic-buffer", "cognitive-load", "context-window-management"]
+---
+
+# agentic-baddeley-working-memory-buffers
+> Based on **Working Memory, Thought, and Action - Alan Baddeley**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Multi-Component Working Memory Model: Central Executive coordinates attention and controls three slave buffers: Phonological Loop, Visuospatial Sketchpad, and Episodic Buffer.**
+2. **Capacity Limits (Miller/Cowan): Working memory can reliably manipulate only 4-7 active conceptual chunks simultaneously.**
+3. **Episodic Buffer: Binds cross-modal information into coherent chronological episodes available for executive decision-making.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Structure LLM context windows to emulate Baddeley's working memory: an executive system prompt, a concise episodic buffer of recent turns, and scratchpad space.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Overloading the context window with dozens of unorganized code snippets exceeding the LLM's effective attention span.**
+- **Failing to clear the working memory buffer after concluding an isolated subtask.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "baddeley"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 47. agentic-tulving-episodic-memory-retrieval Skill
+pub fn agentic_tulving_episodic_memory_retrieval() -> EccSkill {
+    EccSkill::new(
+        "agentic-tulving-episodic-memory-retrieval",
+        "Episodic vs semantic memory, autonoetic consciousness, retrieval cues, temporal tagging, chronesthesia, and agent trajectory retrospection.",
+        r#"---
+name: agentic-tulving-episodic-memory-retrieval
+description: "Episodic vs semantic memory, autonoetic consciousness, retrieval cues, temporal tagging, chronesthesia, and agent trajectory retrospection."
+triggers: ["tulving", "episodic-memory", "semantic-memory", "autonoetic-consciousness", "temporal-tagging", "retrieval-cues"]
+---
+
+# agentic-tulving-episodic-memory-retrieval
+> Based on **Elements of Episodic Memory - Endel Tulving**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Episodic-Semantic Distinction: Semantic memory stores general knowledge ('Rust has ownership'); episodic memory stores temporally situated personal experiences ('In step 3 I broke the build').**
+2. **Encoding Specificity Principle: Retrieval is successful only if the cues present during retrieval match the information encoded with the memory trace.**
+3. **Chronesthesia: Mental time travel allowing an agent to simulate future outcomes by reconstructing past episodic trajectories.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Tag agent tool execution logs with precise temporal and situational metadata. Use encoding specificity to retrieve past debugging sessions that share identical error signatures.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Collapsing all historical actions into generic semantic rules, losing the chronological sequence of why decisions were made.**
+- **Querying memory with generic keywords that lack the situational cues present during original failure.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "tulving"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 48. agentic-sowa-knowledge-representation Skill
+pub fn agentic_sowa_knowledge_representation() -> EccSkill {
+    EccSkill::new(
+        "agentic-sowa-knowledge-representation",
+        "Conceptual graphs, first-order logic semantics, ontologies, semantic networks, semantic ambiguity resolution, and knowledge graph mapping.",
+        r#"---
+name: agentic-sowa-knowledge-representation
+description: "Conceptual graphs, first-order logic semantics, ontologies, semantic networks, semantic ambiguity resolution, and knowledge graph mapping."
+triggers: ["sowa", "knowledge-representation", "conceptual-graphs", "ontologies", "first-order-logic", "semantic-networks"]
+---
+
+# agentic-sowa-knowledge-representation
+> Based on **Knowledge Representation: Logical, Philosophical, and Computational Foundations - John F. Sowa**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Conceptual Graph Invariant: Bipartite graph of Concept nodes and Conceptual Relation nodes with formal first-order logic mappings.**
+2. **Ontological Commitment: Explicitly specifying the categories, relations, and invariants that exist within the software problem domain.**
+3. **Knowledge Fusion: Merging disparate semantic schemas via graph unification and constraint consistency checking.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Construct formal domain ontologies for target codebases. Model relationships (implements, extends, calls, imports) as typed conceptual graphs.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Unconstrained natural language summaries that introduce logical contradictions into the system's world model.**
+- **Assuming isomorphic schemas across different microservices without explicit translation mappings.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "sowa"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 49. agentic-baader-description-logics-ontologies Skill
+pub fn agentic_baader_description_logics_ontologies() -> EccSkill {
+    EccSkill::new(
+        "agentic-baader-description-logics-ontologies",
+        "Description Logics (ALC, SHOIN), TBox (terminological) vs ABox (assertional) reasoning, tableau algorithms, and ontology subsumption.",
+        r#"---
+name: agentic-baader-description-logics-ontologies
+description: "Description Logics (ALC, SHOIN), TBox (terminological) vs ABox (assertional) reasoning, tableau algorithms, and ontology subsumption."
+triggers: ["baader", "description-logics", "tbox-abox", "tableau-algorithm", "ontology-subsumption", "formal-knowledge-base"]
+---
+
+# agentic-baader-description-logics-ontologies
+> Based on **The Description Logic Handbook: Theory, Implementation, and Applications - Franz Baader et al.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **TBox vs ABox: TBox defines conceptual schema axioms (e.g. 'AdminUser subclass of User'); ABox defines concrete instance assertions (e.g. 'alice instance of AdminUser').**
+2. **Subsumption Checking: Determining if concept C is subsumed by concept D (C sqsubseteq D) under all valid interpretations.**
+3. **Tableau Decidability: Applying tableau expansion rules to systematically verify ontology satisfiability and consistency.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Verify that agent-generated architectural schemas and access control models are logically consistent using description logic subsumption checkers.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Defining cyclical ontology hierarchies with unsatisfiable concept definitions.**
+- **Confusing class-level schema modifications (TBox) with instance-level data modifications (ABox).**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "baader"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 50. agentic-robinson-graph-rag-knowledge Skill
+pub fn agentic_robinson_graph_rag_knowledge() -> EccSkill {
+    EccSkill::new(
+        "agentic-robinson-graph-rag-knowledge",
+        "Property graph models, graph traversal algorithms, Cypher queries, Knowledge Graph RAG, and multi-hop relationship reasoning across codebases.",
+        r#"---
+name: agentic-robinson-graph-rag-knowledge
+description: "Property graph models, graph traversal algorithms, Cypher queries, Knowledge Graph RAG, and multi-hop relationship reasoning across codebases."
+triggers: ["robinson", "webber", "eifrem", "graph-databases", "graph-rag", "property-graphs", "cypher-queries", "multi-hop-retrieval"]
+---
+
+# agentic-robinson-graph-rag-knowledge
+> Based on **Graph Databases: New Opportunities for Connected Data - Ian Robinson, Jim Webber & Emil Eifrem**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Labeled Property Graph Model: Nodes with labels and key-value properties connected by directed, typed relationships with properties.**
+2. **Index-Free Adjacency: Each node directly references its adjacent neighbors, allowing O(1) traversal performance independent of total graph size.**
+3. **Multi-Hop Graph RAG: Traversing 2-3 degrees of separation (Function -> Calls -> Dependency -> Version) to retrieve complete architectural context.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Build a Graph RAG pipeline over codebase ASTs and dependency graphs. Use graph traversals to gather multi-hop context for complex refactorings.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Flat keyword search across disconnected files when understanding a bug requires walking call-graph paths.**
+- **Unbounded breadth-first graph expansions that explode memory and retrieve irrelevant modules.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "robinson"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 51. agentic-gulwani-program-synthesis Skill
+pub fn agentic_gulwani_program_synthesis() -> EccSkill {
+    EccSkill::new(
+        "agentic-gulwani-program-synthesis",
+        "Inductive program synthesis, programming by example (PBE), domain-specific Version Space Algebras, syntax-guided synthesis (SyGuS), and deductive search.",
+        r#"---
+name: agentic-gulwani-program-synthesis
+description: "Inductive program synthesis, programming by example (PBE), domain-specific Version Space Algebras, syntax-guided synthesis (SyGuS), and deductive search."
+triggers: ["gulwani", "polozov", "singh", "program-synthesis", "programming-by-example", "version-space-algebra", "sygus"]
+---
+
+# agentic-gulwani-program-synthesis
+> Based on **Program Synthesis - Sumit Gulwani, Oleksandr Polozov & Rishabh Singh**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Inductive Synthesis Invariant: Given input-output examples {(x_1, y_1), ..., (x_n, y_n)}, synthesize program P in DSL such that forall i, P(x_i) == y_i.**
+2. **Version Space Algebra (VSA): Compactly represent an exponential number of consistent candidate programs using a polynomial-sized shared DAG.**
+3. **Deductive Top-Down Search: Propagate input-output constraints downward through grammar operators to prune invalid program spaces early.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Synthesize data transformation pipelines and regex extractors using programming-by-example principles. Verify candidate programs against test suites before proposing them.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Proposing code without checking that it passes the user's provided input-output examples.**
+- **Generating overly complex general programs when a simple DSL expression satisfies all constraints.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "gulwani"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 52. agentic-aho-dragon-compiler-parsing Skill
+pub fn agentic_aho_dragon_compiler_parsing() -> EccSkill {
+    EccSkill::new(
+        "agentic-aho-dragon-compiler-parsing",
+        "Lexical analysis, LL/LR parsing tables, abstract syntax trees (AST), syntax-directed translation, symbol tables, and compiler frontends.",
+        r#"---
+name: agentic-aho-dragon-compiler-parsing
+description: "Lexical analysis, LL/LR parsing tables, abstract syntax trees (AST), syntax-directed translation, symbol tables, and compiler frontends."
+triggers: ["aho", "dragon-book", "compiler-parsing", "abstract-syntax-tree", "syntax-directed-translation", "symbol-table", "lr-parsing"]
+---
+
+# agentic-aho-dragon-compiler-parsing
+> Based on **Compilers: Principles, Techniques, and Tools (Dragon Book) - Alfred V. Aho, Monica S. Lam, Ravi Sethi & Jeffrey D. Ullman**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Grammar Classification: Context-Free Grammar G = (V, Sigma, R, S) parsed via deterministic LR(1) or LALR tables without shift-reduce conflicts.**
+2. **AST Construction: Generating an Abstract Syntax Tree that abstracts away concrete punctuation while preserving hierarchical semantic structure.**
+3. **Symbol Table Scope Stack: Maintaining lexical scope hierarchies mapping identifier symbols to type signatures and memory offsets.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Parse agent-generated code into formal ASTs before saving to disk. Catch syntax and lexical errors immediately at the compiler frontend level.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Relying on naive regex string matching to inspect or refactor nested programming language constructs.**
+- **Ignoring lexical scope rules, causing duplicate symbol declarations or shadow variable bugs.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "aho"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 53. agentic-cooper-compiler-ir-optimization Skill
+pub fn agentic_cooper_compiler_ir_optimization() -> EccSkill {
+    EccSkill::new(
+        "agentic-cooper-compiler-ir-optimization",
+        "Intermediate representations (IR), control flow graphs (CFG), SSA (Static Single Assignment) form, dead code elimination, and register allocation.",
+        r#"---
+name: agentic-cooper-compiler-ir-optimization
+description: "Intermediate representations (IR), control flow graphs (CFG), SSA (Static Single Assignment) form, dead code elimination, and register allocation."
+triggers: ["cooper", "torczon", "compiler-optimization", "intermediate-representation", "control-flow-graph", "ssa-form", "dead-code-elimination"]
+---
+
+# agentic-cooper-compiler-ir-optimization
+> Based on **Engineering a Compiler - Keith D. Cooper & Linda Torczon**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Static Single Assignment (SSA): Every variable is assigned exactly once; phi-nodes resolve values at confluence points in the Control Flow Graph.**
+2. **Dominator Tree Invariant: Node d dominates node n (d dom n) if every path from entry to n must pass through d.**
+3. **Dead Code Elimination: Iteratively removing operations whose definitions have no uses and produce no observable side-effects.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Analyze code refactorings at the Control Flow Graph and SSA level. Verify that transformations preserve dominance invariants and eliminate unreachable dead branches.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Refactorings that leave dangling unused variables, unreferenced imports, or unreachable code blocks.**
+- **Accidentally altering phi-node value resolution across branching conditionals.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "cooper"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 54. agentic-muchnick-cfg-dataflow-analysis Skill
+pub fn agentic_muchnick_cfg_dataflow_analysis() -> EccSkill {
+    EccSkill::new(
+        "agentic-muchnick-cfg-dataflow-analysis",
+        "Dataflow equations (available expressions, reaching definitions, live variables), dominance frontiers, loop transformations, and interprocedural analysis.",
+        r#"---
+name: agentic-muchnick-cfg-dataflow-analysis
+description: "Dataflow equations (available expressions, reaching definitions, live variables), dominance frontiers, loop transformations, and interprocedural analysis."
+triggers: ["muchnick", "dataflow-analysis", "reaching-definitions", "live-variables", "dominance-frontiers", "interprocedural-analysis"]
+---
+
+# agentic-muchnick-cfg-dataflow-analysis
+> Based on **Advanced Compiler Design and Implementation - Steven S. Muchnick**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Dataflow Equation Framework: Out[B] = Gen[B] union (In[B] \ Kill[B]); In[B] = bigcup_{P in pred(B)} Out[P].**
+2. **Liveness Analysis: A variable is live at point p if there exists an execution path from p to a use that does not redefine the variable.**
+3. **Monotone Framework Fixed Point: Iterating dataflow equations until convergence is guaranteed by Knaster-Tarski fixed-point theorem on finite lattices.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Perform static dataflow analysis to ensure variables are initialized before use and resources (file handles, network sockets) are safely disposed along all paths.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Introducing uninitialized variable reads along rarely executed error branches.**
+- **Resource leaks caused by failing to close handles on abnormal exit paths.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "muchnick"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 55. agentic-nystrom-crafting-interpreters Skill
+pub fn agentic_nystrom_crafting_interpreters() -> EccSkill {
+    EccSkill::new(
+        "agentic-nystrom-crafting-interpreters",
+        "Tree-walk interpreters, bytecode virtual machines, Pratt parsing, garbage collection, and stack-based execution architectures.",
+        r#"---
+name: agentic-nystrom-crafting-interpreters
+description: "Tree-walk interpreters, bytecode virtual machines, Pratt parsing, garbage collection, and stack-based execution architectures."
+triggers: ["nystrom", "crafting-interpreters", "bytecode-vm", "pratt-parsing", "tree-walk-interpreter", "garbage-collection"]
+---
+
+# agentic-nystrom-crafting-interpreters
+> Based on **Crafting Interpreters - Robert Nystrom**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Pratt Parsing (Top-Down Operator Precedence): Associating parse functions with token types and binding powers to parse expressions cleanly in O(N).**
+2. **Stack-Based VM Dispatch: Executing instructions via a central bytecode evaluation loop manipulating an explicit operand value stack.**
+3. **Mark-and-Sweep Garbage Collection: Tracing reachable objects from root references (stack, globals) and reclaiming unreachable memory.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Scaffold internal domain-specific scripting interpreters using Pratt parsing for ergonomic expressions and stack-based bytecode evaluation for execution speed.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Writing messy recursive-descent parsers for mathematical expressions when Pratt parsing handles precedence cleanly.**
+- **Creating circular object references in custom interpreters without cycle-collection support.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "nystrom"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 56. agentic-fowler-domain-specific-languages Skill
+pub fn agentic_fowler_domain_specific_languages() -> EccSkill {
+    EccSkill::new(
+        "agentic-fowler-domain-specific-languages",
+        "Internal vs external DSLs, semantic models, fluent interfaces, parser combinators, and language workbenches for business rule modeling.",
+        r#"---
+name: agentic-fowler-domain-specific-languages
+description: "Internal vs external DSLs, semantic models, fluent interfaces, parser combinators, and language workbenches for business rule modeling."
+triggers: ["fowler", "domain-specific-languages", "dsl-design", "fluent-interface", "semantic-model", "internal-dsl", "external-dsl"]
+---
+
+# agentic-fowler-domain-specific-languages
+> Based on **Domain-Specific Languages - Martin Fowler**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Semantic Model Decoupling: The DSL syntax (internal builder or external script) populates a pure, syntax-agnostic semantic object graph.**
+2. **Fluent Interface Protocol: Method chaining designed so sentences read as natural human language while remaining syntactically valid in host language.**
+3. **Grammar-Driven External DSL: When business domain rules need to be edited by non-programmers without recompiling application binaries.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Create clean internal DSLs with fluent builders for complex configurations. Keep the underlying semantic model strictly decoupled from the syntax layer.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Coupling DSL parsing logic directly with execution side-effects instead of building a semantic model first.**
+- **Creating clunky, unreadable method chaining that defeats the purpose of a fluent interface.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "fowler"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 57. agentic-parr-antlr4-grammar-dsl Skill
+pub fn agentic_parr_antlr4_grammar_dsl() -> EccSkill {
+    EccSkill::new(
+        "agentic-parr-antlr4-grammar-dsl",
+        "ALL(*) adaptive LL grammar parsing, listener vs visitor AST traversal patterns, lexical modes, and grammar ambiguity resolution.",
+        r#"---
+name: agentic-parr-antlr4-grammar-dsl
+description: "ALL(*) adaptive LL grammar parsing, listener vs visitor AST traversal patterns, lexical modes, and grammar ambiguity resolution."
+triggers: ["parr", "antlr4", "adaptive-ll-star", "ast-visitor", "ast-listener", "lexical-modes", "grammar-engineering"]
+---
+
+# agentic-parr-antlr4-grammar-dsl
+> Based on **The Definitive ANTLR 4 Reference - Terence Parr**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **ALL(*) Parsing Algorithm: Dynamically explores lookahead paths at runtime using deterministic finite automata (DFA), handling complex grammar recursion.**
+2. **Visitor vs Listener Pattern: Listeners walk ASTs passively via event callbacks (enterRule/exitRule); Visitors explicitly control traversal order and return values.**
+3. **Lexical Mode Switching: Switching token rules contextually (e.g. entering string interpolation or embedded SQL blocks).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Generate robust language parsers using ANTLR4 grammars. Implement the Visitor pattern when traversing code structures for type checking and transpilation.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Introducing left-recursive grammar rules that cause infinite loops in non-adaptive parsers.**
+- **Embedding arbitrary target language code actions directly into grammar files, destroying portability.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "parr"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 58. agentic-pierce-type-systems-soundness Skill
+pub fn agentic_pierce_type_systems_soundness() -> EccSkill {
+    EccSkill::new(
+        "agentic-pierce-type-systems-soundness",
+        "Simply typed lambda calculus, type safety (progress and preservation theorems), subtyping, parametric polymorphism, and Curry-Howard isomorphism.",
+        r#"---
+name: agentic-pierce-type-systems-soundness
+description: "Simply typed lambda calculus, type safety (progress and preservation theorems), subtyping, parametric polymorphism, and Curry-Howard isomorphism."
+triggers: ["pierce", "tapl", "type-systems", "type-soundness", "progress-preservation", "lambda-calculus", "curry-howard"]
+---
+
+# agentic-pierce-type-systems-soundness
+> Based on **Types and Programming Languages (TAPL) - Benjamin C. Pierce**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Type Safety = Progress + Preservation: Progress: A well-typed term is either a value or can take an evaluation step. Preservation: If t : T and t -> t', then t' : T.**
+2. **Curry-Howard Isomorphism: Types correspond to logical propositions; programs correspond to proofs of those propositions.**
+3. **Subtyping Invariant (Liskov): S <: T means any term of type S can be safely used in a context expecting type T.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Leverage rich static type systems (Rust, TypeScript) to encode business invariants into types. Make illegal states unrepresentable at compile time.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using stringly-typed or unstructured `any` types that bypass compiler safety verification.**
+- **Violating the preservation theorem by writing unsafe casts that cause runtime type crashes.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "pierce"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 59. agentic-harper-practical-foundations-pl Skill
+pub fn agentic_harper_practical_foundations_pl() -> EccSkill {
+    EccSkill::new(
+        "agentic-harper-practical-foundations-pl",
+        "Abstract binding trees, structural operational semantics, inductive definitions, dynamic dispatch vs static typing, and language modularity.",
+        r#"---
+name: agentic-harper-practical-foundations-pl
+description: "Abstract binding trees, structural operational semantics, inductive definitions, dynamic dispatch vs static typing, and language modularity."
+triggers: ["harper", "pfpl", "operational-semantics", "abstract-binding-trees", "inductive-definitions", "type-theory"]
+---
+
+# agentic-harper-practical-foundations-pl
+> Based on **Practical Foundations for Programming Languages - Robert Harper**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Structural Operational Semantics (SOS): Defining computation steps via inductive inference rules over abstract syntax terms.**
+2. **Abstract Binding Trees (ABTs): Enriching ASTs with formal variable binding, alpha-equivalence, and capture-avoiding substitution.**
+3. **Static/Dynamic Phase Distinction: Strict separation between compile-time static analysis and runtime dynamic evaluation.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Define language extensions and domain primitives using rigorous operational semantics. Enforce capture-avoiding substitution in code generation templates.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Naive macro expansions that cause variable name collisions (accidental variable capture).**
+- **Blurring the phase distinction by executing dynamic runtime logic during static build steps.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "harper"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 60. agentic-sicp-evaluator-metacircular Skill
+pub fn agentic_sicp_evaluator_metacircular() -> EccSkill {
+    EccSkill::new(
+        "agentic-sicp-evaluator-metacircular",
+        "Metacircular evaluators, homoiconicity, lexical closures, higher-order functional abstractions, stream processing, and lazy evaluation.",
+        r#"---
+name: agentic-sicp-evaluator-metacircular
+description: "Metacircular evaluators, homoiconicity, lexical closures, higher-order functional abstractions, stream processing, and lazy evaluation."
+triggers: ["sicp", "abelson-sussman", "metacircular-evaluator", "homoiconicity", "lexical-closures", "higher-order-functions", "lazy-evaluation"]
+---
+
+# agentic-sicp-evaluator-metacircular
+> Based on **Structure and Interpretation of Computer Programs - Harold Abelson & Gerald Jay Sussman**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **The Eval-Apply Cycle: Eval evaluates expressions relative to an environment; Apply applies procedures to arguments, closing the metacircular loop.**
+2. **Lexical Closures: Functions capture their enclosing environment bindings at definition time, maintaining state without global mutations.**
+3. **Streams as Infinite Data Structures: Decoupling the simulation of time from the order of events using delayed evaluation (lazy memoization).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Harness higher-order abstractions and closures to build modular agent middleware. Use lazy stream evaluation to process massive code bases incrementally.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Relying on mutable global variables rather than pure functional closures.**
+- **Eagerly loading massive files into memory when streaming generators avoid out-of-memory errors.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "sicp"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 61. agentic-amodei-concrete-ai-safety Skill
+pub fn agentic_amodei_concrete_ai_safety() -> EccSkill {
+    EccSkill::new(
+        "agentic-amodei-concrete-ai-safety",
+        "Avoiding negative side effects, reward hacking mitigation, scalable oversight, safe exploration, and robustness to distributional shift.",
+        r#"---
+name: agentic-amodei-concrete-ai-safety
+description: "Avoiding negative side effects, reward hacking mitigation, scalable oversight, safe exploration, and robustness to distributional shift."
+triggers: ["amodei", "ai-safety", "reward-hacking", "negative-side-effects", "scalable-oversight", "safe-exploration", "distributional-shift"]
+---
+
+# agentic-amodei-concrete-ai-safety
+> Based on **Concrete Problems in AI Safety - Dario Amodei et al.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Side Effect Invariant: Actions must not cause unintended destructive perturbations to external systems outside the primary objective.**
+2. **Reward Hacking Defense: Ensure agent fitness cannot be maximized by trivial shortcuts (e.g. deleting failing tests).**
+3. **Safe Exploration: Constraining exploratory actions to verified sandboxes where catastrophic damage is mathematically impossible.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Sandbox all agent filesystem and shell operations. Protect test files from unauthorized tampering and enforce least-privilege security policies.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Permitting agents to edit the very test suites verifying their correctness.**
+- **Running unverified agent shell commands directly on host production machines.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "amodei"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 62. agentic-hendrycks-benchmarking-evals Skill
+pub fn agentic_hendrycks_benchmarking_evals() -> EccSkill {
+    EccSkill::new(
+        "agentic-hendrycks-benchmarking-evals",
+        "Benchmark design, multi-choice evaluation rubrics, calibration curves, normalized scoring, and contamination/leakage detection.",
+        r#"---
+name: agentic-hendrycks-benchmarking-evals
+description: "Benchmark design, multi-choice evaluation rubrics, calibration curves, normalized scoring, and contamination/leakage detection."
+triggers: ["hendrycks", "mmlu", "llm-benchmarking", "evaluation-rubrics", "calibration-curves", "contamination-detection"]
+---
+
+# agentic-hendrycks-benchmarking-evals
+> Based on **Measuring Massive Multitask Language Understanding (MMLU) and Benchmarking - Dan Hendrycks et al.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Normalized Scoring: Evaluating agents against standardized multidimensional benchmark suites across zero-shot and few-shot splits.**
+2. **Model Calibration: Confidence scores must reflect true empirical accuracy: E_{(X, Y)}[|P(Y=y | P_pred=p) - p|] -> 0.**
+3. **Data Leakage Auditing: Ensuring benchmark evaluation tasks are not present in the agent's pre-training or fine-tuning datasets.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Establish rigorous internal evals for code generation agents. Track pass@1 and pass@k across diverse coding tasks to detect regression before deploying.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Evaluating agents only on synthetic tasks identical to prompt examples.**
+- **Relying on subjective human vibes without quantitative automated benchmark metrics.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "hendrycks"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 63. agentic-perez-red-teaming-adversarial Skill
+pub fn agentic_perez_red_teaming_adversarial() -> EccSkill {
+    EccSkill::new(
+        "agentic-perez-red-teaming-adversarial",
+        "Automated red-teaming, prompt injection vulnerability discovery, jailbreak fuzzing, adversarial perturbation testing, and safety alignment.",
+        r#"---
+name: agentic-perez-red-teaming-adversarial
+description: "Automated red-teaming, prompt injection vulnerability discovery, jailbreak fuzzing, adversarial perturbation testing, and safety alignment."
+triggers: ["perez", "red-teaming", "adversarial-testing", "prompt-injection", "jailbreak-fuzzing", "automated-redteaming"]
+---
+
+# agentic-perez-red-teaming-adversarial
+> Based on **Red Teaming Language Models with Language Models - Ethan Perez et al.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Adversarial Fuzzing Loop: Using an attacker LLM to generate perturbations designed to trigger safety violations or system prompt leakage.**
+2. **Zero-Tolerance Injection Guard: Verifying that user input payloads cannot override system-level safety instructions.**
+3. **Robustness Under Perturbation: Output behavior must remain sound despite whitespace noise, homoglyphs, or semantic trickery.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Subject all production agent prompts to automated red-teaming sweeps. Test injection vectors against tool call parameters and file editing commands.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Deploying agents without testing against prompt injection attacks.**
+- **Assuming trust in external user inputs, comments in scraped code, or PR descriptions.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "perez"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 64. agentic-anthropic-constitutional-ai Skill
+pub fn agentic_anthropic_constitutional_ai() -> EccSkill {
+    EccSkill::new(
+        "agentic-anthropic-constitutional-ai",
+        "Principle-based self-critique, Reinforcement Learning from AI Feedback (RLAIF), constitutional rulesets, and automated chain-of-thought moderation.",
+        r#"---
+name: agentic-anthropic-constitutional-ai
+description: "Principle-based self-critique, Reinforcement Learning from AI Feedback (RLAIF), constitutional rulesets, and automated chain-of-thought moderation."
+triggers: ["anthropic", "constitutional-ai", "rlaif", "self-critique", "constitutional-rules", "chain-of-thought-moderation"]
+---
+
+# agentic-anthropic-constitutional-ai
+> Based on **Constitutional AI: Harmlessness from AI Feedback - Yuntao Bai et al.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Critique and Revision Loop: Generate response -> Critique response against constitution principles -> Revise response to satisfy principles.**
+2. **Constitutional Principles: Unambiguous axioms governing safety, copyright, ethical behavior, and software correctness.**
+3. **RLAIF Alignment: Training preference models using automated AI critiques based on constitutional criteria rather than manual human labeling.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Equip coding agents with an explicit architectural constitution. Before committing code, have the agent execute a self-critique step against the constitution.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Committing raw first-draft code without a critique and revision pass.**
+- **Vague constitutional rules that cannot be objectively verified by automated checks.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "anthropic"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 65. agentic-ozkaya-llm-software-evals Skill
+pub fn agentic_ozkaya_llm_software_evals() -> EccSkill {
+    EccSkill::new(
+        "agentic-ozkaya-llm-software-evals",
+        "SWE-bench decomposition, pass@k metrics, patch verification, test suite execution in sandboxes, and regression prevention in agentic software engineering.",
+        r#"---
+name: agentic-ozkaya-llm-software-evals
+description: "SWE-bench decomposition, pass@k metrics, patch verification, test suite execution in sandboxes, and regression prevention in agentic software engineering."
+triggers: ["ozkaya", "swe-bench", "software-evals", "pass-at-k", "patch-verification", "regression-prevention", "sandbox-execution"]
+---
+
+# agentic-ozkaya-llm-software-evals
+> Based on **LLMs in Software Engineering: Evaluation & Verification - Ipek Ozkaya**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Pass@k Metric: Probability that at least one of k generated code samples passes all unit tests: pass@k = E[1 - comb(n - c, k) / comb(n, k)].**
+2. **Isolated Sandbox Verification: Compiling and executing generated patches inside ephemeral Docker or WebAssembly containers.**
+3. **Regression Invariant: A patch is valid if and only if it makes previously failing tests pass without breaking any existing passing tests.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Evaluate agent-generated git patches inside isolated worktrees. Run full regression test suites before presenting solutions to the developer.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Accepting patches that resolve a local bug but introduce silent regressions elsewhere.**
+- **Executing generated code directly on the host development machine without sandboxing.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "ozkaya"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 66. agentic-beck-tdd-verifiable-contracts Skill
+pub fn agentic_beck_tdd_verifiable_contracts() -> EccSkill {
+    EccSkill::new(
+        "agentic-beck-tdd-verifiable-contracts",
+        "Red-Green-Refactor cycle, test-first specifications, triangulation, isolation through test doubles, and regression test suites.",
+        r#"---
+name: agentic-beck-tdd-verifiable-contracts
+description: "Red-Green-Refactor cycle, test-first specifications, triangulation, isolation through test doubles, and regression test suites."
+triggers: ["beck", "tdd", "test-driven-development", "red-green-refactor", "triangulation", "test-doubles", "verifiable-contracts"]
+---
+
+# agentic-beck-tdd-verifiable-contracts
+> Based on **Test-Driven Development: By Example - Kent Beck**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Red-Green-Refactor Invariant: 1. Write a failing test (Red). 2. Write minimal code to pass the test (Green). 3. Clean up design without breaking tests (Refactor).**
+2. **Triangulation: Generalize code logic only when you have two or more distinct examples/tests requiring that generalization.**
+3. **Isolation: Tests must run independently in any order without shared mutable state or environmental dependencies.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Direct agents to always write the unit test FIRST. The agent must verify the test fails with the expected error before writing production code to pass it.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Writing production code before tests, leading to untestable designs or confirmation-biased tests.**
+- **Writing tests that pass trivially without actually exercising the targeted failure mode.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "beck"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 67. agentic-claessen-property-based-testing Skill
+pub fn agentic_claessen_property_based_testing() -> EccSkill {
+    EccSkill::new(
+        "agentic-claessen-property-based-testing",
+        "Property-based testing, universal property specifications, algebraic invariants (associativity, idempotence, round-trip), and automated generative testing.",
+        r#"---
+name: agentic-claessen-property-based-testing
+description: "Property-based testing, universal property specifications, algebraic invariants (associativity, idempotence, round-trip), and automated generative testing."
+triggers: ["claessen", "hughes", "quickcheck", "property-based-testing", "algebraic-invariants", "generative-testing", "round-trip-testing"]
+---
+
+# agentic-claessen-property-based-testing
+> Based on **QuickCheck: A Lightweight Tool for Random Testing of Haskell Programs - Koen Claessen & John Hughes**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Universal Property Invariant: forall x in Domain: Property(x) == true across thousands of randomly generated inputs.**
+2. **Round-Trip Property: deserialize(serialize(x)) == x for all valid domain objects x.**
+3. **Idempotence Property: f(f(x)) == f(x) for operations like formatting, normalization, and reconciliation.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement property-based tests (using proptest, hypothesis, or QuickCheck) for all serialization, parsers, and mathematical state transitions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Relying solely on 2-3 hardcoded example test cases for complex parsers or data serializers.**
+- **Writing property tests with weak assertions that never challenge edge cases.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "claessen"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 68. agentic-maciver-invariant-shrinking Skill
+pub fn agentic_maciver_invariant_shrinking() -> EccSkill {
+    EccSkill::new(
+        "agentic-maciver-invariant-shrinking",
+        "Automated minimal test case reduction (shrinking), stateful model-based testing, falsification search, and integration fuzzing.",
+        r#"---
+name: agentic-maciver-invariant-shrinking
+description: "Automated minimal test case reduction (shrinking), stateful model-based testing, falsification search, and integration fuzzing."
+triggers: ["maciver", "hypothesis", "test-shrinking", "minimal-reproduction", "stateful-testing", "falsification-search"]
+---
+
+# agentic-maciver-invariant-shrinking
+> Based on **Hypothesis: Modern Property-Based Testing and Invariant Shrinking - David R. MacIver**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Minimal Counterexample Shrinking: When a test fails on complex input X, automatically shrink X down to the smallest minimal failing reproduction.**
+2. **Stateful Model-Based Testing: Execute randomized sequences of state-machine actions comparing system state against an abstract reference model.**
+3. **Deterministic Replay: Any shrunk counterexample must reproduce identically given its random seed.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+When debugging, have the agent automatically shrink failing test payloads to minimal 1-line reproductions before attempting code fixes.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Dumping massive 1000-line failure logs on the developer without isolating the minimal failing input.**
+- **Non-deterministic tests that cannot be reliably reproduced from a fixed seed.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "maciver"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 69. agentic-clarke-model-checking-invariants Skill
+pub fn agentic_clarke_model_checking_invariants() -> EccSkill {
+    EccSkill::new(
+        "agentic-clarke-model-checking-invariants",
+        "State transition systems, temporal logic formulas, safety and liveness properties, state-space explosion mitigation, Binary Decision Diagrams (BDD).",
+        r#"---
+name: agentic-clarke-model-checking-invariants
+description: "State transition systems, temporal logic formulas, safety and liveness properties, state-space explosion mitigation, Binary Decision Diagrams (BDD)."
+triggers: ["clarke", "grumberg", "peled", "model-checking", "temporal-logic", "safety-liveness", "state-space-verification"]
+---
+
+# agentic-clarke-model-checking-invariants
+> Based on **Model Checking - Edmund M. Clarke, Orna Grumberg & Doron A. Peled**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Safety vs Liveness: Safety: 'Bad things never happen' (G ~bad). Liveness: 'Good things eventually happen' (F good).**
+2. **Kripke Structure Formalization: M = (S, S_0, R, L), verifying whether M satisfies temporal formula phi (M |= phi).**
+3. **Counterexample Generation: Model checkers provide exact execution traces demonstrating how an invariant is violated.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Verify critical concurrency locks, consensus protocols, and state machines against formal safety and liveness invariants.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Confusing safety with liveness, ignoring deadlock states where no bad state occurs but progress ceases.**
+- **State explosions caused by modeling unconstrained integers instead of bounded abstractions.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "clarke"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 70. agentic-baier-temporal-logic-ltl-ctl Skill
+pub fn agentic_baier_temporal_logic_ltl_ctl() -> EccSkill {
+    EccSkill::new(
+        "agentic-baier-temporal-logic-ltl-ctl",
+        "Linear Temporal Logic (LTL), Computation Tree Logic (CTL), Büchi automata, bisimulation equivalence, and probabilistic model checking.",
+        r#"---
+name: agentic-baier-temporal-logic-ltl-ctl
+description: "Linear Temporal Logic (LTL), Computation Tree Logic (CTL), Büchi automata, bisimulation equivalence, and probabilistic model checking."
+triggers: ["baier", "katoen", "principles-model-checking", "ltl", "ctl", "buchi-automata", "bisimulation-equivalence"]
+---
+
+# agentic-baier-temporal-logic-ltl-ctl
+> Based on **Principles of Model Checking - Christel Baier & Joost-Pieter Katoen**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **LTL Operators: Next (X), Globally/Always (G), Finally/Eventually (F), Until (U) over infinite execution paths.**
+2. **Büchi Automata Translation: An LTL formula is converted into a non-deterministic Büchi automaton accepting infinite words that violate the property.**
+3. **Bisimulation Equivalence: Systems S_1 and S_2 are bisimilar (S_1 ~ S_2) if they can simulate each other's transitions step-by-step.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Formulate critical async system invariants in LTL. Verify that every requested background task eventually terminates or reports an error.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Creating asynchronous event loops with no eventual termination or cancellation guarantee.**
+- **Assuming path-based linear properties hold across branching computation trees without CTL checks.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "baier"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 71. agentic-kleppmann-distributed-consistency Skill
+pub fn agentic_kleppmann_distributed_consistency() -> EccSkill {
+    EccSkill::new(
+        "agentic-kleppmann-distributed-consistency",
+        "ACID vs BASE, linearizability, eventual consistency, leader-follower replication, partitioning, distributed transactions, and event sourcing.",
+        r#"---
+name: agentic-kleppmann-distributed-consistency
+description: "ACID vs BASE, linearizability, eventual consistency, leader-follower replication, partitioning, distributed transactions, and event sourcing."
+triggers: ["kleppmann", "ddia", "data-intensive-applications", "linearizability", "eventual-consistency", "event-sourcing", "distributed-consensus"]
+---
+
+# agentic-kleppmann-distributed-consistency
+> Based on **Designing Data-Intensive Applications - Martin Kleppmann**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **CAP Theorem & Trade-offs: In the presence of a network partition (P), a distributed system must choose between Consistency (C) or Availability (A).**
+2. **Linearizability: All operations appear to execute atomically at a single instant in time between their invocation and response.**
+3. **Two-Phase Commit (2PC) Vulnerability: Coordinator failure during the prepare/commit window blocks participants indefinitely.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design agent persistent stores with clear consistency guarantees. Use event-sourced logs for auditability and idempotent operations for safe retries.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming network calls never fail or time out, omitting retry backoff and circuit breakers.**
+- **Relying on distributed locks without fencing tokens, causing split-brain storage writes.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "kleppmann"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 72. agentic-tanenbaum-distributed-systems Skill
+pub fn agentic_tanenbaum_distributed_systems() -> EccSkill {
+    EccSkill::new(
+        "agentic-tanenbaum-distributed-systems",
+        "RPC protocols, message-oriented middleware, distributed naming, synchronization, fault tolerance, and process migration.",
+        r#"---
+name: agentic-tanenbaum-distributed-systems
+description: "RPC protocols, message-oriented middleware, distributed naming, synchronization, fault tolerance, and process migration."
+triggers: ["tanenbaum", "van-steen", "distributed-systems", "remote-procedure-call", "rpc-protocols", "fault-tolerance", "distributed-naming"]
+---
+
+# agentic-tanenbaum-distributed-systems
+> Based on **Distributed Systems: Principles and Paradigms - Andrew S. Tanenbaum & Maarten van Steen**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Fallacies of Distributed Computing: The network is reliable; latency is zero; bandwidth is infinite; the network is secure; topology doesn't change.**
+2. **Idempotent Remote Procedure Calls: Remote operations must be idempotent so retransmissions do not cause duplicate side effects: f(f(x)) == f(x).**
+3. **Heartbeat & Lease Heartbeats: Detecting node failure using periodic heartbeats with bounded timeout thresholds.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Wrap all inter-agent RPCs in idempotent envelopes with unique idempotency keys. Implement exponential backoff and jitter on network retries.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Treating remote API calls as synchronous local method calls, ignoring latency and network partitions.**
+- **Non-idempotent endpoints that double-charge or create duplicate records on network retry.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "tanenbaum"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 73. agentic-lamport-logical-clocks Skill
+pub fn agentic_lamport_logical_clocks() -> EccSkill {
+    EccSkill::new(
+        "agentic-lamport-logical-clocks",
+        "Partial orderings, happens-before relation (->), logical timestamps, vector clocks, total ordering consistency, and distributed state machines.",
+        r#"---
+name: agentic-lamport-logical-clocks
+description: "Partial orderings, happens-before relation (->), logical timestamps, vector clocks, total ordering consistency, and distributed state machines."
+triggers: ["lamport", "logical-clocks", "happens-before", "vector-clocks", "lamport-timestamps", "distributed-ordering"]
+---
+
+# agentic-lamport-logical-clocks
+> Based on **Time, Clocks, and the Ordering of Events in a Distributed System - Leslie Lamport**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Happens-Before Relation (->): If a and b are in the same process and a occurs before b, then a -> b. If a is send and b is receive, a -> b.**
+2. **Lamport Timestamp Update: C(e) = max(C_local, C_msg) + 1, establishing a strict partial order across distributed events.**
+3. **Vector Clocks: V_i[j] tracks agent i's knowledge of agent j's logical time, enabling detection of causal vs concurrent events.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Order agent swarm actions and messages using Lamport timestamps or vector clocks to guarantee causal consistency without relying on unsynchronized wall clocks.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Using system physical wall clocks (SystemTime) to order distributed events, causing clock drift corruption.**
+- **Assuming concurrent events have a natural causal order without vector clock verification.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "lamport"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 74. agentic-ongaro-raft-distributed-consensus Skill
+pub fn agentic_ongaro_raft_distributed_consensus() -> EccSkill {
+    EccSkill::new(
+        "agentic-ongaro-raft-distributed-consensus",
+        "Leader election, log replication, safety invariants, randomized election timeouts, joint consensus reconfiguration, and state machine replication.",
+        r#"---
+name: agentic-ongaro-raft-distributed-consensus
+description: "Leader election, log replication, safety invariants, randomized election timeouts, joint consensus reconfiguration, and state machine replication."
+triggers: ["ongaro", "ousterhout", "raft-consensus", "leader-election", "log-replication", "state-machine-replication", "randomized-timeouts"]
+---
+
+# agentic-ongaro-raft-distributed-consensus
+> Based on **In Search of an Understandable Consensus Algorithm (Raft) - Diego Ongaro & John Ousterhout**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Raft State Invariants: Election Safety (at most one leader per term); Leader Append-Only; Log Matching; Leader Completeness; State Machine Safety.**
+2. **Quorum Majority Rule: A leader can commit a log entry only after it is replicated on a strict majority of nodes: floor(N/2) + 1.**
+3. **Randomized Election Timeouts: Split-vote prevention by randomizing election timeouts (e.g. 150ms-300ms).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement leader election and state machine replication for multi-agent clusters using Raft consensus. Guarantee quorum agreement before committing configuration changes.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Split-brain scenarios caused by committing log entries without majority quorum confirmation.**
+- **Fixed election timeouts causing perpetual split-vote election ties.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "ongaro"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 75. agentic-hohpe-enterprise-integration-patterns Skill
+pub fn agentic_hohpe_enterprise_integration_patterns() -> EccSkill {
+    EccSkill::new(
+        "agentic-hohpe-enterprise-integration-patterns",
+        "Message channels, pipes and filters, content-based router, scatter-gather, message translator, idempotent receiver, and pub/sub architectures.",
+        r#"---
+name: agentic-hohpe-enterprise-integration-patterns
+description: "Message channels, pipes and filters, content-based router, scatter-gather, message translator, idempotent receiver, and pub/sub architectures."
+triggers: ["hohpe", "woolf", "enterprise-integration", "pipes-and-filters", "content-based-router", "scatter-gather", "message-translator", "idempotent-receiver"]
+---
+
+# agentic-hohpe-enterprise-integration-patterns
+> Based on **Enterprise Integration Patterns: Designing, Building, and Deploying Messaging Solutions - Gregor Hohpe & Bobby Woolf**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Pipes and Filters Architecture: Decomposing complex data processing into independent, reusable processing stages connected by message pipes.**
+2. **Content-Based Router: Inspecting message payload attributes to dynamically direct messages to the appropriate downstream agent specialist.**
+3. **Scatter-Gather Pattern: Broadcasting a query to multiple agent workers and aggregating/ranking their responses into a single composite output.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design multi-agent processing pipelines using Enterprise Integration Patterns: Scatter-Gather for parallel research, Content-Based Routers for language dispatch.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Direct point-to-point spaghetti coupling between agents without message channels.**
+- **Non-idempotent message consumers that corrupt state upon receiving duplicate delivery.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "hohpe"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 76. agentic-newman-microservices-tool-isolation Skill
+pub fn agentic_newman_microservices_tool_isolation() -> EccSkill {
+    EccSkill::new(
+        "agentic-newman-microservices-tool-isolation",
+        "Loose coupling, high cohesion, bounded contexts, API versioning, canary deployments, circuit breakers, and sandboxed tool isolation.",
+        r#"---
+name: agentic-newman-microservices-tool-isolation
+description: "Loose coupling, high cohesion, bounded contexts, API versioning, canary deployments, circuit breakers, and sandboxed tool isolation."
+triggers: ["newman", "building-microservices", "service-isolation", "bounded-contexts", "circuit-breakers", "canary-deployment"]
+---
+
+# agentic-newman-microservices-tool-isolation
+> Based on **Building Microservices: Designing Fine-Grained Systems - Sam Newman**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **High Cohesion & Loose Coupling: Code that changes together stays together; services know as little as possible about each other's internals.**
+2. **Circuit Breaker Pattern: Automatically tripping open to stop calling a failing dependency, returning fast fallbacks rather than cascading failures.**
+3. **Backwards-Compatible API Versioning: Tolerant reader pattern ensuring schema additions do not break existing downstream service clients.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Isolate agent tool execution within microservice boundaries with strict circuit breakers and timeouts. Protect production backends from cascading agent retries.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Cascading failures where a single failing agent tool crashes the entire orchestrator.**
+- **Breaking API contract changes that break downstream client agents.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "newman"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 77. agentic-richards-software-architecture-tradeoffs Skill
+pub fn agentic_richards_software_architecture_tradeoffs() -> EccSkill {
+    EccSkill::new(
+        "agentic-richards-software-architecture-tradeoffs",
+        "Architectural characteristics (-ilities), modularity, component coupling, trade-off analysis, fitness functions, and architecture governance.",
+        r#"---
+name: agentic-richards-software-architecture-tradeoffs
+description: "Architectural characteristics (-ilities), modularity, component coupling, trade-off analysis, fitness functions, and architecture governance."
+triggers: ["richards", "ford", "software-architecture", "architectural-tradeoffs", "fitness-functions", "component-coupling", "architecture-governance"]
+---
+
+# agentic-richards-software-architecture-tradeoffs
+> Based on **Fundamentals of Software Architecture - Mark Richards & Neal Ford**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **First Law of Software Architecture: Everything in software architecture is a trade-off (performance vs simplicity, flexibility vs maintainability).**
+2. **Automated Architectural Fitness Functions: Automated tests that execute in CI/CD to verify architecture characteristics (e.g. cycle detection, module coupling).**
+3. **Connascence Metrics: Measuring the strength of coupling between components to minimize ripple effects of changes.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Formulate architectural decisions as explicit trade-offs. Protect system structure by writing automated fitness functions that prevent circular dependencies.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Claiming an architectural choice has no downsides, ignoring hidden operational or latency costs.**
+- **Allowing architectural degradation over time due to lack of automated fitness functions.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "richards"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 78. agentic-fielding-rest-agent-apis Skill
+pub fn agentic_fielding_rest_agent_apis() -> EccSkill {
+    EccSkill::new(
+        "agentic-fielding-rest-agent-apis",
+        "Statelessness, uniform interface, cacheability, layered systems, HATEOAS, and resource-oriented modeling for autonomous agent APIs.",
+        r#"---
+name: agentic-fielding-rest-agent-apis
+description: "Statelessness, uniform interface, cacheability, layered systems, HATEOAS, and resource-oriented modeling for autonomous agent APIs."
+triggers: ["fielding", "rest-architecture", "hateoas", "uniform-interface", "statelessness", "resource-oriented", "web-architecture"]
+---
+
+# agentic-fielding-rest-agent-apis
+> Based on **Architectural Styles and the Design of Network-based Software Architectures (REST) - Roy Thomas Fielding**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Statelessness Invariant: Each request from client to server must contain all the information necessary to understand and process the request.**
+2. **Uniform Interface (HATEOAS): Hypermedia as the Engine of Application State; clients transition through states via hypermedia links in responses.**
+3. **Cacheability Constraint: Responses must explicitly define themselves as cacheable or non-cacheable to optimize network efficiency.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design agent-accessible web APIs using strict REST principles. Provide self-descriptive hypermedia links in API responses so agents can discover available actions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Maintaining hidden session state on servers that breaks client agent failover and scalability.**
+- **Tunneling arbitrary non-idempotent operations through HTTP GET requests.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "fielding"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 79. agentic-henning-rpc-schema-contracts Skill
+pub fn agentic_henning_rpc_schema_contracts() -> EccSkill {
+    EccSkill::new(
+        "agentic-henning-rpc-schema-contracts",
+        "Interface Definition Languages (IDL), serialization efficiency, binary schemas, backwards compatibility, and strongly typed RPC contracts.",
+        r#"---
+name: agentic-henning-rpc-schema-contracts
+description: "Interface Definition Languages (IDL), serialization efficiency, binary schemas, backwards compatibility, and strongly typed RPC contracts."
+triggers: ["henning", "vinoski", "rpc-contracts", "protocol-buffers", "interface-definition-language", "binary-serialization", "schema-evolution"]
+---
+
+# agentic-henning-rpc-schema-contracts
+> Based on **Advanced CORBA / Modern RPC & Protocol Buffers - Michi Henning & Steve Vinoski**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **IDL Contract Primacy: The schema is the single source of truth; client and server stubs are mechanically generated from the IDL.**
+2. **Binary Wire Efficiency: Protocol Buffers / Cap'n Proto binary serialization delivers order-of-magnitude faster throughput and smaller footprints than JSON.**
+3. **Tag-Based Backwards Compatibility: Fields are identified by field numbers/tags; unknown fields are preserved, enabling zero-downtime schema evolution.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Use strongly typed schemas (Protocol Buffers, Cap'n Proto, or JSON Schema) for all high-throughput agent-to-agent and tool communications.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Passing loosely typed, undocumented JSON dictionaries between distributed agent services.**
+- **Changing field IDs or deleting fields in active schemas without migration paths.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "henning"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 80. agentic-mcp-protocol-specification Skill
+pub fn agentic_mcp_protocol_specification() -> EccSkill {
+    EccSkill::new(
+        "agentic-mcp-protocol-specification",
+        "Client-Host-Server topology, JSON-RPC 2.0 framing, resource subscriptions, tool invocation contracts, prompt templates, and security sandboxing.",
+        r#"---
+name: agentic-mcp-protocol-specification
+description: "Client-Host-Server topology, JSON-RPC 2.0 framing, resource subscriptions, tool invocation contracts, prompt templates, and security sandboxing."
+triggers: ["mcp", "model-context-protocol", "json-rpc", "mcp-server", "mcp-client", "tool-invocation", "resource-subscriptions"]
+---
+
+# agentic-mcp-protocol-specification
+> Based on **Anthropic Model Context Protocol Specification - Anthropic MCP Architecture**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Client-Host-Server Architecture: Host application (e.g. Tagisan) coordinates MCP Clients that connect to isolated MCP Servers providing tools and resources.**
+2. **JSON-RPC 2.0 Framing: Strict request, response, notification, and error objects with deterministic error codes (-32600 to -32603).**
+3. **Resource URI Schemes: Resources identified by standardized URIs (e.g. `file:///`, `postgres://`) with subscription notifications on content changes.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Expose all agent capabilities, tools, and project contexts through the Model Context Protocol (MCP). Enforce strict parameter validation on all incoming tool calls.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Writing proprietary ad-hoc tool execution protocols when standard MCP provides universal interop.**
+- **Failing to validate tool input arguments against the declared JSON schema before execution.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "mcp"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 81. agentic-laird-soar-cognitive-architecture Skill
+pub fn agentic_laird_soar_cognitive_architecture() -> EccSkill {
+    EccSkill::new(
+        "agentic-laird-soar-cognitive-architecture",
+        "Production system rules, working memory elements (WMEs), subgoaling on impasses, chunking (rule learning), and unified cognitive architectures.",
+        r#"---
+name: agentic-laird-soar-cognitive-architecture
+description: "Production system rules, working memory elements (WMEs), subgoaling on impasses, chunking (rule learning), and unified cognitive architectures."
+triggers: ["laird", "soar-architecture", "cognitive-architecture", "subgoaling-impasses", "chunking-learning", "working-memory-elements"]
+---
+
+# agentic-laird-soar-cognitive-architecture
+> Based on **The Soar Cognitive Architecture - John E. Laird**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Decision Cycle: Input -> Elaboration (parallel production firing) -> Operator Proposal -> Operator Selection -> Operator Application -> Output.**
+2. **Subgoaling on Impasses: When the agent cannot select an operator (tie, conflict, or no-change impasse), Soar creates a substate to resolve it.**
+3. **Chunking Invariant: The system compiles the results of successful substate problem solving into new permanent production rules.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Detect reasoning impasses (e.g. uncertainty between two libraries). Spawn an isolated subagent to resolve the impasse, then cache the resolution rule.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Failing to recognize when an agent is in an impasse, causing endless circular retries.**
+- **Discarding the lessons learned from resolved impasses instead of chunking them into memory.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "laird"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 82. agentic-minsky-society-of-mind Skill
+pub fn agentic_minsky_society_of_mind() -> EccSkill {
+    EccSkill::new(
+        "agentic-minsky-society-of-mind",
+        "Mind as a society of mindless agents, agency hierarchies, censors and suppressors, cross-exclusion, and emergence of intelligence from simple modules.",
+        r#"---
+name: agentic-minsky-society-of-mind
+description: "Mind as a society of mindless agents, agency hierarchies, censors and suppressors, cross-exclusion, and emergence of intelligence from simple modules."
+triggers: ["minsky", "society-of-mind", "censors-suppressors", "agency-hierarchies", "cross-exclusion", "emergent-intelligence"]
+---
+
+# agentic-minsky-society-of-mind
+> Based on **The Society of Mind - Marvin Minsky**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Agency Composition: Intelligence emerges from the interactions of many simple agents, none of which are intelligent on their own.**
+2. **Censors & Suppressors: Specialized agents whose sole function is inhibiting destructive thoughts or forbidden actions before they execute.**
+3. **Cross-Exclusion: Competing agencies mutually inhibit one another so only one dominant action plan gains motor control at a time.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Implement specialized censor agents (e.g. security validator, style linter) that inspect and veto actions proposed by generative coding agents.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Attempting to build an all-knowing monolithic agent instead of a society of focused specialists.**
+- **Allowing competing agent plans to execute simultaneously without cross-exclusion.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "minsky"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 83. agentic-kahneman-dual-process-thinking Skill
+pub fn agentic_kahneman_dual_process_thinking() -> EccSkill {
+    EccSkill::new(
+        "agentic-kahneman-dual-process-thinking",
+        "System 1 (heuristic, rapid, intuitive) vs System 2 (deliberative, analytical, slow), cognitive biases, anchoring, loss aversion, and metacognition.",
+        r#"---
+name: agentic-kahneman-dual-process-thinking
+description: "System 1 (heuristic, rapid, intuitive) vs System 2 (deliberative, analytical, slow), cognitive biases, anchoring, loss aversion, and metacognition."
+triggers: ["kahneman", "thinking-fast-and-slow", "system-1-system-2", "dual-process-theory", "cognitive-biases", "deliberative-reasoning"]
+---
+
+# agentic-kahneman-dual-process-thinking
+> Based on **Thinking, Fast and Slow - Daniel Kahneman**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Dual-Process Architecture: System 1 operates automatically and quickly with little or no effort; System 2 allocates attention to effortful mental operations.**
+2. **Substitution Heuristic: When faced with a difficult question, System 1 substitutes an easier question without the system noticing.**
+3. **Anchoring & Confirmation Bias: The tendency to over-rely on the first piece of information encountered and seek confirming evidence.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Use fast System 1 generation for routine boilerplate syntax, but invoke explicit deliberative System 2 verification before committing architecture or security changes.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Letting System 1 handle safety-critical concurrency logic, yielding subtle race conditions.**
+- **Over-thinking simple formatting tasks with heavyweight System 2 reasoning chains.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "kahneman"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 84. agentic-hofstadter-strange-loops-recursion Skill
+pub fn agentic_hofstadter_strange_loops_recursion() -> EccSkill {
+    EccSkill::new(
+        "agentic-hofstadter-strange-loops-recursion",
+        "Strange loops, self-referential systems, meta-reasoning, recursive isomorphism, Gödelian limits of formal systems, and consciousness emergence.",
+        r#"---
+name: agentic-hofstadter-strange-loops-recursion
+description: "Strange loops, self-referential systems, meta-reasoning, recursive isomorphism, Gödelian limits of formal systems, and consciousness emergence."
+triggers: ["hofstadter", "geb", "strange-loops", "self-reference", "meta-reasoning", "recursive-isomorphism", "godel-incompleteness"]
+---
+
+# agentic-hofstadter-strange-loops-recursion
+> Based on **Gödel, Escher, Bach: An Eternal Golden Braid - Douglas R. Hofstadter**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Strange Loop Phenomenon: A paradoxical hierarchy where moving up through levels unexpectedly brings one back to the starting point.**
+2. **Gödelian Incompleteness: Any consistent formal system capable of expressing arithmetic contains truths that cannot be proven within the system.**
+3. **Level Jumping (Jumping out of the system): The metacognitive ability of an agent to reflect on its own rules and modify its operational frame.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Enable agents to 'jump out of the system' when caught in infinite debugging loops: stop code editing and evaluate whether the underlying problem premise is flawed.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Getting trapped in recursive self-referential loops without termination bounds.**
+- **Assuming a local formal system or test framework is complete and incapable of subtle bugs.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "hofstadter"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 85. agentic-simon-bounded-rationality-heuristics Skill
+pub fn agentic_simon_bounded_rationality_heuristics() -> EccSkill {
+    EccSkill::new(
+        "agentic-simon-bounded-rationality-heuristics",
+        "Bounded rationality, satisficing vs optimizing, near-decomposability of complex systems, and cognitive architecture heuristics.",
+        r#"---
+name: agentic-simon-bounded-rationality-heuristics
+description: "Bounded rationality, satisficing vs optimizing, near-decomposability of complex systems, and cognitive architecture heuristics."
+triggers: ["simon", "herbert-simon", "bounded-rationality", "satisficing", "near-decomposability", "sciences-of-the-artificial"]
+---
+
+# agentic-simon-bounded-rationality-heuristics
+> Based on **The Sciences of the Artificial (3rd ed) - Herbert A. Simon**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Bounded Rationality: Decision-makers lack the cognitive resources and complete information required to find mathematically optimal solutions.**
+2. **Satisficing Principle: Select the first candidate solution that meets or exceeds predefined aspiration thresholds rather than searching for the global optimum.**
+3. **Near-Decomposability: Complex systems can be decomposed into subsystems whose internal interactions are much stronger than interactions between subsystems.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Apply satisficing criteria to code synthesis: accept solutions that pass all tests and meet performance budgets without endlessly striving for theoretical perfection.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Paralysis by analysis: searching indefinitely for the 'perfect' algorithm when a standard solution is 100% adequate.**
+- **Monolithic coupling that destroys the near-decomposability of software modules.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "simon"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 86. agentic-newell-unified-cognition Skill
+pub fn agentic_newell_unified_cognition() -> EccSkill {
+    EccSkill::new(
+        "agentic-newell-unified-cognition",
+        "Time scales of human action (biological, cognitive, rational, social bands), problem space hypothesis, and cognitive architecture benchmarks.",
+        r#"---
+name: agentic-newell-unified-cognition
+description: "Time scales of human action (biological, cognitive, rational, social bands), problem space hypothesis, and cognitive architecture benchmarks."
+triggers: ["newell", "unified-theories-cognition", "problem-space-hypothesis", "cognitive-bands", "cognitive-benchmarks", "action-timescales"]
+---
+
+# agentic-newell-unified-cognition
+> Based on **Unified Theories of Cognition - Allen Newell**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Bands of Human Action: Biological (~1-10ms), Cognitive (~100ms-10s), Rational (~minutes-hours), and Social (~days-months) time scales.**
+2. **Problem Space Hypothesis: All goal-oriented cognitive behavior occurs through search within formulated problem spaces.**
+3. **Knowledge Level Principle: An agent's behavior can be predicted solely by knowing its goals and the knowledge it possesses.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Structure agent tasks across appropriate time scales: sub-second linter fixes at the cognitive band; multi-hour architectural refactors at the rational band.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Applying multi-hour deliberative planning to millisecond-level syntax completions.**
+- **Failing to track overarching rational-band goals during low-level cognitive debugging.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "newell"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 87. agentic-sun-clarion-implicit-explicit Skill
+pub fn agentic_sun_clarion_implicit_explicit() -> EccSkill {
+    EccSkill::new(
+        "agentic-sun-clarion-implicit-explicit",
+        "Implicit vs explicit cognitive processes, bottom-up learning, motivational subsystems, and metacognitive control loops in hybrid agents.",
+        r#"---
+name: agentic-sun-clarion-implicit-explicit
+description: "Implicit vs explicit cognitive processes, bottom-up learning, motivational subsystems, and metacognitive control loops in hybrid agents."
+triggers: ["sun", "clarion", "implicit-explicit-learning", "dual-process-cognition", "motivational-subsystem", "metacognitive-control"]
+---
+
+# agentic-sun-clarion-implicit-explicit
+> Based on **An Introduction to Dual-Process Cognitive Systems with CLARION - Ron Sun**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Two-Level Cognitive Architecture: Bottom level encodes implicit procedural skills (neural weights); top level encodes explicit declarative rules (symbolic logic).**
+2. **Bottom-Up Learning: Explicit symbolic rules are extracted from successful implicit neural trials through rule extraction algorithms.**
+3. **Metacognitive Regulation: Monitoring cognitive progress, adjusting reinforcement learning rates, and balancing exploration vs exploitation.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Combine implicit neural pattern matching (LLM generation) with explicit symbolic verification (linters, compilers, formal provers) in every agent turn.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Relying solely on implicit neural intuition without explicit symbolic verification.**
+- **Rigid symbolic systems that cannot adapt to fuzzy or ambiguous natural language requirements.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "sun"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 88. agentic-lake-cognitive-concept-learning Skill
+pub fn agentic_lake_cognitive_concept_learning() -> EccSkill {
+    EccSkill::new(
+        "agentic-lake-cognitive-concept-learning",
+        "Compositionality, causality, learning to learn (meta-learning), intuitive physics, intuitive psychology, and sample-efficient concept learning.",
+        r#"---
+name: agentic-lake-cognitive-concept-learning
+description: "Compositionality, causality, learning to learn (meta-learning), intuitive physics, intuitive psychology, and sample-efficient concept learning."
+triggers: ["lake", "concept-learning", "intuitive-psychology", "meta-learning", "compositional-concepts", "sample-efficiency"]
+---
+
+# agentic-lake-cognitive-concept-learning
+> Based on **Building Machines That Learn and Think Like People - Brenden M. Lake et al.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Compositionality Principle: Complex concepts are constructed as structured compositional programs built from primitive atomic elements.**
+2. **Causal Model Induction: Representing knowledge as causal generative models rather than surface statistical correlations.**
+3. **Learning-to-Learn (Meta-Learning): Accelerating new concept acquisition by transferring abstract structural schemas learned from previous tasks.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Structure code generation around composable building blocks. Induce causal models of the developer's intent rather than matching surface keywords.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Treating new software frameworks as completely alien instead of mapping them to known architectural abstractions.**
+- **Superficial copy-pasting without understanding the underlying causal component relationships.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "lake"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 89. agentic-schmidhuber-intrinsic-curiosity Skill
+pub fn agentic_schmidhuber_intrinsic_curiosity() -> EccSkill {
+    EccSkill::new(
+        "agentic-schmidhuber-intrinsic-curiosity",
+        "Compression progress as intrinsic reward, artificial curiosity, Gödel machines, self-invented problems, and mathematically optimal self-improvement.",
+        r#"---
+name: agentic-schmidhuber-intrinsic-curiosity
+description: "Compression progress as intrinsic reward, artificial curiosity, Gödel machines, self-invented problems, and mathematically optimal self-improvement."
+triggers: ["schmidhuber", "intrinsic-curiosity", "compression-progress", "godel-machine", "self-improving-agents", "formal-theory-fun"]
+---
+
+# agentic-schmidhuber-intrinsic-curiosity
+> Based on **Formal Theory of Fun & Intrinsic Motivation in Self-Improving Agents - Jürgen Schmidhuber**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Compression Progress Reward: Intrinsic reward R_intrinsic(t) = C(state | model_{t-1}) - C(state | model_t), rewarding the discovery of compressible regularities.**
+2. **Gödel Machine Invariant: A self-referential system that rewires its own code if and only if it can formally prove the modification yields superior expected utility.**
+3. **Artificial Curiosity: Actively seeking out environments where the agent's current predictive model makes errors, accelerating learning.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Incentivize agents to proactively explore and refactor confusing, high-entropy legacy code modules. Reward the discovery of simplifying abstractions.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Allowing self-modifying agents to alter core safety invariants without mathematical proof of safety.**
+- **Focusing exclusively on easy, familiar code while avoiding poorly understood mission-critical modules.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "schmidhuber"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 90. agentic-wang-nars-non-axiomatic-reasoning Skill
+pub fn agentic_wang_nars_non_axiomatic_reasoning() -> EccSkill {
+    EccSkill::new(
+        "agentic-wang-nars-non-axiomatic-reasoning",
+        "Assumption of Insufficient Knowledge and Resources (AIKR), truth values as frequency and confidence, syllogistic inference, and open-world reasoning.",
+        r#"---
+name: agentic-wang-nars-non-axiomatic-reasoning
+description: "Assumption of Insufficient Knowledge and Resources (AIKR), truth values as frequency and confidence, syllogistic inference, and open-world reasoning."
+triggers: ["wang", "nars", "non-axiomatic-logic", "aikr", "truth-value-confidence", "syllogistic-reasoning", "open-world-reasoning"]
+---
+
+# agentic-wang-nars-non-axiomatic-reasoning
+> Based on **Non-Axiomatic Logic: A Model of Intelligent Reasoning (NARS) - Pei Wang**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **AIKR Axiom: An intelligent agent must adapt under the constraint of Insufficient Knowledge and Resources (finite memory, finite compute, real-time deadlines).**
+2. **NARS Truth Value Pair: <f, c>, where f in [0, 1] is the frequency of positive evidence, and c in [0, 1) is confidence based on total amount of evidence.**
+3. **Non-Axiomatic Syllogism: Deducing, inducting, and abducing relationships between concepts while tracking evidence confidence intervals.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Operate explicitly under AIKR constraints: prioritize high-confidence code suggestions when time is scarce; fall back to conservative approximations.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming infinite time and compute to solve coding tasks under strict production deadlines.**
+- **Treating uncertain empirical observations as binary (1 or 0) mathematical truths.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "wang"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 91. agentic-shneiderman-human-centered-ai Skill
+pub fn agentic_shneiderman_human_centered_ai() -> EccSkill {
+    EccSkill::new(
+        "agentic-shneiderman-human-centered-ai",
+        "High automation and high human control (HCAI matrix), explainable AI, reliable/safe/trustworthy design, and human oversight in agent systems.",
+        r#"---
+name: agentic-shneiderman-human-centered-ai
+description: "High automation and high human control (HCAI matrix), explainable AI, reliable/safe/trustworthy design, and human oversight in agent systems."
+triggers: ["shneiderman", "human-centered-ai", "hcai-matrix", "human-in-the-loop", "high-automation-high-control", "explainable-ai"]
+---
+
+# agentic-shneiderman-human-centered-ai
+> Based on **Human-Centered AI - Ben Shneiderman**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **HCAI Two-Dimensional Matrix: Simultaneously maximize Human Control and Computer Automation (avoiding the false choice between total autonomy or manual toil).**
+2. **Continuous Oversight Interfaces: Dashboards providing real-time visibility into agent telemetry, pending actions, and override controls.**
+3. **Audit Trails & Explainability: Every autonomous action must produce an intelligible audit log explaining why the action was chosen.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Provide transparent audit previews before applying multi-file refactorings. Give the developer instant 1-click override and rollback capabilities.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Black-box autonomous modifications with zero explanation or user visibility.**
+- **Degrading developer control in the name of full automation, breeding mistrust and rejection.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "shneiderman"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 92. agentic-brooks-mythical-man-month Skill
+pub fn agentic_brooks_mythical_man_month() -> EccSkill {
+    EccSkill::new(
+        "agentic-brooks-mythical-man-month",
+        "Brooks's Law, conceptual integrity, the surgical team, second-system effect, and essential vs accidental complexity in engineering projects.",
+        r#"---
+name: agentic-brooks-mythical-man-month
+description: "Brooks's Law, conceptual integrity, the surgical team, second-system effect, and essential vs accidental complexity in engineering projects."
+triggers: ["brooks", "mythical-man-month", "brooks-law", "conceptual-integrity", "surgical-team", "second-system-effect", "essential-complexity"]
+---
+
+# agentic-brooks-mythical-man-month
+> Based on **The Mythical Man-Month: Essays on Software Engineering - Frederick P. Brooks Jr.**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Brooks's Law: Adding manpower to a late software project makes it later (due to combinatorial communication overhead: n*(n-1)/2).**
+2. **Conceptual Integrity: The most important attribute of software design; best achieved when a system reflects a single unified architectural vision.**
+3. **The Surgical Team: Structuring development teams around a chief architect/developer supported by specialized assistants (toolsmith, tester, editor).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Act as the chief architect's surgical team assistant. Preserve conceptual integrity across all modules and prevent communication bloat.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Spawning dozens of uncoordinated agent workers that create combinatorial git conflicts (Brooks's Law in multi-agent systems).**
+- **Falling victim to the second-system effect by packing excessive bells and whistles into a redesign.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "brooks"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 93. agentic-ousterhout-philosophy-software-design Skill
+pub fn agentic_ousterhout_philosophy_software_design() -> EccSkill {
+    EccSkill::new(
+        "agentic-ousterhout-philosophy-software-design",
+        "Deep modules vs shallow modules, information hiding, complexity as a symptom of dependency and obscurity, and strategic vs tactical programming.",
+        r#"---
+name: agentic-ousterhout-philosophy-software-design
+description: "Deep modules vs shallow modules, information hiding, complexity as a symptom of dependency and obscurity, and strategic vs tactical programming."
+triggers: ["ousterhout", "philosophy-software-design", "deep-modules", "information-hiding", "tactical-tornado", "strategic-programming"]
+---
+
+# agentic-ousterhout-philosophy-software-design
+> Based on **A Philosophy of Software Design - John Ousterhout**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Deep Module Invariant: The best modules provide powerful functionality through simple, compact interfaces (deep); avoid shallow modules.**
+2. **Strategic vs Tactical Programming: Tactical: quick patches that add technical debt; Strategic: investing 10-20% extra effort in clean design.**
+3. **Complexity Definition: Complexity is anything related to the structure of a software system that makes it hard to understand and modify.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Synthesize deep modules with simple public APIs that hide substantial internal complexity. Avoid shallow wrapper classes that increase obscurity.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Becoming a 'tactical tornado' that hacks in quick fixes while degrading overall codebase structure.**
+- **Creating shallow interfaces that expose internal implementation details to callers.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "ousterhout"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 94. agentic-martin-clean-architecture-boundaries Skill
+pub fn agentic_martin_clean_architecture_boundaries() -> EccSkill {
+    EccSkill::new(
+        "agentic-martin-clean-architecture-boundaries",
+        "Dependency Inversion Principle, concentric architectural boundaries, entities, use cases, interface adapters, and framework independence.",
+        r#"---
+name: agentic-martin-clean-architecture-boundaries
+description: "Dependency Inversion Principle, concentric architectural boundaries, entities, use cases, interface adapters, and framework independence."
+triggers: ["martin", "uncle-bob", "clean-architecture", "dependency-inversion", "concentric-boundaries", "use-cases", "framework-independence"]
+---
+
+# agentic-martin-clean-architecture-boundaries
+> Based on **Clean Architecture: A Craftsman's Guide to Software Structure and Design - Robert C. Martin**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **The Dependency Rule: Source code dependencies must point only inward, toward higher-level policies: Entities -> Use Cases -> Adapters -> Frameworks.**
+2. **Entities & Business Logic Purity: Enterprise business rules must have zero dependencies on databases, UI frameworks, or external third-party libraries.**
+3. **Boundaries as Plugins: Databases and web delivery mechanisms are details that plug into the core application using interface ports.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Enforce concentric boundaries in generated code: keep business entities strictly decoupled from database engines and web frameworks via ports and adapters.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Importing database ORM entities directly into domain logic or UI views.**
+- **Letting external framework conventions dictate core business domain models.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "martin"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 95. agentic-feathers-legacy-code-refactoring Skill
+pub fn agentic_feathers_legacy_code_refactoring() -> EccSkill {
+    EccSkill::new(
+        "agentic-feathers-legacy-code-refactoring",
+        "Legacy code definition (code without tests), sensing and separation pins, sprout/wrap method, characterization tests, and breaking dependencies.",
+        r#"---
+name: agentic-feathers-legacy-code-refactoring
+description: "Legacy code definition (code without tests), sensing and separation pins, sprout/wrap method, characterization tests, and breaking dependencies."
+triggers: ["feathers", "legacy-code", "characterization-tests", "sprout-method", "wrap-method", "breaking-dependencies", "seams"]
+---
+
+# agentic-feathers-legacy-code-refactoring
+> Based on **Working Effectively with Legacy Code - Michael C. Feathers**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Definition of Legacy Code: Code without unit tests. Tests are a safety harness allowing rapid, fearless modification without regressions.**
+2. **Characterization Tests: Tests that document and preserve the existing actual behavior of a legacy system before attempting refactoring.**
+3. **Seams: A place where you can alter behavior in a program without editing in that place (e.g. object seams, link seams).**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Before modifying legacy code, write characterization tests to lock down current behavior. Use Sprout/Wrap methods to add new features safely.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Refactoring complex legacy code without first establishing automated regression tests.**
+- **Assuming undocumented legacy behavior is a bug and removing it, breaking downstream clients.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "feathers"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 96. agentic-forsgren-accelerate-dora-metrics Skill
+pub fn agentic_forsgren_accelerate_dora_metrics() -> EccSkill {
+    EccSkill::new(
+        "agentic-forsgren-accelerate-dora-metrics",
+        "Four DORA metrics (Deployment Frequency, Lead Time for Changes, Change Failure Rate, Time to Restore Service), and continuous delivery practices.",
+        r#"---
+name: agentic-forsgren-accelerate-dora-metrics
+description: "Four DORA metrics (Deployment Frequency, Lead Time for Changes, Change Failure Rate, Time to Restore Service), and continuous delivery practices."
+triggers: ["forsgren", "humble", "gene-kim", "accelerate", "dora-metrics", "continuous-delivery", "lead-time-for-changes"]
+---
+
+# agentic-forsgren-accelerate-dora-metrics
+> Based on **Accelerate: Building and Scaling High Performing Technology Organizations - Nicole Forsgren, Jez Humble & Gene Kim**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Four DORA Metrics: Deployment Frequency, Lead Time for Changes, Change Failure Rate (< 15%), Mean Time to Recovery (< 1 hour).**
+2. **Continuous Delivery Capabilities: Version control for all artifacts, trunk-based development, automated testing, loosely coupled architecture.**
+3. **Transformational Leadership: Empowering engineering teams with autonomous decision-making and psychological safety.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Optimize agent-assisted development to drive elite DORA metrics: sub-hour lead time from prompt to production, zero-regression trunk commits.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Long-lived feature branches that delay feedback and trigger painful merge conflicts.**
+- **Deploying unverified changes that spike Change Failure Rates above healthy thresholds.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "forsgren"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 97. agentic-kim-phoenix-project-flow-theory Skill
+pub fn agentic_kim_phoenix_project_flow_theory() -> EccSkill {
+    EccSkill::new(
+        "agentic-kim-phoenix-project-flow-theory",
+        "The Three Ways (Flow, Feedback, Continual Learning), Theory of Constraints (Goldratt), work-in-progress (WIP) limits, and bottleneck management.",
+        r#"---
+name: agentic-kim-phoenix-project-flow-theory
+description: "The Three Ways (Flow, Feedback, Continual Learning), Theory of Constraints (Goldratt), work-in-progress (WIP) limits, and bottleneck management."
+triggers: ["kim", "phoenix-project", "three-ways", "theory-of-constraints", "wip-limits", "bottleneck-management", "devops-flow"]
+---
+
+# agentic-kim-phoenix-project-flow-theory
+> Based on **The Phoenix Project - Gene Kim, Kevin Behr & George Spafford**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **The First Way (Principles of Flow): Accelerate the flow of work from Development to Operations; reduce batch sizes and WIP.**
+2. **The Second Way (Principles of Feedback): Create fast, reciprocal feedback loops from right to left; amplify feedback to prevent recurrence of errors.**
+3. **The Third Way (Continual Learning): Foster a culture of experimentation, calculated risk-taking, and learning from failure.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Identify the primary bottleneck in the software pipeline (e.g. slow tests, manual deploys) and subordinate all agent activities to resolving it.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Optimizing non-bottleneck stages, creating inventory piles without increasing throughput.**
+- **Ignoring operational feedback and continuing to push code into broken environments.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "kim"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 98. agentic-evans-domain-driven-design Skill
+pub fn agentic_evans_domain_driven_design() -> EccSkill {
+    EccSkill::new(
+        "agentic-evans-domain-driven-design",
+        "Ubiquitous Language, Bounded Contexts, Entities, Value Objects, Aggregates, Repositories, Domain Services, and Anti-Corruption Layers.",
+        r#"---
+name: agentic-evans-domain-driven-design
+description: "Ubiquitous Language, Bounded Contexts, Entities, Value Objects, Aggregates, Repositories, Domain Services, and Anti-Corruption Layers."
+triggers: ["evans", "domain-driven-design", "ddd", "ubiquitous-language", "bounded-context", "aggregates", "anti-corruption-layer"]
+---
+
+# agentic-evans-domain-driven-design
+> Based on **Domain-Driven Design: Tackling Complexity in the Heart of Software - Eric Evans**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Ubiquitous Language: A common, rigorous language shared by developers and domain experts, reflected directly in the source code.**
+2. **Bounded Context: A clear linguistic and architectural boundary within which a specific domain model applies and remains internally consistent.**
+3. **Aggregate Root Invariant: Aggregates are clusters of associated objects treated as a unit for data changes; all external access must go through the Root.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Model software domains around strict Aggregate boundaries. Enforce Ubiquitous Language consistently in types, variable names, and database schemas.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Anemic domain models where entities are dumb data bags manipulated by bloated procedural services.**
+- **Leaking model concepts across Bounded Contexts without an Anti-Corruption Layer.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "evans"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 99. agentic-meadows-systems-thinking-feedback Skill
+pub fn agentic_meadows_systems_thinking_feedback() -> EccSkill {
+    EccSkill::new(
+        "agentic-meadows-systems-thinking-feedback",
+        "Stocks and flows, feedback loops (balancing and reinforcing), delays, system archetypes, and the 12 leverage points to intervene in a system.",
+        r#"---
+name: agentic-meadows-systems-thinking-feedback
+description: "Stocks and flows, feedback loops (balancing and reinforcing), delays, system archetypes, and the 12 leverage points to intervene in a system."
+triggers: ["meadows", "systems-thinking", "stocks-and-flows", "feedback-loops", "leverage-points", "system-archetypes", "delay-dynamics"]
+---
+
+# agentic-meadows-systems-thinking-feedback
+> Based on **Thinking in Systems: A Primer - Donella H. Meadows**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Stock and Flow Dynamics: Stock is the memory of history (codebase size, tech debt, bug count); flow is the rate of change (commit rate, fix rate).**
+2. **Balancing vs Reinforcing Loops: Reinforcing loops generate exponential growth or collapse; balancing loops resist change and enforce equilibrium.**
+3. **High-Leverage Interventions: Changing goals, paradigms, and system rules produces orders of magnitude more impact than tweaking numerical parameters.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Analyze software architectures as living dynamic systems. Target high-leverage intervention points (e.g. automated CI gates, compiler types) rather than surface symptoms.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Treating systemic bugs as isolated one-off errors without addressing the reinforcing feedback loops that cause them.**
+- **Ignoring delays in feedback loops, causing over-correction and catastrophic oscillations in codebase refactoring.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "meadows"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
+
+/// 100. agentic-kelly-autonomous-cognition-flows Skill
+pub fn agentic_kelly_autonomous_cognition_flows() -> EccSkill {
+    EccSkill::new(
+        "agentic-kelly-autonomous-cognition-flows",
+        "Becoming, cognifying, flowing, screening, accessing, sharing, filtering, remixing, tracking, questioning, beginning, and autonomous intelligence flows.",
+        r#"---
+name: agentic-kelly-autonomous-cognition-flows
+description: "Becoming, cognifying, flowing, screening, accessing, sharing, filtering, remixing, tracking, questioning, beginning, and autonomous intelligence flows."
+triggers: ["kelly", "kevin-kelly", "the-inevitable", "cognifying", "autonomous-flows", "remixing", "technological-forces", "future-ai-systems"]
+---
+
+# agentic-kelly-autonomous-cognition-flows
+> Based on **The Inevitable: Understanding the 12 Technological Forces That Will Shape Our Future - Kevin Kelly**
+
+## 1. Core Mathematical & Architectural Foundations / Formal Invariants
+
+1. **Cognifying Everything: Infusing cheap, ubiquitous autonomous intelligence into every tool, compiler, and developer interface.**
+2. **Perpetual 'Becoming': All software is permanently in beta; continuous upgrades and dynamic mutations replace static finished releases.**
+3. **Remixing & Flowing: Value shifts from static copyrighted code repositories to real-time, dynamic streams of composable agent skills.**
+
+## 2. Concrete Agent Specification & Prompt Contract (Vibe Coder Protocol)
+
+### Prompt Contract
+Design agentic tools as continuous, cognified streams. Facilitate effortless remixing and composition of specialized agent capabilities across project tasks.
+
+## 3. Anti-Patterns & Hallucination Mitigations for AI Coding Agents
+
+- **Assuming software reaches a 'finished' static state, neglecting continuous self-updating adaptability.**
+- **Building rigid monolithic tools that cannot be remixed into larger agentic workflows.**
+
+## 4. Executable Verification Recipe
+
+```bash
+# Verify skill presence and discoverability in Tagisan
+tgs ecc skills -q "kelly"
+
+# Execute automated agentic engineering audit
+cargo test --test agentic_skills_brutal_tests
+```
+
+"#,
+    )
+}
 
