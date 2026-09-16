@@ -52,6 +52,28 @@ pub mod viva;
 pub mod vscode;
 pub mod visio;
 pub mod wam;
+pub mod ms_enterprise;
+pub mod ms_frontier;
+
+pub use ms_enterprise::{
+    A2AAgentCard, A2AAgentRole, A2AConsensusVerdict, A2ADebateRound, A2ADelegationTask,
+    AceQueryRequest, AceQueryResult, CaeChallenge, CaeStepUpRequest, CaeZeroTrustGuard,
+    CopilotA2ASwarmEngine, DataverseAlmEngine, DataverseCdcEvent, DeltaCommitSummary,
+    DesktopAppType, DirectLakeSemanticModel, DirectLineActivity, DriftSeverity, FabricOneLakeEngine,
+    FabricRestDeploymentPlan, MsDesktopRuntimeBridge, OneLakeAbfsPath, RotEntry, SchemaDriftReport,
+    ShapeSheetEvalRequest, ShapeSheetEvalResult, SolutionComponentType, SolutionManifest,
+    VbaExecutionRequest, VbaExecutionResult, VirtualTableConfig, ZeroTrustToken,
+};
+
+pub use ms_frontier::{
+    AmqpFrameType, AmqpMessage, AudioPacket, TeamsCallParticipant, CallSessionState,
+    ComplianceEvaluationResult, CompliancePolicyRule, CredentialValidationReceipt,
+    CryptographicProof, DispositionStatus, EntraVerifiedIdEngine, IntuneDevicePosture,
+    MsSecurityCopilotIntuneEngine, OleBinaryForensicsEngine, OleDirectoryEntry,
+    OleForensicReport, OleObjectType, SecurityCopilotManifest, SecurityCopilotSkill,
+    SpeechInvariantAlert, TeamsRealTimeMediaEngine, VerifiableCredential,
+    VerifiablePresentation, AzureServiceBusAmqpEngine, OLE_MAGIC,
+};
 
 pub use bicep::{
     AvmComplianceChecker, AvmComplianceReport, AvmRuleViolation, BicepAuditReport,
