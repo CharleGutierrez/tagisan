@@ -245,6 +245,10 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotSdlAuditTool::default());
         registry.register_tool(crate::copilot::CopilotStudioPackagerTool::default());
         registry.register_tool(crate::copilot::CopilotVivaSyncTool::default());
+        // Phase 7 Microsoft Power Platform Expansion Tools (3 tools -> 46 total)
+        registry.register_tool(crate::copilot::CopilotDataverseSyncTool::default());
+        registry.register_tool(crate::copilot::CopilotPowerAutomateTool::default());
+        registry.register_tool(crate::copilot::CopilotPowerPlatformPackagerTool::default());
         registry
     }
 

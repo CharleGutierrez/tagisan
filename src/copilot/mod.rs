@@ -13,6 +13,7 @@ pub mod bot;
 pub mod cae;
 pub mod calendar;
 pub mod connector;
+pub mod dataverse;
 pub mod delta;
 pub mod excel;
 pub mod fabric;
@@ -27,6 +28,8 @@ pub mod ooxml;
 pub mod perms_auditor;
 pub mod planner;
 pub mod plugin;
+pub mod power_automate;
+pub mod powerplatform;
 pub mod purview;
 pub mod sdl;
 pub mod sentinel;
@@ -151,6 +154,18 @@ pub use substrate::{
 };
 pub use viva::{Viva1on1Briefing, VivaEngine, VivaGoal, CopilotVivaSyncTool};
 pub use wam::{WamAccount, WamBrokerEngine, WamTokenRequest, WamTokenResponse, CopilotWamAuthTool};
+pub use dataverse::{
+    CopilotDataverseSyncTool, DataverseAdrRecord, DataverseBatchReport, DataverseBatchSubRequest,
+    DataverseBlastRadiusRecord, DataverseEngine, DataverseIncidentRecord, DEFAULT_DATAVERSE_API_VERSION,
+    ENTITY_SET_ADR, ENTITY_SET_BLAST_RADIUS, ENTITY_SET_INCIDENT,
+};
+pub use power_automate::{
+    CopilotPowerAutomateTool, FlowRunResult, FlowTriggerType, PowerAutomateEngine,
+    DEFAULT_FLOW_HMAC_SECRET,
+};
+pub use powerplatform::{
+    CopilotPowerPlatformPackagerTool, PowerPlatformPackagerEngine, PowerPlatformSolutionReport,
+};
 
 
 

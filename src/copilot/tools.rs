@@ -39,6 +39,9 @@ pub use crate::copilot::studio::CopilotStudioPackagerTool;
 pub use crate::copilot::substrate::CopilotSubstrateIngestTool;
 pub use crate::copilot::viva::CopilotVivaSyncTool;
 pub use crate::copilot::wam::CopilotWamAuthTool;
+pub use crate::copilot::dataverse::CopilotDataverseSyncTool;
+pub use crate::copilot::power_automate::CopilotPowerAutomateTool;
+pub use crate::copilot::powerplatform::CopilotPowerPlatformPackagerTool;
 
 use crate::copilot::graph::{ActionItem, GraphClient, TranscriptEntry};
 use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};

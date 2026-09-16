@@ -1197,6 +1197,47 @@ pub enum CopilotAction {
         #[arg(long, default_value = "Copilot-Test-Pass-Rate")]
         goal_id: String,
     },
+
+    /// Microsoft Dataverse OData v4 Web API Engine (ADR, Blast Telemetry & Incident Remediation)
+    Dataverse {
+        /// Action: 'upsert_adr', 'upsert_blast_report', 'upsert_incident', 'query', 'get', 'delete'
+        #[arg(long, default_value = "query")]
+        action: String,
+
+        /// Entity set name
+        #[arg(long, default_value = "tgs_architecturaldecisions")]
+        entity_set: String,
+
+        /// Optional OData $filter string
+        #[arg(long)]
+        filter: Option<String>,
+    },
+
+    /// Microsoft Power Automate Cloud Flow Generation, HMAC Webhook & Adaptive Card Approvals
+    PowerAutomate {
+        /// Action: 'generate_flow', 'create_approval_card', 'simulate_trigger'
+        #[arg(long, default_value = "generate_flow")]
+        action: String,
+
+        /// Flow Name
+        #[arg(long, default_value = "Tagisan-CI-AutoRemediation")]
+        flow_name: String,
+    },
+
+    /// Microsoft Power Platform Custom Connector Swagger & Certified Solution ZIP Packager
+    PowerPlatform {
+        /// Action: 'generate_swagger', 'package_solution_zip'
+        #[arg(long, default_value = "package_solution_zip")]
+        action: String,
+
+        /// Unique technical Solution Name
+        #[arg(long, default_value = "TagisanEnterpriseSolution")]
+        solution_name: String,
+
+        /// Output directory for ZIP bundle
+        #[arg(long, default_value = ".tagisan/powerplatform_export")]
+        output_dir: String,
+    },
 }
 
 
@@ -6249,6 +6290,55 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
             let args = serde_json::json!({
                 "action": action,
                 "goal_id": goal_id,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Dataverse { action, entity_set, filter } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🏢 MICROSOFT DATAVERSE ODATA V4 WEB API ENGINE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::dataverse::CopilotDataverseSyncTool::default();
+            let mut args = serde_json::json!({
+                "action": action,
+                "entity_set": entity_set,
+            });
+            if let Some(f) = filter {
+                args.as_object_mut().unwrap().insert("filter".to_string(), serde_json::json!(f));
+            }
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::PowerAutomate { action, flow_name } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  ⚡ MICROSOFT POWER AUTOMATE CLOUD FLOW & APPROVAL ENGINE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::power_automate::CopilotPowerAutomateTool::default();
+            let args = serde_json::json!({
+                "action": action,
+                "flow_name": flow_name,
+            });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::PowerPlatform { action, solution_name, output_dir } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  📦 MICROSOFT POWER PLATFORM CONNECTOR & SOLUTION PACKAGER".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::powerplatform::CopilotPowerPlatformPackagerTool::default();
+            let args = serde_json::json!({
+                "action": action,
+                "solution_name": solution_name,
+                "output_dir": output_dir,
             });
             let out = tool.execute(args).await?;
             println!("\n{out}");
