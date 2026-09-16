@@ -150,14 +150,14 @@ flowchart TD
         MCPHub["Bidirectional Model Context Protocol (tgs mcp / tgs serve-mcp)"]
     end
 
-    UI --> CoreEngine
-    CoreEngine --> TensorDaemon
-    CoreEngine --> SwarmStrategies
-    CoreEngine --> CodeIntelligence
-    CoreEngine --> CyberDefense
-    CoreEngine --> EnterpriseCopilot
-    CoreEngine --> PolyglotRuntimes
-    CoreEngine --> SkillsMemory
+    CLI --> Budget
+    Budget --> Mmap
+    Budget --> Debate
+    Budget --> Autofix
+    Budget --> ZeroAuth
+    Budget --> COM
+    Budget --> BunRuntime
+    Budget --> PILOT
 ```
 
 ---
@@ -314,16 +314,157 @@ flowchart TD
         Tools56["56 Autonomous Copilot MCP Tools"]
     end
 
-    Copilot -->|User JWT| OBO
-    OBO -->|Graph Bearer Token| Throttler
-    X509 -->|Client Assertion| Entra
-    Throttler -->|Rate-Limited API Requests| Teams
-    Throttler -->|Ingestion & Sanitization| SharePoint
-    Webhook -->|Validation Handshake (<10s)| Teams
-    TagisanCore -->|CEF / RFC 5424 Security Events| Sentinel
-    Purview -->|GUID Policy Binding| AgentShield
-    Attestation -->|compliance.json & Attestation| AdminCenter
+    Copilot -->|"User JWT"| OBO
+    OBO -->|"Graph Bearer Token"| Throttler
+    X509 -->|"Client Assertion"| Entra
+    Throttler -->|"Rate-Limited API Requests"| Teams
+    Throttler -->|"Ingestion & Sanitization"| SharePoint
+    Webhook -->|"Validation Handshake (under 10s)"| Teams
+    SIEM -->|"CEF / RFC 5424 Security Events"| Sentinel
+    Purview -->|"GUID Policy Binding"| AgentShield
+    Attestation -->|"compliance.json & Attestation"| AdminCenter
 ```
+
+### 🚀 Core Enterprise Scenarios & Autonomous Pipelines
+
+1. **Microsoft Purview Sensitivity & Zero-Egress Air-Gapping (`tgs copilot purview` / `copilot_purview_guard`):**
+   - Automatically classifies data into `General`, `Confidential`, `HighlyConfidential`, and `Secret` sensitivity labels.
+   - When sensitivity is `Confidential` or `HighlyConfidential`/`Secret`, dynamically enforces **Zero-Egress Air-Gapped mode**: strictly routes tasks to Tagisan's local in-process GGUF/offline tensor engine, completely forbidding external cloud API calls.
+   - Issues cryptographic **SHA-256 audit receipts** (`PurviewAuditReceipt`) with content digest, timestamp, sensitivity classification, routing enforcement proof, and HMAC/signature.
+
+2. **Architecture Decision Record (ADR) Sync to OneNote & SharePoint (`tgs copilot adr` / `copilot_adr_sync`):**
+   - Synthesizes dialectical debate verdicts and technical RFCs into standard Markdown Architectural Decision Records (**MADR 3.0 format**): Title, Status, Deciders, Context, Considered Options, Decision Outcome, Formal Invariants, and Consequences.
+   - Automatically synchronizes ADRs to **Microsoft OneNote notebooks** (`sync_onenote_page`) and **SharePoint document libraries / wikis** (`upload_sharepoint_file`) via `GraphClient`.
+
+3. **Direct Git Branch & PR Automation (`tgs copilot pr` / `copilot_create_pr`):**
+   - Ingests synthesized patches from `meeting-to-code`, creates an ephemeral Git branch (`tgs/m2c-...`), and generates conventional commit messages.
+   - Formats comprehensive GitHub and Azure DevOps PR markdown descriptions with embedded **Adaptive Card v1.5 blast-radius telemetry**, risk assessments, and file diffs.
+   - Automatically dispatches PR notification cards to Microsoft Teams channels or chats.
+
+4. **Interactive Teams Bot Webhook Action Handler (`tgs copilot listen` / `src/copilot/bot.rs`):**
+   - Processes interactive Adaptive Card `Action.Submit` callbacks from Teams users directly into Tagisan:
+     - `approve_patch`: Approves and merges ephemeral patch, generating commit SHA and updating card state.
+     - `run_autofix`: Dispatches Tagisan iterative self-healing autofix engine on target files.
+     - `run_debate`: Initiates dialectical debate on the card's proposal and displays Lakandiwa synthesis.
+     - `sync_adr`: Synthesizes MADR architecture decision record and syncs to OneNote & SharePoint.
+   - Returns refreshed Adaptive Card state with visual confirmation badges and audit trails.
+
+5. **Executive Presentation Deck Generator (`tgs copilot deck` / `copilot_export_deck`):**
+   - Compiles responsive, presentation-ready 5-slide executive briefing decks (in Fluent UI HTML and Marp Markdown format) covering:
+     1. Executive Summary & KPI metrics
+     2. High-Risk Codebase Blast Hotspots
+     3. Dialectical Invariants formally verified
+     4. Cost Savings of Local Compute ($18,450/mo savings via offline tensor inference)
+     5. AgentShield Compliance Clearance & Purview Zero-Egress certification
+   - Supports direct export to disk and dispatch via Outlook email.
+
+6. **Meeting-to-Code Pipeline (`tgs copilot meeting-to-code` / `copilot_meeting_to_code`):**
+   - Ingests raw or live Microsoft Teams meeting transcripts via Microsoft Graph.
+   - Automatically decomposes dialogue into prioritized engineering action items (`High`/`Medium`/`Low`), assigning owners and categories.
+   - Maps each task to concrete symbols in the codebase and computes the **AST transitive blast radius** and ripple-effect risk level.
+   - Synthesizes automated, surgical code patches and diffs with **AgentShield DLP security clearance**, and dispatches execution plans to Teams.
+
+7. **Codebase Telemetry & Blast Radius Cards (`tgs copilot blast-report` / `copilot_blast_radius_report`):**
+   - Evaluates the transitive call graph and architectural depth for any struct, function, method, or trait.
+   - Emits **Microsoft Teams Adaptive Card v1.5 JSON** with interactive action buttons and color-coded risk indicators (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
+   - Produces executive **Microsoft Fluent UI HTML reports** optimized for Outlook, PowerPoint, and Excel.
+
+8. **Dialectical Debate Dispatch (`tgs copilot debate` / `copilot_debate_dispatch`):**
+   - Orchestrates Tagisan's 3-round adversarial debate on technical RFCs and architecture decisions:
+     - **Round 1 (Thesis):** Rigorous proposal detailing throughput, zero-copy safety, and latency wins.
+     - **Round 2 (Antithesis):** Adversarial attack on edge cases, lock contention, token invalidation, and memory overhead.
+     - **Round 3 (Lakandiwa Synthesis):** Definitive binding consensus and formal invariant constraints.
+   - Enforces pre-flight AgentShield DLP scanning and broadcasts the verdict directly to Microsoft Teams channels or Outlook stakeholders.
+
+9. **Microsoft Search Graph Connector (`tgs copilot index`):**
+   - Registers external connection schema (`tagisan_enterprise_index`) with searchable, queryable, and retrievable properties.
+   - Ingests 495+ built-in engineering skills, debate transcripts, and architecture diagrams into Microsoft Search so users can query Tagisan intelligence natively within Microsoft 365 Copilot.
+
+10. **Declarative Agent Manifest & Plugin Generator (`tgs copilot package` / `plugin`):**
+    - Emits a complete, sideloadable Teams App package bundle:
+      - `manifest.json` (Teams App manifest v1.16)
+      - `declarativeAgent.json` (Microsoft Copilot Declarative Agent v1.0)
+      - `ai-plugin.json` (Copilot Studio & ChatGPT Plugin schema)
+      - `openapi.json` (OpenAPI 3.0.3 specification exposing all 16 endpoints)
+      - `color.png` & `outline.png` (RFC 2083 valid binary PNG icons generated in-memory)
+
+11. **Native Excel Custom Functions Engine & Add-in Packager (`tgs copilot excel` / `copilot_excel_functions`):**
+    - Evaluates native Excel formula expressions dynamically directly against the Tagisan engine:
+      - `=TGS.BLAST_RADIUS(symbol, path)`: Calculates transitive affected symbol count and risk tier.
+      - `=TGS.COMPLEXITY(symbol, path)`: Computes AST cyclomatic complexity and risk rating.
+      - `=TGS.COST_SAVINGS(prompt_tokens, completion_tokens)`: Models API cost avoidance vs OpenAI GPT-4o pricing.
+      - `=TGS.INVARIANT_CHECK(target, code)`: Formally verifies mathematical and architectural invariants.
+    - Generates complete Office Add-in packages containing `manifest.xml`, `functions.json` schema, and TypeScript bridge `functions.js`.
+
+12. **Live Server-Sent Events (SSE) Streaming Gateway (`tgs copilot stream` / `copilot_stream_gateway`):**
+    - Real-time event streaming protocol for Copilot Studio, Teams bots, and webhooks formatted as standard `text/event-stream` or NDJSON.
+    - Dispatches streaming frames (`round_start`, `token`, `keepalive`, `verdict`, `done`) with 3-second anti-timeout heartbeat pulses, ensuring zero connection drops during heavy reasoning workloads.
+
+13. **Microsoft Planner & To-Do Task Synchronizer (`tgs copilot planner` / `copilot_planner_sync`):**
+    - Synchronizes meeting action items, debate outcomes, and architectural tasks directly to **Microsoft Planner** plan buckets or **Microsoft To-Do** personal task lists.
+    - Supports setting priorities (`Urgent`, `Important`, `Medium`, `Low`), checklist items, assignees, and linking back to Git commit SHAs and pull requests.
+
+14. **Teams "@Tagisan" CI/CD Incident Debugger (`tgs copilot incident` / `copilot_incident_debugger`):**
+    - Ingests raw CI/CD failure logs (rustc errors, stack trace panics, TypeScript diagnostics, pytest failures), extracts root cause lines, and computes symbol blast radius.
+    - Synthesizes automated unified diff patches with confidence scores and emits interactive **Adaptive Cards v1.5** featuring an actionable `[Apply Autofix & Rerun CI]` `Action.Submit` button.
+
+15. **Windows Copilot+ PC Hardware Telemetry & Datacenter Energy Efficiency (`tgs copilot hardware` / `copilot_hardware_telemetry`):**
+    - Detects on-device silicon acceleration (NPU, DirectML GPUs, AVX-512/NEON SIMD) and calculates TOPS capability and local energy consumption (Joules & kWh).
+    - Benchmarks local inference against 8x H100 datacenter clusters, modeling dollars saved and grams of CO2 emissions avoided.
+    - Computes a cryptographic **Data Sovereignty Score (100% Air-Gapped)** and generates an executive Fluent UI Adaptive Card.
+
+16. **Entra ID On-Behalf-Of (OBO) Flow & Certificate Assertions (`tgs copilot obo` / `copilot_obo_exchange`):**
+    - RFC 7523 OAuth2 JWT bearer token exchange preserving user security context (UPN, OID, tenant, roles, scopes) across downstream Microsoft Graph calls.
+    - X.509 client certificate assertion with SHA-1/SHA-256 thumbprints for zero-password production daemon authentication.
+
+17. **Microsoft Graph Webhook Subscriptions & Handshake Engine (`tgs copilot subscribe` / `copilot_subscription_manage`):**
+    - High-speed validation challenge handler responding to `validationToken` in under 10 seconds.
+    - Full lifecycle management (create, renew, delete, list) for online meetings, SharePoint drives, and Teams chats with HMAC-SHA256 `clientState` signature verification.
+
+18. **Microsoft Graph 429 Adaptive Throttling & Token Bucket Rate Limiting:**
+    - Per-resource token bucket rate limiters intercepting HTTP 429 status codes.
+    - Parses integer, float, and RFC 2822/3339 `Retry-After` headers with truncated exponential backoff and full jitter to eliminate thundering herds.
+
+19. **Dynamic Microsoft Purview Sensitivity Taxonomy Synchronization (`tgs copilot sync-labels` / `copilot_purview_sync`):**
+    - Queries `/informationProtection/policy/labels` to synchronize tenant custom sensitivity labels and GUIDs directly to local Zero-Egress air-gap policies.
+
+20. **Microsoft Sentinel CEF, RFC 5424 & Azure Monitor SIEM Telemetry Bridge (`tgs copilot sentinel` / `copilot_sentinel_audit`):**
+    - Structured security event telemetry formatted in Common Event Format (CEF:0), RFC 5424 Syslog, and Azure Monitor DCR custom log formats.
+    - Emits real-time audit events for AST blast-radius calculations, DLP blocks, Purview air-gap triggers, and autonomous PR commits.
+
+21. **M365 Admin Center App Compliance & Publisher Attestation (`tgs copilot certify` / `copilot_certify`):**
+    - Automated compliance generator emitting `compliance.json` for Microsoft Partner Center certification.
+    - Attests MPN ID, valid domains, SOC 2 Type II, ISO/IEC 27001:2022, GDPR, HIPAA, and zero-retention ephemeral storage policies.
+
+22. **Continuous Access Evaluation (CAE) Claims-Challenge Negotiation (`copilot_cae_handler`):**
+    - Intercepts HTTP 401 `WWW-Authenticate: Bearer error="insufficient_claims"` challenges per RFC 8693 / MS Graph CAE specification.
+    - Automatically parses base64-encoded JSON claims objects, evaluates step-up authentication requirements, and issues remediation tokens with continuous zero-trust policy enforcement.
+
+23. **Microsoft Graph Rich Notification JWE Decryption (`copilot_jwe_decrypt`):**
+    - Decrypts RFC 7516 JSON Web Encryption (JWE) payloads received via real-time Microsoft Graph webhooks for Teams chats, channel messages, and online meeting transcripts.
+    - Employs AES-256-GCM symmetric authenticated encryption with RSA-OAEP asymmetric key transport and HMAC-SHA256 signature verification.
+
+24. **Microsoft Graph JSON Batching & DAG Dependency Engine (`copilot_graph_batch`):**
+    - Consolidates up to 20 individual Microsoft Graph requests into a single RFC 2046 / OData `$batch` POST envelope, reducing network round-trips by up to 95%.
+    - Formally validates dependencies using topological sort DAG analysis (`dependsOn`), detects cyclic dependencies, and auto-chunks oversized request batches.
+
+25. **Incremental Delta Query & Tombstone Change Tracking (`copilot_delta_sync`):**
+    - Manages stateful change tracking across SharePoint document libraries, Teams messages, and Planner tasks using `/delta` query endpoints.
+    - Caches `@odata.deltaLink` tokens in `.tagisan/copilot_delta_cache.json` and accurately tracks tombstone deletions (`@removed`) and entity updates across synchronization cycles.
+
+26. **Teams Adaptive Cards 1.6 Universal Actions (`copilot_universal_action`):**
+    - Processes Modern Teams Adaptive Cards v1.6 `Action.Execute` callbacks with Single Sign-On (SSO) context validation.
+    - Dispatches surgical actions (`approve_patch`, `run_autofix`, `run_debate`, `sync_adr`) and generates per-user `refresh` views tailored to each viewer's identity and security permissions.
+
+27. **Azure Information Protection (AIP/RMS) Cryptographic Guard (`copilot_rms_guard`):**
+    - Deeply inspects enterprise files protected by Microsoft Purview / Rights Management Services (AIP/RMS), including `.pfile` containers and Compound File Binary (CFB) format streams.
+    - Formally verifies user license capabilities (`VIEW`, `EDIT`, `EXTRACT`) before permitting local ingestion, preventing unauthorized LLM processing of protected enterprise assets.
+
+28. **Sovereign Clouds, Azure Managed Identity & Workload Identity Federation (`copilot_workload_identity`):**
+    - Authenticates across multiple sovereign cloud partitions: Commercial, US Gov GCC High, US Gov DoD, and China (21Vianet), dynamically configuring login and Graph API endpoints.
+    - Natively supports passwordless Azure Instance Metadata Service (IMDS) Managed Identity and RFC 7523 Workload Identity Federation OIDC token exchange for secure Kubernetes / GitHub Actions / Azure DevOps CI/CD runners.
+
+---
 
 ### 🏛️ The 5 Strengthened Enterprise Engines
 
@@ -444,6 +585,94 @@ flowchart TD
 | **54** | `copilot_jet_binary` | Binary Forensics | Pure-Rust JET/ACE database binary parser (.mdb/.accdb) and integrity auditor | Page Size & Magic Verified |
 | **55** | `copilot_calling` | Real-Time Voice | Real-time Teams Calling WebRTC and audio demuxing session manager with VAD analysis | RMS Energy & VAD Monitored |
 | **56** | `copilot_delta_lake` | Big Data & Analytics | DirectDelta log reader and OneLake table snapshot analyzer with partition pruning | Transaction Log Audited |
+
+---
+
+### 💻 Dedicated CLI Usage Guide (`tgs copilot`)
+
+```bash
+# 1. Inspect Copilot Subsystem & Entra ID status (all 56 tools active)
+tgs copilot status
+
+# 2. Authenticate with Entra ID via OAuth2 Device Code Flow
+tgs copilot auth
+tgs copilot auth --status
+
+# 3. Enforce Microsoft Purview Sensitivity & Zero-Egress Air-Gapping
+tgs copilot purview --content "Confidential enterprise ledger" --label "Confidential"
+
+# 4. Synthesize MADR Architecture Decision Record & Sync to OneNote / SharePoint
+tgs copilot adr --proposal "Adopt zero-egress in-process GGUF routing" --title "Zero Egress Architecture"
+
+# 5. Create Ephemeral Git Branch & Automated Pull Request with Blast Telemetry
+tgs copilot pr --patch "diff --git a/file b/file" --title "feat(copilot): harden graph client" --channel "general"
+
+# 6. Generate Responsive Executive Presentation Deck (HTML & Markdown)
+tgs copilot deck --title "Q3 Engineering Copilot Briefing" --format all --output ".tagisan/executive_deck.html"
+
+# 7. Start Teams Bot Webhook Listener for Adaptive Card Action.Submit Callbacks
+tgs copilot listen --port 3978
+tgs copilot listen --test-action "approve_patch" --target "src/copilot/mod.rs"
+
+# 8. Execute Meeting-to-Code Pipeline on Teams Transcript
+tgs copilot meeting-to-code --meeting "sprint_42_sync" --path "." --channel "general"
+
+# 9. Generate Codebase Blast Radius Telemetry & Adaptive Cards
+tgs copilot blast-report --symbol "EntraAuthManager" --max-depth 3 --format all
+
+# 10. Dispatch 3-Round Dialectical Debate on Architecture Proposal
+tgs copilot debate --proposal "Adopt lock-free concurrent channels for vector sync" --post-to-teams "architecture-channel"
+
+# 11. Post an update directly to Teams
+tgs copilot post --channel "engineering-alerts" --message "Tagisan grounding invariants verified: 0 regressions."
+
+# 12. Ingest and inspect meeting transcript
+tgs copilot transcript --meeting "latest_sync" --parse-items
+
+# 13. Index skills and architecture diagrams into Microsoft Search Connector
+tgs copilot index
+
+# 14. Export complete Copilot package bundle for sideloading
+tgs copilot package --output-dir ".tagisan/copilot_package" --base-url "https://api.tagisan.ai"
+
+# 15. Evaluate Excel Custom Functions or export Office Add-in package
+tgs copilot excel --formula '=TGS.BLAST_RADIUS("EntraAuthManager", ".")'
+tgs copilot excel --export-package --output-dir ".tagisan/excel_addin"
+
+# 16. Stream debate or token generation via Server-Sent Events (SSE)
+tgs copilot stream --topic "Lock-free channel architecture" --format sse
+
+# 17. Synchronize tasks to Microsoft Planner or To-Do
+tgs copilot planner --title "Verify Purview Air-Gap Invariants" --plan-id "plan_prod_01" --bucket-id "bucket_security" --priority 1
+
+# 18. Debug CI/CD incident logs and synthesize autofix Adaptive Card
+tgs copilot incident --log-file "ci_failure.log" --channel "incident-response"
+
+# 19. Inspect Windows Copilot+ PC hardware telemetry, NPU acceleration, and CO2 savings
+tgs copilot hardware --prompt-tokens 50000 --completion-tokens 10000
+
+# 20. On-Behalf-Of (OBO) Token Exchange with downstream Graph scopes
+tgs copilot obo --assertion "eyJhbGciOiJSUzI1NiIs..." --scopes "User.Read Files.Read.All" --use-cert
+
+# 21. Manage Microsoft Graph Webhook Subscriptions & Handle Challenge
+tgs copilot subscribe --action create --resource "me/onlineMeetings" --notification-url "https://api.tagisan.ai/copilot/webhook"
+tgs copilot subscribe --action list
+tgs copilot subscribe --action validate_challenge --validation-token "CHALLENGE_TOKEN_XYZ"
+
+# 22. Emit Microsoft Sentinel & Azure Monitor SIEM Telemetry
+tgs copilot sentinel --event-type ast_blast_radius --severity High --message "Refactoring EntraAuthManager impacts 14 dependents" --format cef
+
+# 23. Synchronize Tenant Purview Sensitivity Label Taxonomy
+tgs copilot sync-labels --action sync
+tgs copilot sync-labels --action list
+
+# 24. Certify and Export M365 Admin Center Compliance Bundle
+tgs copilot certify --action audit
+tgs copilot certify --action export --output-dir ".tagisan/copilot_package"
+
+# 25. Run built-in Copilot subsystem self-test suite
+tgs copilot test
+```
 
 ---
 
