@@ -47,6 +47,7 @@ pub use crate::copilot::bicep::CopilotBicepTool;
 pub use crate::copilot::defender::CopilotDefenderTool;
 pub use crate::copilot::powerbi::CopilotPowerBiTool;
 pub use crate::copilot::vscode::CopilotVsCodeTool;
+pub use crate::copilot::visio::CopilotVisioTool;
 
 use crate::copilot::graph::{ActionItem, GraphClient, TranscriptEntry};
 use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};

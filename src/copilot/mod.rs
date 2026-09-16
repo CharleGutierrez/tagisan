@@ -46,11 +46,25 @@ pub mod throttling;
 pub mod tools;
 pub mod viva;
 pub mod vscode;
+pub mod visio;
 pub mod wam;
 
-pub use bicep::{BicepAuditReport, BicepEngine, BicepGraph, BicepResource, CopilotBicepTool, IacBlastRadiusReport, InvariantViolation};
-pub use defender::{CopilotDefenderTool, DefenderCveAlert, DefenderEngine, DefenderRemediationAction, ReachabilityStatus, TriageFinding, VirtualPatch};
-pub use powerbi::{CopilotPowerBiTool, PowerBiEngine, TmdlColumn, TmdlDatabase, TmdlMeasure, TmdlPartition, TmdlRelationship, TmdlTable, TmdlValidationResult};
+pub use bicep::{
+    AvmComplianceChecker, AvmComplianceReport, AvmRuleViolation, BicepAuditReport,
+    BicepEngine, BicepEvaluationContext, BicepFunctionEvaluator, BicepGraph,
+    BicepResource, BicepToArmTranspiler, CopilotBicepTool, IacBlastRadiusReport, InvariantViolation,
+};
+pub use defender::{
+    AutomatedRemediationPrGenerator, CopilotDefenderTool, DefenderCveAlert, DefenderEngine,
+    DefenderRemediationAction, DefenderWebhookGateway, ReachabilityStatus, RemediationPullRequest,
+    RiskTelemetry, SentinelKqlRule, SentinelKqlRuleGenerator, TriageFinding, VirtualPatch,
+    WebhookTriageResult, compute_hmac_sha256, verify_client_state_hmac,
+};
+pub use powerbi::{
+    CopilotPowerBiTool, PowerBiEngine, TmdlColumn, TmdlDatabase, TmdlMeasure, TmdlPartition,
+    TmdlRelationship, TmdlTable, TmdlValidationResult, TmslEngine, TmslRefreshType,
+    TmslTargetObject, XmlaDeploymentPackage,
+};
 pub use vscode::{CopilotChatRequest, CopilotChatResponse, CopilotVsCodeTool, GutterDecorationPayload, LspCodeAction, LspCodeLens, LspDiagnostic, LspDocumentHighlight, LspPosition, LspRange, VsCodeEngine, VsCodeExtensionManifestGenerator};
 
 pub use adr::{AdrDocument, AdrEngine, AdrSyncReport, CopilotAdrSyncTool};
@@ -175,7 +189,9 @@ pub use power_automate::{
     DEFAULT_FLOW_HMAC_SECRET,
 };
 pub use powerplatform::{
-    CopilotPowerPlatformPackagerTool, PowerPlatformPackagerEngine, PowerPlatformSolutionReport,
+    CopilotPowerPlatformPackagerTool, PcfControlConfig, PcfControlGenerator, PcfPackage,
+    PowerAutomateFlow, PowerAutomateFlowConfig, PowerAutomateTranspiler,
+    PowerPlatformPackagerEngine, PowerPlatformSolutionReport,
 };
 pub use access::{
     AccessBlastRadiusAnalyzer, AccessBlastRadiusReport, AccessDataType, AccessDataverseMigrator,
@@ -185,7 +201,12 @@ pub use access::{
     ReportSection, SchemaValidationReport, TableDefinition, TranspileResult, AceSqlTranspiler,
     TWIPS_PER_CM, TWIPS_PER_INCH, TWIPS_PER_POINT,
 };
-
-
-
-
+pub use visio::{
+    ArrowType, AzureResource, AzureResourceType, AzureSecurityCallout, AzureTopologyEngine,
+    BlastDependency, BlastNode, BlastRadiusEngine, BlastRiskTier, BpmnConsensusEngine,
+    C4DiagramType, C4Element, C4ElementType, C4Model, C4ModelEngine, C4Relationship,
+    ConnectorType, ConsensusRound, CopilotVisioTool, DataVisualizerEngine, DataVisualizerRow,
+    ErdCardinality, ErdColumn, ErdEngine, ErdRelationship, ErdTable, ShapeType, VisioConnector,
+    VisioDocument, VisioPackageVerification, VisioPackager, VisioPage, VisioProperty,
+    VisioPropertyType, VisioShape, VisioTranspiler,
+};

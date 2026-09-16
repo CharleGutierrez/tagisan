@@ -73,7 +73,7 @@ pub use crate::copilot::{
     CopilotPurviewSyncTool, CopilotRmsGuardTool, CopilotSentinelAuditTool, CopilotSharepointGetTool,
     CopilotStreamGatewayTool, CopilotSubscriptionTool, CopilotTeamsPostTool, CopilotUniversalActionTool,
     CopilotWorkloadIdentityTool, CopilotAccessTool, CopilotBicepTool, CopilotDefenderTool,
-    CopilotPowerBiTool, CopilotVsCodeTool,
+    CopilotPowerBiTool, CopilotVsCodeTool, CopilotVisioTool,
 };
 
 
@@ -257,6 +257,7 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotDefenderTool::default());
         registry.register_tool(crate::copilot::CopilotBicepTool::default());
         registry.register_tool(crate::copilot::CopilotPowerBiTool::default());
+        registry.register_tool(crate::copilot::CopilotVisioTool::default());
         registry
     }
 
@@ -410,6 +411,7 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotDefenderTool::default());
         registry.register_tool(crate::copilot::CopilotBicepTool::default());
         registry.register_tool(crate::copilot::CopilotPowerBiTool::default());
+        registry.register_tool(crate::copilot::CopilotVisioTool::default());
         registry
     }
 

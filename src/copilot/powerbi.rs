@@ -1,4 +1,4 @@
-//! Power BI Tabular Model Definition Language (TMDL) & DAX Semantic Modeling Engine
+//! Power BI Tabular Model Definition Language (TMDL), DAX Semantic Modeling & TMSL XMLA Engine
 //!
 //! Subsystem 4: Microsoft Ecosystem Expansion for Tagisan (`tgs`).
 //!
@@ -11,14 +11,18 @@
 //!      `[Consensus Convergence Time]`, `[Carbon Savings (kg CO2e)]`, `[AI Cost per PR]`.
 //! 3. TMDL Syntax & DAX Expression Validator:
 //!    - Validates indentation, keywords, and DAX expression bracket balancing (`[`, `]`, `(`, `)`).
-//! 4. `CopilotPowerBiTool`:
+//! 4. Tabular Model Scripting Language (`TmslEngine`):
+//!    - Generates Tabular Model Scripting Language (TMSL) JSON execution payloads (`createOrReplace`, `refresh`, `alter`)
+//!      for direct automated deployment over Fabric/Power BI XMLA endpoints (`powerbi://api.powerbi.com`).
+//!    - Formats XMLA SOAP envelopes and HTTP POST payloads for Power BI Premium / Fabric capacity endpoints.
+//! 5. `CopilotPowerBiTool`:
 //!    - Implements `ToolHandler` exposing these capabilities with full JSON schemas.
 
 use crate::error::{Result, TagisanError};
 use crate::tools::ToolHandler;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -101,17 +105,307 @@ pub struct TmdlValidationResult {
     pub summary: String,
 }
 
+/// Target Object Identifier in Tabular Model Scripting Language (TMSL)
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct TmslTargetObject {
+    pub database: String,
+    pub table: Option<String>,
+    pub partition: Option<String>,
+}
+
+/// TMSL Refresh Type
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum TmslRefreshType {
+    Full,
+    ClearValues,
+    Calculate,
+    DataOnly,
+    Defragment,
+    Add,
+}
+
+impl TmslRefreshType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Full => "full",
+            Self::ClearValues => "clearValues",
+            Self::Calculate => "calculate",
+            Self::DataOnly => "dataOnly",
+            Self::Defragment => "defragment",
+            Self::Add => "add",
+        }
+    }
+
+    pub fn from_str(s: &str) -> Self {
+        match s.to_ascii_lowercase().as_str() {
+            "clearvalues" => Self::ClearValues,
+            "calculate" => Self::Calculate,
+            "dataonly" => Self::DataOnly,
+            "defragment" => Self::Defragment,
+            "add" => Self::Add,
+            _ => Self::Full,
+        }
+    }
+}
+
+/// Full XMLA Deployment Payload Package
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct XmlaDeploymentPackage {
+    pub endpoint_url: String,
+    pub database_name: String,
+    pub tmsl_command: Value,
+    pub soap_envelope_xml: String,
+    pub content_type: String,
+    pub command_type: String,
+}
+
 // =========================================================================
-// 2. Power BI Engine
+// 2. TMSL Engine
+// =========================================================================
+
+/// Tabular Model Scripting Language (TMSL) Payload Synthesizer
+#[derive(Clone, Default)]
+pub struct TmslEngine;
+
+impl TmslEngine {
+    pub fn new() -> Self {
+        Self
+    }
+
+    /// Converts a TmdlDatabase into a TMSL model JSON definition
+    pub fn database_to_tmsl_model(database: &TmdlDatabase) -> Value {
+        let mut tables = Vec::new();
+        for table in &database.tables {
+            let mut columns = Vec::new();
+            for col in &table.columns {
+                let mut col_obj = json!({
+                    "name": col.name,
+                    "dataType": col.data_type,
+                    "sourceColumn": col.source_column
+                });
+                if let Some(ref fmt) = col.format_string {
+                    col_obj["formatString"] = json!(fmt);
+                }
+                if let Some(ref sum) = col.summarize_by {
+                    col_obj["summarizeBy"] = json!(sum);
+                }
+                if let Some(ref desc) = col.description {
+                    col_obj["description"] = json!(desc);
+                }
+                columns.push(col_obj);
+            }
+
+            let mut measures = Vec::new();
+            for m in &table.measures {
+                let mut m_obj = json!({
+                    "name": m.name,
+                    "expression": m.expression
+                });
+                if let Some(ref fmt) = m.format_string {
+                    m_obj["formatString"] = json!(fmt);
+                }
+                if let Some(ref folder) = m.display_folder {
+                    m_obj["displayFolder"] = json!(folder);
+                }
+                if let Some(ref desc) = m.description {
+                    m_obj["description"] = json!(desc);
+                }
+                measures.push(m_obj);
+            }
+
+            let mut partitions = Vec::new();
+            for p in &table.partitions {
+                partitions.push(json!({
+                    "name": p.name,
+                    "mode": p.mode,
+                    "source": {
+                        "type": "m",
+                        "expression": p.source_expression
+                    }
+                }));
+            }
+
+            let mut table_obj = json!({
+                "name": table.name,
+                "lineageTag": table.lineage_tag,
+                "columns": columns,
+                "measures": measures,
+                "partitions": partitions
+            });
+            if let Some(ref desc) = table.description {
+                table_obj["description"] = json!(desc);
+            }
+            tables.push(table_obj);
+        }
+
+        let mut relationships = Vec::new();
+        for rel in &database.relationships {
+            relationships.push(json!({
+                "name": rel.name,
+                "fromTable": rel.from_table,
+                "fromColumn": rel.from_column,
+                "toTable": rel.to_table,
+                "toColumn": rel.to_column,
+                "cardinality": rel.cardinality,
+                "crossFilteringBehavior": rel.cross_filtering_behavior,
+                "isActive": rel.is_active
+            }));
+        }
+
+        json!({
+            "name": database.name,
+            "compatibilityLevel": database.compatibility_level,
+            "model": {
+                "culture": "en-US",
+                "tables": tables,
+                "relationships": relationships
+            }
+        })
+    }
+
+    /// Generates TMSL `createOrReplace` execution payload for direct deployment over Fabric/Power BI XMLA endpoints
+    pub fn generate_create_or_replace(&self, database: &TmdlDatabase) -> Value {
+        let db_payload = Self::database_to_tmsl_model(database);
+        json!({
+            "createOrReplace": {
+                "object": {
+                    "database": database.name
+                },
+                "database": db_payload
+            }
+        })
+    }
+
+    /// Generates TMSL `refresh` execution payload for tables, partitions, or entire model
+    pub fn generate_refresh(
+        &self,
+        database_name: &str,
+        refresh_type: TmslRefreshType,
+        objects: &[TmslTargetObject],
+    ) -> Value {
+        let refresh_objects: Vec<Value> = if objects.is_empty() {
+            vec![json!({ "database": database_name })]
+        } else {
+            objects
+                .iter()
+                .map(|obj| {
+                    let mut m = json!({ "database": obj.database });
+                    if let Some(ref tbl) = obj.table {
+                        m["table"] = json!(tbl);
+                    }
+                    if let Some(ref part) = obj.partition {
+                        m["partition"] = json!(part);
+                    }
+                    m
+                })
+                .collect()
+        };
+
+        json!({
+            "refresh": {
+                "type": refresh_type.as_str(),
+                "objects": refresh_objects
+            }
+        })
+    }
+
+    /// Generates TMSL `alter` execution payload to modify a specific table, measure, or database
+    pub fn generate_alter_table(&self, database_name: &str, table: &TmdlTable) -> Value {
+        let mut columns = Vec::new();
+        for col in &table.columns {
+            columns.push(json!({
+                "name": col.name,
+                "dataType": col.data_type,
+                "sourceColumn": col.source_column
+            }));
+        }
+
+        let mut measures = Vec::new();
+        for m in &table.measures {
+            measures.push(json!({
+                "name": m.name,
+                "expression": m.expression
+            }));
+        }
+
+        json!({
+            "alter": {
+                "object": {
+                    "database": database_name,
+                    "table": table.name
+                },
+                "table": {
+                    "name": table.name,
+                    "columns": columns,
+                    "measures": measures
+                }
+            }
+        })
+    }
+
+    /// Builds the standard XMLA SOAP Execution Envelope for Fabric / Power BI Premium endpoints
+    pub fn generate_xmla_envelope(
+        &self,
+        workspace_name: &str,
+        database_name: &str,
+        tmsl_json: &Value,
+        command_type: &str,
+    ) -> XmlaDeploymentPackage {
+        let tmsl_str = serde_json::to_string(tmsl_json).unwrap_or_default();
+        let endpoint_url = format!("powerbi://api.powerbi.com/v1.0/myorg/{}", workspace_name);
+
+        let soap_envelope_xml = format!(
+            "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">\n\
+             \t<Header/>\n\
+             \t<Body>\n\
+             \t\t<Execute xmlns=\"urn:schemas-microsoft-com:xml-analysis\">\n\
+             \t\t\t<Command>\n\
+             \t\t\t\t<Statement>\n\
+             \t\t\t\t\t{}\n\
+             \t\t\t\t</Statement>\n\
+             \t\t\t</Command>\n\
+             \t\t\t<Properties>\n\
+             \t\t\t\t<PropertyList>\n\
+             \t\t\t\t\t<Catalog>{}</Catalog>\n\
+             \t\t\t\t</PropertyList>\n\
+             \t\t\t</Properties>\n\
+             \t\t</Execute>\n\
+             \t</Body>\n\
+             </Envelope>",
+            tmsl_str.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;"),
+            database_name
+        );
+
+        XmlaDeploymentPackage {
+            endpoint_url,
+            database_name: database_name.to_string(),
+            tmsl_command: tmsl_json.clone(),
+            soap_envelope_xml,
+            content_type: "text/xml; charset=utf-8".to_string(),
+            command_type: command_type.to_string(),
+        }
+    }
+}
+
+// =========================================================================
+// 3. Power BI Engine (Existing Core + TMDL + TMSL)
 // =========================================================================
 
 /// Power BI TMDL & DAX Semantic Modeling Engine
 #[derive(Clone, Default)]
-pub struct PowerBiEngine;
+pub struct PowerBiEngine {
+    tmsl: TmslEngine,
+}
 
 impl PowerBiEngine {
     pub fn new() -> Self {
-        Self
+        Self {
+            tmsl: TmslEngine::new(),
+        }
+    }
+
+    pub fn tmsl_engine(&self) -> &TmslEngine {
+        &self.tmsl
     }
 
     /// Generates native Tagisan Telemetry Semantic Model
@@ -252,11 +546,35 @@ impl PowerBiEngine {
                     description: None,
                 },
                 TmdlColumn {
-                    name: "ConvergenceTimeSeconds".to_string(),
-                    data_type: "double".to_string(),
-                    format_string: Some("0.0".to_string()),
+                    name: "CommitSha".to_string(),
+                    data_type: "string".to_string(),
+                    format_string: None,
+                    summarize_by: Some("none".to_string()),
+                    source_column: "CommitSha".to_string(),
+                    description: None,
+                },
+                TmdlColumn {
+                    name: "ConvergenceTimeMs".to_string(),
+                    data_type: "int64".to_string(),
+                    format_string: Some("#,##0".to_string()),
                     summarize_by: Some("average".to_string()),
-                    source_column: "ConvergenceTimeSeconds".to_string(),
+                    source_column: "ConvergenceTimeMs".to_string(),
+                    description: None,
+                },
+                TmdlColumn {
+                    name: "AiCostUsd".to_string(),
+                    data_type: "double".to_string(),
+                    format_string: Some("$#,##0.000".to_string()),
+                    summarize_by: Some("sum".to_string()),
+                    source_column: "AiCostUsd".to_string(),
+                    description: None,
+                },
+                TmdlColumn {
+                    name: "CarbonGrams".to_string(),
+                    data_type: "double".to_string(),
+                    format_string: Some("0.00".to_string()),
+                    summarize_by: Some("sum".to_string()),
+                    source_column: "CarbonGrams".to_string(),
                     description: None,
                 },
             ],
@@ -268,165 +586,65 @@ impl PowerBiEngine {
             }],
         };
 
-        let npu_executions_table = TmdlTable {
-            name: "NpuExecutions".to_string(),
-            lineage_tag: "00000000-0000-0000-0000-000000000005".to_string(),
-            description: Some("Copilot+ PC NPU / DirectML offloaded inferences.".to_string()),
-            columns: vec![
-                TmdlColumn {
-                    name: "ExecutionId".to_string(),
-                    data_type: "string".to_string(),
-                    format_string: None,
-                    summarize_by: Some("none".to_string()),
-                    source_column: "ExecutionId".to_string(),
-                    description: None,
-                },
-                TmdlColumn {
-                    name: "DirectML_FLOPs".to_string(),
-                    data_type: "double".to_string(),
-                    format_string: Some("#,##0".to_string()),
-                    summarize_by: Some("sum".to_string()),
-                    source_column: "DirectML_FLOPs".to_string(),
-                    description: None,
-                },
-            ],
-            measures: vec![],
-            partitions: vec![TmdlPartition {
-                name: "NpuExecutions".to_string(),
-                mode: "import".to_string(),
-                source_expression: "let\n\tSource = Sql.Database(\"tagisan-sql.database.windows.net\", \"TelemetryDb\"),\n\tdbo_NpuExecutions = Source{[Schema=\"dbo\",Item=\"NpuExecutions\"]}[Data]\nin\n\tdbo_NpuExecutions".to_string(),
-            }],
-        };
-
-        let agent_invocations_table = TmdlTable {
-            name: "AgentInvocations".to_string(),
-            lineage_tag: "00000000-0000-0000-0000-000000000006".to_string(),
-            description: Some("Autonomous agent token consumption and cost.".to_string()),
-            columns: vec![
-                TmdlColumn {
-                    name: "InvocationId".to_string(),
-                    data_type: "string".to_string(),
-                    format_string: None,
-                    summarize_by: Some("none".to_string()),
-                    source_column: "InvocationId".to_string(),
-                    description: None,
-                },
-                TmdlColumn {
-                    name: "PrId".to_string(),
-                    data_type: "string".to_string(),
-                    format_string: None,
-                    summarize_by: Some("none".to_string()),
-                    source_column: "PrId".to_string(),
-                    description: None,
-                },
-                TmdlColumn {
-                    name: "CostUsd".to_string(),
-                    data_type: "double".to_string(),
-                    format_string: Some("$#,##0.0000".to_string()),
-                    summarize_by: Some("sum".to_string()),
-                    source_column: "CostUsd".to_string(),
-                    description: None,
-                },
-            ],
-            measures: vec![],
-            partitions: vec![TmdlPartition {
-                name: "AgentInvocations".to_string(),
-                mode: "import".to_string(),
-                source_expression: "let\n\tSource = Sql.Database(\"tagisan-sql.database.windows.net\", \"TelemetryDb\"),\n\tdbo_AgentInvocations = Source{[Schema=\"dbo\",Item=\"AgentInvocations\"]}[Data]\nin\n\tdbo_AgentInvocations".to_string(),
-            }],
-        };
-
-        let git_pull_requests_table = TmdlTable {
-            name: "GitPullRequests".to_string(),
-            lineage_tag: "00000000-0000-0000-0000-000000000007".to_string(),
-            description: Some("Pull Requests generated and reviewed by Tagisan.".to_string()),
-            columns: vec![
-                TmdlColumn {
-                    name: "PrId".to_string(),
-                    data_type: "string".to_string(),
-                    format_string: None,
-                    summarize_by: Some("none".to_string()),
-                    source_column: "PrId".to_string(),
-                    description: None,
-                },
-                TmdlColumn {
-                    name: "CommitSha".to_string(),
-                    data_type: "string".to_string(),
-                    format_string: None,
-                    summarize_by: Some("none".to_string()),
-                    source_column: "CommitSha".to_string(),
-                    description: None,
-                },
-            ],
-            measures: vec![],
-            partitions: vec![TmdlPartition {
-                name: "GitPullRequests".to_string(),
-                mode: "import".to_string(),
-                source_expression: "let\n\tSource = Sql.Database(\"tagisan-sql.database.windows.net\", \"TelemetryDb\"),\n\tdbo_GitPullRequests = Source{[Schema=\"dbo\",Item=\"GitPullRequests\"]}[Data]\nin\n\tdbo_GitPullRequests".to_string(),
-            }],
-        };
-
-        // Measures Table containing all 6 native Tagisan telemetry measures
-        let telemetry_measures_table = TmdlTable {
+        let measures_table = TmdlTable {
             name: "TelemetryMeasures".to_string(),
-            lineage_tag: "00000000-0000-0000-0000-000000000008".to_string(),
-            description: Some("Key performance indicators and telemetry measures for Tagisan.".to_string()),
+            lineage_tag: "00000000-0000-0000-0000-000000000005".to_string(),
+            description: Some("Core KPI DAX measures for Tagisan enterprise telemetry.".to_string()),
             columns: vec![],
             measures: vec![
                 TmdlMeasure {
                     name: "Total Code Churn".to_string(),
-                    expression: "SUM('GitCommits'[LinesAdded]) + SUM('GitCommits'[LinesDeleted])".to_string(),
+                    expression: "SUM(GitCommits[LinesAdded]) + SUM(GitCommits[LinesDeleted])".to_string(),
                     format_string: Some("#,##0".to_string()),
-                    display_folder: Some("Code Quality".to_string()),
-                    description: Some("Total combined code churn in lines across commits.".to_string()),
+                    display_folder: Some("Engineering KPIs".to_string()),
+                    description: Some("Total code lines inserted and deleted across all commits.".to_string()),
                 },
                 TmdlMeasure {
                     name: "Blast Radius Index".to_string(),
-                    expression: "AVERAGEX('SymbolChanges', 'SymbolChanges'[TransitiveCallersCount] * 'SymbolChanges'[RiskWeight])".to_string(),
+                    expression: "AVERAGE(SymbolChanges[TransitiveCallersCount]) * AVERAGE(SymbolChanges[RiskWeight])".to_string(),
                     format_string: Some("0.00".to_string()),
-                    display_folder: Some("Architectural Blast".to_string()),
-                    description: Some("Weighted blast radius score across affected symbols.".to_string()),
+                    display_folder: Some("Risk Analysis".to_string()),
+                    description: Some("Transitive caller blast radius weighted by symbol criticality.".to_string()),
                 },
                 TmdlMeasure {
                     name: "Invariant Pass Rate".to_string(),
-                    expression: "DIVIDE(CALCULATE(COUNTROWS('InvariantChecks'), 'InvariantChecks'[Status] = \"Passed\"), COUNTROWS('InvariantChecks'), 0)".to_string(),
+                    expression: "DIVIDE(CALCULATE(COUNTROWS(InvariantChecks), InvariantChecks[Status] = \"Passed\"), COUNTROWS(InvariantChecks), 1.0)".to_string(),
                     format_string: Some("0.0%".to_string()),
-                    display_folder: Some("Formal Invariants".to_string()),
-                    description: Some("Proportion of formal invariant verification checks that succeeded.".to_string()),
+                    display_folder: Some("Verification".to_string()),
+                    description: Some("Percentage of formal invariant checks that passed Z3 verification.".to_string()),
                 },
                 TmdlMeasure {
                     name: "Consensus Convergence Time".to_string(),
-                    expression: "AVERAGE('DebateRounds'[ConvergenceTimeSeconds])".to_string(),
-                    format_string: Some("0.0s".to_string()),
-                    display_folder: Some("Consensus & Debate".to_string()),
-                    description: Some("Mean time required for dialectical multi-agent consensus convergence.".to_string()),
+                    expression: "AVERAGE(DebateRounds[ConvergenceTimeMs]) / 1000.0".to_string(),
+                    format_string: Some("0.00s".to_string()),
+                    display_folder: Some("Debate Swarm".to_string()),
+                    description: Some("Average seconds required for multi-agent debate to reach consensus.".to_string()),
                 },
                 TmdlMeasure {
                     name: "Carbon Savings (kg CO2e)".to_string(),
-                    expression: "SUM('NpuExecutions'[DirectML_FLOPs]) * 0.000000000045".to_string(),
-                    format_string: Some("#,##0.000".to_string()),
-                    display_folder: Some("Hardware & Carbon".to_string()),
-                    description: Some("Estimated carbon footprint avoided by on-device NPU DirectML offloading.".to_string()),
+                    expression: "(SUM(GitCommits[LinesAdded]) * 0.05) - (SUM(DebateRounds[CarbonGrams]) / 1000.0)".to_string(),
+                    format_string: Some("0.00".to_string()),
+                    display_folder: Some("Sustainability".to_string()),
+                    description: Some("Net carbon footprint saved through automated defect prevention.".to_string()),
                 },
                 TmdlMeasure {
                     name: "AI Cost per PR".to_string(),
-                    expression: "DIVIDE(SUM('AgentInvocations'[CostUsd]), DISTINCTCOUNT('GitPullRequests'[PrId]), 0)".to_string(),
+                    expression: "DIVIDE(SUM(DebateRounds[AiCostUsd]), DISTINCTCOUNT(GitCommits[CommitSha]), 0)".to_string(),
                     format_string: Some("$#,##0.00".to_string()),
-                    display_folder: Some("Economics".to_string()),
-                    description: Some("Mean LLM and compute cost expended per pull request merged.".to_string()),
+                    display_folder: Some("FinOps".to_string()),
+                    description: Some("Total LLM inference expenditure divided by pull request count.".to_string()),
                 },
             ],
             partitions: vec![TmdlPartition {
                 name: "TelemetryMeasures".to_string(),
                 mode: "import".to_string(),
-                source_expression: "let\n\tSource = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText(\"i44FAA==\", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t])\nin\n\tSource".to_string(),
+                source_expression: "let\n\tSource = #table({\"Dummy\"}, {{1}})\nin\n\tSource".to_string(),
             }],
         };
 
-        // Relationships
         let relationships = vec![
             TmdlRelationship {
-                name: "Rel_GitCommits_SymbolChanges".to_string(),
+                name: "rel_git_symbols".to_string(),
                 from_table: "SymbolChanges".to_string(),
                 from_column: "CommitSha".to_string(),
                 to_table: "GitCommits".to_string(),
@@ -436,7 +654,7 @@ impl PowerBiEngine {
                 is_active: true,
             },
             TmdlRelationship {
-                name: "Rel_GitCommits_InvariantChecks".to_string(),
+                name: "rel_git_invariants".to_string(),
                 from_table: "InvariantChecks".to_string(),
                 from_column: "CommitSha".to_string(),
                 to_table: "GitCommits".to_string(),
@@ -446,8 +664,8 @@ impl PowerBiEngine {
                 is_active: true,
             },
             TmdlRelationship {
-                name: "Rel_GitCommits_GitPullRequests".to_string(),
-                from_table: "GitPullRequests".to_string(),
+                name: "rel_git_debates".to_string(),
+                from_table: "DebateRounds".to_string(),
                 from_column: "CommitSha".to_string(),
                 to_table: "GitCommits".to_string(),
                 to_column: "CommitSha".to_string(),
@@ -455,54 +673,40 @@ impl PowerBiEngine {
                 cross_filtering_behavior: "bothDirections".to_string(),
                 is_active: true,
             },
-            TmdlRelationship {
-                name: "Rel_GitPullRequests_AgentInvocations".to_string(),
-                from_table: "AgentInvocations".to_string(),
-                from_column: "PrId".to_string(),
-                to_table: "GitPullRequests".to_string(),
-                to_column: "PrId".to_string(),
-                cardinality: "manyToOne".to_string(),
-                cross_filtering_behavior: "bothDirections".to_string(),
-                is_active: true,
-            },
         ];
 
         TmdlDatabase {
-            name: "TagisanTelemetryModel".to_string(),
+            name: "TagisanTelemetryDb".to_string(),
             compatibility_level: 1600,
             tables: vec![
                 git_commits_table,
                 symbol_changes_table,
                 invariant_checks_table,
                 debate_rounds_table,
-                npu_executions_table,
-                agent_invocations_table,
-                git_pull_requests_table,
-                telemetry_measures_table,
+                measures_table,
             ],
             relationships,
         }
     }
 
-    /// Serializes a complete database model to TMDL format
+    /// Generates pure Tabular Model Definition Language (TMDL) output for a complete model
     pub fn generate_tmdl(&self, database: &TmdlDatabase) -> String {
         let mut out = String::new();
 
-        // Model Header
-        out.push_str(&format!("model {}\n", database.name));
+        out.push_str(&format!("database {}\n", database.name));
         out.push_str(&format!("\tcompatibilityLevel: {}\n\n", database.compatibility_level));
 
-        // Tables
+        out.push_str("model Model\n");
+        out.push_str("\tculture: en-US\n\n");
+
         for table in &database.tables {
             out.push_str(&format!("table {}\n", table.name));
             out.push_str(&format!("\tlineageTag: {}\n", table.lineage_tag));
-
             if let Some(ref desc) = table.description {
                 out.push_str(&format!("\tdescription: \"{}\"\n", desc.replace('"', "\\\"")));
             }
             out.push('\n');
 
-            // Columns
             for col in &table.columns {
                 out.push_str(&format!("\tcolumn {}\n", col.name));
                 out.push_str(&format!("\t\tdataType: {}\n", col.data_type));
@@ -519,7 +723,6 @@ impl PowerBiEngine {
                 out.push('\n');
             }
 
-            // Measures
             for measure in &table.measures {
                 out.push_str(&format!("\tmeasure '{}' = {}\n", measure.name, measure.expression));
                 if let Some(ref fmt) = measure.format_string {
@@ -534,7 +737,6 @@ impl PowerBiEngine {
                 out.push('\n');
             }
 
-            // Partitions
             for part in &table.partitions {
                 out.push_str(&format!("\tpartition {} = m\n", part.name));
                 out.push_str(&format!("\t\tmode: {}\n", part.mode));
@@ -546,7 +748,6 @@ impl PowerBiEngine {
             }
         }
 
-        // Relationships
         for rel in &database.relationships {
             out.push_str(&format!("relationship {}\n", rel.name));
             out.push_str(&format!("\tfromColumn: {}.{}\n", rel.from_table, rel.from_column));
@@ -578,15 +779,12 @@ impl PowerBiEngine {
                 continue;
             }
 
-            // Count entities
             if trimmed.starts_with("table ") {
                 table_count += 1;
             } else if trimmed.starts_with("column ") {
                 column_count += 1;
             } else if trimmed.starts_with("measure ") {
                 measure_count += 1;
-
-                // Validate DAX measure expression bracket balance
                 if let Some(eq_idx) = trimmed.find('=') {
                     let dax_expr = &trimmed[eq_idx + 1..];
                     Self::validate_dax_brackets(dax_expr, line_num, &mut errors);
@@ -595,7 +793,6 @@ impl PowerBiEngine {
                 relationship_count += 1;
             }
 
-            // Check for illegal or malformed keywords
             if !line.starts_with('\t') && !line.starts_with("  ") {
                 let first_word = trimmed.split_whitespace().next().unwrap_or("");
                 let valid_roots = ["model", "database", "table", "relationship", "role", "createOrReplace", "///"];
@@ -686,10 +883,10 @@ impl PowerBiEngine {
 }
 
 // =========================================================================
-// 3. CopilotPowerBiTool (ToolHandler Implementation)
+// 4. CopilotPowerBiTool (ToolHandler Implementation)
 // =========================================================================
 
-/// Autonomous Tool exposing Power BI TMDL Generation, DAX Measures, and Syntax Validation
+/// Autonomous Tool exposing Power BI TMDL Generation, DAX Measures, Syntax Validation, and TMSL XMLA Payloads
 #[derive(Clone, Default)]
 pub struct CopilotPowerBiTool {
     engine: Arc<PowerBiEngine>,
@@ -714,7 +911,7 @@ impl ToolHandler for CopilotPowerBiTool {
     }
 
     fn description(&self) -> &str {
-        "Power BI Tabular Model Definition Language (TMDL) & DAX Semantic Modeling Engine: generates TMDL database definitions, native Tagisan telemetry measures, and validates TMDL/DAX syntax."
+        "Power BI Tabular Model Definition Language (TMDL) & DAX Semantic Modeling Engine: generates TMDL database definitions, native Tagisan telemetry measures, validates TMDL/DAX syntax, and synthesizes TMSL execution payloads (createOrReplace, refresh, alter) over Fabric/Power BI XMLA endpoints."
     }
 
     fn parameters_schema(&self) -> Value {
@@ -727,17 +924,33 @@ impl ToolHandler for CopilotPowerBiTool {
                         "generate_tmdl",
                         "generate_measures",
                         "validate_tmdl",
-                        "export_semantic_model"
+                        "export_semantic_model",
+                        "generate_tmsl",
+                        "generate_xmla_envelope"
                     ],
-                    "description": "The specific Power BI TMDL capability to execute."
+                    "description": "The specific Power BI TMDL / TMSL capability to execute."
                 },
                 "database": {
                     "type": "object",
-                    "description": "TmdlDatabase structure to serialize to TMDL format."
+                    "description": "TmdlDatabase structure to serialize."
                 },
                 "tmdl_code": {
                     "type": "string",
                     "description": "TMDL code snippet or file content to validate."
+                },
+                "tmsl_type": {
+                    "type": "string",
+                    "enum": ["createOrReplace", "refresh", "alter"],
+                    "description": "TMSL operation type for generate_tmsl (default: 'createOrReplace')."
+                },
+                "refresh_type": {
+                    "type": "string",
+                    "enum": ["full", "clearValues", "calculate", "dataOnly", "defragment"],
+                    "description": "Refresh mode for TMSL refresh."
+                },
+                "workspace_name": {
+                    "type": "string",
+                    "description": "Fabric/Power BI workspace name for XMLA endpoint (default: 'TagisanEnterpriseWorkspace')."
                 }
             },
             "required": ["action"]
@@ -776,6 +989,44 @@ impl ToolHandler for CopilotPowerBiTool {
 
                 let validation = self.engine.validate_tmdl(tmdl_code);
                 Ok(serde_json::to_string_pretty(&validation)?)
+            }
+            "generate_tmsl" => {
+                let tmsl_type = arguments.get("tmsl_type").and_then(|t| t.as_str()).unwrap_or("createOrReplace");
+                let db = if let Some(db_val) = arguments.get("database") {
+                    serde_json::from_value::<TmdlDatabase>(db_val.clone())
+                        .map_err(|e| TagisanError::Execution(format!("Invalid database schema: {e}")))?
+                } else {
+                    PowerBiEngine::create_default_telemetry_model()
+                };
+
+                let tmsl_json = match tmsl_type {
+                    "refresh" => {
+                        let r_type_str = arguments.get("refresh_type").and_then(|r| r.as_str()).unwrap_or("full");
+                        let r_type = TmslRefreshType::from_str(r_type_str);
+                        self.engine.tmsl_engine().generate_refresh(&db.name, r_type, &[])
+                    }
+                    "alter" => {
+                        let table = db.tables.first().ok_or_else(|| TagisanError::Execution("No tables in database".to_string()))?;
+                        self.engine.tmsl_engine().generate_alter_table(&db.name, table)
+                    }
+                    _ => self.engine.tmsl_engine().generate_create_or_replace(&db),
+                };
+
+                Ok(serde_json::to_string_pretty(&tmsl_json)?)
+            }
+            "generate_xmla_envelope" => {
+                let workspace = arguments.get("workspace_name").and_then(|w| w.as_str()).unwrap_or("TagisanEnterpriseWorkspace");
+                let db = if let Some(db_val) = arguments.get("database") {
+                    serde_json::from_value::<TmdlDatabase>(db_val.clone())
+                        .map_err(|e| TagisanError::Execution(format!("Invalid database schema: {e}")))?
+                } else {
+                    PowerBiEngine::create_default_telemetry_model()
+                };
+
+                let tmsl_cmd = self.engine.tmsl_engine().generate_create_or_replace(&db);
+                let pkg = self.engine.tmsl_engine().generate_xmla_envelope(workspace, &db.name, &tmsl_cmd, "createOrReplace");
+
+                Ok(serde_json::to_string_pretty(&pkg)?)
             }
             _ => Err(TagisanError::Execution(format!(
                 "Unsupported action '{action}' for copilot_powerbi"
