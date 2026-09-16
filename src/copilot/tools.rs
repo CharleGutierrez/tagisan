@@ -42,6 +42,7 @@ pub use crate::copilot::wam::CopilotWamAuthTool;
 pub use crate::copilot::dataverse::CopilotDataverseSyncTool;
 pub use crate::copilot::power_automate::CopilotPowerAutomateTool;
 pub use crate::copilot::powerplatform::CopilotPowerPlatformPackagerTool;
+pub use crate::copilot::access::CopilotAccessTool;
 
 use crate::copilot::graph::{ActionItem, GraphClient, TranscriptEntry};
 use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};

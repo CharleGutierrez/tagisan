@@ -72,7 +72,7 @@ pub use crate::copilot::{
     CopilotOboExchangeTool, CopilotPlannerSyncTool, CopilotPurviewGuardTool,
     CopilotPurviewSyncTool, CopilotRmsGuardTool, CopilotSentinelAuditTool, CopilotSharepointGetTool,
     CopilotStreamGatewayTool, CopilotSubscriptionTool, CopilotTeamsPostTool, CopilotUniversalActionTool,
-    CopilotWorkloadIdentityTool,
+    CopilotWorkloadIdentityTool, CopilotAccessTool,
 };
 
 
@@ -249,6 +249,8 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotDataverseSyncTool::default());
         registry.register_tool(crate::copilot::CopilotPowerAutomateTool::default());
         registry.register_tool(crate::copilot::CopilotPowerPlatformPackagerTool::default());
+        // Phase 8 Microsoft Access 365 Expansion Tool (47 tools total)
+        registry.register_tool(crate::copilot::CopilotAccessTool::default());
         registry
     }
 
@@ -391,6 +393,12 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotSdlAuditTool::default());
         registry.register_tool(crate::copilot::CopilotStudioPackagerTool::default());
         registry.register_tool(crate::copilot::CopilotVivaSyncTool::default());
+        // Phase 7 Microsoft Power Platform Expansion Tools
+        registry.register_tool(crate::copilot::CopilotDataverseSyncTool::default());
+        registry.register_tool(crate::copilot::CopilotPowerAutomateTool::default());
+        registry.register_tool(crate::copilot::CopilotPowerPlatformPackagerTool::default());
+        // Phase 8 Microsoft Access 365 Expansion Tool
+        registry.register_tool(crate::copilot::CopilotAccessTool::default());
         registry
     }
 

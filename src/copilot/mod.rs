@@ -4,6 +4,7 @@
 //! multi-agent consensus, and formal invariant verification to the Microsoft 365
 //! Enterprise Ecosystem (Teams, SharePoint/OneDrive, Outlook, Microsoft Search, and Copilot Studio).
 
+pub mod access;
 pub mod adr;
 pub mod ado;
 pub mod airgap;
@@ -167,6 +168,15 @@ pub use power_automate::{
 pub use powerplatform::{
     CopilotPowerPlatformPackagerTool, PowerPlatformPackagerEngine, PowerPlatformSolutionReport,
 };
+pub use access::{
+    AccessBlastRadiusAnalyzer, AccessBlastRadiusReport, AccessDataType, AccessDataverseMigrator,
+    AccessFormDefinition, AccessFormReportGenerator, AccessReportDefinition, AccessSchemaEngine,
+    AccessVbaBridge, BlastImpactItem, ColumnDefinition, CopilotAccessTool, DataverseMigrationPlan,
+    ForeignKeyDefinition, FormReportControl, FormSection, IndexDefinition, ReferentialRule,
+    ReportSection, SchemaValidationReport, TableDefinition, TranspileResult, AceSqlTranspiler,
+    TWIPS_PER_CM, TWIPS_PER_INCH, TWIPS_PER_POINT,
+};
+
 
 
 
