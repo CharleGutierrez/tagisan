@@ -126,8 +126,9 @@ pub use loop_pages::{
     LoopSyncAction, LoopSyncResult,
 };
 pub use ooxml::{
-    calculate_crc32, DocxSection, DocxTable, OoxmlEngine, OoxmlExportReport, PptxSlide,
-    ZipBuilder, CopilotOoxmlGeneratorTool,
+    calculate_crc32, CalloutSeverity, CopilotOoxmlGeneratorTool, DocxCallout, DocxCustomStyle,
+    DocxSection, DocxTable, OoxmlEngine, OoxmlExportReport, PptxMetricCard, PptxSlide,
+    ZipBuilder, ZipPackageVerification,
 };
 pub use perms_auditor::{
     CopilotPermsAuditorTool, GraphPermission, GraphPermissionType, ScopeAuditReport,

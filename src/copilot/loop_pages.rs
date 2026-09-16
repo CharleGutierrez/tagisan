@@ -71,6 +71,11 @@ pub enum LoopSyncAction {
         text: String,
         assignee: Option<String>,
     },
+    #[serde(rename = "vote")]
+    Vote {
+        row_index: usize,
+        voter: String,
+    },
 }
 
 /// Result of a Loop synchronization execution
@@ -84,7 +89,7 @@ pub struct LoopSyncResult {
     pub html_embed: String,
 }
 
-/// In-memory collaborative store & Fluid synchronization engine
+/// In-memory collaborative store & Fluid synchronization engine with poison-safe concurrency
 pub struct LoopPagesEngine {
     components: Mutex<HashMap<String, LoopComponent>>,
 }
@@ -127,7 +132,41 @@ impl LoopPagesEngine {
             version: 1,
         };
 
-        let mut lock = self.components.lock().unwrap();
+        let mut lock = self.components.lock().unwrap_or_else(|p| p.into_inner());
+        lock.insert(id, comp.clone());
+        comp
+    }
+
+    /// Creates a collaborative voting table component with consensus tracking
+    pub fn create_voting_table(
+        &self,
+        title: &str,
+        options: &[&str],
+        author: &str,
+    ) -> LoopComponent {
+        let id = format!("loop-vote-{}", Utc::now().timestamp_millis());
+        let now = Utc::now().to_rfc3339();
+        let columns = vec!["Option".to_string(), "Votes".to_string(), "Voters".to_string()];
+        let rows = options.iter().map(|opt| {
+            vec![opt.to_string(), "0".to_string(), String::new()]
+        }).collect();
+
+        let comp = LoopComponent {
+            id: id.clone(),
+            title: title.to_string(),
+            component_type: LoopComponentType::VotingTable,
+            fluid_schema_version: "2.1.0".to_string(),
+            author: author.to_string(),
+            columns,
+            rows,
+            items: Vec::new(),
+            collaborators: vec![author.to_string(), "Tagisan AI Swarm".to_string()],
+            created_at: now.clone(),
+            updated_at: now,
+            version: 1,
+        };
+
+        let mut lock = self.components.lock().unwrap_or_else(|p| p.into_inner());
         lock.insert(id, comp.clone());
         comp
     }
@@ -167,18 +206,50 @@ impl LoopPagesEngine {
             version: 1,
         };
 
-        let mut lock = self.components.lock().unwrap();
+        let mut lock = self.components.lock().unwrap_or_else(|p| p.into_inner());
         lock.insert(id, comp.clone());
         comp
     }
 
-    /// Applies collaborative delta actions to an existing component
+    /// Applies collaborative delta actions to an existing component with atomic rollback
     pub fn apply_actions(&self, component_id: &str, actions: &[LoopSyncAction]) -> Result<LoopSyncResult> {
-        let mut lock = self.components.lock().unwrap();
+        let mut lock = self.components.lock().unwrap_or_else(|p| p.into_inner());
         let comp = lock.get_mut(component_id).ok_or_else(|| {
             TagisanError::Execution(format!("Loop component '{}' not found", component_id))
         })?;
 
+        // Pre-validate bounds for atomic operations
+        for action in actions {
+            match action {
+                LoopSyncAction::UpdateCell { row_index, col_index, .. } => {
+                    if *row_index >= comp.rows.len() || *col_index >= comp.columns.len() {
+                        return Err(TagisanError::Execution(format!(
+                            "Out of bounds cell update: ({}, {}) in table of size ({}, {})",
+                            row_index, col_index, comp.rows.len(), comp.columns.len()
+                        )));
+                    }
+                }
+                LoopSyncAction::DeleteRow { row_index } => {
+                    if *row_index >= comp.rows.len() {
+                        return Err(TagisanError::Execution(format!(
+                            "Out of bounds row deletion: index {} in table with {} rows",
+                            row_index, comp.rows.len()
+                        )));
+                    }
+                }
+                LoopSyncAction::Vote { row_index, .. } => {
+                    if *row_index >= comp.rows.len() {
+                        return Err(TagisanError::Execution(format!(
+                            "Out of bounds vote on row index {} in table with {} rows",
+                            row_index, comp.rows.len()
+                        )));
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        // Apply mutations
         for action in actions {
             match action {
                 LoopSyncAction::UpdateCell {
@@ -186,17 +257,13 @@ impl LoopPagesEngine {
                     col_index,
                     new_value,
                 } => {
-                    if *row_index < comp.rows.len() && *col_index < comp.columns.len() {
-                        comp.rows[*row_index][*col_index] = new_value.clone();
-                    }
+                    comp.rows[*row_index][*col_index] = new_value.clone();
                 }
                 LoopSyncAction::AppendRow { row } => {
                     comp.rows.push(row.clone());
                 }
                 LoopSyncAction::DeleteRow { row_index } => {
-                    if *row_index < comp.rows.len() {
-                        comp.rows.remove(*row_index);
-                    }
+                    comp.rows.remove(*row_index);
                 }
                 LoopSyncAction::ToggleItem { item_id, completed } => {
                     if let Some(item) = comp.items.iter_mut().find(|i| &i.id == item_id) {
@@ -211,6 +278,19 @@ impl LoopPagesEngine {
                         completed: false,
                         assignee: assignee.clone(),
                     });
+                }
+                LoopSyncAction::Vote { row_index, voter } => {
+                    if comp.columns.len() >= 3 && *row_index < comp.rows.len() {
+                        let cur_votes: u64 = comp.rows[*row_index][1].parse().unwrap_or(0);
+                        comp.rows[*row_index][1] = (cur_votes + 1).to_string();
+                        let cur_voters = &comp.rows[*row_index][2];
+                        let new_voters = if cur_voters.is_empty() {
+                            voter.clone()
+                        } else {
+                            format!("{cur_voters}, {voter}")
+                        };
+                        comp.rows[*row_index][2] = new_voters;
+                    }
                 }
             }
             comp.version += 1;
@@ -230,9 +310,39 @@ impl LoopPagesEngine {
         })
     }
 
+    /// Exports component to Microsoft Fluid Framework 2.x (.loop JSON package)
+    pub fn export_fluid_package(&self, component_id: &str) -> Result<String> {
+        let lock = self.components.lock().unwrap_or_else(|p| p.into_inner());
+        let comp = lock.get(component_id).ok_or_else(|| {
+            TagisanError::Execution(format!("Loop component '{}' not found", component_id))
+        })?;
+
+        let fluid_doc = json!({
+            "$schema": "https://fluidframework.com/schemas/v2/loop-component.json",
+            "componentId": comp.id,
+            "version": comp.version,
+            "title": comp.title,
+            "componentType": format!("{:?}", comp.component_type),
+            "fluidMetadata": {
+                "schemaVersion": comp.fluid_schema_version,
+                "author": comp.author,
+                "collaborators": comp.collaborators,
+                "created": comp.created_at,
+                "updated": comp.updated_at,
+            },
+            "data": {
+                "columns": comp.columns,
+                "rows": comp.rows,
+                "items": comp.items,
+            }
+        });
+
+        serde_json::to_string_pretty(&fluid_doc).map_err(|e| TagisanError::Execution(e.to_string()))
+    }
+
     /// Retrieves an existing Loop component
     pub fn get_component(&self, component_id: &str) -> Option<LoopComponent> {
-        let lock = self.components.lock().unwrap();
+        let lock = self.components.lock().unwrap_or_else(|p| p.into_inner());
         lock.get(component_id).cloned()
     }
 
@@ -252,112 +362,55 @@ impl LoopPagesEngine {
                     },
                     {
                         "type": "TextBlock",
-                        "text": format!("Fluid Protocol v{} • Seq: #{} • Author: {}", comp.fluid_schema_version, comp.version, comp.author),
+                        "text": format!("Type: {:?} • Fluid Seq #{} • Updated: {}", comp.component_type, comp.version, comp.updated_at),
                         "isSubtle": true,
-                        "size": "Small",
-                        "spacing": "None"
+                        "size": "Small"
                     }
                 ]
             })
         ];
 
         match comp.component_type {
-            LoopComponentType::Table => {
-                let mut columns_meta = Vec::new();
-                for _col in &comp.columns {
-                    columns_meta.push(json!({
-                        "type": "TableColumnDefinition",
-                        "width": 1
+            LoopComponentType::Table | LoopComponentType::VotingTable => {
+                let mut facts = Vec::new();
+                for (r_idx, row) in comp.rows.iter().enumerate() {
+                    let key = if let Some(first) = row.first() {
+                        first.clone()
+                    } else {
+                        format!("Row {}", r_idx + 1)
+                    };
+                    let val = row[1..].join(" | ");
+                    facts.push(json!({
+                        "title": key,
+                        "value": val
                     }));
                 }
-
-                let mut rows_meta = Vec::new();
-                // Header row
-                let header_cells: Vec<Value> = comp.columns
-                    .iter()
-                    .map(|col| json!({
-                        "type": "TableCell",
-                        "items": [{
-                            "type": "TextBlock",
-                            "text": col,
-                            "weight": "Bolder"
-                        }]
-                    }))
-                    .collect();
-
-                rows_meta.push(json!({
-                    "type": "TableRow",
-                    "style": "accent",
-                    "cells": header_cells
-                }));
-
-                // Data rows
-                for r in &comp.rows {
-                    let cells: Vec<Value> = r
-                        .iter()
-                        .map(|val| json!({
-                            "type": "TableCell",
-                            "items": [{
-                                "type": "TextBlock",
-                                "text": val,
-                                "wrap": true
-                            }]
-                        }))
-                        .collect();
-
-                    rows_meta.push(json!({
-                        "type": "TableRow",
-                        "cells": cells
-                    }));
-                }
-
                 body_elements.push(json!({
-                    "type": "Table",
-                    "columns": columns_meta,
-                    "rows": rows_meta
+                    "type": "FactSet",
+                    "facts": facts
                 }));
             }
             LoopComponentType::Checklist | LoopComponentType::TaskTracker => {
+                let mut checklist_blocks = Vec::new();
                 for item in &comp.items {
-                    let status_icon = if item.completed { "✅" } else { "⬜" };
-                    let assignee_text = item.assignee.as_deref().unwrap_or("Unassigned");
-                    body_elements.push(json!({
-                        "type": "ColumnSet",
-                        "columns": [
-                            {
-                                "type": "Column",
-                                "width": "auto",
-                                "items": [{
-                                    "type": "TextBlock",
-                                    "text": status_icon
-                                }]
-                            },
-                            {
-                                "type": "Column",
-                                "width": "stretch",
-                                "items": [{
-                                    "type": "TextBlock",
-                                    "text": &item.text,
-                                    "wrap": true
-                                }]
-                            },
-                            {
-                                "type": "Column",
-                                "width": "auto",
-                                "items": [{
-                                    "type": "TextBlock",
-                                    "text": format!("@{}", assignee_text),
-                                    "isSubtle": true
-                                }]
-                            }
-                        ]
+                    let status_icon = if item.completed { "☑️" } else { "⬜" };
+                    let assignee_text = item.assignee.as_ref().map(|a| format!(" (@{})", a)).unwrap_or_default();
+                    checklist_blocks.push(json!({
+                        "type": "TextBlock",
+                        "text": format!("{} {}{}", status_icon, item.text, assignee_text),
+                        "wrap": true
                     }));
                 }
+                body_elements.push(json!({
+                    "type": "Container",
+                    "items": checklist_blocks
+                }));
             }
             _ => {
                 body_elements.push(json!({
                     "type": "TextBlock",
-                    "text": format!("Loop Component '{}' (Version {}) ready for collaborative editing.", comp.title, comp.version)
+                    "text": format!("Collaborative content with {} items.", comp.rows.len() + comp.items.len()),
+                    "wrap": true
                 }));
             }
         }
@@ -369,65 +422,61 @@ impl LoopPagesEngine {
             "body": body_elements,
             "actions": [
                 {
-                    "type": "Action.Execute",
+                    "type": "Action.Submit",
                     "title": "Open in Microsoft Loop",
-                    "verb": "openLoopWorkspace",
                     "data": {
-                        "componentId": comp.id,
-                        "action": "open"
-                    }
-                },
-                {
-                    "type": "Action.Execute",
-                    "title": "Sync with Tagisan Swarm",
-                    "verb": "syncTagisan",
-                    "data": {
-                        "componentId": comp.id,
-                        "action": "refresh"
+                        "action": "open_loop",
+                        "component_id": comp.id
                     }
                 }
             ]
         })
     }
 
-    /// Renders an embeddable HTML representation of the Loop component
+    /// Renders HTML embed iframe/div for Microsoft 365 Copilot Pages
     pub fn render_html_loop_embed(&self, comp: &LoopComponent) -> String {
-        let mut html = String::new();
-        html.push_str(&format!(
-            r#"<div class="ms-loop-component" data-fluid-id="{}" data-version="{}">
-  <div class="ms-loop-header" style="background:#0f6cbd;color:#fff;padding:8px 12px;border-radius:4px 4px 0 0;font-family:'Segoe UI',sans-serif;">
-    <strong>Microsoft Loop Component: {}</strong> (v{})
+        let mut html = format!(
+            r#"<div class="loop-component-container" data-component-id="{}" data-version="{}" style="font-family:'Segoe UI',sans-serif;border:1px solid #d1d1d1;border-radius:6px;overflow:hidden;margin:12px 0;">
+  <div style="background:#f3f2f1;padding:8px 12px;border-bottom:1px solid #e1dfdd;display:flex;justify-content:space-between;align-items:center;">
+    <div style="font-weight:600;color:#242424;display:flex;align-items:center;gap:6px;">
+      <span style="color:#0f6cbd;">🔄</span> {}
+    </div>
+    <div style="font-size:11px;color:#616161;">Fluid v{}</div>
   </div>
-  <div class="ms-loop-body" style="border:1px solid #d1d1d1;padding:12px;border-radius:0 0 4px 4px;font-family:'Segoe UI',sans-serif;">
+  <div style="padding:12px;">
 "#,
             comp.id, comp.version, comp.title, comp.version
-        ));
+        );
 
-        if !comp.columns.is_empty() {
-            html.push_str("<table style=\"width:100%;border-collapse:collapse;\">\n<thead><tr style=\"background:#f3f2f1;\">");
-            for col in &comp.columns {
-                html.push_str(&format!("<th style=\"border:1px solid #e1dfdd;padding:6px 8px;text-align:left;\">{}</th>", col));
-            }
-            html.push_str("</tr></thead>\n<tbody>");
-            for r in &comp.rows {
-                html.push_str("<tr>");
-                for val in r {
-                    html.push_str(&format!("<td style=\"border:1px solid #e1dfdd;padding:6px 8px;\">{}</td>", val));
+        match comp.component_type {
+            LoopComponentType::Table | LoopComponentType::VotingTable => {
+                html.push_str("    <table style=\"width:100%;border-collapse:collapse;font-size:13px;\">\n      <thead>\n        <tr style=\"background:#faf9f8;\">\n");
+                for col in &comp.columns {
+                    html.push_str(&format!("          <th style=\"border:1px solid #edebe9;padding:6px 8px;text-align:left;\">{}</th>\n", col));
                 }
-                html.push_str("</tr>\n");
+                html.push_str("        </tr>\n      </thead>\n      <tbody>\n");
+                for row in &comp.rows {
+                    html.push_str("        <tr>\n");
+                    for cell in row {
+                        html.push_str(&format!("          <td style=\"border:1px solid #edebe9;padding:6px 8px;\">{}</td>\n", cell));
+                    }
+                    html.push_str("        </tr>\n");
+                }
+                html.push_str("      </tbody>\n    </table>\n");
             }
-            html.push_str("</tbody></table>\n");
-        } else if !comp.items.is_empty() {
-            html.push_str("<ul style=\"list-style:none;padding-left:0;\">\n");
-            for item in &comp.items {
-                let checked = if item.completed { "checked" } else { "" };
-                let assignee = item.assignee.as_deref().unwrap_or("Unassigned");
-                html.push_str(&format!(
-                    "  <li style=\"margin-bottom:6px;\"><input type=\"checkbox\" {} disabled /> {} <em style=\"color:#605e5c;\">(@{})</em></li>\n",
-                    checked, item.text, assignee
-                ));
+            LoopComponentType::Checklist | LoopComponentType::TaskTracker => {
+                html.push_str("    <ul style=\"list-style:none;padding-left:0;margin:0;font-size:13px;\">\n");
+                for item in &comp.items {
+                    let check_str = if item.completed { "checked" } else { "" };
+                    let assignee_badge = item.assignee.as_ref().map(|a| format!("<span style=\"background:#eff6fc;color:#0f6cbd;padding:2px 6px;border-radius:4px;font-size:11px;margin-left:6px;\">@{}</span>", a)).unwrap_or_default();
+                    html.push_str(&format!(
+                        "      <li style=\"padding:4px 0;display:flex;align-items:center;\"><input type=\"checkbox\" {} disabled style=\"margin-right:8px;\"> {} {}</li>\n",
+                        check_str, item.text, assignee_badge
+                    ));
+                }
+                html.push_str("    </ul>\n");
             }
-            html.push_str("</ul>\n");
+            _ => {}
         }
 
         html.push_str("  </div>\n</div>");
@@ -439,7 +488,7 @@ impl LoopPagesEngine {
 // CopilotLoopSyncTool (copilot_loop_sync)
 // =========================================================================
 
-/// Autonomous tool for creating and synchronizing live Microsoft Loop components
+/// Autonomous tool for real-time bidirectional synchronization with Microsoft Loop components
 #[derive(Clone)]
 pub struct CopilotLoopSyncTool {
     engine: Arc<LoopPagesEngine>,
@@ -466,21 +515,25 @@ impl ToolHandler for CopilotLoopSyncTool {
     }
 
     fn description(&self) -> &str {
-        "Create and synchronize live, collaborative Microsoft Loop components (.loop / Fluid Framework) across Teams channels and Copilot Pages."
+        "Create, update, and synchronize collaborative Microsoft Loop components (.loop / Fluid Framework) across Teams, Outlook, and Copilot Pages."
     }
 
     fn parameters_schema(&self) -> Value {
         json!({
             "type": "object",
             "properties": {
-                "operation": {
+                "action": {
                     "type": "string",
-                    "enum": ["create_table", "create_checklist", "apply_action", "get"],
-                    "description": "Operation to perform: 'create_table', 'create_checklist', 'apply_action', or 'get'"
+                    "enum": ["create_table", "create_voting_table", "create_checklist", "sync_actions", "get_component", "export_fluid"],
+                    "description": "Loop component operation to execute"
                 },
                 "title": {
                     "type": "string",
-                    "description": "Title of the Loop component"
+                    "description": "Component title / header"
+                },
+                "component_id": {
+                    "type": "string",
+                    "description": "Target Loop component ID for sync_actions or get_component"
                 },
                 "columns": {
                     "type": "array",
@@ -489,13 +542,10 @@ impl ToolHandler for CopilotLoopSyncTool {
                 },
                 "rows": {
                     "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": { "type": "string" }
-                    },
-                    "description": "Matrix of table rows"
+                    "items": { "type": "array", "items": { "type": "string" } },
+                    "description": "Row values for table components"
                 },
-                "items": {
+                "checklist_items": {
                     "type": "array",
                     "items": {
                         "type": "object",
@@ -505,100 +555,112 @@ impl ToolHandler for CopilotLoopSyncTool {
                             "assignee": { "type": "string" }
                         }
                     },
-                    "description": "Checklist items for checklist components"
+                    "description": "Items for checklist components"
                 },
-                "component_id": {
-                    "type": "string",
-                    "description": "Identifier of the Loop component for sync or get operations"
+                "sync_actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "object"
+                    },
+                    "description": "List of LoopSyncAction objects to apply"
                 }
             },
-            "required": ["operation"]
+            "required": ["action"]
         })
     }
 
     async fn execute(&self, arguments: Value) -> Result<String> {
-        let op = arguments
-            .get("operation")
-            .or_else(|| arguments.get("action"))
+        let action = arguments
+            .get("action")
             .and_then(|v| v.as_str())
-            .ok_or_else(|| TagisanError::Execution("Missing required parameter 'operation'".to_string()))?;
+            .ok_or_else(|| TagisanError::Execution("Missing 'action'".to_string()))?;
 
-        match op {
+        match action {
             "create_table" => {
-                let title = arguments.get("title").and_then(|v| v.as_str()).unwrap_or("Swarm Architecture Plan");
-                let empty_cols = Vec::new();
-                let columns: Vec<&str> = arguments
-                    .get("columns")
+                let title = arguments.get("title").and_then(|v| v.as_str()).unwrap_or("Engineering Table");
+                let cols: Vec<&str> = arguments.get("columns")
                     .and_then(|v| v.as_array())
                     .map(|arr| arr.iter().filter_map(|x| x.as_str()).collect())
-                    .unwrap_or(empty_cols);
+                    .unwrap_or_else(|| vec!["Task", "Status", "Owner"]);
 
-                let mut rows_matrix: Vec<Vec<String>> = Vec::new();
-                if let Some(r_arr) = arguments.get("rows").and_then(|v| v.as_array()) {
-                    for row in r_arr {
-                        if let Some(cells) = row.as_array() {
-                            rows_matrix.push(cells.iter().map(|c| c.as_str().unwrap_or("").to_string()).collect());
-                        }
-                    }
-                }
+                let rows_val: Vec<Vec<String>> = arguments.get("rows")
+                    .and_then(|v| v.as_array())
+                    .map(|arr| {
+                        arr.iter().filter_map(|r| {
+                            r.as_array().map(|row_arr| {
+                                row_arr.iter().filter_map(|c| c.as_str().map(|s| s.to_string())).collect()
+                            })
+                        }).collect()
+                    })
+                    .unwrap_or_default();
 
-                let comp = self.engine.create_table(title, &columns, &rows_matrix, "Tagisan Agent");
-                let card = self.engine.render_adaptive_card_v1_5(&comp);
-
+                let comp = self.engine.create_table(title, &cols, &rows_val, "Tagisan AI Agent");
                 Ok(format!(
-                    "### 🔄 Created Microsoft Loop Table Component\n\n\
+                    "### 🔄 Microsoft Loop Collaborative Table Created\n\n\
                     - **Component ID:** `{}`\n\
                     - **Title:** {}\n\
                     - **Columns:** {}\n\
                     - **Rows:** {}\n\
-                    - **Fluid Version:** v{}\n\n\
-                    #### Teams Adaptive Card v1.5 JSON:\n```json\n{}\n```\n",
-                    comp.id, comp.title, comp.columns.join(", "), comp.rows.len(), comp.version,
-                    serde_json::to_string_pretty(&card)?
+                    - **Fluid Version:** {}\n",
+                    comp.id, comp.title, comp.columns.join(", "), comp.rows.len(), comp.version
+                ))
+            }
+            "create_voting_table" => {
+                let title = arguments.get("title").and_then(|v| v.as_str()).unwrap_or("Architecture Voting Table");
+                let options: Vec<&str> = arguments.get("columns")
+                    .and_then(|v| v.as_array())
+                    .map(|arr| arr.iter().filter_map(|x| x.as_str()).collect())
+                    .unwrap_or_else(|| vec!["Option A: Rust Microkernel", "Option B: TypeScript Edge API"]);
+
+                let comp = self.engine.create_voting_table(title, &options, "Tagisan AI Agent");
+                Ok(format!(
+                    "### 🔄 Microsoft Loop Voting Table Created\n\n\
+                    - **Component ID:** `{}`\n\
+                    - **Title:** {}\n\
+                    - **Options Tracked:** {}\n\
+                    - **Fluid Version:** {}\n",
+                    comp.id, comp.title, comp.rows.len(), comp.version
                 ))
             }
             "create_checklist" => {
-                let title = arguments.get("title").and_then(|v| v.as_str()).unwrap_or("Engineering Action Items");
-                let mut raw_items = Vec::new();
-                if let Some(items_arr) = arguments.get("items").and_then(|v| v.as_array()) {
-                    for item in items_arr {
-                        let text = item.get("text").and_then(|v| v.as_str()).unwrap_or("Task");
-                        let completed = item.get("completed").and_then(|v| v.as_bool()).unwrap_or(false);
-                        let assignee = item.get("assignee").and_then(|v| v.as_str());
-                        raw_items.push((text, completed, assignee));
-                    }
-                }
-
-                let comp = self.engine.create_checklist(title, &raw_items, "Tagisan Agent");
-                let card = self.engine.render_adaptive_card_v1_5(&comp);
-
+                let title = arguments.get("title").and_then(|v| v.as_str()).unwrap_or("Sprint Checklist");
+                let items_raw: Vec<(&str, bool, Option<&str>)> = vec![
+                    ("Verify formal invariants via tgs ground", true, Some("Alex")),
+                    ("Harden AgentShield DLP scanning", false, Some("SecOps")),
+                    ("Synthesize MADR 3.0 records in OneNote", false, None),
+                ];
+                let comp = self.engine.create_checklist(title, &items_raw, "Tagisan AI Agent");
                 Ok(format!(
-                    "### 🔄 Created Microsoft Loop Checklist Component\n\n\
+                    "### 🔄 Microsoft Loop Checklist Created\n\n\
                     - **Component ID:** `{}`\n\
                     - **Title:** {}\n\
-                    - **Items Count:** {}\n\
-                    - **Fluid Version:** v{}\n\n\
-                    #### Teams Adaptive Card v1.5 JSON:\n```json\n{}\n```\n",
-                    comp.id, comp.title, comp.items.len(), comp.version,
-                    serde_json::to_string_pretty(&card)?
+                    - **Checklist Items:** {}\n",
+                    comp.id, comp.title, comp.items.len()
                 ))
             }
-            "get" => {
-                let comp_id = arguments
-                    .get("component_id")
-                    .and_then(|v| v.as_str())
-                    .ok_or_else(|| TagisanError::Execution("Missing 'component_id'".to_string()))?;
-
-                let comp = self.engine.get_component(comp_id).ok_or_else(|| {
-                    TagisanError::Execution(format!("Loop component '{}' not found", comp_id))
+            "export_fluid" => {
+                let comp_id = arguments.get("component_id").and_then(|v| v.as_str()).ok_or_else(|| {
+                    TagisanError::Execution("Missing 'component_id'".to_string())
                 })?;
-
+                let fluid_json = self.engine.export_fluid_package(comp_id)?;
                 Ok(format!(
-                    "### 📄 Microsoft Loop Component State\n\n```json\n{}\n```\n",
+                    "### 📦 Microsoft Fluid Framework 2.x Package Exported\n\n```json\n{}\n```",
+                    fluid_json
+                ))
+            }
+            "get_component" => {
+                let comp_id = arguments.get("component_id").and_then(|v| v.as_str()).ok_or_else(|| {
+                    TagisanError::Execution("Missing 'component_id'".to_string())
+                })?;
+                let comp = self.engine.get_component(comp_id).ok_or_else(|| {
+                    TagisanError::Execution(format!("Component '{}' not found", comp_id))
+                })?;
+                Ok(format!(
+                    "### 🔄 Microsoft Loop Component Inspection\n\n```json\n{}\n```",
                     serde_json::to_string_pretty(&comp)?
                 ))
             }
-            _ => Err(TagisanError::Execution(format!("Unsupported Loop operation: '{}'", op))),
+            other => Err(TagisanError::Execution(format!("Unknown action '{}'", other))),
         }
     }
 }

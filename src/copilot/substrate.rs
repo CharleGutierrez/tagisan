@@ -4,6 +4,7 @@
 //! for ambient grounding in Microsoft 365 Copilot (BizChat, Word, Teams, Edge).
 
 use crate::copilot::graph::GraphClient;
+use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};
 use crate::error::{Result, TagisanError};
 use crate::tools::ToolHandler;
 use async_trait::async_trait;
@@ -11,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tracing::{debug, info};
 
 /// Connection descriptor for Microsoft Substrate external index
@@ -80,6 +81,7 @@ pub struct SubstrateIngestReport {
 pub struct SubstrateEngine {
     pub graph_client: Arc<GraphClient>,
     pub connection_id: String,
+    indexed_items: Arc<Mutex<HashMap<String, SubstrateItem>>>,
 }
 
 impl Default for SubstrateEngine {
@@ -87,6 +89,7 @@ impl Default for SubstrateEngine {
         Self {
             graph_client: Arc::new(GraphClient::mock()),
             connection_id: "tagisan_enterprise_codebase".to_string(),
+            indexed_items: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 }
@@ -96,7 +99,48 @@ impl SubstrateEngine {
         Self {
             graph_client,
             connection_id: connection_id.to_string(),
+            indexed_items: Arc::new(Mutex::new(HashMap::new())),
         }
+    }
+
+    /// Validates an item against a schema definition
+    pub fn validate_item_against_schema(&self, item: &SubstrateItem, schema: &[SubstratePropertySchema]) -> Result<()> {
+        for prop in schema {
+            if let Some(val) = item.properties.get(&prop.name) {
+                match prop.property_type.as_str() {
+                    "String" => {
+                        if !val.is_string() {
+                            return Err(TagisanError::Execution(format!(
+                                "Property '{}' expected String, got {:?}", prop.name, val
+                            )));
+                        }
+                    }
+                    "Int64" => {
+                        if !val.is_i64() && !val.is_u64() {
+                            return Err(TagisanError::Execution(format!(
+                                "Property '{}' expected Int64, got {:?}", prop.name, val
+                            )));
+                        }
+                    }
+                    "Double" => {
+                        if !val.is_f64() && !val.is_number() {
+                            return Err(TagisanError::Execution(format!(
+                                "Property '{}' expected Double, got {:?}", prop.name, val
+                            )));
+                        }
+                    }
+                    "StringCollection" => {
+                        if !val.is_array() {
+                            return Err(TagisanError::Execution(format!(
+                                "Property '{}' expected StringCollection, got {:?}", prop.name, val
+                            )));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Ok(())
     }
 
     /// Register schema for the external connection
@@ -115,21 +159,62 @@ impl SubstrateEngine {
         ))
     }
 
-    /// Ingest a single external item into the Substrate semantic index
+    /// Ingest a single external item into the Substrate semantic index with AgentShield DLP scanning
     pub async fn ingest_item(&self, item: &SubstrateItem) -> Result<String> {
         info!("Ingesting external item '{}' into connection '{}'", item.id, self.connection_id);
 
-        let endpoint = format!("/external/connections/{}/items/{}", self.connection_id, item.id);
+        // Pre-indexing AgentShield DLP scanning on content
+        if let AgentShieldVerdict::Block { reason, threat_level } = AgentShieldScanner::scan_outbound_dlp(&item.content.value) {
+            return Err(TagisanError::Execution(format!(
+                "AgentShield DLP barrier blocked Substrate indexing of item '{}': {:?} - {}",
+                item.id, threat_level, reason
+            )));
+        }
+
+        // Scan properties for leaked credentials
+        for (prop_key, prop_val) in &item.properties {
+            if let Some(s) = prop_val.as_str() {
+                if let AgentShieldVerdict::Block { reason, .. } = AgentShieldScanner::scan_outbound_dlp(s) {
+                    return Err(TagisanError::Execution(format!(
+                        "AgentShield DLP barrier blocked property '{}' on item '{}': {}",
+                        prop_key, item.id, reason
+                    )));
+                }
+            }
+        }
+
+        let endpoint = format!("external/connections/{}/items/{}", self.connection_id, item.id);
         let payload = json!({
             "acl": item.acl,
             "properties": item.properties,
             "content": item.content,
         });
 
-        // GraphClient puts the item into Graph
-        debug!("Pushing to Graph Substrate endpoint '{}': {}", endpoint, serde_json::to_string(&payload)?);
+        if !self.graph_client.is_mock() {
+            let _ = self.graph_client.put(&endpoint, &payload).await?;
+        }
+
+        // Cache indexed item for search grounding
+        let mut lock = self.indexed_items.lock().unwrap_or_else(|p| p.into_inner());
+        lock.insert(item.id.clone(), item.clone());
+
+        debug!("Indexed into Graph Substrate endpoint '{}': {}", endpoint, serde_json::to_string(&payload)?);
 
         Ok(format!("Item '{}' successfully indexed into Microsoft Substrate.", item.id))
+    }
+
+    /// Searches indexed items for ambient Copilot query grounding
+    pub fn search_substrate_index(&self, query: &str) -> Vec<SubstrateItem> {
+        let lock = self.indexed_items.lock().unwrap_or_else(|p| p.into_inner());
+        let q_lower = query.to_lowercase();
+        lock.values()
+            .filter(|it| {
+                it.id.to_lowercase().contains(&q_lower)
+                    || it.content.value.to_lowercase().contains(&q_lower)
+                    || it.properties.values().any(|v| v.to_string().to_lowercase().contains(&q_lower))
+            })
+            .cloned()
+            .collect()
     }
 
     /// Index repository knowledge (ADRs, blast radius, specs) into Substrate
@@ -254,33 +339,29 @@ impl ToolHandler for CopilotSubstrateIngestTool {
             "properties": {
                 "action": {
                     "type": "string",
-                    "enum": ["register_schema", "ingest_item", "index_repo"],
+                    "enum": ["register_schema", "ingest_item", "index_repo", "search"],
                     "description": "Substrate ingestion action to perform"
                 },
                 "operation": {
                     "type": "string",
-                    "description": "Alias for action"
-                },
-                "connection_id": {
-                    "type": "string",
-                    "default": "tagisan_enterprise_codebase",
-                    "description": "Target Graph Connector connection identifier"
+                    "enum": ["index", "query"],
+                    "description": "Compatibility alias for action"
                 },
                 "item_id": {
                     "type": "string",
-                    "description": "Unique external item identifier"
-                },
-                "title": {
-                    "type": "string",
-                    "description": "Title of the item for semantic indexing"
+                    "description": "External item unique identifier"
                 },
                 "content": {
                     "type": "string",
-                    "description": "Text body to ingest and ground with Copilot"
+                    "description": "Item text content"
                 },
-                "url": {
+                "title": {
                     "type": "string",
-                    "description": "Deep link to source file or repository"
+                    "description": "Item title"
+                },
+                "query": {
+                    "type": "string",
+                    "description": "Search query for semantic search"
                 }
             }
         })
@@ -289,13 +370,13 @@ impl ToolHandler for CopilotSubstrateIngestTool {
     async fn execute(&self, arguments: Value) -> Result<String> {
         let action = arguments
             .get("action")
-            .or_else(|| arguments.get("operation"))
             .and_then(|v| v.as_str())
+            .or_else(|| arguments.get("operation").and_then(|v| v.as_str()))
             .unwrap_or("index_repo");
 
         match action {
             "register_schema" => {
-                let schema = vec![
+                let properties = vec![
                     SubstratePropertySchema {
                         name: "title".to_string(),
                         property_type: "String".to_string(),
@@ -318,7 +399,7 @@ impl ToolHandler for CopilotSubstrateIngestTool {
                         is_searchable: false,
                         is_queryable: true,
                         is_retrievable: true,
-                        is_refinable: true,
+                        is_refinable: false,
                     },
                     SubstratePropertySchema {
                         name: "blastRisk".to_string(),
@@ -328,22 +409,26 @@ impl ToolHandler for CopilotSubstrateIngestTool {
                         is_retrievable: true,
                         is_refinable: true,
                     },
+                    SubstratePropertySchema {
+                        name: "tags".to_string(),
+                        property_type: "StringCollection".to_string(),
+                        is_searchable: true,
+                        is_queryable: true,
+                        is_retrievable: true,
+                        is_refinable: true,
+                    },
                 ];
 
-                let res = self.engine.register_schema(&schema).await?;
-                Ok(format!("### 🌐 Microsoft Substrate Schema Registered\n\n{}\n", res))
+                let res = self.engine.register_schema(&properties).await?;
+                Ok(format!("### 🏷️ Microsoft Substrate Schema Registered\n\n{}", res))
             }
             "ingest_item" => {
-                let id = arguments.get("item_id").and_then(|v| v.as_str()).unwrap_or("tgs-item-custom-01");
-                let title = arguments.get("title").and_then(|v| v.as_str()).unwrap_or("Tagisan Knowledge Article");
-                let content_str = arguments.get("content").and_then(|v| v.as_str()).unwrap_or("Tagisan verified engineering knowledge.");
-                let url = arguments.get("url").and_then(|v| v.as_str()).unwrap_or("https://github.com/tagisan/tgs");
+                let id = arguments.get("item_id").and_then(|v| v.as_str()).unwrap_or("tgs-item-manual");
+                let content_str = arguments.get("content").and_then(|v| v.as_str()).unwrap_or("Engine artifact");
+                let title_str = arguments.get("title").and_then(|v| v.as_str()).unwrap_or("Custom Item");
 
                 let mut props = HashMap::new();
-                props.insert("title".to_string(), json!(title));
-                props.insert("url".to_string(), json!(url));
-                props.insert("author".to_string(), json!("Tagisan Copilot Engine"));
-                props.insert("lastModifiedDateTime".to_string(), json!(chrono::Utc::now().to_rfc3339()));
+                props.insert("title".to_string(), json!(title_str));
 
                 let item = SubstrateItem {
                     id: id.to_string(),
@@ -360,38 +445,34 @@ impl ToolHandler for CopilotSubstrateIngestTool {
                 };
 
                 let res = self.engine.ingest_item(&item).await?;
+                Ok(format!("### 📥 Microsoft Substrate Item Ingested\n\n{}", res))
+            }
+            "search" => {
+                let query = arguments.get("query").and_then(|v| v.as_str()).unwrap_or("architecture");
+                let results = self.engine.search_substrate_index(query);
                 Ok(format!(
-                    "### 📥 Microsoft Substrate Item Ingested\n\n\
-                    - **Item ID:** `{}`\n\
-                    - **Title:** {}\n\
-                    - **Connection ID:** `{}`\n\
-                    - **Status:** `{}`\n",
-                    id, title, self.engine.connection_id, res
+                    "### 🔍 Microsoft Substrate Semantic Search\n\n- Query: `{}`\n- Matches: {}\n\n```json\n{}\n```",
+                    query, results.len(), serde_json::to_string_pretty(&results)?
                 ))
             }
-            "index_repo" => {
+            "index" | "index_repo" => {
                 let report = self.engine.index_repository_knowledge(Path::new(".")).await?;
-
-                let id_list = report.indexed_item_ids
-                    .iter()
-                    .map(|id| format!("- `{}`", id))
-                    .collect::<Vec<_>>()
-                    .join("\n");
-
                 Ok(format!(
-                    "### 🧠 Microsoft Substrate Semantic Indexing Complete\n\n\
+                    "### 🌐 Microsoft Substrate Repository Knowledge Ingestion Complete\n\n\
                     - **Connection ID:** `{}`\n\
                     - **Items Ingested:** {}\n\
-                    - **Total Payload Size:** {} bytes\n\
-                    - **Copilot Semantic Index Ready:** {}\n\n\
-                    #### Indexed Document Identifiers:\n{}\n\n\
-                    > **Ambient Discovery Active:** This knowledge is now queryable in Microsoft 365 Chat (BizChat), Teams, and Word via `@Tagisan`.\n",
-                    report.connection_id, report.items_ingested, report.total_bytes,
-                    if report.semantic_index_ready { "✅ Yes (Substrate Grounded)" } else { "❌ Pending" },
-                    id_list
+                    - **Total Bytes Indexed:** {}\n\
+                    - **Semantic Index Ready:** {}\n\n\
+                    #### Indexed Document Identifiers:\n\
+                    {}\n",
+                    report.connection_id,
+                    report.items_ingested,
+                    report.total_bytes,
+                    report.semantic_index_ready,
+                    report.indexed_item_ids.iter().map(|id| format!("- `{}`", id)).collect::<Vec<_>>().join("\n")
                 ))
             }
-            _ => Err(TagisanError::Execution(format!("Unsupported Substrate operation '{}'", action))),
+            other => Err(TagisanError::Execution(format!("Unknown Substrate action: '{}'", other))),
         }
     }
 }

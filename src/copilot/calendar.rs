@@ -2,7 +2,8 @@
 //!
 //! Features:
 //! - Pre-meeting intelligence: extracts agenda, linked GitHub PRs, and architectural risks
-//! - Automated risk scoring and technical discussion prompts
+//! - Automated dynamic risk scoring and technical discussion prompts
+//! - RFC 5545 iCalendar (`.ics`) invitation payload generation
 //! - Post-meeting executive recap email drafts stored in Outlook `/me/messages` (drafts folder)
 //! - Teams Adaptive Card v1.5 pre-read briefs
 
@@ -11,7 +12,7 @@ use crate::copilot::purview::PurviewSensitivity;
 use crate::error::{Result, TagisanError};
 use crate::tools::ToolHandler;
 use async_trait::async_trait;
-use chrono::{DateTime, Duration, Utc};
+use chrono::{Duration, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::Arc;
@@ -75,6 +76,48 @@ impl CalendarEngine {
         Self { client }
     }
 
+    /// Generates RFC 5545 compliant iCalendar (.ics) event string
+    pub fn generate_ics_event(&self, event: &CalendarEvent) -> String {
+        let clean_start = event.start_time.replace(['-', ':', 'Z'], "");
+        let clean_end = event.end_time.replace(['-', ':', 'Z'], "");
+        let now_stamp = Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
+
+        let mut attendees_ics = String::new();
+        for att in &event.attendees {
+            attendees_ics.push_str(&format!("ATTENDEE;CN={};RSVP=TRUE:mailto:{}\r\n", att, att));
+        }
+
+        format!(
+            "BEGIN:VCALENDAR\r\n\
+            VERSION:2.0\r\n\
+            PRODID:-//Tagisan AI//Calendar Engine//EN\r\n\
+            METHOD:REQUEST\r\n\
+            BEGIN:VEVENT\r\n\
+            UID:{}\r\n\
+            DTSTAMP:{}\r\n\
+            DTSTART:{}\r\n\
+            DTEND:{}\r\n\
+            SUMMARY:{}\r\n\
+            DESCRIPTION:{}\r\n\
+            ORGANIZER;CN={}:mailto:{}\r\n\
+            {}\
+            URL:{}\r\n\
+            STATUS:CONFIRMED\r\n\
+            END:VEVENT\r\n\
+            END:VCALENDAR\r\n",
+            event.id,
+            now_stamp,
+            clean_start,
+            clean_end,
+            event.subject,
+            event.body_preview,
+            event.organizer,
+            event.organizer,
+            attendees_ics,
+            event.web_link
+        )
+    }
+
     /// Fetches upcoming calendar events for the next N hours
     pub async fn get_upcoming_events(&self, hours_ahead: u32) -> Result<Vec<CalendarEvent>> {
         if self.client.is_mock() {
@@ -130,13 +173,22 @@ impl CalendarEngine {
                 let preview = it.get("bodyPreview").and_then(|v| v.as_str()).unwrap_or("").to_string();
                 let link = it.get("webLink").and_then(|v| v.as_str()).unwrap_or("").to_string();
 
+                let attendees = it.get("attendees")
+                    .and_then(|a| a.as_array())
+                    .map(|arr| {
+                        arr.iter().filter_map(|x| {
+                            x.get("emailAddress").and_then(|e| e.get("address")).and_then(|s| s.as_str()).map(|s| s.to_string())
+                        }).collect()
+                    })
+                    .unwrap_or_default();
+
                 events.push(CalendarEvent {
                     id,
                     subject,
                     start_time: start,
                     end_time: end,
                     organizer: org,
-                    attendees: Vec::new(),
+                    attendees,
                     body_preview: preview,
                     web_link: link,
                     meeting_type: "ScheduledEvent".to_string(),
@@ -146,40 +198,88 @@ impl CalendarEngine {
         }
     }
 
-    /// Generates pre-read briefing document with risk scoring and prompt hooks
+    /// Generates pre-read briefing document with dynamic risk scoring and contextual prompt hooks
     pub fn generate_preread_brief(&self, event: &CalendarEvent) -> PreReadBrief {
-        let active_prs = vec![
-            LinkedPrInfo {
-                pr_number: 142,
-                title: "feat(court): implement Rule 141 legal fee assessment engine".to_string(),
-                branch: "feat/rule141-engine".to_string(),
-                blast_radius_risk: "MODERATE".to_string(),
-            },
-            LinkedPrInfo {
-                pr_number: 145,
-                title: "feat(raffle): A.M. No. 03-8-02-SC electronic case raffle with audit log".to_string(),
-                branch: "feat/am03-raffle".to_string(),
-                blast_radius_risk: "CRITICAL".to_string(),
-            },
-        ];
+        let text_lower = format!("{} {}", event.subject, event.body_preview).to_lowercase();
 
-        let relevant_adrs = vec![
-            "ADR-004: PostgreSQL Row-Level Security for Multi-Branch Isolation".to_string(),
-            "ADR-007: Dialectical Debate for Statutory Legal Compliance".to_string(),
-        ];
-
-        let open_planner_tasks = vec![
-            "Verify Rule 141 Judiciary Development Fund (JDF) calculation bracket".to_string(),
-            "Conduct adversarial debate on branch judge recusal re-raffle rules".to_string(),
-        ];
-
-        let technical_risk_score = 0.65; // Moderate-High due to critical raffle algorithm
-
-        let discussion_prompts = vec![
-            "Are deterministic audit seeds for the electronic raffle algorithm cryptographically verifiable?".to_string(),
-            "Does the legal fee calculation handle multi-claim civil suits without integer overflow?".to_string(),
-            "How does the zero-cloud-egress airgap enforce data privacy on domestic court dockets?".to_string(),
-        ];
+        let (active_prs, relevant_adrs, open_planner_tasks, technical_risk_score, discussion_prompts) = if text_lower.contains("rule 141") || text_lower.contains("raffle") || text_lower.contains("docket") {
+            (
+                vec![
+                    LinkedPrInfo {
+                        pr_number: 142,
+                        title: "feat(court): implement Rule 141 legal fee assessment engine".to_string(),
+                        branch: "feat/rule141-engine".to_string(),
+                        blast_radius_risk: "MODERATE".to_string(),
+                    },
+                    LinkedPrInfo {
+                        pr_number: 145,
+                        title: "feat(raffle): A.M. No. 03-8-02-SC electronic case raffle with audit log".to_string(),
+                        branch: "feat/am03-raffle".to_string(),
+                        blast_radius_risk: "CRITICAL".to_string(),
+                    },
+                ],
+                vec![
+                    "ADR-004: PostgreSQL Row-Level Security for Multi-Branch Isolation".to_string(),
+                    "ADR-007: Dialectical Debate for Statutory Legal Compliance".to_string(),
+                ],
+                vec![
+                    "Verify Rule 141 Judiciary Development Fund (JDF) calculation bracket".to_string(),
+                    "Conduct adversarial debate on branch judge recusal re-raffle rules".to_string(),
+                ],
+                0.65,
+                vec![
+                    "Are deterministic audit seeds for the electronic raffle algorithm cryptographically verifiable?".to_string(),
+                    "Does the legal fee calculation handle multi-claim civil suits without integer overflow?".to_string(),
+                    "How does the zero-cloud-egress airgap enforce data privacy on domestic court dockets?".to_string(),
+                ],
+            )
+        } else if text_lower.contains("npu") || text_lower.contains("directml") || text_lower.contains("copilot+") || text_lower.contains("airgap") {
+            (
+                vec![
+                    LinkedPrInfo {
+                        pr_number: 151,
+                        title: "feat(hardware): Windows Copilot+ PC DirectML NPU offload engine".to_string(),
+                        branch: "feat/directml-npu".to_string(),
+                        blast_radius_risk: "LOW".to_string(),
+                    },
+                ],
+                vec![
+                    "ADR-012: On-Device Qualcomm Snapdragon X Elite Model Execution".to_string(),
+                    "ADR-015: Zero-Cloud-Egress Air-Gap Invariant Enforcement".to_string(),
+                ],
+                vec![
+                    "Benchmark NPU inference latency under 45 TOPS peak load".to_string(),
+                    "Validate Purview Secret classification air-gap routing".to_string(),
+                ],
+                0.35,
+                vec![
+                    "Is memory residency strictly constrained to device unified RAM?".to_string(),
+                    "How does carbon emission reduction scale across local NPU clusters?".to_string(),
+                ],
+            )
+        } else {
+            (
+                vec![
+                    LinkedPrInfo {
+                        pr_number: 101,
+                        title: "chore(core): harden invariant verification pipeline".to_string(),
+                        branch: "chore/invariants".to_string(),
+                        blast_radius_risk: "LOW".to_string(),
+                    },
+                ],
+                vec![
+                    "ADR-001: Pure Rust Zero-Panic Architecture".to_string(),
+                ],
+                vec![
+                    "Review pull request test coverage".to_string(),
+                ],
+                0.20,
+                vec![
+                    "Are all pull request AST blast radii bounded?".to_string(),
+                    "Is system telemetry properly routed to Microsoft Sentinel?".to_string(),
+                ],
+            )
+        };
 
         let card = json!({
             "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
@@ -207,8 +307,8 @@ impl CalendarEngine {
                 },
                 {
                     "type": "TextBlock",
-                    "text": format!("**Technical Risk Score:** {:.0}% (Moderate-High Risk)", technical_risk_score * 100.0),
-                    "color": "Warning",
+                    "text": format!("**Technical Risk Score:** {:.0}% (Risk Assessment)", technical_risk_score * 100.0),
+                    "color": if technical_risk_score > 0.5 { "Warning" } else { "Good" },
                     "weight": "Bolder"
                 },
                 {
@@ -305,6 +405,25 @@ impl CalendarEngine {
         html_body.push_str("  </div>\n</div>");
 
         let draft_id = format!("draft-msg-{}", Utc::now().timestamp_millis());
+
+        // In real mode, post draft to Graph API
+        if !self.client.is_mock() {
+            let recipients: Vec<Value> = attendees.iter().map(|a| {
+                json!({ "emailAddress": { "address": a } })
+            }).collect();
+
+            let payload = json!({
+                "subject": draft_subject,
+                "body": {
+                    "contentType": "HTML",
+                    "content": html_body,
+                },
+                "toRecipients": recipients,
+            });
+
+            let _ = self.client.post("me/messages", &payload).await;
+        }
+
         let draft_result = DraftResult {
             draft_id,
             subject: draft_subject,
@@ -359,6 +478,10 @@ impl ToolHandler for CopilotCalendarPreReadTool {
                 "hours_ahead": {
                     "type": "number",
                     "description": "Number of hours ahead to inspect upcoming meetings (default: 4)"
+                },
+                "export_ics": {
+                    "type": "boolean",
+                    "description": "Whether to export RFC 5545 .ics calendar invitation string"
                 }
             }
         })
@@ -370,6 +493,11 @@ impl ToolHandler for CopilotCalendarPreReadTool {
             .and_then(|v| v.as_u64())
             .unwrap_or(4) as u32;
 
+        let export_ics = arguments
+            .get("export_ics")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
         let events = self.engine.get_upcoming_events(hours).await?;
         if events.is_empty() {
             return Ok("No upcoming calendar events detected in the specified timeframe.".to_string());
@@ -377,6 +505,13 @@ impl ToolHandler for CopilotCalendarPreReadTool {
 
         let first_event = &events[0];
         let brief = self.engine.generate_preread_brief(first_event);
+
+        let ics_block = if export_ics {
+            let ics = self.engine.generate_ics_event(first_event);
+            format!("\n\n#### RFC 5545 iCalendar Payload:\n```text\n{}\n```", ics)
+        } else {
+            String::new()
+        };
 
         Ok(format!(
             "### 📅 Outlook Calendar Pre-Read Briefing Synthesized\n\n\
@@ -386,14 +521,15 @@ impl ToolHandler for CopilotCalendarPreReadTool {
             - **Active PRs Linked:** {}\n\
             - **Key ADRs Context:** {}\n\n\
             #### Key Discussion Prompts for Attendees:\n{}\n\n\
-            #### Teams Adaptive Card v1.5 JSON:\n```json\n{}\n```\n",
+            #### Teams Adaptive Card v1.5 JSON:\n```json\n{}\n```{}",
             brief.subject,
             brief.scheduled_at,
             brief.technical_risk_score * 100.0,
             brief.active_prs.len(),
             brief.relevant_adrs.join(", "),
             brief.discussion_prompts.iter().map(|p| format!("- {}", p)).collect::<Vec<_>>().join("\n"),
-            serde_json::to_string_pretty(&brief.adaptive_card_json)?
+            serde_json::to_string_pretty(&brief.adaptive_card_json)?,
+            ics_block
         ))
     }
 }

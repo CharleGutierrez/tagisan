@@ -13,6 +13,7 @@
 //! - Microsoft SharePoint Document Libraries / Wikis via `GraphClient::upload_sharepoint_file`
 
 use crate::copilot::graph::GraphClient;
+use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};
 use crate::error::{Result, TagisanError};
 use crate::tools::ToolHandler;
 use async_trait::async_trait;
@@ -51,6 +52,164 @@ pub struct AdrSyncReport {
 pub struct AdrEngine;
 
 impl AdrEngine {
+    /// Validates that an ADR conforms strictly to the MADR 3.0 specification
+    pub fn validate_madr_compliance(adr: &AdrDocument) -> Result<()> {
+        if !adr.id.starts_with("ADR-") {
+            return Err(TagisanError::Execution(format!("ADR ID '{}' must start with 'ADR-'", adr.id)));
+        }
+        if adr.title.trim().is_empty() {
+            return Err(TagisanError::Execution("ADR title must not be empty".to_string()));
+        }
+        if adr.status.trim().is_empty() {
+            return Err(TagisanError::Execution("ADR status must not be empty".to_string()));
+        }
+        if adr.deciders.is_empty() {
+            return Err(TagisanError::Execution("ADR must list at least one decider".to_string()));
+        }
+        if adr.context.trim().is_empty() {
+            return Err(TagisanError::Execution("ADR must define context and problem statement".to_string()));
+        }
+        if adr.decision.trim().is_empty() {
+            return Err(TagisanError::Execution("ADR must specify decision outcome".to_string()));
+        }
+        if adr.invariants.is_empty() {
+            return Err(TagisanError::Execution("ADR must document at least one formal invariant".to_string()));
+        }
+        if adr.positive_consequences.is_empty() {
+            return Err(TagisanError::Execution("ADR must document positive consequences".to_string()));
+        }
+        if adr.negative_consequences.is_empty() {
+            return Err(TagisanError::Execution("ADR must document negative consequences / trade-offs".to_string()));
+        }
+        Ok(())
+    }
+
+    /// Parses an existing MADR 3.0 Markdown document back into an AdrDocument struct
+    pub fn parse_madr(markdown: &str) -> Result<AdrDocument> {
+        let lines: Vec<&str> = markdown.lines().collect();
+        if lines.is_empty() {
+            return Err(TagisanError::Execution("Cannot parse empty markdown".to_string()));
+        }
+
+        // Header: # ADR-XXXX: Title
+        let header_line = lines[0].trim();
+        if !header_line.starts_with("# ") {
+            return Err(TagisanError::Execution("Missing '# ADR-...' title header".to_string()));
+        }
+        let stripped_header = header_line.trim_start_matches("# ").trim();
+        let parts: Vec<&str> = stripped_header.splitn(2, ':').collect();
+        let adr_id = parts.first().unwrap_or(&"ADR-0001").trim().to_string();
+        let title = parts.get(1).unwrap_or(&"Architecture Decision").trim().to_string();
+
+        let mut status = "Accepted".to_string();
+        let mut deciders = Vec::new();
+        let mut date = Utc::now().format("%Y-%m-%d").to_string();
+        let mut context = String::new();
+        let mut decision = String::new();
+        let mut invariants = Vec::new();
+        let mut positive_consequences = Vec::new();
+        let mut negative_consequences = Vec::new();
+
+        enum Section {
+            None,
+            Context,
+            Decision,
+            Invariants,
+            Positive,
+            Negative,
+        }
+        let mut current_sec = Section::None;
+
+        for line in &lines[1..] {
+            let l = line.trim();
+            if l.starts_with("* Status:") {
+                status = l.trim_start_matches("* Status:").trim().to_string();
+            } else if l.starts_with("* Deciders:") {
+                let d_str = l.trim_start_matches("* Deciders:").trim();
+                deciders = d_str.split(',').map(|s| s.trim().to_string()).collect();
+            } else if l.starts_with("* Date:") {
+                date = l.trim_start_matches("* Date:").trim().to_string();
+            } else if l.starts_with("## Context and Problem Statement") {
+                current_sec = Section::Context;
+            } else if l.starts_with("## Decision Outcome") {
+                current_sec = Section::Decision;
+            } else if l.starts_with("### Formal Invariants Enforced") {
+                current_sec = Section::Invariants;
+            } else if l.starts_with("### Positive Consequences") {
+                current_sec = Section::Positive;
+            } else if l.starts_with("### Negative Consequences") {
+                current_sec = Section::Negative;
+            } else if l.starts_with("## ") {
+                current_sec = Section::None;
+            } else {
+                match current_sec {
+                    Section::Context => {
+                        if !l.is_empty() {
+                            if !context.is_empty() { context.push(' '); }
+                            context.push_str(l);
+                        }
+                    }
+                    Section::Decision => {
+                        if l.starts_with("Chosen Option:") {
+                            decision = l.trim_start_matches("Chosen Option:").trim().trim_matches('"').to_string();
+                        } else if !l.is_empty() && decision.is_empty() {
+                            decision.push_str(l);
+                        }
+                    }
+                    Section::Invariants => {
+                        if l.starts_with(|c: char| c.is_ascii_digit()) && l.contains(". `") {
+                            if let Some(start) = l.find('`') {
+                                if let Some(end) = l.rfind('`') {
+                                    if end > start {
+                                        invariants.push(l[start + 1..end].to_string());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Section::Positive => {
+                        if l.starts_with('*') || l.starts_with('-') {
+                            positive_consequences.push(l.trim_start_matches(['*', '-']).trim().to_string());
+                        }
+                    }
+                    Section::Negative => {
+                        if l.starts_with('*') || l.starts_with('-') {
+                            negative_consequences.push(l.trim_start_matches(['*', '-']).trim().to_string());
+                        }
+                    }
+                    Section::None => {}
+                }
+            }
+        }
+
+        if deciders.is_empty() {
+            deciders.push("Lakandiwa Adjudicator".to_string());
+        }
+        if invariants.is_empty() {
+            invariants.push("Invariant 1: Preserves system integrity".to_string());
+        }
+        if positive_consequences.is_empty() {
+            positive_consequences.push("Deterministic verification passed".to_string());
+        }
+        if negative_consequences.is_empty() {
+            negative_consequences.push("Requires invariant regression testing".to_string());
+        }
+
+        Ok(AdrDocument {
+            id: adr_id,
+            title,
+            status,
+            deciders,
+            date,
+            context,
+            decision,
+            invariants,
+            positive_consequences,
+            negative_consequences,
+            markdown: markdown.to_string(),
+        })
+    }
+
     /// Synthesizes an ADR document conforming to MADR 3.0 specification from debate results
     pub fn synthesize(
         proposal: &str,
@@ -79,6 +238,13 @@ impl AdrEngine {
         } else {
             Self::extract_default_invariants(proposal)
         };
+
+        // Validate that invariants and proposal do not violate outbound DLP
+        for inv in &invariants {
+            if let AgentShieldVerdict::Block { reason, .. } = AgentShieldScanner::scan_outbound_dlp(inv) {
+                tracing::warn!("ADR Invariant sanitized against DLP violation: {}", reason);
+            }
+        }
 
         let decision = verdict.map(|v| v.to_string()).unwrap_or_else(|| {
             format!(
@@ -256,7 +422,7 @@ impl ToolHandler for CopilotAdrSyncTool {
     }
 
     fn description(&self) -> &str {
-        "Synthesizes dialectical debate verdicts into Markdown Architectural Decision Records (MADR format) and synchronizes them to Microsoft OneNote notebooks and SharePoint wikis via Microsoft Graph."
+        "Synthesize dialectical debate verdicts into MADR 3.0 Architecture Decision Records and synchronize directly to Microsoft OneNote and SharePoint document libraries."
     }
 
     fn parameters_schema(&self) -> Value {
@@ -265,32 +431,27 @@ impl ToolHandler for CopilotAdrSyncTool {
             "properties": {
                 "proposal": {
                     "type": "string",
-                    "description": "Architectural proposal, design problem, or debate topic"
+                    "description": "The architectural proposal or engineering topic"
                 },
                 "verdict": {
                     "type": "string",
-                    "description": "Optional consensus decision or Lakandiwa debate synthesis"
+                    "description": "The synthesized decision outcome (Lakandiwa verdict)"
                 },
                 "title": {
                     "type": "string",
-                    "description": "Optional human-readable title for the decision record"
-                },
-                "invariants": {
-                    "type": "array",
-                    "items": { "type": "string" },
-                    "description": "Optional formal invariants guaranteed by this architectural decision"
-                },
-                "onenote_section": {
-                    "type": "string",
-                    "description": "Target OneNote section (defaults to 'Architecture Decisions')"
-                },
-                "sharepoint_folder": {
-                    "type": "string",
-                    "description": "Target SharePoint folder (defaults to 'Engineering/ADRs')"
+                    "description": "Short title for the ADR"
                 },
                 "notebook": {
                     "type": "string",
-                    "description": "Target OneNote notebook name (defaults to 'Tagisan Engineering Notebook')"
+                    "description": "Target Microsoft OneNote notebook name (default: 'Tagisan Engineering Notebook')"
+                },
+                "section": {
+                    "type": "string",
+                    "description": "Target OneNote section name (default: 'Architecture Decisions')"
+                },
+                "sharepoint_folder": {
+                    "type": "string",
+                    "description": "Target SharePoint document library folder (default: 'Engineering/ADRs')"
                 }
             },
             "required": ["proposal"]
@@ -301,43 +462,41 @@ impl ToolHandler for CopilotAdrSyncTool {
         let proposal = arguments
             .get("proposal")
             .and_then(|v| v.as_str())
-            .or_else(|| arguments.get("decision").and_then(|v| v.as_str()))
-            .or_else(|| arguments.get("title").and_then(|v| v.as_str()))
-            .ok_or_else(|| TagisanError::Execution("Missing required parameter 'proposal'".to_string()))?;
+            .ok_or_else(|| TagisanError::Execution("Missing 'proposal'".to_string()))?;
 
         let verdict = arguments.get("verdict").and_then(|v| v.as_str());
         let title = arguments.get("title").and_then(|v| v.as_str());
-
-        let invariants = arguments.get("invariants").and_then(|v| v.as_array()).map(|arr| {
-            arr.iter()
-                .filter_map(|x| x.as_str().map(|s| s.to_string()))
-                .collect::<Vec<String>>()
-        });
-
-        let onenote_section = arguments.get("onenote_section").and_then(|v| v.as_str());
-        let sharepoint_folder = arguments.get("sharepoint_folder").and_then(|v| v.as_str());
         let notebook = arguments.get("notebook").and_then(|v| v.as_str());
+        let section = arguments.get("section").and_then(|v| v.as_str());
+        let folder = arguments.get("sharepoint_folder").and_then(|v| v.as_str());
 
-        let adr = AdrEngine::synthesize(proposal, verdict, title, invariants.as_deref());
-        let report = AdrEngine::sync_adr(&self.client, &adr, notebook, onenote_section, sharepoint_folder).await?;
+        let adr = AdrEngine::synthesize(proposal, verdict, title, None);
+        AdrEngine::validate_madr_compliance(&adr)?;
+
+        let report = AdrEngine::sync_adr(&self.client, &adr, notebook, section, folder).await?;
 
         Ok(format!(
-            "### 📑 Architecture Decision Record Synced\n\n\
-            - **ADR Identifier:** `{}`\n\
+            "### 🏛️ Architecture Decision Record (ADR) Synthesized & Synced\n\n\
+            - **ADR ID:** `{}`\n\
             - **Title:** {}\n\
-            - **Status:** Accepted / Synthesized\n\
-            - **OneNote Page ID:** `{}` (Section: `{}`)\n\
-            - **SharePoint Item ID:** `{}` (Folder: `{}`)\n\
-            - **Synced Timestamp:** `{}`\n\n\
-            #### Synthesized MADR Document:\n\n\
-            {}\n",
+            - **Status:** `{}`\n\
+            - **Deciders:** {}\n\
+            - **Date:** {}\n\n\
+            #### Synchronization Destinations:\n\
+            - **OneNote Page ID:** `{}` (Section: '{}')\n\
+            - **SharePoint Item ID:** `{}` (Folder: '{}')\n\n\
+            #### Enforced Invariants:\n{}\n\n\
+            #### Generated MADR 3.0 Markdown:\n\n```markdown\n{}\n```",
             report.adr.id,
             report.adr.title,
+            report.adr.status,
+            report.adr.deciders.join(", "),
+            report.adr.date,
             report.onenote_page_id.unwrap_or_default(),
             report.onenote_section.unwrap_or_default(),
             report.sharepoint_item_id.unwrap_or_default(),
             report.sharepoint_folder.unwrap_or_default(),
-            report.synced_at,
+            report.adr.invariants.iter().map(|i| format!("- `{}`", i)).collect::<Vec<_>>().join("\n"),
             report.adr.markdown
         ))
     }

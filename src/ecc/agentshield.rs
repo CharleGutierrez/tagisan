@@ -2426,6 +2426,9 @@ impl AgentShieldScanner {
             "secret_key:",
             "database_url=postgres://",
             "database_url=mysql://",
+            "accountkey=",
+            "sharedaccesskey=",
+            "defaultendpointsprotocol=",
         ];
 
         for ind in secret_indicators {
