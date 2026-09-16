@@ -65,9 +65,9 @@ pub use defender::{
     WebhookTriageResult, compute_hmac_sha256, verify_client_state_hmac,
 };
 pub use powerbi::{
-    CopilotPowerBiTool, PowerBiEngine, TmdlColumn, TmdlDatabase, TmdlMeasure, TmdlPartition,
-    TmdlRelationship, TmdlTable, TmdlValidationResult, TmslEngine, TmslRefreshType,
-    TmslTargetObject, XmlaDeploymentPackage,
+    CopilotPowerBiTool, LakehouseMaintenanceCommands, PowerBiEngine, TmdlColumn, TmdlDatabase,
+    TmdlMeasure, TmdlPartition, TmdlRelationship, TmdlTable, TmdlValidationResult, TmslEngine,
+    TmslRefreshType, TmslTargetObject, XmlaDeploymentPackage,
 };
 pub use vscode::{CopilotChatRequest, CopilotChatResponse, CopilotVsCodeTool, GutterDecorationPayload, LspCodeAction, LspCodeLens, LspDiagnostic, LspDocumentHighlight, LspPosition, LspRange, VsCodeEngine, VsCodeExtensionManifestGenerator};
 
@@ -81,8 +81,9 @@ pub use batch::{
     CopilotGraphBatchTool, GRAPH_BATCH_MAX_LIMIT,
 };
 pub use bot::{
-    TeamsActionPayload, TeamsBotHandler, TeamsCardResponse, UniversalActionPayload,
-    CopilotUniversalActionTool,
+    AdaptiveCardUniversalAction, CopilotUniversalActionTool, MessagingExtensionAttachment,
+    MessagingExtensionResponse, MessagingExtensionResult, TeamsActionPayload, TeamsBotHandler,
+    TeamsCardResponse, TeamsMessageExtensionHandler, UniversalActionPayload,
 };
 pub use cae::{
     CaeClaimsChallenge, CaeRiskLevel, CopilotCaeHandlerTool,
@@ -118,13 +119,16 @@ pub use plugin::{
     generate_valid_png, CopilotCertifyTool, CopilotPackageInfo,
 };
 pub use purview::{
-    CopilotPurviewGuardTool, CopilotPurviewSyncTool, CopilotRmsGuardTool, PurviewAuditReceipt,
-    PurviewGuardEngine, PurviewGuardResult, PurviewLabelPolicy, PurviewSensitivity,
-    RmsProtectionHandler, RmsProtectionStatus,
+    AtlasEntity, AtlasEntityWithExtInfo, AtlasLineageInfo, AtlasLineageRelation, AtlasObjectId,
+    CopilotPurviewGuardTool, CopilotPurviewSyncTool, CopilotPurviewTool, CopilotRmsGuardTool,
+    PurviewAuditReceipt, PurviewDataMapEngine, PurviewGuardEngine, PurviewGuardResult,
+    PurviewLabelPolicy, PurviewSensitivity, RmsProtectionHandler, RmsProtectionStatus,
 };
 pub use sentinel::{
-    CopilotSentinelAuditTool, SentinelAuditEvent, SentinelAuditEngine, SentinelAuditResult,
-    SentinelSeverity,
+    CopilotSentinelAuditTool, CopilotSentinelTool, KqlHuntingCatalog, KqlHuntingQuery, KustoClient,
+    KustoColumn, KustoExecutionEngine, KustoQueryResult, KustoRow, KustoTable, SentinelAuditEvent,
+    SentinelAuditEngine, SentinelAuditResult, SentinelBridgeEngine, SentinelEventType,
+    SentinelSecurityEvent, SentinelSeverity,
 };
 pub use stream::{
     CopilotStreamGateway, CopilotStreamGatewayTool, StreamEventType, StreamFrame, StreamMode,
@@ -167,10 +171,15 @@ pub use sharepoint_crawler::{
     SharePointCrawlerEngine, SharePointSiteCrawlerConfig,
 };
 
-pub use ado::{AdoConfig, AdoEngine, AdoPullRequest, AdoRelation, AdoWorkItem, CopilotAdoSyncTool};
+pub use ado::{
+    AdoComment, AdoCommentPosition, AdoCommentThread, AdoConfig, AdoEngine, AdoFederatedTokenRequest,
+    AdoFederatedTokenResponse, AdoGitStatus, AdoGitStatusContext, AdoGitStatusState, AdoPullRequest,
+    AdoRelation, AdoThreadStatus, AdoWorkItem, CopilotAdoSyncTool, CopilotAdoTool,
+};
 pub use icm::{
-    IcmEngine, IcmIncident, IcmSeverity, PirTimelineEntry, PostIncidentReview,
-    CopilotIcmBridgeTool,
+    CopilotIcmBridgeTool, CopilotIcmTool, CorrelationConfidence, GitCommitInfo, IcmEngine,
+    IcmIncident, IcmRollbackPr, IcmRollbackPrGenerator, IcmSeverity, IncidentCorrelationResult,
+    PirTimelineEntry, PostIncidentReview,
 };
 pub use sdl::{
     CredScanFinding, PoliCheckFinding, SbomPackage, SdlAuditReport, SdlEngine,
@@ -181,7 +190,7 @@ pub use substrate::{
     SubstrateAcl, SubstrateConnection, SubstrateContent, SubstrateEngine, SubstrateIngestReport,
     SubstrateItem, SubstratePropertySchema, CopilotSubstrateIngestTool,
 };
-pub use viva::{Viva1on1Briefing, VivaEngine, VivaGoal, CopilotVivaSyncTool};
+pub use viva::{CopilotVivaSyncTool, CopilotVivaTool, Viva1on1Briefing, VivaEngine, VivaGoal, VivaGoalsClient};
 pub use wam::{WamAccount, WamBrokerEngine, WamTokenRequest, WamTokenResponse, CopilotWamAuthTool};
 pub use dataverse::{
     CopilotDataverseSyncTool, DataverseAdrRecord, DataverseBatchReport, DataverseBatchSubRequest,

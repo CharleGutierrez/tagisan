@@ -159,6 +159,15 @@ pub struct XmlaDeploymentPackage {
     pub command_type: String,
 }
 
+/// Fabric Lakehouse Table Maintenance SQL Commands (VACUUM & OPTIMIZE)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LakehouseMaintenanceCommands {
+    pub table_name: String,
+    pub vacuum_sql: String,
+    pub optimize_sql: String,
+    pub full_maintenance_script: String,
+}
+
 // =========================================================================
 // 2. TMSL Engine
 // =========================================================================
@@ -689,6 +698,70 @@ impl PowerBiEngine {
         }
     }
 
+    /// Generates a Power BI Tabular Model configured for Fabric Direct Lake mode over OneLake Delta Lake parquet tables
+    pub fn generate_direct_lake_model(
+        workspace_name: &str,
+        lakehouse_name: &str,
+        table_name: &str,
+        columns: &[TmdlColumn],
+        measures: &[TmdlMeasure],
+    ) -> Result<TmdlDatabase> {
+        let onelake_path = format!("onelake://{}/{}/Tables/{}", workspace_name, lakehouse_name, table_name);
+
+        let table = TmdlTable {
+            name: table_name.to_string(),
+            lineage_tag: format!("tagisan-directlake-{}", &blake3::hash(table_name.as_bytes()).to_hex()[..16]),
+            description: Some(format!("Fabric Direct Lake semantic table connected to OneLake path '{}'", onelake_path)),
+            columns: columns.to_vec(),
+            measures: measures.to_vec(),
+            partitions: vec![TmdlPartition {
+                name: format!("{}_DirectLakePartition", table_name),
+                mode: "directLake".to_string(),
+                source_expression: onelake_path,
+            }],
+        };
+
+        Ok(TmdlDatabase {
+            name: format!("{}_DirectLakeModel", table_name),
+            compatibility_level: 1604,
+            tables: vec![table],
+            relationships: vec![],
+        })
+    }
+
+    /// Generates Delta Lake maintenance commands (VACUUM and OPTIMIZE) for Microsoft Fabric Lakehouse
+    pub fn generate_lakehouse_maintenance_sql(
+        table_name: &str,
+        vacuum_retain_hours: u32,
+        zorder_columns: &[&str],
+    ) -> LakehouseMaintenanceCommands {
+        let vacuum_sql = format!("VACUUM {} RETAIN {} HOURS;", table_name, vacuum_retain_hours);
+        let optimize_sql = if zorder_columns.is_empty() {
+            format!("OPTIMIZE {};", table_name)
+        } else {
+            format!("OPTIMIZE {} ZORDER BY ({});", table_name, zorder_columns.join(", "))
+        };
+
+        let full_maintenance_script = format!(
+            "-- =========================================================================\n\
+            -- Microsoft Fabric Lakehouse Delta Table Maintenance Script\n\
+            -- Target Table: {}\n\
+            -- =========================================================================\n\n\
+            -- Step 1: Remove uncommitted and stale files older than retention threshold\n\
+            {}\n\n\
+            -- Step 2: Compact small parquet files and co-locate data via Z-Order clustering\n\
+            {}\n",
+            table_name, vacuum_sql, optimize_sql
+        );
+
+        LakehouseMaintenanceCommands {
+            table_name: table_name.to_string(),
+            vacuum_sql,
+            optimize_sql,
+            full_maintenance_script,
+        }
+    }
+
     /// Generates pure Tabular Model Definition Language (TMDL) output for a complete model
     pub fn generate_tmdl(&self, database: &TmdlDatabase) -> String {
         let mut out = String::new();
@@ -926,7 +999,9 @@ impl ToolHandler for CopilotPowerBiTool {
                         "validate_tmdl",
                         "export_semantic_model",
                         "generate_tmsl",
-                        "generate_xmla_envelope"
+                        "generate_xmla_envelope",
+                        "generate_direct_lake_model",
+                        "lakehouse_maintenance"
                     ],
                     "description": "The specific Power BI TMDL / TMSL capability to execute."
                 },
@@ -951,6 +1026,24 @@ impl ToolHandler for CopilotPowerBiTool {
                 "workspace_name": {
                     "type": "string",
                     "description": "Fabric/Power BI workspace name for XMLA endpoint (default: 'TagisanEnterpriseWorkspace')."
+                },
+                "lakehouse_name": {
+                    "type": "string",
+                    "description": "Fabric Lakehouse name for OneLake Direct Lake binding."
+                },
+                "table_name": {
+                    "type": "string",
+                    "description": "Target Delta table name."
+                },
+                "vacuum_retain_hours": {
+                    "type": "integer",
+                    "default": 168,
+                    "description": "Retention threshold in hours for VACUUM command."
+                },
+                "zorder_columns": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Columns to optimize and co-locate via Z-Order clustering."
                 }
             },
             "required": ["action"]
@@ -1027,6 +1120,75 @@ impl ToolHandler for CopilotPowerBiTool {
                 let pkg = self.engine.tmsl_engine().generate_xmla_envelope(workspace, &db.name, &tmsl_cmd, "createOrReplace");
 
                 Ok(serde_json::to_string_pretty(&pkg)?)
+            }
+            "generate_direct_lake_model" => {
+                let ws = arguments.get("workspace_name").and_then(|w| w.as_str()).unwrap_or("TagisanWorkspace");
+                let lh = arguments.get("lakehouse_name").and_then(|l| l.as_str()).unwrap_or("TagisanLakehouse");
+                let tbl = arguments.get("table_name").and_then(|t| t.as_str()).unwrap_or("TelemetryEvents");
+
+                let cols = vec![
+                    TmdlColumn {
+                        name: "CommitSha".to_string(),
+                        data_type: "string".to_string(),
+                        format_string: None,
+                        summarize_by: Some("none".to_string()),
+                        source_column: "CommitSha".to_string(),
+                        description: Some("Git commit SHA hash".to_string()),
+                    },
+                    TmdlColumn {
+                        name: "BlastRadiusScore".to_string(),
+                        data_type: "double".to_string(),
+                        format_string: Some("0.0".to_string()),
+                        summarize_by: Some("average".to_string()),
+                        source_column: "BlastRadiusScore".to_string(),
+                        description: Some("Calculated blast radius score".to_string()),
+                    },
+                ];
+
+                let measures = vec![
+                    TmdlMeasure {
+                        name: "Average Blast Radius".to_string(),
+                        expression: "AVERAGE(TelemetryEvents[BlastRadiusScore])".to_string(),
+                        format_string: Some("0.0".to_string()),
+                        display_folder: Some("Metrics".to_string()),
+                        description: Some("Average blast radius score".to_string()),
+                    },
+                ];
+
+                let db = PowerBiEngine::generate_direct_lake_model(ws, lh, tbl, &cols, &measures)?;
+                let tmdl = self.engine.generate_tmdl(&db);
+
+                Ok(format!(
+                    "### ⚡ Power BI Direct Lake TMDL Model Generated\n\n\
+                    - **Workspace:** `{}`\n\
+                    - **Lakehouse:** `{}`\n\
+                    - **Table:** `{}`\n\
+                    - **Partition Mode:** `directLake`\n\
+                    - **OneLake Path:** `onelake://{}/{}/Tables/{}`\n\n\
+                    ```tmdl\n{}\n```",
+                    ws, lh, tbl, ws, lh, tbl, tmdl
+                ))
+            }
+            "lakehouse_maintenance" => {
+                let tbl = arguments.get("table_name").and_then(|t| t.as_str()).unwrap_or("TelemetryEvents");
+                let retain_hours = arguments.get("vacuum_retain_hours").and_then(|v| v.as_u64()).unwrap_or(168) as u32;
+                let zorder_raw = arguments.get("zorder_columns").and_then(|z| z.as_array());
+                let zorder_cols: Vec<&str> = if let Some(arr) = zorder_raw {
+                    arr.iter().filter_map(|v| v.as_str()).collect()
+                } else {
+                    vec!["CommitSha", "Timestamp"]
+                };
+
+                let maint = PowerBiEngine::generate_lakehouse_maintenance_sql(tbl, retain_hours, &zorder_cols);
+
+                Ok(format!(
+                    "### 🧹 Microsoft Fabric Lakehouse Table Maintenance SQL\n\n\
+                    - **Table:** `{}`\n\
+                    - **VACUUM SQL:** `{}`\n\
+                    - **OPTIMIZE SQL:** `{}`\n\n\
+                    ```sql\n{}\n```",
+                    maint.table_name, maint.vacuum_sql, maint.optimize_sql, maint.full_maintenance_script
+                ))
             }
             _ => Err(TagisanError::Execution(format!(
                 "Unsupported action '{action}' for copilot_powerbi"

@@ -20,6 +20,7 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
+use tracing::info;
 
 /// Microsoft Purview Sensitivity Labels
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -830,4 +831,458 @@ impl ToolHandler for CopilotRmsGuardTool {
         Ok(report)
     }
 }
+
+// =========================================================================
+// Microsoft Purview Data Map & Catalog Lineage (Apache Atlas REST API)
+// =========================================================================
+
+/// Unique object identifier in Microsoft Purview / Apache Atlas
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AtlasObjectId {
+    pub type_name: String,
+    pub guid: String,
+    pub unique_attributes: HashMap<String, Value>,
+}
+
+/// Apache Atlas Entity in Microsoft Purview Data Map
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AtlasEntity {
+    pub type_name: String,
+    pub guid: String,
+    pub attributes: HashMap<String, Value>,
+    pub status: String,
+    pub relationship_attributes: HashMap<String, Value>,
+}
+
+impl AtlasEntity {
+    pub fn new(type_name: &str, guid: &str, qualified_name: &str, name: &str) -> Self {
+        let mut attributes = HashMap::new();
+        attributes.insert("qualifiedName".to_string(), json!(qualified_name));
+        attributes.insert("name".to_string(), json!(name));
+
+        Self {
+            type_name: type_name.to_string(),
+            guid: guid.to_string(),
+            attributes,
+            status: "ACTIVE".to_string(),
+            relationship_attributes: HashMap::new(),
+        }
+    }
+}
+
+/// Apache Atlas Entity with referred entities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AtlasEntityWithExtInfo {
+    pub entity: AtlasEntity,
+    pub referred_entities: HashMap<String, AtlasEntity>,
+}
+
+/// Directional lineage relationship edge in Purview Data Map
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AtlasLineageRelation {
+    pub from_entity_id: String,
+    pub to_entity_id: String,
+    pub relationship_id: String,
+    pub process_guid: String,
+}
+
+/// End-to-end lineage representation in Purview Catalog
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct AtlasLineageInfo {
+    pub base_entity_guid: String,
+    pub lineage_depth: u32,
+    pub lineage_direction: String,
+    pub relations: Vec<AtlasLineageRelation>,
+    pub guid_entity_map: HashMap<String, AtlasEntity>,
+}
+
+/// Core engine for Microsoft Purview Data Map and Apache Atlas Catalog Lineage
+#[derive(Clone, Default)]
+pub struct PurviewDataMapEngine {
+    entities: Arc<tokio::sync::RwLock<HashMap<String, AtlasEntity>>>,
+    lineage_relations: Arc<tokio::sync::RwLock<Vec<AtlasLineageRelation>>>,
+}
+
+impl PurviewDataMapEngine {
+    pub fn new() -> Self {
+        Self {
+            entities: Arc::new(tokio::sync::RwLock::new(HashMap::new())),
+            lineage_relations: Arc::new(tokio::sync::RwLock::new(Vec::new())),
+        }
+    }
+
+    /// Register or update an entity in the Purview Data Map catalog
+    pub async fn register_entity(&self, entity: AtlasEntity) -> Result<AtlasEntityWithExtInfo> {
+        info!("Registering Purview Data Map entity '{}' ({})", entity.guid, entity.type_name);
+        let mut lock = self.entities.write().await;
+        lock.insert(entity.guid.clone(), entity.clone());
+
+        Ok(AtlasEntityWithExtInfo {
+            entity,
+            referred_entities: HashMap::new(),
+        })
+    }
+
+    /// Register a process with input and output lineage edges
+    pub async fn register_lineage(
+        &self,
+        process_name: &str,
+        input_guids: &[String],
+        output_guids: &[String],
+    ) -> Result<AtlasLineageInfo> {
+        info!("Registering Purview lineage process '{}': {} inputs -> {} outputs",
+            process_name, input_guids.len(), output_guids.len());
+
+        let process_guid = format!("proc_{}", &blake3::hash(process_name.as_bytes()).to_hex()[..12]);
+        let mut proc_entity = AtlasEntity::new("Process", &process_guid, process_name, process_name);
+        proc_entity.attributes.insert("inputs".to_string(), json!(input_guids));
+        proc_entity.attributes.insert("outputs".to_string(), json!(output_guids));
+
+        self.register_entity(proc_entity.clone()).await?;
+
+        let mut relations = Vec::new();
+        let mut guid_entity_map = HashMap::new();
+        guid_entity_map.insert(process_guid.clone(), proc_entity);
+
+        let entity_lock = self.entities.read().await;
+        for in_id in input_guids {
+            if let Some(ent) = entity_lock.get(in_id) {
+                guid_entity_map.insert(in_id.clone(), ent.clone());
+            }
+            for out_id in output_guids {
+                if let Some(ent) = entity_lock.get(out_id) {
+                    guid_entity_map.insert(out_id.clone(), ent.clone());
+                }
+
+                let rel = AtlasLineageRelation {
+                    from_entity_id: in_id.clone(),
+                    to_entity_id: out_id.clone(),
+                    relationship_id: format!("rel_{}_{}", &in_id[..in_id.len().min(8)], &out_id[..out_id.len().min(8)]),
+                    process_guid: process_guid.clone(),
+                };
+                relations.push(rel);
+            }
+        }
+
+        let mut rel_lock = self.lineage_relations.write().await;
+        rel_lock.extend(relations.clone());
+
+        Ok(AtlasLineageInfo {
+            base_entity_guid: process_guid,
+            lineage_depth: 2,
+            lineage_direction: "BOTH".to_string(),
+            relations,
+            guid_entity_map,
+        })
+    }
+
+    /// Synthesizes complete 4-tier lineage: Access 365 -> Dataverse -> OneLake Delta Lake -> Power BI Direct Lake
+    pub async fn generate_tagisan_end_to_end_lineage(&self, dataset_name: &str) -> Result<AtlasLineageInfo> {
+        info!("Synthesizing Tagisan end-to-end Microsoft data lineage for '{}'", dataset_name);
+
+        let access_guid = format!("guid_access_{}", dataset_name.to_lowercase());
+        let dataverse_guid = format!("guid_dataverse_{}", dataset_name.to_lowercase());
+        let onelake_guid = format!("guid_onelake_{}", dataset_name.to_lowercase());
+        let powerbi_guid = format!("guid_powerbi_{}", dataset_name.to_lowercase());
+
+        // Tier 1: Access 365 Table
+        let access_ent = AtlasEntity::new(
+            "access_table",
+            &access_guid,
+            &format!("msaccess://corp.sharepoint.com/teams/db/{}.accdb/{}", dataset_name, dataset_name),
+            &format!("Access_{}", dataset_name),
+        );
+        self.register_entity(access_ent.clone()).await?;
+
+        // Tier 2: Dataverse Entity
+        let dataverse_ent = AtlasEntity::new(
+            "dataverse_entity",
+            &dataverse_guid,
+            &format!("dataverse://org.crm.dynamics.com/entities/cr42_{}", dataset_name.to_lowercase()),
+            &format!("Dataverse_{}", dataset_name),
+        );
+        self.register_entity(dataverse_ent.clone()).await?;
+
+        // Tier 3: OneLake Delta Lake Table
+        let onelake_ent = AtlasEntity::new(
+            "delta_table",
+            &onelake_guid,
+            &format!("onelake://workspace-42/lakehouse-prod/Tables/{}_delta", dataset_name.to_lowercase()),
+            &format!("OneLake_{}_Delta", dataset_name),
+        );
+        self.register_entity(onelake_ent.clone()).await?;
+
+        // Tier 4: Power BI Direct Lake Tabular Model
+        let powerbi_ent = AtlasEntity::new(
+            "powerbi_direct_lake_model",
+            &powerbi_guid,
+            &format!("powerbi://api.powerbi.com/v1.0/myorg/models/{}_DirectLake", dataset_name),
+            &format!("PowerBI_{}_DirectLake", dataset_name),
+        );
+        self.register_entity(powerbi_ent.clone()).await?;
+
+        // Process 1: Access to Dataverse Sync
+        let proc1 = self.register_lineage(
+            &format!("Process_Access_To_Dataverse_Sync_{}", dataset_name),
+            &[access_guid.clone()],
+            &[dataverse_guid.clone()],
+        ).await?;
+
+        // Process 2: Dataverse Fabric Link to OneLake Delta
+        let proc2 = self.register_lineage(
+            &format!("Process_Dataverse_Fabric_Link_{}", dataset_name),
+            &[dataverse_guid.clone()],
+            &[onelake_guid.clone()],
+        ).await?;
+
+        // Process 3: OneLake Direct Lake to Power BI Model
+        let proc3 = self.register_lineage(
+            &format!("Process_OneLake_DirectLake_Binding_{}", dataset_name),
+            &[onelake_guid.clone()],
+            &[powerbi_guid.clone()],
+        ).await?;
+
+        let mut all_relations = Vec::new();
+        all_relations.extend(proc1.relations);
+        all_relations.extend(proc2.relations);
+        all_relations.extend(proc3.relations);
+
+        let mut all_entities = HashMap::new();
+        all_entities.insert(access_guid, access_ent);
+        all_entities.insert(dataverse_guid, dataverse_ent);
+        all_entities.insert(onelake_guid, onelake_ent);
+        all_entities.insert(powerbi_guid.clone(), powerbi_ent);
+        for (k, v) in proc1.guid_entity_map { all_entities.insert(k, v); }
+        for (k, v) in proc2.guid_entity_map { all_entities.insert(k, v); }
+        for (k, v) in proc3.guid_entity_map { all_entities.insert(k, v); }
+
+        Ok(AtlasLineageInfo {
+            base_entity_guid: powerbi_guid,
+            lineage_depth: 4,
+            lineage_direction: "INPUT".to_string(),
+            relations: all_relations,
+            guid_entity_map: all_entities,
+        })
+    }
+}
+
+// =========================================================================
+// Autonomous Tool: CopilotPurviewTool
+// =========================================================================
+
+/// First-class autonomous tool for Microsoft Purview Data Governance, Classification, and Lineage
+#[derive(Clone, Default)]
+pub struct CopilotPurviewTool {
+    datamap_engine: Arc<PurviewDataMapEngine>,
+}
+
+impl CopilotPurviewTool {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_engine(datamap_engine: Arc<PurviewDataMapEngine>) -> Self {
+        Self { datamap_engine }
+    }
+}
+
+#[async_trait]
+impl ToolHandler for CopilotPurviewTool {
+    fn name(&self) -> &'static str {
+        "copilot_purview"
+    }
+
+    fn description(&self) -> &'static str {
+        "Microsoft Purview governance tool: evaluate sensitivity, air-gap zero-egress enforcement, register Apache Atlas entities, and synthesize end-to-end data lineage"
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "classify",
+                        "verify_receipt",
+                        "register_entity",
+                        "register_lineage",
+                        "generate_e2e_lineage"
+                    ],
+                    "description": "Operation to perform"
+                },
+                "operation": {
+                    "type": "string",
+                    "description": "Alias for action"
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Text content to classify or verify"
+                },
+                "declared_label": {
+                    "type": "string",
+                    "description": "Explicit sensitivity label (General, Confidential, HighlyConfidential, Secret)"
+                },
+                "receipt": {
+                    "type": "object",
+                    "description": "PurviewAuditReceipt JSON object to verify"
+                },
+                "dataset_name": {
+                    "type": "string",
+                    "description": "Dataset name for lineage synthesis (e.g. 'Customers', 'Telemetry')"
+                },
+                "type_name": {
+                    "type": "string",
+                    "description": "Atlas entity type (e.g. 'access_table', 'dataverse_entity', 'delta_table')"
+                },
+                "guid": {
+                    "type": "string",
+                    "description": "Atlas entity GUID"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Display name"
+                },
+                "qualified_name": {
+                    "type": "string",
+                    "description": "Qualified resource URI / name"
+                },
+                "process_name": {
+                    "type": "string",
+                    "description": "Process name for lineage"
+                },
+                "input_guids": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Input entity GUIDs"
+                },
+                "output_guids": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Output entity GUIDs"
+                }
+            }
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let action = arguments
+            .get("action")
+            .or_else(|| arguments.get("operation"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("classify");
+
+        match action {
+            "classify" => {
+                let content = arguments.get("content").and_then(|v| v.as_str()).unwrap_or("Internal documentation");
+                let label = arguments.get("declared_label").and_then(|v| v.as_str());
+                let destination = arguments.get("destination").and_then(|v| v.as_str());
+                let result = PurviewGuardEngine::evaluate(content, label, destination)?;
+
+                Ok(format!(
+                    "### 🛡️ Microsoft Purview Sensitivity & Zero-Egress Audit\n\n\
+                    - **Assigned Label:** `{}`\n\
+                    - **Zero-Egress Air-Gap Enforced:** {}\n\
+                    - **Routing Engine:** `{}`\n\
+                    - **Receipt ID:** `{}`\n\
+                    - **Content SHA-256:** `{}`\n\
+                    - **Signature SHA-256:** `{}`\n\n\
+                    {}",
+                    result.sensitivity.as_str(),
+                    if result.air_gapped { "🔒 YES (Air-Gapped)" } else { "🟢 NO (Unrestricted)" },
+                    result.routing_engine,
+                    result.receipt.receipt_id,
+                    result.receipt.content_sha256,
+                    result.receipt.signature_sha256,
+                    result.message
+                ))
+            }
+
+            "verify_receipt" => {
+                let content = arguments.get("content").and_then(|v| v.as_str()).unwrap_or("");
+                let receipt_val = arguments.get("receipt").ok_or_else(|| TagisanError::Execution("Missing 'receipt'".to_string()))?;
+                let receipt: PurviewAuditReceipt = serde_json::from_value(receipt_val.clone())
+                    .map_err(|e| TagisanError::Execution(format!("Invalid receipt JSON: {e}")))?;
+
+                let is_valid = receipt.verify_integrity(content);
+
+                Ok(format!(
+                    "### 🔐 Purview Cryptographic Audit Receipt Verification\n\n\
+                    - **Receipt ID:** `{}`\n\
+                    - **Verification Status:** {}\n\
+                    - **Egress Blocked:** {}\n\
+                    - **Policy:** `{}`\n",
+                    receipt.receipt_id,
+                    if is_valid { "✅ VALID & INTACT" } else { "❌ FORGED / MISMATCHED" },
+                    receipt.egress_blocked,
+                    receipt.policy_applied
+                ))
+            }
+
+            "register_entity" => {
+                let type_name = arguments.get("type_name").and_then(|v| v.as_str()).unwrap_or("dataset");
+                let guid = arguments.get("guid").and_then(|v| v.as_str()).unwrap_or("guid_001");
+                let name = arguments.get("name").and_then(|v| v.as_str()).unwrap_or("Dataset_1");
+                let q_name = arguments.get("qualified_name").and_then(|v| v.as_str()).unwrap_or("dataset://corp/data1");
+
+                let entity = AtlasEntity::new(type_name, guid, q_name, name);
+                let ext = self.datamap_engine.register_entity(entity).await?;
+
+                Ok(format!(
+                    "### 🗺️ Microsoft Purview Data Map Entity Registered\n\n\
+                    - **Type:** `{}`\n\
+                    - **GUID:** `{}`\n\
+                    - **Status:** `{}`\n\
+                    - **Qualified Name:** `{}`\n",
+                    ext.entity.type_name, ext.entity.guid, ext.entity.status,
+                    ext.entity.attributes.get("qualifiedName").and_then(|v| v.as_str()).unwrap_or_default()
+                ))
+            }
+
+            "register_lineage" => {
+                let proc_name = arguments.get("process_name").and_then(|v| v.as_str()).unwrap_or("ETL_Pipeline_01");
+                let inputs: Vec<String> = arguments.get("input_guids")
+                    .and_then(|v| v.as_array())
+                    .map(|a| a.iter().filter_map(|i| i.as_str().map(|s| s.to_string())).collect())
+                    .unwrap_or_default();
+                let outputs: Vec<String> = arguments.get("output_guids")
+                    .and_then(|v| v.as_array())
+                    .map(|a| a.iter().filter_map(|i| i.as_str().map(|s| s.to_string())).collect())
+                    .unwrap_or_default();
+
+                let lineage = self.datamap_engine.register_lineage(proc_name, &inputs, &outputs).await?;
+
+                Ok(format!(
+                    "### 🔄 Purview Apache Atlas Lineage Edge Registered\n\n\
+                    - **Process Name:** `{}`\n\
+                    - **Process GUID:** `{}`\n\
+                    - **Lineage Depth:** {}\n\
+                    - **Lineage Edges Created:** {}\n",
+                    proc_name, lineage.base_entity_guid, lineage.lineage_depth, lineage.relations.len()
+                ))
+            }
+
+            "generate_e2e_lineage" => {
+                let dataset = arguments.get("dataset_name").and_then(|v| v.as_str()).unwrap_or("Customers");
+                let lineage = self.datamap_engine.generate_tagisan_end_to_end_lineage(dataset).await?;
+
+                let edges: Vec<String> = lineage.relations
+                    .iter()
+                    .map(|r| format!("- `{}` ➡️ `{}` (via process `{}`)", r.from_entity_id, r.to_entity_id, r.process_guid))
+                    .collect();
+
+                Ok(format!(
+                    "### 🌐 Tagisan End-to-End Microsoft Data Lineage Synthesized\n\n\
+                    **Dataset:** `{}` | **Tiers Connected:** 4 (Access 365 ➡️ Dataverse ➡️ OneLake ➡️ Power BI)\n\
+                    **Entities in Map:** {} | **Total Lineage Edges:** {}\n\n\
+                    #### Lineage Graph Flow:\n{}\n",
+                    dataset, lineage.guid_entity_map.len(), lineage.relations.len(), edges.join("\n")
+                ))
+            }
+
+            other => Err(TagisanError::Execution(format!("Unknown purview action '{other}'"))),
+        }
+    }
+}
+
 

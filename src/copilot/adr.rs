@@ -476,7 +476,7 @@ impl ToolHandler for CopilotAdrSyncTool {
         let report = AdrEngine::sync_adr(&self.client, &adr, notebook, section, folder).await?;
 
         Ok(format!(
-            "### 🏛️ Architecture Decision Record (ADR) Synthesized & Synced\n\n\
+            "### 🏛️ Architecture Decision Record Synced (ADR Synthesized)\n\n\
             - **ADR ID:** `{}`\n\
             - **Title:** {}\n\
             - **Status:** `{}`\n\
