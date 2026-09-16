@@ -34,73 +34,90 @@
         }
         .cover-page {
             page-break-after: always;
-            background: linear-gradient(135deg, #090d16 0%, #0f172a 100%);
+            background: #090d16;
             color: #ffffff;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 40px;
+            height: 297mm;
+            width: 210mm;
             box-sizing: border-box;
+            padding: 40px 30px;
+            text-align: center;
         }
         .cover-badge {
+            display: inline-block;
             background: rgba(56, 189, 248, 0.15);
             border: 1px solid #38bdf8;
             color: #38bdf8;
-            padding: 6px 18px;
+            padding: 5px 18px;
             border-radius: 20px;
-            font-size: 11pt;
-            font-weight: 600;
+            font-size: 10pt;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+            margin-top: 15px;
         }
         .cover-title {
-            font-size: 34pt;
+            font-size: 30pt;
             font-weight: 800;
             letter-spacing: -0.5px;
-            margin: 0 0 15px 0;
-            background: linear-gradient(to right, #ffffff, #93c5fd);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            margin: 0 0 10px 0;
+            color: #f8fafc;
         }
         .cover-subtitle {
-            font-size: 14pt;
+            font-size: 13pt;
             color: #94a3b8;
-            max-width: 650px;
-            margin: 0 0 30px 0;
+            max-width: 620px;
+            margin: 0 auto 20px auto;
             line-height: 1.4;
         }
-        .cover-img {
-            max-width: 85%;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            border: 1px solid rgba(255,255,255,0.1);
-            margin-bottom: 30px;
+        .cover-img-container {
+            margin: 15px auto 25px auto;
+            max-width: 90%;
+            border-radius: 10px;
+            border: 2px solid #38bdf8;
+            overflow: hidden;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+        }
+        .cover-img-container img {
+            width: 100%;
+            height: auto;
+            display: block;
         }
         .cover-meta {
-            font-size: 10pt;
+            font-size: 9.5pt;
             color: #64748b;
             letter-spacing: 0.5px;
+            margin-top: 15px;
         }
-        .infographic-block {
+        .infographic-plate {
+            page-break-before: always;
             page-break-inside: avoid;
-            margin: 25px 0;
+            margin: 20px 0;
             text-align: center;
         }
-        .infographic-block img {
-            max-width: 100%;
+        .infographic-plate img {
+            max-width: 98%;
             border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
             border: 1px solid #cbd5e1;
         }
-        .infographic-caption {
+        .infographic-plate .caption {
+            font-size: 9pt;
+            color: #475569;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+        .diagram-box {
+            page-break-inside: avoid;
+            margin: 18px 0;
+            text-align: center;
+        }
+        .figure-caption {
             font-size: 8.5pt;
             color: #64748b;
-            margin-top: 8px;
-            font-weight: 500;
+            margin-top: 6px;
+            font-weight: 600;
+            text-align: center;
         }
         h1 {
             font-size: 20pt;
@@ -111,15 +128,15 @@
             page-break-before: always;
         }
         h2 {
-            font-size: 15pt;
+            font-size: 14pt;
             color: #0369a1;
             border-bottom: 1px solid #e2e8f0;
             padding-bottom: 4px;
-            margin-top: 24px;
+            margin-top: 22px;
             page-break-after: avoid;
         }
         h3 {
-            font-size: 12pt;
+            font-size: 11.5pt;
             color: #0f172a;
             margin-top: 18px;
             page-break-after: avoid;
@@ -127,7 +144,7 @@
         h4 {
             font-size: 10pt;
             color: #1e293b;
-            margin-top: 14px;
+            margin-top: 12px;
             margin-bottom: 4px;
             page-break-after: avoid;
         }
@@ -178,13 +195,6 @@
             color: #0f172a;
             font-weight: 600;
         }
-        blockquote {
-            border-left: 3px solid #0284c7;
-            padding-left: 12px;
-            margin: 10px 0;
-            color: #475569;
-            font-style: italic;
-        }
         .scenario-card {
             border: 1px solid #e2e8f0;
             background: #ffffff;
@@ -204,7 +214,9 @@
         <div class="cover-subtitle">
             The Definitive Production Curriculum: From Zero to Sovereign Autonomous Architect Across 950 Real-World Enterprise Scenarios
         </div>
-        <img class="cover-img" src="/home/dyna/TGS Projects/tagisan/docs/assets/tgs_masterclass_infographic.jpg" alt="Tagisan Architecture Infographic">
+        <div class="cover-img-container">
+            <img src="assets/tgs_masterclass_infographic.jpg" alt="Tagisan Architecture Infographic">
+        </div>
         <div class="cover-meta">
             Edition 4.0 • Dual-Brain Inference • BEAM Actor Concurrency • AgentShield Cyber Defense • Microsoft 365 Copilot & Frontier Stack
         </div>
@@ -292,9 +304,17 @@
         </tr>
     </table>
 
-    <div class="infographic-block">
-        <img src="/home/dyna/TGS Projects/tagisan/docs/assets/tgs_scenarios_infographic.jpg" alt="Tagisan 950 Scenarios Infographic">
-        <div class="infographic-caption">Figure 1.2: Tagisan 950 Enterprise Scenarios & Multi-Agent Swarm Orchestration Topology</div>
+    <!-- Infographics Full Plates -->
+    <div class="infographic-plate">
+        <h2>Plate I: Tagisan Core Architecture & Dual-Brain Cognitive Topology</h2>
+        <img src="assets/tgs_masterclass_infographic.jpg" alt="Tagisan Architecture Infographic">
+        <p class="caption">Figure 0.1: Full System Architecture Overview, Dual-Brain Failover & AgentShield Defense</p>
+    </div>
+
+    <div class="infographic-plate">
+        <h2>Plate II: Tagisan 950 Enterprise Scenarios & Multi-Agent Swarm Orchestration</h2>
+        <img src="assets/tgs_scenarios_infographic.jpg" alt="Tagisan 950 Scenarios Infographic">
+        <p class="caption">Figure 0.2: 19 Enterprise Domains Interconnected with Swarm Orchestration & CodeGraph Verification</p>
     </div>
 <pre><code>   ████████╗ ██████╗ ███████╗
    ╚══██╔══╝██╔════╝ ██╔════╝   TAGISAN (tgs / tagisan-rs)
@@ -306,8 +326,16 @@
 <hr style='border:0; border-top:1px solid #e2e8f0; margin: 20px 0;'>
 <h1>Visual Architecture & System Infographics</h1>
 <p>The following technical infographics synthesize the complete Tagisan sovereign agent architecture, dual-brain cognitive failover, and enterprise multi-agent swarm orchestration.</p>
-<p>![Tagisan Autonomous Agent Architecture Infographic](assets/tgs_masterclass_infographic.jpg)</p>
-<p>![Tagisan 950 Enterprise Scenarios & Swarm Orchestration Infographic](assets/tgs_scenarios_infographic.jpg)</p>
+
+            <div class="infographic-plate">
+                <img src="assets/tgs_masterclass_infographic.jpg" alt="Tagisan Autonomous Agent Architecture Infographic">
+                <p class="caption">Tagisan Autonomous Agent Architecture Infographic</p>
+            </div>
+
+            <div class="infographic-plate">
+                <img src="assets/tgs_scenarios_infographic.jpg" alt="Tagisan 950 Enterprise Scenarios & Swarm Orchestration Infographic">
+                <p class="caption">Tagisan 950 Enterprise Scenarios & Swarm Orchestration Infographic</p>
+            </div>
 <hr style='border:0; border-top:1px solid #e2e8f0; margin: 20px 0;'>
 <h1>Executive Course Overview & Learning Objectives</h1>
 <p>Welcome to the **Tagisan (`tgs`) Definitive Master Class Course**. Tagisan is a high-performance, sovereign autonomous agent engine engineered in Rust on top of the Tokio asynchronous work-stealing reactor, combined with an Erlang/Elixir BEAM OTP actor runtime and a native Gleam type-safe compiler. Designed as an uncompromised alternative to fragile, single-threaded Python agent frameworks, Tagisan delivers deterministic sub-millisecond task dispatching, dual-brain hybrid inference (local GGUF/Ollama + Google Cloud Frontier models via AntiGravity CCPA OAuth), proactive AgentShield cyber defense, and native orchestration of 500 Model Context Protocol (MCP) plug-ins.</p>
@@ -324,26 +352,81 @@
 <p>10. **The Definitive 950 Modern Environment Scenarios**: Hands-on mastery across 15 enterprise engineering domains (50 scenarios per domain) covering baseline production, HA disaster recovery, zero-trust security, sub-millisecond latency tuning, chaos self-healing, multi-tenancy, air-gapped sovereign operations, predictive telemetry, cross-cloud wire bridges, and Hegelian formal verification.</p>
 <hr style='border:0; border-top:1px solid #e2e8f0; margin: 20px 0;'>
 <h1>Comprehensive Curriculum Map</h1>
-<pre><code>flowchart TD
-    subgraph Foundations [Phase 1: Foundations &amp; Concurrency]
-        M1["Module 1: Dual-Brain &amp; Google OAuth"] --&gt; M2["Module 2: Gleam &amp; BEAM/OTP Actors"]
-        M2 --&gt; M3["Module 3: CLI Ergonomics &amp; Operations"]
-    end
-    subgraph CognitionAndDefense [Phase 2: Cognition, Defense &amp; Memory]
-        M3 --&gt; M4["Module 4: AgentShield Cyber Defense"]
-        M4 --&gt; M5["Module 5: PILOT JIT Memory Hierarchy"]
-        M5 --&gt; M6["Module 6: Swarm MoA &amp; Dialectical Debate"]
-    end
-    subgraph Extensibility [Phase 3: Universal Extensibility]
-        M6 --&gt; M7["Module 7: 500-Skill Engine (RFC-004)"]
-        M7 --&gt; M8["Module 8: Model Context Protocol (MCP 500)"]
-    end
-    subgraph Production [Phase 4: Digital Twins &amp; Production]
-        M8 --&gt; M9["Module 9: Domain Copilots (VELLA Twins)"]
-        M9 --&gt; M10["Module 10: Enterprise Hardening &amp; Air-Gap"]
-        M10 --&gt; M11["Module 11: 750 Production Scenarios"]
-        M11 --&gt; M12["Module 12: Capstone Certification Labs"]
-    end</code></pre>
+<div class="diagram-box">
+<svg width="680" height="260" viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradP1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/><stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="gradP2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+    <linearGradient id="gradP3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/><stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="gradP4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d97706"/><stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Phase 1: Foundations -->
+  <rect x="15" y="15" width="145" height="225" rx="10" fill="#f8fafc" stroke="#0284c7" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="15" y="15" width="145" height="32" rx="10" fill="url(#gradP1)"/>
+  <text x="87" y="36" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Phase 1: Foundations</text>
+  <rect x="25" y="60" width="125" height="42" rx="6" fill="#e0f2fe" stroke="#38bdf8"/>
+  <text x="87" y="85" fill="#0369a1" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 1: Dual-Brain</text>
+  <rect x="25" y="115" width="125" height="42" rx="6" fill="#e0f2fe" stroke="#38bdf8"/>
+  <text x="87" y="140" fill="#0369a1" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 2: BEAM & Gleam</text>
+  <rect x="25" y="170" width="125" height="42" rx="6" fill="#e0f2fe" stroke="#38bdf8"/>
+  <text x="87" y="195" fill="#0369a1" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 3: 37 CLI Atlas</text>
+
+  <!-- Arrow 1 -> 2 -->
+  <path d="M 160 136 L 180 136" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Phase 2: Cognition & Defense -->
+  <rect x="185" y="15" width="145" height="225" rx="10" fill="#f8fafc" stroke="#7c3aed" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="185" y="15" width="145" height="32" rx="10" fill="url(#gradP2)"/>
+  <text x="257" y="36" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Phase 2: Cognition</text>
+  <rect x="195" y="60" width="125" height="42" rx="6" fill="#ede9fe" stroke="#a78bfa"/>
+  <text x="257" y="85" fill="#5b21b6" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 4: AgentShield</text>
+  <rect x="195" y="115" width="125" height="42" rx="6" fill="#ede9fe" stroke="#a78bfa"/>
+  <text x="257" y="140" fill="#5b21b6" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 5: PILOT Memory</text>
+  <rect x="195" y="170" width="125" height="42" rx="6" fill="#ede9fe" stroke="#a78bfa"/>
+  <text x="257" y="195" fill="#5b21b6" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 6: MoA Debate</text>
+
+  <!-- Arrow 2 -> 3 -->
+  <path d="M 330 136 L 350 136" stroke="#64748b" stroke-width="2"/>
+
+  <!-- Phase 3: Extensibility -->
+  <rect x="355" y="15" width="145" height="225" rx="10" fill="#f8fafc" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="355" y="15" width="145" height="32" rx="10" fill="url(#gradP3)"/>
+  <text x="427" y="36" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Phase 3: Ecosystem</text>
+  <rect x="365" y="60" width="125" height="42" rx="6" fill="#d1fae5" stroke="#34d399"/>
+  <text x="427" y="85" fill="#065f46" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 7: 2,063+ Skills</text>
+  <rect x="365" y="115" width="125" height="42" rx="6" fill="#d1fae5" stroke="#34d399"/>
+  <text x="427" y="140" fill="#065f46" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 8: MCP 500 Hub</text>
+  <rect x="365" y="170" width="125" height="42" rx="6" fill="#d1fae5" stroke="#34d399"/>
+  <text x="427" y="195" fill="#065f46" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 9: VELLA Twins</text>
+
+  <!-- Arrow 3 -> 4 -->
+  <path d="M 500 136 L 520 136" stroke="#64748b" stroke-width="2"/>
+
+  <!-- Phase 4: Enterprise Production -->
+  <rect x="525" y="15" width="145" height="225" rx="10" fill="#f8fafc" stroke="#d97706" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="525" y="15" width="145" height="32" rx="10" fill="url(#gradP4)"/>
+  <text x="597" y="36" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Phase 4: Enterprise</text>
+  <rect x="535" y="60" width="125" height="42" rx="6" fill="#fef3c7" stroke="#fbbf24"/>
+  <text x="597" y="85" fill="#92400e" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 10: MS 365 Copilot</text>
+  <rect x="535" y="115" width="125" height="42" rx="6" fill="#fef3c7" stroke="#fbbf24"/>
+  <text x="597" y="140" fill="#92400e" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 11: Power Platform</text>
+  <rect x="535" y="170" width="125" height="42" rx="6" fill="#fef3c7" stroke="#fbbf24"/>
+  <text x="597" y="195" fill="#92400e" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Mod 13: 950 Scenarios</text>
+</svg>
+<p class="figure-caption">Figure 1.1: Tagisan (tgs) Comprehensive Curriculum Architecture & Progression Phases</p>
+</div>
 <hr style='border:0; border-top:1px solid #e2e8f0; margin: 20px 0;'>
 <h1>Module 1: Dual-Brain Inference & Google Cloud Frontier Integration</h1>
 <h2>1.1 The Dual-Brain Architectural Paradigm</h2>
@@ -351,30 +434,67 @@
 <li>**Cloud-Only Dependence**: High token costs, network latency, vendor lock-in, rate limit throttling, and catastrophic downtime when public APIs experience outages.</li>
 <li>**Local-Only Constraints**: Limited model parameter sizes (7B-14B), reduced reasoning capacity for complex multi-file refactoring, and high local GPU/VRAM hardware requirements.</li>
 <p>Tagisan resolves this with **Dual-Brain Hybrid Failover**:</p>
-<pre><code>sequenceDiagram
-    autonumber
-    actor User as Engineer / User
-    participant TGS as Tagisan Engine Core
-    participant Local as Local Engine (Ollama / GGUF)
-    participant Auth as Google OAuth Manager
-    participant Cloud as Cloud Frontier (CCPA Gateway)
-    participant Shield as AgentShield Auditor
+<div class="diagram-box">
+<svg width="680" height="280" viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+  <!-- Actor Boxes -->
+  <rect x="20" y="15" width="100" height="35" rx="5" fill="#0f172a"/>
+  <text x="70" y="37" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" text-anchor="middle">Engineer</text>
+  <line x1="70" y1="50" x2="70" y2="260" stroke="#cbd5e1" stroke-dasharray="4"/>
 
-    User-&gt;&gt;TGS: tgs ask 'Complex System Refactor'
-    TGS-&gt;&gt;Shield: Pre-Execution Semantic Inspection
-    Shield--&gt;&gt;TGS: Approved (Safe)
-    alt Google OAuth Active (Default)
-        TGS-&gt;&gt;Auth: Check Token Expiry (90s Safety Cushion)
-        opt Token Expired or &lt; 90s Left
-            Auth-&gt;&gt;Auth: Background Refresh via refresh_token
-        end
-        TGS-&gt;&gt;Cloud: POST daily-cloudcode-pa.googleapis.com (User-Agent: antigravity/2.0.0)
-        Cloud--&gt;&gt;TGS: High-Parameter Frontier Response
-    else Logged Out or Offline
-        TGS-&gt;&gt;Local: Zero-Cost Offline Inference (smollm2 / qwen2.5)
-        Local--&gt;&gt;TGS: Local Generation Output
-    end
-    TGS-&gt;&gt;User: Streamed Sovereign Output</code></pre>
+  <rect x="150" y="15" width="100" height="35" rx="5" fill="#0284c7"/>
+  <text x="200" y="37" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" text-anchor="middle">TGS Core</text>
+  <line x1="200" y1="50" x2="200" y2="260" stroke="#cbd5e1" stroke-dasharray="4"/>
+
+  <rect x="280" y="15" width="100" height="35" rx="5" fill="#7c3aed"/>
+  <text x="330" y="37" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" text-anchor="middle">AgentShield</text>
+  <line x1="330" y1="50" x2="330" y2="260" stroke="#cbd5e1" stroke-dasharray="4"/>
+
+  <rect x="410" y="15" width="110" height="35" rx="5" fill="#059669"/>
+  <text x="465" y="37" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" text-anchor="middle">Google OAuth (CCPA)</text>
+  <line x1="465" y1="50" x2="465" y2="260" stroke="#cbd5e1" stroke-dasharray="4"/>
+
+  <rect x="550" y="15" width="110" height="35" rx="5" fill="#d97706"/>
+  <text x="605" y="37" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" text-anchor="middle">Local Ollama Edge</text>
+  <line x1="605" y1="50" x2="605" y2="260" stroke="#cbd5e1" stroke-dasharray="4"/>
+
+  <!-- Messages -->
+  <!-- 1. tgs ask -->
+  <line x1="70" y1="75" x2="195" y2="75" stroke="#0284c7" stroke-width="1.8"/>
+  <polygon points="195,75 187,71 187,79" fill="#0284c7"/>
+  <text x="135" y="70" fill="#0369a1" font-family="-apple-system, sans-serif" font-size="8.5" font-weight="600" text-anchor="middle">1: tgs ask "Refactor"</text>
+
+  <!-- 2. Pre-execution scan -->
+  <line x1="200" y1="105" x2="325" y2="105" stroke="#7c3aed" stroke-width="1.8"/>
+  <polygon points="325,105 317,101 317,109" fill="#7c3aed"/>
+  <text x="262" y="100" fill="#5b21b6" font-family="-apple-system, sans-serif" font-size="8.5" font-weight="600" text-anchor="middle">2: AST Inspection</text>
+
+  <!-- 3. Approved -->
+  <line x1="330" y1="130" x2="205" y2="130" stroke="#7c3aed" stroke-width="1.8" stroke-dasharray="3"/>
+  <polygon points="205,130 213,126 213,134" fill="#7c3aed"/>
+  <text x="262" y="125" fill="#5b21b6" font-family="-apple-system, sans-serif" font-size="8.5" font-weight="600" text-anchor="middle">3: Approved (Clean)</text>
+
+  <!-- Alt Cloud vs Local -->
+  <rect x="180" y="145" width="480" height="75" rx="5" fill="#f8fafc" stroke="#94a3b8" stroke-dasharray="3"/>
+  <text x="190" y="160" fill="#475569" font-family="-apple-system, sans-serif" font-size="8" font-weight="700">ALT [Active Google OAuth CCPA Session]</text>
+
+  <!-- Cloud POST -->
+  <line x1="200" y1="175" x2="460" y2="175" stroke="#059669" stroke-width="1.8"/>
+  <polygon points="460,175 452,171 452,179" fill="#059669"/>
+  <text x="330" y="170" fill="#065f46" font-family="-apple-system, sans-serif" font-size="8.5" font-weight="600" text-anchor="middle">4a: POST Frontier SSE (gemini-2.5-flash)</text>
+
+  <!-- Fallback local -->
+  <text x="190" y="195" fill="#475569" font-family="-apple-system, sans-serif" font-size="8" font-weight="700">ELSE [Air-Gapped / Offline / Rate-Limited]</text>
+  <line x1="200" y1="210" x2="600" y2="210" stroke="#d97706" stroke-width="1.8"/>
+  <polygon points="600,210 592,206 592,214" fill="#d97706"/>
+  <text x="400" y="205" fill="#92400e" font-family="-apple-system, sans-serif" font-size="8.5" font-weight="600" text-anchor="middle">4b: Zero-Cost Edge Inference (qwen2.5-coder / smollm2)</text>
+
+  <!-- Stream Output to User -->
+  <line x1="200" y1="240" x2="75" y2="240" stroke="#0284c7" stroke-width="2"/>
+  <polygon points="75,240 83,236 83,244" fill="#0284c7"/>
+  <text x="137" y="235" fill="#0369a1" font-family="-apple-system, sans-serif" font-size="8.5" font-weight="600" text-anchor="middle">5: Sub-300ms Output</text>
+</svg>
+<p class="figure-caption">Figure 1.2: Tagisan Dual-Brain Hybrid Cognitive Sequence & Failover Topology</p>
+</div>
 <h2>1.2 Google Web OAuth Architecture & AntiGravity CCPA Endpoint</h2>
 <p>Tagisan integrates directly with Google's internal CloudCode Platform Assistant (CCPA) backend, mirroring the authentication and request envelope used by Google's official AntiGravity 2.0 CLI:</p>
 <li>**Endpoint**: `https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse`</li>
@@ -400,17 +520,58 @@
 <h1>Module 2: Polyglot Concurrency: Native Gleam & BEAM/OTP Actor Runtime</h1>
 <h2>2.1 The Erlang/Elixir BEAM Actor Philosophy</h2>
 <p>In high-throughput agent systems, shared-memory multi-threading leads to lock contention, race conditions, and deadlocks. Tagisan incorporates the **Erlang BEAM actor model**, where every autonomous agent task executes inside an isolated, lightweight process with its own private heap and message mailbox.</p>
-<pre><code>graph TD
-    RootSup["Root Supervisor (one_for_all)"] --&gt; AgentSup["Agent Supervisor (one_for_one)"]
-    RootSup --&gt; SecuritySup["AgentShield Supervisor (one_for_one)"]
-    RootSup --&gt; StorageSup["Memory Supervisor (rest_for_one)"]
-    
-    AgentSup --&gt; Worker1["Worker Actor 1 (Analysis)"]
-    AgentSup --&gt; Worker2["Worker Actor 2 (Code Gen)"]
-    AgentSup --&gt; Worker3["Worker Actor 3 (Testing)"]
-    
-    StorageSup --&gt; CacheActor["Cache GenServer"]
-    StorageSup --&gt; SQLiteActor["SQLite Persistent Writer"]</code></pre>
+<div class="diagram-box">
+<svg width="660" height="240" viewBox="0 0 660 240" xmlns="http://www.w3.org/2000/svg">
+  <!-- Root Supervisor -->
+  <rect x="250" y="10" width="160" height="40" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="330" y="35" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">Root Supervisor (one_for_all)</text>
+
+  <!-- Connecting Lines -->
+  <path d="M 330 50 L 120 90 M 330 50 L 330 90 M 330 50 L 540 90" stroke="#64748b" stroke-width="1.5"/>
+
+  <!-- Agent Supervisor -->
+  <rect x="40" y="90" width="160" height="35" rx="6" fill="#0284c7"/>
+  <text x="120" y="112" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Agent Supervisor (one_for_one)</text>
+
+  <!-- Security Supervisor -->
+  <rect x="250" y="90" width="160" height="35" rx="6" fill="#7c3aed"/>
+  <text x="330" y="112" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Security Sup (one_for_one)</text>
+
+  <!-- Memory Supervisor -->
+  <rect x="460" y="90" width="160" height="35" rx="6" fill="#059669"/>
+  <text x="540" y="112" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" text-anchor="middle">Memory Sup (rest_for_one)</text>
+
+  <!-- Worker Connecting Lines -->
+  <path d="M 120 125 L 50 160 M 120 125 L 120 160 M 120 125 L 190 160" stroke="#94a3b8" stroke-width="1.2"/>
+  <path d="M 330 125 L 290 160 M 330 125 L 370 160" stroke="#94a3b8" stroke-width="1.2"/>
+  <path d="M 540 125 L 500 160 M 540 125 L 580 160" stroke="#94a3b8" stroke-width="1.2"/>
+
+  <!-- Worker Actors -->
+  <rect x="15" y="160" width="70" height="40" rx="5" fill="#f1f5f9" stroke="#0284c7"/>
+  <text x="50" y="184" fill="#0f172a" font-family="-apple-system, sans-serif" font-size="8" font-weight="600" text-anchor="middle">Analysis</text>
+
+  <rect x="90" y="160" width="60" height="40" rx="5" fill="#f1f5f9" stroke="#0284c7"/>
+  <text x="120" y="184" fill="#0f172a" font-family="-apple-system, sans-serif" font-size="8" font-weight="600" text-anchor="middle">CodeGen</text>
+
+  <rect x="155" y="160" width="70" height="40" rx="5" fill="#f1f5f9" stroke="#0284c7"/>
+  <text x="190" y="184" fill="#0f172a" font-family="-apple-system, sans-serif" font-size="8" font-weight="600" text-anchor="middle">KaniProver</text>
+
+  <!-- Security Workers -->
+  <rect x="250" y="160" width="80" height="40" rx="5" fill="#f1f5f9" stroke="#7c3aed"/>
+  <text x="290" y="184" fill="#0f172a" font-family="-apple-system, sans-serif" font-size="8" font-weight="600" text-anchor="middle">ThreatIntel</text>
+
+  <rect x="335" y="160" width="75" height="40" rx="5" fill="#f1f5f9" stroke="#7c3aed"/>
+  <text x="372" y="184" fill="#0f172a" font-family="-apple-system, sans-serif" font-size="8" font-weight="600" text-anchor="middle">LandlockJail</text>
+
+  <!-- Memory Workers -->
+  <rect x="455" y="160" width="80" height="40" rx="5" fill="#f1f5f9" stroke="#059669"/>
+  <text x="495" y="184" fill="#0f172a" font-family="-apple-system, sans-serif" font-size="8" font-weight="600" text-anchor="middle">WorkingRAM</text>
+
+  <rect x="540" y="160" width="80" height="40" rx="5" fill="#f1f5f9" stroke="#059669"/>
+  <text x="580" y="184" fill="#0f172a" font-family="-apple-system, sans-serif" font-size="8" font-weight="600" text-anchor="middle">SQLitePersist</text>
+</svg>
+<p class="figure-caption">Figure 2.1: Erlang BEAM / OTP Actor Supervision Hierarchy & Fault Isolation Tree</p>
+</div>
 <h2>2.2 Supervisor Restart Strategies</h2>
 <li>**`one_for_one`**: If a child actor process crashes, only that specific actor is restarted. Sibling actors continue running uninterrupted.</li>
 <li>**`one_for_all`**: If any child process crashes, all sibling processes in the pool are terminated and restarted in sequence.</li>
@@ -490,14 +651,41 @@ tgs auth logout gemini</code></pre>
 <p>AgentShield operates at two distinct pre-execution checkpoints:</p>
 <p>1. **Semantic AST Inspection**: Intercepts tool calls and shell strings *before* process spawning. Parses command syntax trees to detect dangerous tokens and blacklisted operations.</p>
 <p>2. **Linux Landlock LSM Kernel Isolation**: Unprivileged Landlock security modules lock down filesystem access, strictly confining agent subprocesses to safe scratch directories (e.g. `/tmp/scratch` and the current workspace).</p>
-<pre><code>flowchart LR
-    ToolCall["Agent Proposes Tool Call"] --&gt; AST["AgentShield AST Scanner"]
-    AST --&gt; Check1{"Blacklisted Syscall or Shell Bomb?"}
-    Check1 -- Yes --&gt; Block1["🚨 Hard Block &amp; SIGKILL"]
-    Check1 -- No --&gt; Check2{"Exfiltration Target? (.env, id_rsa)"}
-    Check2 -- Yes --&gt; Block2["🚨 Access Denied &amp; Alert"]
-    Check2 -- No --&gt; Landlock["Landlock LSM Sandbox Jail"]
-    Landlock --&gt; Exec["Safe Sovereign Execution"]</code></pre>
+<div class="diagram-box">
+<svg width="680" height="230" viewBox="0 0 680 230" xmlns="http://www.w3.org/2000/svg">
+  <!-- Core TGS Copilot -->
+  <rect x="250" y="75" width="180" height="75" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+  <text x="340" y="105" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="12" font-weight="800" text-anchor="middle">TAGISAN COPILOT HUB</text>
+  <text x="340" y="125" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="9" text-anchor="middle">56 First-Class Enterprise Tools</text>
+  <text x="340" y="138" fill="#cbd5e1" font-family="-apple-system, sans-serif" font-size="8" text-anchor="middle">Entra ID • WAM • 1ES SDL • OpenAPI</text>
+
+  <!-- Connectors -->
+  <!-- Top Left: Substrate -->
+  <rect x="20" y="20" width="170" height="45" rx="6" fill="#f8fafc" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="105" y="42" fill="#0284c7" font-family="-apple-system, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle">Microsoft Substrate</text>
+  <text x="105" y="55" fill="#64748b" font-family="-apple-system, sans-serif" font-size="8" text-anchor="middle">Semantic Index Ingest with ACLs</text>
+  <line x1="190" y1="50" x2="250" y2="85" stroke="#0284c7" stroke-width="1.5"/>
+
+  <!-- Top Right: Copilot Studio -->
+  <rect x="490" y="20" width="170" height="45" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="575" y="42" fill="#7c3aed" font-family="-apple-system, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle">Copilot Studio & Plugins</text>
+  <text x="575" y="55" fill="#64748b" font-family="-apple-system, sans-serif" font-size="8" text-anchor="middle">OpenAPI 3.0 & PKZIP Bundles</text>
+  <line x1="490" y1="50" x2="430" y2="85" stroke="#7c3aed" stroke-width="1.5"/>
+
+  <!-- Bottom Left: Power Platform -->
+  <rect x="20" y="160" width="170" height="45" rx="6" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <text x="105" y="182" fill="#059669" font-family="-apple-system, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle">Power Platform Hub</text>
+  <text x="105" y="195" fill="#64748b" font-family="-apple-system, sans-serif" font-size="8" text-anchor="middle">Power Automate • Apps • Dataverse</text>
+  <line x1="190" y1="175" x2="250" y2="140" stroke="#059669" stroke-width="1.5"/>
+
+  <!-- Bottom Right: 1ES SDL & IcM -->
+  <rect x="490" y="160" width="170" height="45" rx="6" fill="#f8fafc" stroke="#d97706" stroke-width="1.5"/>
+  <text x="575" y="182" fill="#d97706" font-family="-apple-system, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle">1ES SDL & IcM War Room</text>
+  <text x="575" y="195" fill="#64748b" font-family="-apple-system, sans-serif" font-size="8" text-anchor="middle">CredScan • SPDX SBOM • Live-Site</text>
+  <line x1="490" y1="175" x2="430" y2="140" stroke="#d97706" stroke-width="1.5"/>
+</svg>
+<p class="figure-caption">Figure 10.1: Microsoft 365 Copilot & Enterprise Power Platform Integration Topology</p>
+</div>
 <hr style='border:0; border-top:1px solid #e2e8f0; margin: 20px 0;'>
 <h1>Module 5: PILOT Just-In-Time Multi-Tier Memory</h1>
 <h2>5.1 The 3-Tier Cognitive Memory Hierarchy</h2>
@@ -561,12 +749,41 @@ tgs run --skill "k8s-pod-diagnostics,postgresql-zero-downtime-migrator" \
 <h1>Module 9: Domain Copilots & Digital Twin Engineering (VELLA)</h1>
 <h2>9.1 VELLA: The Cyber-Physical Digital Twin Engine</h2>
 <p>VELLA bridges LLM cognitive reasoning with deterministic real-time cyber-physical systems:</p>
-<pre><code>flowchart TD
-    VELLA[VELLA Digital Twin Core] --&gt; SCADA["Industrial SCADA &amp; IoT (Modbus / OPC-UA)"]
-    VELLA --&gt; Quant["Quantitative Finance &amp; Risk (VaR / FIX)"]
-    VELLA --&gt; Aero["Aerospace &amp; Satellites (SGP4 TLE / CCSDS)"]
-    VELLA --&gt; Bio["Bioinformatics &amp; Genomics (FASTA / VCF)"]
-    VELLA --&gt; Web3["Web3 Guardian (Smart Contract Auditing)"]</code></pre>
+<div class="diagram-box">
+<svg width="680" height="230" viewBox="0 0 680 230" xmlns="http://www.w3.org/2000/svg">
+  <!-- Core TGS Copilot -->
+  <rect x="250" y="75" width="180" height="75" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="2"/>
+  <text x="340" y="105" fill="#38bdf8" font-family="-apple-system, sans-serif" font-size="12" font-weight="800" text-anchor="middle">TAGISAN COPILOT HUB</text>
+  <text x="340" y="125" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="9" text-anchor="middle">56 First-Class Enterprise Tools</text>
+  <text x="340" y="138" fill="#cbd5e1" font-family="-apple-system, sans-serif" font-size="8" text-anchor="middle">Entra ID • WAM • 1ES SDL • OpenAPI</text>
+
+  <!-- Connectors -->
+  <!-- Top Left: Substrate -->
+  <rect x="20" y="20" width="170" height="45" rx="6" fill="#f8fafc" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="105" y="42" fill="#0284c7" font-family="-apple-system, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle">Microsoft Substrate</text>
+  <text x="105" y="55" fill="#64748b" font-family="-apple-system, sans-serif" font-size="8" text-anchor="middle">Semantic Index Ingest with ACLs</text>
+  <line x1="190" y1="50" x2="250" y2="85" stroke="#0284c7" stroke-width="1.5"/>
+
+  <!-- Top Right: Copilot Studio -->
+  <rect x="490" y="20" width="170" height="45" rx="6" fill="#f8fafc" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="575" y="42" fill="#7c3aed" font-family="-apple-system, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle">Copilot Studio & Plugins</text>
+  <text x="575" y="55" fill="#64748b" font-family="-apple-system, sans-serif" font-size="8" text-anchor="middle">OpenAPI 3.0 & PKZIP Bundles</text>
+  <line x1="490" y1="50" x2="430" y2="85" stroke="#7c3aed" stroke-width="1.5"/>
+
+  <!-- Bottom Left: Power Platform -->
+  <rect x="20" y="160" width="170" height="45" rx="6" fill="#f8fafc" stroke="#059669" stroke-width="1.5"/>
+  <text x="105" y="182" fill="#059669" font-family="-apple-system, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle">Power Platform Hub</text>
+  <text x="105" y="195" fill="#64748b" font-family="-apple-system, sans-serif" font-size="8" text-anchor="middle">Power Automate • Apps • Dataverse</text>
+  <line x1="190" y1="175" x2="250" y2="140" stroke="#059669" stroke-width="1.5"/>
+
+  <!-- Bottom Right: 1ES SDL & IcM -->
+  <rect x="490" y="160" width="170" height="45" rx="6" fill="#f8fafc" stroke="#d97706" stroke-width="1.5"/>
+  <text x="575" y="182" fill="#d97706" font-family="-apple-system, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle">1ES SDL & IcM War Room</text>
+  <text x="575" y="195" fill="#64748b" font-family="-apple-system, sans-serif" font-size="8" text-anchor="middle">CredScan • SPDX SBOM • Live-Site</text>
+  <line x1="490" y1="175" x2="430" y2="140" stroke="#d97706" stroke-width="1.5"/>
+</svg>
+<p class="figure-caption">Figure 10.1: Microsoft 365 Copilot & Enterprise Power Platform Integration Topology</p>
+</div>
 <h2>9.2 Live VELLA CLI Commands</h2>
 <pre><code># Industrial SCADA telemetry inspection
 tgs vella scada --endpoint "tcp://192.168.1.100:502" --analog 85.4 --alarm "trip_cooling"
