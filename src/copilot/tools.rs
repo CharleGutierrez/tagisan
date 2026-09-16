@@ -43,6 +43,10 @@ pub use crate::copilot::dataverse::CopilotDataverseSyncTool;
 pub use crate::copilot::power_automate::CopilotPowerAutomateTool;
 pub use crate::copilot::powerplatform::CopilotPowerPlatformPackagerTool;
 pub use crate::copilot::access::CopilotAccessTool;
+pub use crate::copilot::bicep::CopilotBicepTool;
+pub use crate::copilot::defender::CopilotDefenderTool;
+pub use crate::copilot::powerbi::CopilotPowerBiTool;
+pub use crate::copilot::vscode::CopilotVsCodeTool;
 
 use crate::copilot::graph::{ActionItem, GraphClient, TranscriptEntry};
 use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};

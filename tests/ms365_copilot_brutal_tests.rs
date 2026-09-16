@@ -3185,6 +3185,8 @@ async fn test_pure_rust_ooxml_generator_suite() {
                 "Zero-egress hardware airgapping ensures complete regulatory sovereignty.".to_string(),
             ],
             table: None,
+            callouts: vec![],
+            custom_style: None,
         },
         DocxSection {
             heading: "Security & Governance".to_string(),
@@ -3193,6 +3195,8 @@ async fn test_pure_rust_ooxml_generator_suite() {
                 "Purview classification inheritance with AgentShield active scanning.".to_string(),
             ],
             table: None,
+            callouts: vec![],
+            custom_style: None,
         },
     ];
 

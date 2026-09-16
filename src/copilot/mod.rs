@@ -10,11 +10,13 @@ pub mod ado;
 pub mod airgap;
 pub mod auth;
 pub mod batch;
+pub mod bicep;
 pub mod bot;
 pub mod cae;
 pub mod calendar;
 pub mod connector;
 pub mod dataverse;
+pub mod defender;
 pub mod delta;
 pub mod excel;
 pub mod fabric;
@@ -31,6 +33,7 @@ pub mod planner;
 pub mod plugin;
 pub mod power_automate;
 pub mod powerplatform;
+pub mod powerbi;
 pub mod purview;
 pub mod sdl;
 pub mod sentinel;
@@ -42,7 +45,13 @@ pub mod substrate;
 pub mod throttling;
 pub mod tools;
 pub mod viva;
+pub mod vscode;
 pub mod wam;
+
+pub use bicep::{BicepAuditReport, BicepEngine, BicepGraph, BicepResource, CopilotBicepTool, IacBlastRadiusReport, InvariantViolation};
+pub use defender::{CopilotDefenderTool, DefenderCveAlert, DefenderEngine, DefenderRemediationAction, ReachabilityStatus, TriageFinding, VirtualPatch};
+pub use powerbi::{CopilotPowerBiTool, PowerBiEngine, TmdlColumn, TmdlDatabase, TmdlMeasure, TmdlPartition, TmdlRelationship, TmdlTable, TmdlValidationResult};
+pub use vscode::{CopilotChatRequest, CopilotChatResponse, CopilotVsCodeTool, GutterDecorationPayload, LspCodeAction, LspCodeLens, LspDiagnostic, LspDocumentHighlight, LspPosition, LspRange, VsCodeEngine, VsCodeExtensionManifestGenerator};
 
 pub use adr::{AdrDocument, AdrEngine, AdrSyncReport, CopilotAdrSyncTool};
 pub use auth::{
