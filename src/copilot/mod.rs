@@ -14,16 +14,19 @@ pub mod bicep;
 pub mod bot;
 pub mod cae;
 pub mod calendar;
+pub mod calling;
 pub mod connector;
 pub mod dataverse;
 pub mod defender;
 pub mod delta;
+pub mod delta_lake;
 pub mod excel;
 pub mod fabric;
 pub mod graph;
 pub mod hardware;
 pub mod icm;
 pub mod incident;
+pub mod jet_binary;
 pub mod jwe;
 pub mod loop_pages;
 pub mod obo;
@@ -35,6 +38,7 @@ pub mod power_automate;
 pub mod powerplatform;
 pub mod powerbi;
 pub mod purview;
+pub mod sarif;
 pub mod sdl;
 pub mod sentinel;
 pub mod sharepoint_crawler;
@@ -210,3 +214,29 @@ pub use visio::{
     VisioDocument, VisioPackageVerification, VisioPackager, VisioPage, VisioProperty,
     VisioPropertyType, VisioShape, VisioTranspiler,
 };
+
+pub use sarif::{
+    AzurePipelinesConfig, AzurePipelinesGenerator, CopilotSarifTool, SarifArtifactLocation,
+    SarifCodeFlow, SarifDocument, SarifDriver, SarifEngine, SarifHelp, SarifInvocation,
+    SarifLevel, SarifLocation, SarifMessage, SarifPhysicalLocation, SarifRegion, SarifResult,
+    SarifRule, SarifRuleConfig, SarifRun, SarifSnippet, SarifThreadFlow, SarifThreadFlowLocation,
+    SarifTool, DEFAULT_TOOL_INFO_URI, DEFAULT_TOOL_NAME, DEFAULT_TOOL_VERSION, SARIF_SCHEMA_2_1_0,
+    SARIF_VERSION,
+};
+pub use jet_binary::{
+    CopilotJetBinaryTool, JetBinaryEngine, JetColumnDef, JetColumnType, JetDatabase,
+    JetHeaderInfo, JetIntegrityReport, JetTableDef, JetValue, JetVersion, ACE_FORMAT_STRING,
+    JET_FORMAT_STRING, JET_MAGIC_PREFIX, PAGE_SIZE_ACE, PAGE_SIZE_JET3, PAGE_TYPE_DATA,
+    PAGE_TYPE_INDEX, PAGE_TYPE_LEAF, PAGE_TYPE_TDEF, PAGE_TYPE_USAGE_MAP,
+};
+pub use calling::{
+    AdaptiveCardIntervention, AudioStreamStats, CallParticipant, CallSession, CallState,
+    CopilotCallingTool, TeamsCallingEngine, TranscriptSegment, TriggerDetection, WebRtcNegotiator,
+};
+pub use delta_lake::{
+    CopilotDeltaLakeTool, DeltaActionEnvelope, DeltaAddAction, DeltaCommitInfo, DeltaFileStats,
+    DeltaFormatSpec, DeltaLakeEngine, DeltaMetaData, DeltaProtocol, DeltaRemoveAction,
+    DeltaTableSnapshot, OneLakePathMapping, DEFAULT_ENGINE_INFO, ONELAKE_BLOB_BASE_URL,
+    ONELAKE_DFS_BASE_URL,
+};
+

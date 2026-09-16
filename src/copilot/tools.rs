@@ -48,6 +48,10 @@ pub use crate::copilot::defender::CopilotDefenderTool;
 pub use crate::copilot::powerbi::CopilotPowerBiTool;
 pub use crate::copilot::vscode::CopilotVsCodeTool;
 pub use crate::copilot::visio::CopilotVisioTool;
+pub use crate::copilot::sarif::CopilotSarifTool;
+pub use crate::copilot::jet_binary::CopilotJetBinaryTool;
+pub use crate::copilot::calling::CopilotCallingTool;
+pub use crate::copilot::delta_lake::CopilotDeltaLakeTool;
 
 use crate::copilot::graph::{ActionItem, GraphClient, TranscriptEntry};
 use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};

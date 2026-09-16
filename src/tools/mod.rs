@@ -74,6 +74,7 @@ pub use crate::copilot::{
     CopilotStreamGatewayTool, CopilotSubscriptionTool, CopilotTeamsPostTool, CopilotUniversalActionTool,
     CopilotWorkloadIdentityTool, CopilotAccessTool, CopilotBicepTool, CopilotDefenderTool,
     CopilotPowerBiTool, CopilotVsCodeTool, CopilotVisioTool,
+    CopilotSarifTool, CopilotJetBinaryTool, CopilotCallingTool, CopilotDeltaLakeTool,
 };
 
 
@@ -258,6 +259,11 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotBicepTool::default());
         registry.register_tool(crate::copilot::CopilotPowerBiTool::default());
         registry.register_tool(crate::copilot::CopilotVisioTool::default());
+        // Microsoft Advanced Systems Subsystems (SARIF 2.1.0, Jet/ACE Binary, Calling Bot, Delta Lake)
+        registry.register_tool(crate::copilot::CopilotSarifTool::default());
+        registry.register_tool(crate::copilot::CopilotJetBinaryTool::default());
+        registry.register_tool(crate::copilot::CopilotCallingTool::default());
+        registry.register_tool(crate::copilot::CopilotDeltaLakeTool::default());
         registry
     }
 
@@ -412,6 +418,11 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotBicepTool::default());
         registry.register_tool(crate::copilot::CopilotPowerBiTool::default());
         registry.register_tool(crate::copilot::CopilotVisioTool::default());
+        // Microsoft Advanced Systems Subsystems (SARIF 2.1.0, Jet/ACE Binary, Calling Bot, Delta Lake)
+        registry.register_tool(crate::copilot::CopilotSarifTool::default());
+        registry.register_tool(crate::copilot::CopilotJetBinaryTool::default());
+        registry.register_tool(crate::copilot::CopilotCallingTool::default());
+        registry.register_tool(crate::copilot::CopilotDeltaLakeTool::default());
         registry
     }
 

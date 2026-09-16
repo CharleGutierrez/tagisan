@@ -705,22 +705,121 @@ impl PowerPlatformPackagerEngine {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "symbol": { "type": "string", "x-ms-summary": "Target Symbol" },
-                                        "path": { "type": "string", "x-ms-summary": "File Path" }
+                                        "symbol": {
+                                            "type": "string",
+                                            "description": "Symbol name to analyze",
+                                            "x-ms-summary": "Target Symbol"
+                                        },
+                                        "path": {
+                                            "type": "string",
+                                            "description": "Source path or directory",
+                                            "x-ms-summary": "File Path"
+                                        },
+                                        "format": {
+                                            "type": "string",
+                                            "description": "Format: 'adaptive_card', 'html', 'json'",
+                                            "x-ms-summary": "Output Format"
+                                        }
                                     },
                                     "required": ["symbol"]
                                 }
                             }
                         ],
                         "responses": {
-                            "200": { "description": "Blast radius telemetry report and Adaptive Card JSON" }
+                            "200": {
+                                "description": "Blast radius telemetry report and Adaptive Card JSON",
+                                "schema": { "type": "object" }
+                            }
+                        }
+                    }
+                },
+                "/copilot/dataverse/adr": {
+                    "post": {
+                        "operationId": "SyncDataverseAdr",
+                        "summary": "Synchronize Architecture Decision to Dataverse",
+                        "description": "Upserts an Architectural Decision Record into Dataverse table tgs_architecturaldecisions.",
+                        "x-ms-summary": "Sync ADR to Dataverse",
+                        "x-ms-visibility": "important",
+                        "parameters": [
+                            {
+                                "name": "body",
+                                "in": "body",
+                                "required": true,
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "decision_id": { "type": "string", "x-ms-summary": "Decision ID" },
+                                        "title": { "type": "string", "x-ms-summary": "Title" },
+                                        "thesis": { "type": "string", "x-ms-summary": "Thesis" },
+                                        "synthesis": { "type": "string", "x-ms-summary": "Synthesis" },
+                                        "purview_sensitivity": { "type": "string", "x-ms-summary": "Purview Sensitivity" }
+                                    },
+                                    "required": ["decision_id", "title"]
+                                }
+                            }
+                        ],
+                        "responses": {
+                            "200": { "description": "Dataverse record created or updated" }
+                        }
+                    }
+                },
+                "/copilot/incident/autofix": {
+                    "post": {
+                        "operationId": "TriageIncidentAutofix",
+                        "summary": "Triage CI/CD Incident & Apply Surgical Autofix",
+                        "description": "Parses panic traces, identifies root causes, and applies verified patches.",
+                        "x-ms-summary": "Triage & Autofix CI Incident",
+                        "x-ms-visibility": "important",
+                        "parameters": [
+                            {
+                                "name": "body",
+                                "in": "body",
+                                "required": true,
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error_log": { "type": "string", "x-ms-summary": "Error Log" },
+                                        "auto_patch": { "type": "boolean", "x-ms-summary": "Auto Apply Patch" }
+                                    },
+                                    "required": ["error_log"]
+                                }
+                            }
+                        ],
+                        "responses": {
+                            "200": { "description": "Autofix diagnosis and patch diff" }
+                        }
+                    }
+                },
+                "/copilot/ooxml/export": {
+                    "post": {
+                        "operationId": "ExportOoxmlDocument",
+                        "summary": "Generate Word, Excel, and PowerPoint Artifacts",
+                        "description": "Produces pure-Rust OOXML packages (.docx, .xlsx, .pptx).",
+                        "x-ms-summary": "Generate OOXML Office Document",
+                        "parameters": [
+                            {
+                                "name": "body",
+                                "in": "body",
+                                "required": true,
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "title": { "type": "string", "x-ms-summary": "Document Title" },
+                                        "format": { "type": "string", "x-ms-summary": "Format: docx, xlsx, pptx" }
+                                    },
+                                    "required": ["title"]
+                                }
+                            }
+                        ],
+                        "responses": {
+                            "200": { "description": "Export status and byte counts" }
                         }
                     }
                 }
             }
         });
 
-        (spec, 2)
+        (spec, 5)
     }
 
     /// Build a certified Power Platform Solution ZIP package
@@ -920,12 +1019,49 @@ impl ToolHandler for CopilotPowerPlatformPackagerTool {
 
         match action {
             "generate_swagger" => {
-                let (spec, _count) = self.engine.generate_custom_connector_swagger(base_url);
-                Ok(serde_json::to_string_pretty(&spec)?)
+                let (spec, count) = self.engine.generate_custom_connector_swagger(base_url);
+
+                Ok(format!(
+                    "### 🔌 Microsoft Power Platform Custom Connector Swagger Generated\n\n\
+                    - **Base Host:** `{}`\n\
+                    - **Operations Count:** {}\n\
+                    - **Authentication:** `OAuth 2.0 (Azure AD / Entra ID)`\n\
+                    - **Target Ecosystems:** Power Apps Canvas/Model, Power Automate Cloud Flows\n\n\
+                    ```json\n{}\n```\n",
+                    base_url,
+                    count,
+                    serde_json::to_string_pretty(&spec)?
+                ))
             }
             "package_solution_zip" => {
                 let report = self.engine.package_solution_zip(Path::new(output_dir), solution_name)?;
-                Ok(serde_json::to_string_pretty(&report)?)
+
+                Ok(format!(
+                    "### 📦 Microsoft Power Platform Solution ZIP Packaged\n\n\
+                    - **ZIP Archive:** `{}`\n\
+                    - **Solution Name:** `{}`\n\
+                    - **Solution Version:** `{}`\n\
+                    - **Archive Size:** {} bytes\n\
+                    - **Connector Operations:** {}\n\
+                    - **Power Platform Ready:** {}\n\n\
+                    #### Included Files in Solution Package:\n\
+                    - `[Content_Types].xml` (Open Packaging Conventions)\n\
+                    - `solution.xml` (Power Platform Solution Manifest & Components)\n\
+                    - `customizations.xml` (Dataverse Entities & Connector Metadata)\n\
+                    - `custom_connector.swagger.json` (OpenAPI Specification)\n\
+                    - `icon.png` (96x96 Fluent Power Platform App Icon)\n\n\
+                    > **1-Click Import Instructions:**\n\
+                    > 1. Navigate to [make.powerapps.com](https://make.powerapps.com) or [make.powerautomate.com](https://make.powerautomate.com).\n\
+                    > 2. Go to **Solutions > Import Solution**.\n\
+                    > 3. Upload `{}` and click **Next > Import**.\n",
+                    report.package_path,
+                    report.solution_name,
+                    report.version,
+                    report.total_bytes,
+                    report.operations_count,
+                    if report.ready_for_power_platform { "✅ Yes (Certified PKZIP)" } else { "❌ No" },
+                    report.package_path
+                ))
             }
             "generate_pcf_control" => {
                 let config: PcfControlConfig = if let Some(cfg_val) = arguments.get("pcf_config") {
