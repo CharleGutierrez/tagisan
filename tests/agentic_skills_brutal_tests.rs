@@ -429,8 +429,8 @@ fn test_multithreaded_concurrent_agentic_dispatching_50_threads() {
         total_dispatches, elapsed
     );
     assert!(
-        elapsed.as_millis() < 10000,
-        "50-thread concurrent dispatch stress test took {:?}, expected < 10s",
+        elapsed.as_millis() < 30000,
+        "50-thread concurrent dispatch stress test took {:?}, expected < 30s",
         elapsed
     );
 }

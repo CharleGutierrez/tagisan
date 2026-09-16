@@ -6,3 +6,5 @@
 Thumbs.db
 .tagisan/
 node_modules/
+__pycache__/
+*.pyc
