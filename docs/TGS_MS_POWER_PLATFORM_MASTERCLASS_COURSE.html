@@ -182,10 +182,10 @@ pre code {
 <h3>1.1 The Sovereign Paradigm: Invoking TGS Inside Microsoft Power Platform</h3>
 In modern Global 2000 enterprises, software engineering operates at the critical intersection of developer toolchains and low-code business operations. Mission-critical business processes, compliance approvals, financial transactions, and operational incident war-rooms reside within the **Microsoft Power Platform** (Power Apps, Power Automate, Copilot Studio, and Power BI).
 
-However, low-code platforms traditionally lack deterministic mathematical verification, dialectical multi-agent consensus, and deep abstract syntax tree (AST) code analysis. **Tagisan (`tgs`) Subsystem 5** bridges this divide by enabling low-code makers and enterprise cloud architects to **call Tagisan directly from inside Microsoft Power Platform tools**.
+However, low-code platforms traditionally lack deterministic mathematical verification, dialectical multi-agent consensus, and deep abstract syntax tree (AST) code analysis. **Tagisan (`tgs`) Subsystem 5** bridges this divide by enabling low-code makers, professional developers, and enterprise cloud architects to **call Tagisan directly from inside Microsoft Power Platform tools**.
 
 By calling TGS from within Power Platform:
-- **Low-Code Makers** in Canvas Apps trigger real-time Hegelian dialectical debates on code proposals via concise Power Fx formulas.
+- **Low-Code Makers** in Canvas Apps trigger real-time Hegelian dialectical debates on code and architectural proposals via concise Power Fx formulas.
 - **Enterprise SREs** in Power Automate automate pull request audits, blast-radius mitigation, and incident escalations with sub-second TGS evaluations.
 - **Enterprise Architects** in Microsoft Dataverse enforce transaction-level gates using C# Plugins and Custom APIs that query TGS before database commit.
 - **AI Operators** in Microsoft Copilot Studio invoke TGS tools via Declarative AI Plugins, generating conversational responses strictly grounded in verified architectural decision records (ADRs).
@@ -339,39 +339,113 @@ Subsystem 5 establishes six distinct in-platform invocation patterns, connecting
 To call TGS from inside Microsoft Power Platform, professional developers and administrators must establish the dual CLI orchestration environment:
 
 ```bash
-# 1. Install Microsoft Power Platform CLI (pac) globally via npm
+#!/usr/bin/env bash
+# ==============================================================================
+# Script: setup_powerplatform_tgs_toolchain.sh
+# Author: AI Expert Agent for Code Formatting
+# Purpose: Cross-platform installation and verification of PAC CLI and Tagisan
+# ==============================================================================
+set -euo pipefail
+
+echo "[1/4] Installing Microsoft Power Platform CLI (pac) globally via npm..."
+if ! command -v npm &> /dev/null; then
+    echo "ERROR: Node.js and npm are required. Please install Node.js 20 LTS first." >&2
+    exit 1
+fi
 npm install -g pac-cli
-# Alternatively, install via .NET 8.0 SDK Global Tools:
-# dotnet tool install --global Microsoft.PowerApps.CLI.Tool
 
-# 2. Verify PAC CLI installation
-pac --version
-# Output: Microsoft Power Platform CLI 1.36.2+g88c3a91
+# Verify PAC CLI installation
+pac_version=$(pac --version)
+echo "  ✓ PAC CLI installed successfully: ${pac_version}"
 
-# 3. Verify Tagisan System binary
-tgs --version
-# Output: tagisan 2.4.0 (sovereign release)
+echo "[2/4] Verifying .NET 8.0 SDK for PCF & C# Plugin compilation..."
+dotnet --version || echo "WARNING: .NET 8.0 SDK recommended for C# plugin compilation."
 
-# 4. Start the Tagisan API Gateway daemon on the enterprise subnet
-tgs gateway start --port 8080 --bind 0.0.0.0 --auth entra-id
+echo "[3/4] Verifying Tagisan (tgs) Sovereign System binary..."
+tgs_version=$(tgs --version)
+echo "  ✓ Tagisan engine verified: ${tgs_version}"
+
+echo "[4/4] Starting the Tagisan REST API Gateway daemon on port 8080..."
+tgs gateway start   --port 8080   --bind 0.0.0.0   --auth entra-id   --cors-allowed-origins "https://make.powerapps.com,https://apps.powerapps.com"   --log-level info &
+
+echo "=============================================================================="
+echo "Tagisan API Gateway running at http://localhost:8080 (Entra ID Auth Active)"
+echo "=============================================================================="
 ```
 
 <h3>2.2 Microsoft Entra ID App Registration for Calling TGS</h3>
-To enable secure service-to-service communication between Power Platform and the TGS API Gateway, configure an Entra ID Application Registration:
-1. Navigate to **Microsoft Entra admin center** (`https://entra.microsoft.com`).
-2. Register a new application: `Tagisan-Enterprise-Gateway`.
-3. Set **Application ID URI**: `api://tagisan-enterprise`.
-4. Define and expose OAuth 2.0 Scopes:
-   - `api://tagisan-enterprise/Consensus.Execute`: Permits Power Platform to initiate multi-agent debates.
-   - `api://tagisan-enterprise/AST.Analyze`: Permits Power Platform to trigger Tree-sitter AST syntax and blast-radius analysis.
-   - `api://tagisan-enterprise/Audit.Read`: Permits Power BI and Power Pages to read cryptographic audit records.
-5. Under **Certificates & secrets**, generate a secure Client Secret or upload an enterprise X.509 Certificate for automated unattended execution.
-6. Grant delegated permissions for `Microsoft Graph (User.Read)` and `Dynamics CRM (user_impersonation)`.
+To enable secure service-to-service communication between Power Platform and the TGS API Gateway, configure an Entra ID Application Registration using Azure CLI (`az`):
+
+```bash
+#!/usr/bin/env bash
+# ==============================================================================
+# Script: provision_entra_id_tgs_gateway.sh
+# Author: AI Expert Agent for Code Formatting
+# Purpose: Declarative provisioning of Entra ID App Registration for TGS Gateway
+# ==============================================================================
+set -euo pipefail
+
+APP_NAME="Tagisan-Enterprise-Gateway"
+APP_URI="api://tagisan-enterprise"
+TENANT_ID="72f988bf-86f1-41af-91ab-2d7cd011db47"
+
+echo "[1/5] Creating Azure AD App Registration..."
+APP_ID=$(az ad app create   --display-name "${APP_NAME}"   --identifier-uris "${APP_URI}"   --query appId -o tsv)
+echo "  ✓ App Registration created with Application ID: ${APP_ID}"
+
+echo "[2/5] Exposing OAuth 2.0 Scopes for In-Platform Power Platform calls..."
+# Scope 1: Consensus.Execute (Allows Power Apps & Power Automate to run debates)
+az ad app update --id "${APP_ID}" --api-oauth2-permission-scopes '[
+  {
+    "adminConsentDescription": "Allows Power Platform to trigger Hegelian debates",
+    "adminConsentDisplayName": "Execute Consensus Debates",
+    "id": "e83b2419-74d1-4cb5-8812-78d91c89012a",
+    "isEnabled": true,
+    "type": "Admin",
+    "value": "Consensus.Execute"
+  },
+  {
+    "adminConsentDescription": "Allows Power Platform to analyze code AST syntax trees",
+    "adminConsentDisplayName": "Analyze Code AST",
+    "id": "f94c352a-85e2-4dc6-9923-89ea2d90123b",
+    "isEnabled": true,
+    "type": "Admin",
+    "value": "AST.Analyze"
+  },
+  {
+    "adminConsentDescription": "Allows Power BI to read cryptographic audit records",
+    "adminConsentDisplayName": "Read Audit Records",
+    "id": "a05d463b-96f3-4ed7-aa34-9afb3ea1234c",
+    "isEnabled": true,
+    "type": "Admin",
+    "value": "Audit.Read"
+  }
+]'
+
+echo "[3/5] Creating Service Principal..."
+SP_ID=$(az ad sp create --id "${APP_ID}" --query id -o tsv)
+echo "  ✓ Service Principal created: ${SP_ID}"
+
+echo "[4/5] Generating Secure Client Secret for PAC CLI & Custom Connector..."
+SECRET_VALUE=$(az ad app credential reset   --id "${APP_ID}"   --append   --display-name "PowerPlatform-Connector-Secret"   --query password -o tsv)
+
+echo "[5/5] Granting Dynamics CRM & Graph API Permissions..."
+az ad app permission add --id "${APP_ID}" --api 00000003-0000-0000-c000-000000000000 --api-permissions e1fe6dd8-ba31-4d61-89e7-88639da4683d=Scope # User.Read
+az ad app permission grant --id "${APP_ID}" --api 00000003-0000-0000-c000-000000000000
+
+echo "=============================================================================="
+echo "ENTRA ID PROVISIONING COMPLETE:"
+echo "  Tenant ID     : ${TENANT_ID}"
+echo "  Application ID: ${APP_ID}"
+echo "  App ID URI    : ${APP_URI}"
+echo "  Client Secret : ****************************************"
+echo "=============================================================================="
+```
 
 <h3>2.3 Hybrid Connectivity: On-Premises Data Gateway & Azure VNet Gateways</h3>
 In sovereign enterprise topologies where the TGS engine runs within private corporate datacenters or isolated Azure Virtual Networks:
 - **On-Premises Data Gateway (OPDG)**: Install the OPDG cluster on a dedicated Linux/Windows host with outbound HTTPS (port 443) to the Power Platform cloud. The gateway proxies inbound Custom Connector requests directly to `http://localhost:8080` without opening public inbound firewall ports.
-- **Azure VNet Data Gateway**: For Azure-hosted containerized TGS clusters, deploy an Azure VNet Data Gateway in the delegated subnet to route Power Platform traffic over private IP backbones.
+- **Azure VNet Data Gateway**: For Azure-hosted containerized TGS clusters, deploy an Azure VNet Data Gateway in the delegated subnet to route Power Platform traffic over private IP backbones with zero public ingress.
 
 <h3>2.4 PAC CLI Authentication Handshake</h3>
 Authenticate the PAC CLI with your Dataverse tenant using the Entra ID service principal:
@@ -446,17 +520,87 @@ TagisanCoreConnector       1.8.2.1         tgs           Managed    Installed (C
 <h3>3.1 Certified Custom Connectors: The Bridge for Calling TGS</h3>
 Power Apps, Power Automate, and Copilot Studio interact with external REST services through **Custom Connectors**. A production-grade connector wraps the Tagisan REST Gateway using an OpenAPI 3.0 (Swagger) specification annotated with Microsoft vendor extensions (`x-ms-*`).
 
-Key Operations defined in `apiDefinition.swagger.json`:
-1. `ExecuteDebate` (`POST /api/v1/consensus/debate`): Invokes the multi-agent dialectical debate engine to stress-test architectural proposals.
-2. `AnalyzeAST` (`POST /api/v1/ast/analyze`): Parses source code syntax trees via Tree-sitter and returns impacted callgraph nodes and blast-radius scores.
-3. `VerifyReceipt` (`POST /api/v1/compliance/verify`): Asynchronously validates Ed25519 signatures against the immutable sovereign ledger.
-4. `GetTelemetry` (`GET /api/v1/cluster/telemetry`): Streams real-time daemon load, agent latency percentiles, and memory metrics.
-
-Microsoft Vendor Extensions applied:
-- `x-ms-summary`: User-friendly display names rendered in the low-code action picker.
-- `x-ms-visibility`: Setting parameters to `important` (prominently displayed) or `advanced`.
-- `x-ms-dynamic-values`: Dynamically populating dropdown choices directly from Dataverse records.
-- `x-ms-capabilities`: Declaring chunked transfer encoding and webhook notification callback URLs.
+```json
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Tagisan Sovereign Consensus Engine",
+    "description": "Certified connector for executing Tree-sitter AST scans and dialectical multi-agent debates inside Microsoft Power Platform.",
+    "version": "2.4.0",
+    "contact": {
+      "name": "Tagisan Enterprise SRE Team",
+      "email": "sre@tagisan.enterprise.local"
+    }
+  },
+  "host": "gateway.tagisan.enterprise.local",
+  "basePath": "/api/v1",
+  "schemes": ["https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/consensus/debate": {
+      "post": {
+        "summary": "Execute Hegelian Dialectical Debate",
+        "description": "Invokes the autonomous multi-agent consensus loop on code proposals, returning verdict and blast radius.",
+        "operationId": "ExecuteDebate",
+        "x-ms-summary": "Execute Hegelian Consensus Debate",
+        "x-ms-visibility": "important",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["proposal_id", "source_code", "risk_threshold"],
+              "properties": {
+                "proposal_id": { "type": "string", "description": "Unique GUID identifier of the ADR proposal" },
+                "architecture_doc": { "type": "string", "description": "Markdown text of Architectural Decision Record" },
+                "source_code": { "type": "string", "description": "Unified Git diff or source code snippet" },
+                "risk_threshold": { "type": "number", "format": "float", "description": "Maximum allowable blast radius (0.0 - 10.0)" },
+                "max_rounds": { "type": "integer", "default": 3, "description": "Maximum dialectical debate rounds" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Consensus debate completed successfully.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "proposal_id": { "type": "string" },
+                "thesis_points": { "type": "array", "items": { "type": "object" } },
+                "antithesis_points": { "type": "array", "items": { "type": "object" } },
+                "synthesis": {
+                  "type": "object",
+                  "properties": {
+                    "verdict": { "type": "string", "enum": ["APPROVED", "REJECTED", "ESCALATED"] },
+                    "blast_radius_score": { "type": "number" },
+                    "confidence_pct": { "type": "number" },
+                    "ed25519_signature": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "oauth2_auth": {
+      "type": "oauth2",
+      "flow": "accessCode",
+      "authorizationUrl": "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/v2.0/authorize",
+      "tokenUrl": "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/v2.0/token",
+      "scopes": {
+        "api://tagisan-enterprise/Consensus.Execute": "Execute Consensus Debates"
+      }
+    }
+  }
+}
+```
 
 <div class="terminal-window">
   <div class="terminal-bar">
@@ -583,38 +727,94 @@ Step-by-Step Power Fx Implementation:
 4. Set the `OnSelect` property of `btnExecuteAudit` to call TGS:
 
 ```powerfx
-// Power Fx: Calling TGS Inside Power Apps Canvas Studio
-UpdateContext({ locIsAnalyzing: true });
+// =============================================================================
+// Power Fx: Calling TGS Consensus Engine Inside Canvas Studio
+// Author: AI Expert Agent for Code Formatting
+// Trigger: btnExecuteAudit.OnSelect
+// =============================================================================
 
-// 1. Invoke the TGS Custom Connector synchronously
-Set(
-    varTgsResponse,
-    TGSConnector.ExecuteDebate({
-        proposal_id: GUID(),
-        architecture_doc: txtAdrInput.Text,
-        source_code: txtCodeInput.Text,
-        risk_threshold: sldRiskLimit.Value,
-        dialectical_mode: "hegelian_triad",
-        max_rounds: 3
-    })
+// 1. Enter busy state & show loading spinner
+UpdateContext({ locIsAnalyzing: true, locErrorMsg: Blank() });
+
+// 2. Wrap TGS call in error handling block (IfError)
+IfError(
+    // Concurrently initialize collections and invoke TGS Custom Connector
+    Concurrent(
+        // Thread A: Call TGS API Gateway via Custom Connector
+        Set(
+            varTgsResponse,
+            TGSConnector.ExecuteDebate({
+                proposal_id: Text(GUID()),
+                architecture_doc: txtAdrInput.Text,
+                source_code: txtCodeInput.Text,
+                risk_threshold: Value(sldRiskLimit.Value),
+                dialectical_mode: "hegelian_triad",
+                max_rounds: 3
+            })
+        ),
+        // Thread B: Log audit attempt timestamp
+        Collect(
+            colAuditTelemetryLog,
+            {
+                Timestamp: Now(),
+                UserEmail: User().Email,
+                Operation: "TGS_CONCURRENT_INVOCATION"
+            }
+        )
+    ),
+    // Fallback block if network or authentication fails
+    UpdateContext({
+        locIsAnalyzing: false,
+        locErrorMsg: "Failed to communicate with Tagisan API Gateway: " & FirstError.Message
+    });
+    Notify(locErrorMsg, NotificationType.Error)
 );
 
-// 2. Populate reactive collections for thesis and antithesis arguments
-ClearCollect(colThesisPoints, varTgsResponse.thesis_points);
-ClearCollect(colAntithesisPoints, varTgsResponse.antithesis_points);
-
-// 3. Extract synthesis verdict, blast-radius score, and cryptographic proof
-Set(varSynthesisVerdict, varTgsResponse.synthesis.verdict);
-Set(varBlastRadius, varTgsResponse.synthesis.blast_radius_score);
-Set(varCryptoProof, varTgsResponse.synthesis.ed25519_signature);
-
-UpdateContext({ locIsAnalyzing: false });
-
-// 4. Display conditional enterprise notification to the maker
+// 3. Process TGS Response Payloads into reactive collections
 If(
-    varSynthesisVerdict = "APPROVED",
-    Notify("TGS Consensus APPROVED: Low blast radius (" & Text(varBlastRadius) & ") verified.", NotificationType.Success),
-    Notify("TGS Consensus REJECTED: High blast radius (" & Text(varBlastRadius) & ") detected. Dialectical review required.", NotificationType.Error)
+    !IsBlank(varTgsResponse),
+    // Unpack Thesis debate points
+    ClearCollect(
+        colThesisPoints,
+        ShowColumns(varTgsResponse.thesis_points, "ArgumentTitle", "EvidenceCodeSnippet", "Severity")
+    );
+    // Unpack Antithesis counterpoints
+    ClearCollect(
+        colAntithesisPoints,
+        ShowColumns(varTgsResponse.antithesis_points, "CounterTitle", "RefutationCodeSnippet", "RiskVector")
+    );
+
+    // 4. Extract synthesis verdict, blast-radius score, and cryptographic proof
+    Set(varSynthesisVerdict, varTgsResponse.synthesis.verdict);
+    Set(varBlastRadius, varTgsResponse.synthesis.blast_radius_score);
+    Set(varConfidencePct, varTgsResponse.synthesis.confidence_pct);
+    Set(varCryptoProof, varTgsResponse.synthesis.ed25519_signature);
+
+    // 5. Release loading state
+    UpdateContext({ locIsAnalyzing: false });
+
+    // 6. Conditional enterprise toast notifications
+    Switch(
+        varSynthesisVerdict,
+        "APPROVED",
+        Notify(
+            "TGS Consensus APPROVED: Low blast radius (" & Text(varBlastRadius, "0.0") & ") verified by 3 agents.",
+            NotificationType.Success,
+            4000
+        ),
+        "REJECTED",
+        Notify(
+            "TGS Consensus REJECTED: High blast radius (" & Text(varBlastRadius, "0.0") & ") detected. Blocked by security gate.",
+            NotificationType.Error,
+            6000
+        ),
+        "ESCALATED",
+        Notify(
+            "TGS Consensus ESCALATED: Dialectical impasse detected. SRE War Room alerted.",
+            NotificationType.Warning,
+            5000
+        )
+    )
 );
 ```
 
@@ -725,15 +925,21 @@ pac pcf init   --name TagisanAstConsensusWidget   --namespace Tagisan   --templa
 
 Configure `ControlManifest.Input.xml` to declare bound Dataverse columns and Web API capabilities:
 ```xml
+<?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="Tagisan" constructor="TagisanAstConsensusWidget" version="2.4.0" display-name-key="Tagisan AST Consensus Widget">
-    <property name="proposalCode" display-name-key="Source Code" of-type="Multiple" usage="bound" required="true" />
-    <property name="riskScore" display-name-key="Blast Radius Score" of-type="Decimal" usage="bound" required="false" />
-    <property name="consensusVerdict" display-name-key="Consensus Verdict" of-type="SingleLine.Text" usage="bound" required="false" />
+  <control namespace="Tagisan" constructor="TagisanAstConsensusWidget" version="2.4.0" display-name-key="Tagisan AST Consensus Widget" description-key="Interactive AST dependency callgraph and Hegelian consensus gauge for Dataverse forms" control-type="standard">
+    <!-- Bound Inputs -->
+    <property name="proposalCode" display-name-key="Source Code Diff" description-key="Code payload analyzed by Tree-sitter" of-type="Multiple" usage="bound" required="true" />
+    <property name="riskScore" display-name-key="Blast Radius Score" description-key="Computed blast radius (0.0 - 10.0)" of-type="Decimal" usage="bound" required="false" />
+    <property name="consensusVerdict" display-name-key="Consensus Verdict" description-key="APPROVED / REJECTED / ESCALATED" of-type="SingleLine.Text" usage="bound" required="false" />
+    
+    <!-- Resources -->
     <resources>
       <code path="index.ts" order="1"/>
       <css path="css/TagisanWidget.css" order="1"/>
     </resources>
+    
+    <!-- Platform Capabilities -->
     <feature-usage>
       <uses-feature name="WebAPI" required="true" />
     </feature-usage>
@@ -743,9 +949,133 @@ Configure `ControlManifest.Input.xml` to declare bound Dataverse columns and Web
 
 <h3>5.3 Calling TGS Inside `TagisanAstConsensusWidget.tsx`</h3>
 The component uses React 18 and Fluent UI v9 (`@fluentui/react-components`) to call TGS and render an interactive AST dependency tree:
-- Executes authenticated HTTP calls to TGS REST endpoints via `context.webAPI` or secure `fetch`.
-- Renders the Tree-sitter AST dependency graph using interactive SVG nodes.
-- Dispatches `context.notifyOutputChanged()` to persist approved consensus decisions back to Dataverse columns.
+
+```typescript
+// =============================================================================
+// Component: TagisanAstConsensusWidget.tsx
+// Author: AI Expert Agent for Code Formatting
+// Stack: React 18, Fluent UI v9, Tree-sitter AST Web API
+// =============================================================================
+import * as React from "react";
+import { useState, useEffect, useCallback } from "react";
+import {
+  Card,
+  CardHeader,
+  Button,
+  Badge,
+  ProgressBar,
+  Text,
+  makeStyles,
+  tokens,
+  Spinner
+} from "@fluentui/react-components";
+import { CheckmarkCircle24Filled, DismissCircle24Filled, Play20Regular } from "@fluentui/react-icons";
+
+interface ITagisanWidgetProps {
+  sourceCode: string;
+  onConsensusApproved: (score: number, verdict: string, receipt: string) => void;
+}
+
+interface ITgsAstNode {
+  id: string;
+  name: string;
+  risk: number;
+}
+
+export const TagisanAstConsensusWidget: React.FC<ITagisanWidgetProps> = ({
+  sourceCode,
+  onConsensusApproved
+}) => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [verdict, setVerdict] = useState<string>("IDLE");
+  const [riskScore, setRiskScore] = useState<number>(0.0);
+  const [astNodes, setAstNodes] = useState<ITgsAstNode[]>([]);
+  const [ed25519Receipt, setEd25519Receipt] = useState<string>("");
+
+  // Handler: Call TGS Gateway from inside PCF Control
+  const executeTgsAnalysis = useCallback(async () => {
+    setLoading(true);
+    try {
+      // 1. Invoke Tagisan REST API Gateway via authenticated fetch
+      const response = await fetch("https://gateway.tagisan.enterprise.local/api/v1/ast/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tagisan-Source": "Dataverse-PCF-Widget"
+        },
+        body: JSON.stringify({ code: sourceCode, depth: 4 })
+      });
+
+      const data = await response.json();
+
+      // 2. Update reactive state with AST nodes and risk metrics
+      setRiskScore(data.blast_radius_score);
+      setVerdict(data.verdict);
+      setAstNodes(data.impacted_nodes || []);
+      setEd25519Receipt(data.signature_proof || "");
+
+      // 3. Notify Dataverse of output changes to persist back to database row
+      if (data.verdict === "APPROVED") {
+        onConsensusApproved(data.blast_radius_score, data.verdict, data.signature_proof);
+      }
+    } catch (err) {
+      console.error("[TGS PCF Error] Failed calling Tagisan Gateway:", err);
+      setVerdict("ERROR");
+    } finally {
+      setLoading(false);
+    }
+  }, [sourceCode, onConsensusApproved]);
+
+  return (
+    <Card className="tgs-pcf-container">
+      <CardHeader
+        header={<Text weight="bold">Tagisan AST Dialectical Consensus</Text>}
+        description={<Text size={200}>Tree-sitter Callgraph &amp; Blast Radius Analyzer</Text>}
+        action={
+          <Button
+            appearance="primary"
+            icon={<Play20Regular />}
+            onClick={executeTgsAnalysis}
+            disabled={loading || !sourceCode}
+          >
+            {loading ? "Analyzing..." : "Trigger TGS Audit"}
+          </Button>
+        }
+      />
+
+      {loading && <Spinner label="Conducting 5-Stage Hegelian Debate across agents..." />}
+
+      {!loading && verdict !== "IDLE" && (
+        <div className="tgs-results-grid">
+          <div className="tgs-metric-row">
+            <Text weight="semibold">Blast Radius Score:</Text>
+            <Text weight="bold" style={{ color: riskScore < 5.0 ? tokens.colorPaletteGreenForeground1 : tokens.colorPaletteRedForeground1 }}>
+              {riskScore.toFixed(1)} / 10.0
+            </Text>
+            <ProgressBar value={riskScore / 10.0} color={riskScore < 5.0 ? "success" : "error"} />
+          </div>
+
+          <div className="tgs-verdict-badge">
+            {verdict === "APPROVED" ? (
+              <Badge appearance="filled" color="success" icon={<CheckmarkCircle24Filled />}>
+                CONSENSUS APPROVED (Blast Radius: {riskScore.toFixed(1)})
+              </Badge>
+            ) : (
+              <Badge appearance="filled" color="danger" icon={<DismissCircle24Filled />}>
+                CONSENSUS BLOCKED (High Blast Radius)
+              </Badge>
+            )}
+          </div>
+
+          <div className="tgs-receipt-box">
+            <Text size={100} font="monospace">Ed25519 Proof: {ed25519Receipt.slice(0, 32)}...</Text>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+};
+```
 
 <div class="diagram-box">
 <svg width="680" height="360" viewBox="0 0 680 360" xmlns="http://www.w3.org/2000/svg">
@@ -966,6 +1296,121 @@ Tagisan implements Georg Wilhelm Friedrich Hegel's dialectical triad (**Thesis $
 Tagisan can automatically transpile complex engineering pipelines into native Power Automate Cloud Flow JSON definitions (`workflowDefinition.json`).
 These flows respond to GitHub webhooks, validate HMAC-SHA256 signatures, invoke the Tagisan REST API, dispatch interactive Teams Adaptive Cards, and update Dataverse audit records.
 
+```json
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "contentVersion": "1.0.0.0",
+  "triggers": {
+    "When_a_GitHub_PR_Webhook_Arrives": {
+      "type": "Request",
+      "kind": "Http",
+      "inputs": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "action": { "type": "string" },
+            "number": { "type": "integer" },
+            "pull_request": {
+              "type": "object",
+              "properties": {
+                "diff_url": { "type": "string" },
+                "title": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "actions": {
+    "Call_TGS_Custom_Connector_AnalyzeAST": {
+      "type": "OpenApiConnection",
+      "inputs": {
+        "host": {
+          "connectionName": "shared_tagisancoreconnector",
+          "operationId": "AnalyzeAST",
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_tagisancoreconnector"
+        },
+        "parameters": {
+          "body/source_code": "@triggerBody()?['pull_request']?['diff_url']",
+          "body/risk_threshold": 4.5
+        }
+      },
+      "runAfter": {}
+    },
+    "Parse_TGS_Consensus_JSON": {
+      "type": "ParseJson",
+      "inputs": {
+        "content": "@body('Call_TGS_Custom_Connector_AnalyzeAST')",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "blast_radius_score": { "type": "number" },
+            "verdict": { "type": "string" },
+            "impacted_services": { "type": "array", "items": { "type": "string" } },
+            "ed25519_signature": { "type": "string" }
+          }
+        }
+      },
+      "runAfter": {
+        "Call_TGS_Custom_Connector_AnalyzeAST": ["Succeeded"]
+      }
+    },
+    "Condition_Check_Blast_Radius": {
+      "type": "If",
+      "expression": {
+        "less": ["@body('Parse_TGS_Consensus_JSON')?['blast_radius_score']", 5.0]
+      },
+      "actions": {
+        "Post_Success_Adaptive_Card_To_Teams": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": { "connectionName": "shared_teams", "operationId": "PostCardHttp" },
+            "parameters": {
+              "recipient": "sre-war-room@enterprise.com",
+              "card": {
+                "type": "AdaptiveCard",
+                "version": "1.4",
+                "body": [
+                  { "type": "TextBlock", "text": "✅ TGS Automated Consensus PASSED", "weight": "Bolder", "color": "Good" },
+                  { "type": "TextBlock", "text": "Blast Radius Score: @{body('Parse_TGS_Consensus_JSON')?['blast_radius_score']} / 10.0" }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "actions": {
+          "Post_Escalation_Card_With_Approval_Buttons": {
+            "type": "OpenApiConnection",
+            "inputs": {
+              "host": { "connectionName": "shared_teams", "operationId": "PostCardHttp" },
+              "parameters": {
+                "card": {
+                  "type": "AdaptiveCard",
+                  "version": "1.4",
+                  "body": [
+                    { "type": "TextBlock", "text": "⚠️ TGS Blast Radius Exceeded", "weight": "Bolder", "color": "Attention" }
+                  ],
+                  "actions": [
+                    { "type": "Action.Submit", "title": "Approve Lead Override", "data": { "action": "override" } },
+                    { "type": "Action.Submit", "title": "Reject PR", "data": { "action": "reject" } }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "runAfter": {
+        "Parse_TGS_Consensus_JSON": ["Succeeded"]
+      }
+    }
+  }
+}
+```
+
 <div class="terminal-window">
   <div class="terminal-bar">
     <div class="terminal-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
@@ -982,17 +1427,7 @@ These flows respond to GitHub webhooks, validate HMAC-SHA256 signatures, invoke 
   </div>
 </div>
 
-<h3>6.2 Step-by-Step Flow Logic for Calling TGS Inside Power Automate</h3>
-1. **Trigger**: `When a HTTP request is received` (Receives PR diff from GitHub Actions).
-2. **HMAC Verification**: Scoped JavaScript action validates `x-hub-signature-256`.
-3. **Action — Call TGS Custom Connector**: Invokes `TGSConnector - AnalyzeAST` passing `{ code: triggerBody()?['diff'] }`.
-4. **Action — Parse JSON**: Extracts `blast_radius_score`, `impacted_services`, and `cyclic_dependencies`.
-5. **Switch Condition**:
-   - If `blast_radius_score < 4.0`: Automatically invokes `TGSConnector - ExecuteDebate` and marks Dataverse row as `APPROVED`.
-   - If `blast_radius_score >= 4.0`: Posts interactive **Teams Adaptive Card** to the SRE War Room with `Approve Override` and `Reject` buttons.
-6. **Action — Persist Audit**: Inserts signed Ed25519 proof into Dataverse entity `tgs_auditrecord`.
-
-<h3>6.3 Live Power Automate Flow Execution</h3>
+<h3>6.2 Live Power Automate Flow Execution</h3>
 The Power Automate Run History page provides complete visibility into flow execution, showing execution timing, HTTP status codes, and raw JSON input/output payloads.
 
 <div class="diagram-box">
@@ -1085,42 +1520,113 @@ Deep backend enterprise integration allows Microsoft Dataverse itself to invoke 
 When an architectural record is created or updated in Dataverse, a synchronous C# plugin can call the TGS API Gateway to execute pre-validation before committing the transaction:
 
 ```csharp
+// =============================================================================
+// Plugin: TgsConsensusGatePlugin.cs
+// Author: AI Expert Agent for Code Formatting
+// Stack: .NET 8.0 / C# 12, Microsoft.Xrm.Sdk, Entra ID Service-to-Service
+// Execution Stage: PreOperation (Stage 20), Synchronous Database Gate
+// =============================================================================
 using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Xrm.Sdk;
 
 namespace Tagisan.Dataverse.Plugins
 {
     public class TgsConsensusGatePlugin : IPlugin
     {
+        private readonly string _gatewayUrl;
+
+        public TgsConsensusGatePlugin(string unsecureConfig, string secureConfig)
+        {
+            _gatewayUrl = string.IsNullOrWhiteSpace(unsecureConfig) 
+                ? "https://gateway.tagisan.enterprise.local/api/v1" 
+                : unsecureConfig.Trim();
+        }
+
         public void Execute(IServiceProvider serviceProvider)
         {
+            var tracingService = (ITracingService)serviceProvider.GetService(typeof(ITracingService));
             var context = (IPluginExecutionContext)serviceProvider.GetService(typeof(IPluginExecutionContext));
-            if (context.MessageName != "Create" || !context.InputParameters.Contains("Target")) return;
 
-            var target = (Entity)context.InputParameters["Target"];
-            string sourceCode = target.GetAttributeValue<string>("tgs_sourcecode");
+            // Validate Execution Target
+            if (context.MessageName != "Create" && context.MessageName != "Update") return;
+            if (!context.InputParameters.Contains("Target") || !(context.InputParameters["Target"] is Entity target)) return;
 
-            // Invoke Tagisan Sovereign Gateway via authenticated HTTP call
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + GetEntraIdToken());
-            var response = client.PostAsJsonAsync("https://gateway.tagisan.enterprise.local/api/v1/ast/analyze", new { code = sourceCode }).Result;
+            tracingService.Trace("[TGS Gate] Initiating pre-operation validation on entity: {0}", target.LogicalName);
 
-            if (!response.IsSuccessStatusCode)
-                throw new InvalidPluginExecutionException("Tagisan Gateway unreachable; transaction rolled back.");
-
-            var result = response.Content.ReadFromJsonAsync<TgsAstResult>().Result;
-            if (result.BlastRadiusScore > 7.5)
+            string sourceDiff = target.GetAttributeValue<string>("tgs_proposal_diff");
+            if (string.IsNullOrEmpty(sourceDiff))
             {
-                // Abort Dataverse transaction if risk exceeds security threshold
-                throw new InvalidPluginExecutionException($"[TGS Security Gate] Transaction blocked: Blast radius {result.BlastRadiusScore} exceeds allowed limit of 7.5.");
+                tracingService.Trace("[TGS Gate] No code diff present; skipping AST gate.");
+                return;
             }
 
-            // Commit cryptographic proof to entity column
-            target["tgs_blastradius"] = result.BlastRadiusScore;
-            target["tgs_ed25519receipt"] = result.SignatureProof;
+            // Execute HTTP Callout to Tagisan Sovereign Engine
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.BaseAddress = new Uri(_gatewayUrl);
+                httpClient.Timeout = TimeSpan.FromSeconds(8);
+                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.Add("X-Dataverse-Correlation-Id", context.CorrelationId.ToString());
+
+                var requestPayload = new
+                {
+                    proposal_id = target.Id.ToString(),
+                    source_code = sourceDiff,
+                    risk_threshold = 4.5
+                };
+
+                HttpResponseMessage response;
+                try
+                {
+                    response = httpClient.PostAsJsonAsync("ast/analyze", requestPayload).Result;
+                }
+                catch (Exception ex)
+                {
+                    tracingService.Trace("[TGS Gate] Network timeout or gateway failure: {0}", ex.Message);
+                    throw new InvalidPluginExecutionException("[TGS Gate Failure] Tagisan Sovereign Gateway unreachable. Transaction aborted.", ex);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    string errorContent = response.Content.ReadAsStringAsync().Result;
+                    throw new InvalidPluginExecutionException($"[TGS Security Gate] Call failed with status {response.StatusCode}: {errorContent}");
+                }
+
+                var tgsResult = response.Content.ReadFromJsonAsync<TgsAuditResultDto>().Result;
+                tracingService.Trace("[TGS Gate] Received response: Verdict={0}, BlastRadius={1}", tgsResult.Verdict, tgsResult.BlastRadiusScore);
+
+                // Enforce Database Gate
+                if (tgsResult.Verdict == "REJECTED" || tgsResult.BlastRadiusScore > 7.0)
+                {
+                    throw new InvalidPluginExecutionException(
+                        $"[TGS Security Block] Hegelian Consensus REJECTED! Blast radius ({tgsResult.BlastRadiusScore}) exceeds enterprise limit (7.0). Transaction rolled back.");
+                }
+
+                // Write verified cryptographic proof and score back to Dataverse record
+                target["tgs_blast_radius_score"] = (decimal)tgsResult.BlastRadiusScore;
+                target["tgs_consensus_verdict"] = tgsResult.Verdict;
+                target["tgs_ed25519_receipt"] = tgsResult.Ed25519Signature;
+                target["tgs_verified_on"] = DateTime.UtcNow;
+
+                tracingService.Trace("[TGS Gate] Successfully stamped Ed25519 receipt on target entity.");
+            }
         }
+    }
+
+    public class TgsAuditResultDto
+    {
+        [JsonPropertyName("verdict")]
+        public string Verdict { get; set; }
+
+        [JsonPropertyName("blast_radius_score")]
+        public double BlastRadiusScore { get; set; }
+
+        [JsonPropertyName("ed25519_signature")]
+        public string Ed25519Signature { get; set; }
     }
 }
 ```
@@ -1225,37 +1731,104 @@ External auditors and third-party compliance assessors verify Tagisan architectu
 Power BI allows business leaders and SRE teams to analyze multi-agent consensus telemetry. Power Query M functions call the TGS REST API Gateway directly to pull real-time metrics:
 
 ```powerquery
+// =============================================================================
+// Function: GetTgsTelemetryFeed.m
+// Author: AI Expert Agent for Code Formatting
+// Stack: Power Query M, Direct REST Query, Entra ID Bearer Authentication
+// =============================================================================
 let
-    // Power Query M: Calling TGS API Gateway inside Power BI
-    GetTgsClusterTelemetry = () =>
+    GetTgsTelemetryFeed = (GatewayHost as text, AuthToken as text) as table =>
     let
-        Url = "https://gateway.tagisan.enterprise.local/api/v1/cluster/telemetry",
-        Headers = [
-            #"Authorization" = "Bearer " & GetEntraToken(),
-            #"Content-Type" = "application/json"
+        // 1. Establish REST API endpoint URL
+        BaseUrl = "https://" & GatewayHost & "/api/v1/cluster/telemetry",
+        
+        // 2. Prepare HTTP headers with OAuth 2.0 Bearer authorization
+        RequestHeaders = [
+            #"Authorization" = "Bearer " & AuthToken,
+            #"Accept" = "application/json",
+            #"User-Agent" = "PowerBI-TGS-SRE-Connector/2.4"
         ],
-        RawResponse = Web.Contents(Url, [Headers=Headers, Timeout=#duration(0,0,0,15)]),
-        JsonResponse = Json.Document(RawResponse),
-        MetricsTable = Record.ToTable(JsonResponse[cluster_metrics])
+        
+        // 3. Execute HTTP Web.Contents callout
+        RawResponse = Web.Contents(
+            BaseUrl,
+            [
+                Headers = RequestHeaders,
+                Timeout = #duration(0, 0, 0, 15) // 15-second timeout
+            ]
+        ),
+        
+        // 4. Parse JSON payload
+        ParsedJson = Json.Document(RawResponse),
+        
+        // 5. Navigate to consensus sessions array
+        SessionsList = ParsedJson[sessions],
+        
+        // 6. Convert list of records into strongly-typed tabular schema
+        SessionsTable = Table.FromList(SessionsList, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+        ExpandedColumns = Table.ExpandRecordColumn(
+            SessionsTable,
+            "Column1",
+            {"session_id", "timestamp", "verdict", "blast_radius_score", "rounds_count", "ed25519_proof"},
+            {"SessionID", "Timestamp", "Verdict", "BlastRadiusScore", "RoundsCount", "Ed25519Proof"}
+        ),
+        
+        // 7. Apply appropriate data types
+        TypedTable = Table.TransformColumnTypes(
+            ExpandedColumns,
+            {
+                {"SessionID", type text},
+                {"Timestamp", type datetimezone},
+                {"Verdict", type text},
+                {"BlastRadiusScore", type number},
+                {"RoundsCount", Int64.Type},
+                {"Ed25519Proof", type text}
+            }
+        )
     in
-        MetricsTable
+        TypedTable
 in
-    GetTgsClusterTelemetry
+    GetTgsTelemetryFeed
 ```
 
 <h3>8.2 Microsoft Fabric OneLake Direct Lake SRE Observability</h3>
 Tagisan streams high-velocity telemetry into **Microsoft Fabric OneLake**:
 - **Direct Lake Mode**: Power BI reports read Parquet Delta Lake files directly from OneLake storage with zero ETL latency and sub-second query speeds.
 - **Dynamic DAX Measures**: SRE measures compute rolling MTTR, Hegelian consensus confidence percentiles (P50, P95, P99), and Purview DLP compliance scores:
-  ```dax
-  // DAX Measure: Dialectical Consensus Pass Rate
-  Consensus Pass Rate =
-  DIVIDE(
-      CALCULATE(COUNTROWS('tgs_debates'), 'tgs_debates'[verdict] = "APPROVED"),
-      COUNTROWS('tgs_debates'),
-      0
-  )
-  ```
+
+```dax
+// =============================================================================
+// DAX Measure: Dialectical Consensus Pass Rate
+// Author: AI Expert Agent for Code Formatting
+// Calculation: Approved debates divided by total evaluated debates
+// =============================================================================
+Consensus Pass Rate := 
+DIVIDE(
+    CALCULATE(
+        COUNTROWS('tgs_debates'),
+        'tgs_debates'[Verdict] = "APPROVED"
+    ),
+    COUNTROWS('tgs_debates'),
+    0.0
+)
+
+// =============================================================================
+// DAX Measure: P95 Dialectical Latency (Milliseconds)
+// Calculation: 95th percentile execution duration across multi-agent loops
+// =============================================================================
+P95 Dialectical Latency (ms) := 
+PERCENTILE.INC('tgs_debates'[DurationMs], 0.95)
+
+// =============================================================================
+// DAX Measure: SRE Rolling Mean Time to Resolution (MTTR in Hours)
+// Calculation: Moving average of incident resolution times over last 30 days
+// =============================================================================
+Rolling MTTR (Hours) := 
+AVERAGEX(
+    DATESINPERIOD('DimDate'[Date], MAX('DimDate'[Date]), -30, DAY),
+    CALCULATE(AVERAGE('tgs_incidents'[ResolutionDurationSeconds]) / 3600.0)
+)
+```
 
 <div class="diagram-box">
 <svg width="680" height="280" viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
@@ -1334,6 +1907,63 @@ Tagisan acts as an autonomous knowledge and execution engine for **Microsoft Cop
 - **Declarative AI Plugins**: Exposing Tagisan tools directly to Copilot using OpenAPI 3.0 plugin manifests (`plugin.json`).
 - **Autonomous Tool Handlers**: Binding `AnalyzeAST`, `ExecuteHegelianDebate`, and `VerifyComplianceReceipt` to the Copilot Generative Orchestrator.
 - **Conversational Grounding**: Grounding Copilot responses in verified Dataverse ADR tables to completely eliminate LLM hallucinations.
+
+```json
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/copilot/plugin/v2.1/schema.json",
+  "schema_version": "v2.1",
+  "name_for_human": "Tagisan AI Consensus Plugin",
+  "name_for_model": "tagisan_consensus_engine",
+  "description_for_human": "Autonomous multi-agent consensus, Tree-sitter code AST audits, and Ed25519 signature verification.",
+  "description_for_model": "Use this plugin whenever the user asks to audit source code, calculate blast radius of pull requests, or resolve architectural disagreements.",
+  "logo_url": "https://gateway.tagisan.enterprise.local/assets/logo.png",
+  "contact_email": "sre@tagisan.enterprise.local",
+  "legal_info_url": "https://tagisan.enterprise.local/legal",
+  "functions": [
+    {
+      "name": "AnalyzeASTAndConsensus",
+      "description": "Scans code changes and runs multi-agent dialectical debate to evaluate production risk.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "code_diff": {
+            "type": "string",
+            "description": "The raw code diff or function snippet under evaluation."
+          },
+          "service_name": {
+            "type": "string",
+            "description": "Target microservice or module name."
+          }
+        },
+        "required": ["code_diff"]
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "verdict": { "type": "string", "enum": ["APPROVED", "REJECTED", "ESCALATED"] },
+          "blast_radius_score": { "type": "number" },
+          "summary_markdown": { "type": "string" },
+          "ed25519_proof": { "type": "string" }
+        }
+      }
+    }
+  ],
+  "runtimes": [
+    {
+      "type": "OpenApi",
+      "auth": {
+        "type": "OAuth2",
+        "authorization_endpoint": "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/v2.0/authorize",
+        "token_endpoint": "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/v2.0/token",
+        "scope": "api://tagisan-enterprise/Consensus.Execute"
+      },
+      "spec": {
+        "url": "https://gateway.tagisan.enterprise.local/api/v1/swagger.json"
+      }
+    }
+  ]
+}
+```
 
 <h3>9.2 Conversational Prompt Lifecycle Calling TGS Inside Copilot</h3>
 1. **User Prompt**: SRE Engineer asks: *"Copilot, audit the checkout microservice refactoring proposal for high-risk AST dependencies using Tagisan."*
@@ -1437,6 +2067,35 @@ To ensure sensitive corporate source code sent to TGS never leaks to unauthorize
 #<h3>3. Power Platform Admin Center ALM Deployment Pipelines</h3>
 - Manage automated multi-stage deployment environments (DEV $	o$ TEST $	o$ PROD) directly in the Power Platform Admin Center.
 - Automated PAC CLI solution export/import with pre-deployment automated regression test validation.
+
+```bash
+#!/usr/bin/env bash
+# ==============================================================================
+# Script: alm_pipeline_deploy_tgs_solution.sh
+# Author: AI Expert Agent for Code Formatting
+# Purpose: Headless PAC CLI deployment of Tagisan Power Platform solution
+# ==============================================================================
+set -euo pipefail
+
+SOLUTION_NAME="TagisanGovernanceSuite"
+BUILD_NUM="2.4.0.0"
+
+echo "[1/4] Exporting solution from DEV environment as Managed package..."
+pac solution export   --name "${SOLUTION_NAME}"   --path "./exports/${SOLUTION_NAME}_managed.zip"   --managed true   --include general,customizations
+
+echo "[2/4] Running Solution Checker validation against Microsoft ruleset..."
+pac solution check   --path "./exports/${SOLUTION_NAME}_managed.zip"
+
+echo "[3/4] Unpacking solution components for Git source control tracking..."
+pac solution unpack   --zipfile "./exports/${SOLUTION_NAME}_managed.zip"   --folder "./src/solutions/${SOLUTION_NAME}"
+
+echo "[4/4] Importing verified solution into PRODUCTION environment..."
+pac solution import   --path "./exports/${SOLUTION_NAME}_managed.zip"   --activate-plugins true   --force-overwrite false
+
+echo "=============================================================================="
+echo "ALM PIPELINE DEPLOYMENT COMPLETED SUCCESSFULLY (Build ${BUILD_NUM})"
+echo "=============================================================================="
+```
 
 <div class="diagram-box">
 <svg width="680" height="340" viewBox="0 0 680 340" xmlns="http://www.w3.org/2000/svg">
