@@ -617,3 +617,500 @@ fn has_modified_files(dir: &Path, since: std::time::SystemTime) -> bool {
     }
     false
 }
+
+// ---------------------------------------------------------------------------
+// 5. Autonomous Linux System & Hardware Doctor (tgs doctor)
+// ---------------------------------------------------------------------------
+
+pub async fn handle_doctor_command(
+    fix: bool,
+    battery_only: bool,
+    cli_max_budget: f64,
+) -> Result<()> {
+    println!("{}", "══════════════════════════════════════════════════════════════".cyan().bold());
+    println!("{}", "  🩺  TGS AUTONOMOUS LINUX SYSTEM & HARDWARE DOCTOR".bold().yellow());
+    println!("{}", "══════════════════════════════════════════════════════════════".cyan().bold());
+
+    // 1. Gather Telemetry
+    let kernel_ver = std::fs::read_to_string("/proc/version").unwrap_or_default();
+    
+    // CPU Governor
+    let governor = std::fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
+        .unwrap_or_else(|_| "unknown".into());
+    
+    // Thermals
+    let mut temps = Vec::new();
+    if let Ok(entries) = std::fs::read_dir("/sys/class/thermal") {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.starts_with("thermal_zone") {
+                let temp_file = entry.path().join("temp");
+                if let Ok(content) = std::fs::read_to_string(temp_file) {
+                    if let Ok(milli) = content.trim().parse::<f64>() {
+                        temps.push(format!("{}: {:.1}°C", name, milli / 1000.0));
+                    }
+                }
+            }
+        }
+    }
+
+    // Battery Health
+    let mut battery_info = String::new();
+    if let Ok(entries) = std::fs::read_dir("/sys/class/power_supply") {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.starts_with("BAT") {
+                let status = std::fs::read_to_string(entry.path().join("status")).unwrap_or_default();
+                let cap = std::fs::read_to_string(entry.path().join("capacity")).unwrap_or_default();
+                let energy_full = std::fs::read_to_string(entry.path().join("energy_full")).ok()
+                    .and_then(|s| s.trim().parse::<f64>().ok());
+                let energy_design = std::fs::read_to_string(entry.path().join("energy_full_design")).ok()
+                    .and_then(|s| s.trim().parse::<f64>().ok());
+                
+                let health_pct = match (energy_full, energy_design) {
+                    (Some(full), Some(design)) if design > 0.0 => format!("{:.1}%", (full / design) * 100.0),
+                    _ => "N/A".into(),
+                };
+                battery_info = format!("{}: Status: {}, Level: {}%, Health/Capacity: {}", name, status.trim(), cap.trim(), health_pct);
+            }
+        }
+    }
+
+    // Failed systemd units
+    let failed_units = Command::new("systemctl")
+        .args(["--failed", "--no-legend"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+        .unwrap_or_default();
+
+    // Pacman Lock check
+    let pacman_locked = Path::new("/var/lib/pacman/db.lck").exists();
+
+    // Disk space
+    let disk_space = Command::new("df")
+        .args(["-h", "/"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+        .unwrap_or_default();
+
+    // Kernel critical errors
+    let journal_errors = Command::new("journalctl")
+        .args(["-p", "3", "-xb", "-n", "10", "--no-pager"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+        .unwrap_or_default();
+
+    println!("Kernel:        {}", kernel_ver.lines().next().unwrap_or("Unknown").cyan());
+    println!("CPU Governor:  {}", governor.trim().green().bold());
+    println!("Thermals:      {}", temps.join(", ").yellow());
+    if !battery_info.is_empty() {
+        println!("Battery:       {}", battery_info.cyan());
+    }
+    println!("Pacman Lock:   {}", if pacman_locked { "LOCKED (/var/lib/pacman/db.lck)".red().bold() } else { "Clean (No stale lock)".green() });
+    println!("Failed Units:  {}", if failed_units.trim().is_empty() { "0 failed systemd units".green() } else { failed_units.trim().red().bold() });
+    println!();
+
+    if battery_only {
+        return Ok(());
+    }
+
+    // 2. Query TGS LLM for Holistic Diagnosis
+    println!("{}", "🧠 Consulting TGS AI Doctor for System Health Diagnosis...".bold().magenta());
+
+    let telemetry = format!(
+        "System Metrics:\n\
+        - Kernel: {}\n\
+        - CPU Governor: {}\n\
+        - Thermals: {}\n\
+        - Battery: {}\n\
+        - Failed Systemd Units:\n{}\n\
+        - Pacman Lock Status: {}\n\
+        - Disk Space (/):\n{}\n\
+        - Critical Kernel Errors (journalctl -p 3):\n{}\n",
+        kernel_ver.lines().next().unwrap_or(""),
+        governor.trim(),
+        temps.join(", "),
+        battery_info,
+        if failed_units.trim().is_empty() { "None" } else { &failed_units },
+        if pacman_locked { "LOCKED" } else { "UNLOCKED" },
+        disk_space,
+        if journal_errors.trim().is_empty() { "None" } else { &journal_errors }
+    );
+
+    let prompt = format!(
+        "You are the TGS Autonomous Linux Kernel & Hardware Doctor on Garuda/Arch Linux.\n\
+        Analyze this live telemetry:\n{}\n\
+        Format your diagnosis strictly as:\n\
+        1. 🩺 Health Score: X/100 (and 1-sentence summary)\n\
+        2. 🚨 Critical Issues & Anomalies (if any)\n\
+        3. ⚡ Recommended Tuning & Maintenance Actions (numbered list with exact shell commands)",
+        telemetry
+    );
+
+    let ctx = build_engine_context(cli_max_budget);
+    let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, "auto", None)?;
+
+    let req = CompletionRequest::new(model_name, prompt)
+        .with_stream(true)
+        .with_cancellation(ctx.cancellation_token.clone());
+
+    let mut stream = prov.stream(req).await?;
+    let start = std::time::Instant::now();
+
+    while let Some(chunk_res) = stream.next().await {
+        if let Ok(chunk) = chunk_res {
+            if let StreamChunkDelta::Text(t) = chunk.delta {
+                print!("{}", t);
+                io::stdout().flush().ok();
+            }
+        }
+    }
+
+    println!("\n\n{} Diagnosis completed in {:.2}s", "✔".green().bold(), start.elapsed().as_secs_f64());
+
+    // 3. Interactive Healing Actions
+    if fix {
+        println!("\n{}", "───────────────────────────────────────────────────────".yellow());
+        println!("{}", "⚡ TGS Doctor Auto-Remediation Mode:".bold().yellow());
+        println!("{}", "───────────────────────────────────────────────────────".yellow());
+
+        if pacman_locked {
+            print!("{}", "Stale pacman lock file detected. Remove /var/lib/pacman/db.lck? [y/N]: ".bold());
+            io::stdout().flush().ok();
+            let mut choice = String::new();
+            io::stdin().read_line(&mut choice).ok();
+            if choice.trim().eq_ignore_ascii_case("y") {
+                let _ = Command::new("sudo").args(["rm", "-f", "/var/lib/pacman/db.lck"]).status();
+                println!("{}", "✔ Stale pacman lock removed.".green());
+            }
+        }
+
+        if !failed_units.trim().is_empty() {
+            print!("{}", "Attempt to reset failed systemd units (systemctl reset-failed)? [y/N]: ".bold());
+            io::stdout().flush().ok();
+            let mut choice = String::new();
+            io::stdin().read_line(&mut choice).ok();
+            if choice.trim().eq_ignore_ascii_case("y") {
+                let _ = Command::new("systemctl").args(["reset-failed"]).status();
+                let _ = Command::new("systemctl").args(["--user", "reset-failed"]).status();
+                println!("{}", "✔ Failed unit state reset.".green());
+            }
+        }
+
+        println!("{}", "✔ System healing pass completed.".green().bold());
+    }
+
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// 6. Autonomous Headless Web Agent (tgs browse)
+// ---------------------------------------------------------------------------
+
+pub async fn handle_browse_command(
+    target: String,
+    query: Option<String>,
+    cli_max_budget: f64,
+) -> Result<()> {
+    println!("{}", "🌐 Launching Headless Web Extraction Agent...".cyan().bold());
+    println!("Target URL: {}", target.yellow());
+
+    // 1. Fetch content using headless Chrome or reqwest fallback
+    let raw_html = if Command::new("google-chrome-stable").arg("--version").output().is_ok() {
+        println!("{}", "Using Google Chrome (Headless DOM Engine)...".dimmed());
+        let out = Command::new("google-chrome-stable")
+            .args([
+                "--headless=new",
+                "--disable-gpu",
+                "--no-sandbox",
+                "--dump-dom",
+                &target,
+            ])
+            .output();
+        match out {
+            Ok(o) if o.status.success() => String::from_utf8_lossy(&o.stdout).to_string(),
+            _ => {
+                println!("{}", "Headless Chrome failed, falling back to HTTP client...".yellow());
+                fetch_http_body(&target).await?
+            }
+        }
+    } else {
+        fetch_http_body(&target).await?
+    };
+
+    if raw_html.trim().is_empty() {
+        return Err(TagisanError::Execution(format!("Failed to retrieve any content from {}", target)));
+    }
+
+    // 2. Extract and clean text from HTML
+    let cleaned_text = extract_clean_text_from_html(&raw_html);
+    let sample = if cleaned_text.len() > 25_000 {
+        format!("{}\n\n[... Page truncated at 25,000 characters ...]", &cleaned_text[..25_000])
+    } else {
+        cleaned_text
+    };
+
+    println!("{} Extracted {:.1} KB of clean page text.\n", "✔".green().bold(), sample.len() as f64 / 1024.0);
+
+    // 3. Query TGS
+    let prompt_intent = query.unwrap_or_else(|| "Provide an executive summary and extract all key insights from this page.".to_string());
+    let prompt = format!(
+        "You are an expert web research agent. Analyze this extracted web content from <{}>:\n\
+        User Objective: {}\n\n\
+        EXTRACTED PAGE TEXT:\n```\n{}\n```",
+        target,
+        prompt_intent,
+        sample
+    );
+
+    let ctx = build_engine_context(cli_max_budget);
+    let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, "auto", None)?;
+
+    println!(
+        "{} [{}: {}]...\n",
+        "Analyzing Web Content".bold().magenta(),
+        provider_id.cyan().bold(),
+        model_name.yellow()
+    );
+
+    let req = CompletionRequest::new(model_name, prompt)
+        .with_stream(true)
+        .with_cancellation(ctx.cancellation_token.clone());
+
+    let mut stream = prov.stream(req).await?;
+    let start = std::time::Instant::now();
+
+    while let Some(chunk_res) = stream.next().await {
+        if let Ok(chunk) = chunk_res {
+            if let StreamChunkDelta::Text(t) = chunk.delta {
+                print!("{}", t);
+                io::stdout().flush().ok();
+            }
+        }
+    }
+
+    println!("\n\n{} Web analysis completed in {:.2}s", "✔".green().bold(), start.elapsed().as_secs_f64());
+    Ok(())
+}
+
+async fn fetch_http_body(url: &str) -> Result<String> {
+    let client = reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .timeout(Duration::from_secs(15))
+        .build()?;
+    let text = client.get(url).send().await?.text().await?;
+    Ok(text)
+}
+
+fn extract_clean_text_from_html(html: &str) -> String {
+    let re_script = regex::Regex::new(r"(?is)<script[^>]*>.*?</script>|<style[^>]*>.*?</style>|<noscript[^>]*>.*?</noscript>|<svg[^>]*>.*?</svg>").unwrap();
+    let stripped = re_script.replace_all(html, " ");
+    let re_tags = regex::Regex::new(r"<[^>]+>").unwrap();
+    let text_only = re_tags.replace_all(&stripped, " ");
+    let re_spaces = regex::Regex::new(r"[ \t]+").unwrap();
+    let re_newlines = regex::Regex::new(r"\n\s*\n").unwrap();
+    let normalized = re_spaces.replace_all(&text_only, " ");
+    let cleaned = re_newlines.replace_all(&normalized, "\n\n");
+    cleaned.trim().to_string()
+}
+
+// ---------------------------------------------------------------------------
+// 7. Personal Knowledge Vault & Local RAG (tgs recall)
+// ---------------------------------------------------------------------------
+
+pub async fn handle_recall_command(
+    query: Option<String>,
+    index_dir: Option<String>,
+    stats: bool,
+    top_k: usize,
+    cli_max_budget: f64,
+) -> Result<()> {
+    if stats {
+        let store = crate::memory::VectorStore::load_or_default();
+        let default_path = crate::memory::VectorStore::default_path();
+        println!("{}", "=========================================================".cyan());
+        println!("{}", "  📊  Tagisan Persistent Memory & Vault Statistics".bold().yellow());
+        println!("{}", "=========================================================".cyan());
+        println!("Storage File:         {}", default_path.display().to_string().yellow());
+        println!("Total Documents:      {}", store.len().to_string().cyan().bold());
+        return Ok(());
+    }
+
+    if let Some(ref dir) = index_dir {
+        println!("{}", "=========================================================".cyan());
+        println!("{}", format!("  🧠  Indexing Vault into Memory: {}", dir).bold().magenta());
+        println!("{}", "=========================================================".cyan());
+
+        let store = crate::memory::VectorStore::load_or_default();
+        let provider = crate::memory::default_embedding_provider();
+        println!("Embedding Provider: {} ({} dims)", provider.provider_id().cyan().bold(), provider.dimensions());
+
+        let indexer = crate::memory::CodebaseIndexer::new(provider);
+        let start = std::time::Instant::now();
+        let count = indexer.index_directory(dir, &store).await?;
+
+        let default_path = crate::memory::VectorStore::default_path();
+        store.save_to_file(&default_path)?;
+
+        println!("\n{} Indexed {} total chunks in {:.2}s!", "✔".green().bold(), count, start.elapsed().as_secs_f32());
+        println!("Persistent Vault File: {}", default_path.display().to_string().yellow());
+        return Ok(());
+    }
+
+    if let Some(ref q) = query {
+        println!("{}", "=========================================================".cyan());
+        println!("{}", format!("  🧠  TGS Semantic Recall: \"{}\"", q).bold().yellow());
+        println!("{}", "=========================================================".cyan());
+
+        let store = crate::memory::VectorStore::load_or_default();
+        if store.is_empty() {
+            println!("{}: Vault memory is empty. Run `tgs recall --index <dir>` to index notes/code.", "Note".yellow().bold());
+            return Ok(());
+        }
+
+        let provider = crate::memory::default_embedding_provider();
+        let emb = provider.embed_text(q).await?;
+        let hits = store.search(&emb, top_k, 0.05);
+
+        if hits.is_empty() {
+            println!("No relevant matches found in your personal vault.");
+            return Ok(());
+        }
+
+        let mut context_snippets = String::new();
+        println!("Found {} relevant source snippet(s) in personal vault:\n", hits.len());
+        for (i, hit) in hits.iter().enumerate() {
+            let doc = &hit.document;
+            let file_path = doc.metadata.get("file_path").map(|s| s.as_str()).unwrap_or(&doc.id);
+            let start_line = doc.metadata.get("start_line").map(|s| s.as_str()).unwrap_or("?");
+            let end_line = doc.metadata.get("end_line").map(|s| s.as_str()).unwrap_or("?");
+            println!("  [{}] {} (Lines {}-{}) | Score: {:.3}", i + 1, file_path.cyan(), start_line, end_line, hit.score);
+            context_snippets.push_str(&format!("\n--- File: {} (Lines {}-{}) ---\n{}\n", file_path, start_line, end_line, doc.text));
+        }
+
+        // Synthesize answer
+        println!("\n{}", "🇵🇭 Synthesizing answer from personal knowledge...".bold().magenta());
+        let prompt = format!(
+            "You are TGS Personal Knowledge Assistant. Based ONLY on the following retrieved personal documents and codebase files, answer the user question:\n\n\
+            RETRIEVED KNOWLEDGE:\n{}\n\n\
+            USER QUESTION: {}\n\n\
+            Rules: Cite which files and lines your answer is based on.",
+            context_snippets,
+            q
+        );
+
+        let ctx = build_engine_context(cli_max_budget);
+        let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, "auto", None)?;
+
+        let req = CompletionRequest::new(model_name, prompt)
+            .with_stream(true)
+            .with_cancellation(ctx.cancellation_token.clone());
+
+        let mut stream = prov.stream(req).await?;
+        let start = std::time::Instant::now();
+
+        while let Some(chunk_res) = stream.next().await {
+            if let Ok(chunk) = chunk_res {
+                if let StreamChunkDelta::Text(t) = chunk.delta {
+                    print!("{}", t);
+                    io::stdout().flush().ok();
+                }
+            }
+        }
+
+        println!("\n\n{} Recall query answered in {:.2}s", "✔".green().bold(), start.elapsed().as_secs_f64());
+        return Ok(());
+    }
+
+    println!("Usage: tgs recall \"your question\"  OR  tgs recall --index <path>  OR  tgs recall --stats");
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// 8. Sovereign Speech & Voice Copilot (tgs voice)
+// ---------------------------------------------------------------------------
+
+pub async fn handle_voice_command(
+    duration: u32,
+    prompt: Option<String>,
+    cli_max_budget: f64,
+) -> Result<()> {
+    let pid = std::process::id();
+    let timestamp = Local::now().format("%Y%m%d_%H%M%S");
+    let temp_audio = std::env::temp_dir().join(format!("tgs_voice_{}_{}.wav", pid, timestamp));
+    let _guard = TempFileGuard::new(temp_audio.clone());
+
+    println!("{}", "🎙️  TGS Voice Copilot Active".bold().cyan());
+    println!("Recording audio for {}s via PipeWire (pw-record)... Speak now!", duration);
+
+    // Record via pw-record
+    let status = Command::new("pw-record")
+        .args([
+            "--rate", "16000",
+            "--channels", "1",
+            temp_audio.to_str().unwrap(),
+        ])
+        .spawn();
+
+    match status {
+        Ok(mut child) => {
+            tokio::time::sleep(Duration::from_secs(duration as u64)).await;
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+        Err(_) => {
+            return Err(TagisanError::Execution("Failed to spawn pw-record for audio capture.".into()));
+        }
+    }
+
+    if !temp_audio.exists() || std::fs::metadata(&temp_audio).map(|m| m.len() < 1000).unwrap_or(true) {
+        return Err(TagisanError::Execution("Audio recording failed or file was empty.".into()));
+    }
+
+    let file_size = std::fs::metadata(&temp_audio).map(|m| m.len()).unwrap_or(0);
+    println!("{} Recorded {:.1} KB of audio. Processing voice intent...", "✔".green().bold(), file_size as f64 / 1024.0);
+
+    use base64::prelude::*;
+    let audio_bytes = std::fs::read(&temp_audio)?;
+    let audio_b64 = BASE64_STANDARD.encode(&audio_bytes);
+
+    let default_prompt = prompt.unwrap_or_else(|| "Listen to this audio carefully. Transcribe the user speech (English, Tagalog, or Taglish) and execute or answer the user's intent directly and concisely.".to_string());
+
+    let user_blocks = vec![
+        ContentBlock::text(default_prompt),
+        ContentBlock::Image {
+            media_type: "audio/wav".to_string(),
+            data_base64: audio_b64,
+        },
+    ];
+
+    let ctx = build_engine_context(cli_max_budget);
+    let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, "gemini", None)?;
+
+    println!(
+        "{} [{}: {}]...\n",
+        "Transcribing & Reasoning".bold().magenta(),
+        provider_id.cyan().bold(),
+        model_name.yellow()
+    );
+
+    let req = CompletionRequest::new(model_name, "")
+        .with_messages(vec![Message::user_with_content(user_blocks)])
+        .with_stream(true)
+        .with_cancellation(ctx.cancellation_token.clone());
+
+    let mut stream = prov.stream(req).await?;
+    let start = std::time::Instant::now();
+
+    while let Some(chunk_res) = stream.next().await {
+        if let Ok(chunk) = chunk_res {
+            if let StreamChunkDelta::Text(t) = chunk.delta {
+                print!("{}", t);
+                io::stdout().flush().ok();
+            }
+        }
+    }
+
+    println!("\n\n{} Voice response received in {:.2}s", "✔".green().bold(), start.elapsed().as_secs_f64());
+    Ok(())
+}

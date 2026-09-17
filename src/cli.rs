@@ -600,6 +600,51 @@ enum Commands {
         #[arg(default_value = ".")]
         path: String,
     },
+    /// Autonomous Linux kernel, hardware, thermals, battery, and system healer
+    Doctor {
+        /// Interactively fix detected anomalies (stale locks, failed units)
+        #[arg(short, long)]
+        fix: bool,
+
+        /// Display battery degradation and power metrics only
+        #[arg(short, long)]
+        battery: bool,
+    },
+    /// Autonomous headless browser web extraction and DOM analysis agent
+    Browse {
+        /// Target URL to extract and analyze
+        url: String,
+
+        /// Optional question or research objective
+        query: Option<String>,
+    },
+    /// Sovereign personal knowledge vault and local RAG search
+    Recall {
+        /// Semantic search query against personal vault
+        query: Option<String>,
+
+        /// Directory path to recursively index into vault memory
+        #[arg(short, long)]
+        index: Option<String>,
+
+        /// Display vault statistics and storage footprint
+        #[arg(short, long)]
+        stats: bool,
+
+        /// Maximum results to retrieve (default: 5)
+        #[arg(short, long, default_value_t = 5)]
+        top_k: usize,
+    },
+    /// Sovereign speech & voice copilot via PipeWire audio capture and Gemini multimodal audio
+    Voice {
+        /// Recording duration in seconds (default: 5)
+        #[arg(short, long, default_value_t = 5)]
+        duration: u32,
+
+        /// Optional prompt instructions for transcription or command execution
+        #[arg(short, long)]
+        prompt: Option<String>,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -5572,6 +5617,18 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Watch { path } => {
             crate::frontier::handle_watch_command(path, cli.max_budget).await?;
+        }
+        Commands::Doctor { fix, battery } => {
+            crate::frontier::handle_doctor_command(fix, battery, cli.max_budget).await?;
+        }
+        Commands::Browse { url, query } => {
+            crate::frontier::handle_browse_command(url, query, cli.max_budget).await?;
+        }
+        Commands::Recall { query, index, stats, top_k } => {
+            crate::frontier::handle_recall_command(query, index, stats, top_k, cli.max_budget).await?;
+        }
+        Commands::Voice { duration, prompt } => {
+            crate::frontier::handle_voice_command(duration, prompt, cli.max_budget).await?;
         }
     }
 
