@@ -244,29 +244,29 @@ li { margin: 2px 0; line-height: 1.4; }
 </div>
 <h2>Module 1: Enterprise Architectural Topology: Invoking Sovereign TGS Inside Microsoft Power Platform</h2>
 
-<h3></h3>
-<p>In modern Global 2000 enterprises, software engineering operates at the critical intersection of developer toolchains and low-code business operations. Mission-critical business processes, compliance approvals, financial transactions, and operational incident war-rooms reside within the <strong></strong> (Power Apps, Power Automate, Copilot Studio, and Power BI).</p>
+<h3>1.1 The Sovereign Paradigm: Invoking TGS Inside Microsoft Power Platform</h3>
+<p>In modern Global 2000 enterprises, software engineering operates at the critical intersection of developer toolchains and low-code business operations. Mission-critical business processes, compliance approvals, financial transactions, and operational incident war-rooms reside within the <strong>Microsoft Power Platform</strong> (Power Apps, Power Automate, Copilot Studio, and Power BI).</p>
 
-<p>However, low-code platforms traditionally lack deterministic mathematical verification, dialectical multi-agent consensus, and deep abstract syntax tree (AST) code analysis. <strong></strong> bridges this divide by enabling low-code makers, professional developers, and enterprise cloud architects to <strong></strong>.</p>
+<p>However, low-code platforms traditionally lack deterministic mathematical verification, dialectical multi-agent consensus, and deep abstract syntax tree (AST) code analysis. <strong>Tagisan (<code>tgs</code>) Subsystem 5</strong> bridges this divide by enabling low-code makers, professional developers, and enterprise cloud architects to <strong>call Tagisan directly from inside Microsoft Power Platform tools</strong>.</p>
 
 <p>By calling TGS from within Power Platform:</p>
 <ul>
-  <li><strong></strong> in Canvas Apps trigger real-time Hegelian dialectical debates on code and architectural proposals via concise Power Fx formulas.</li>
-  <li><strong></strong> in Power Automate automate pull request audits, blast-radius mitigation, and incident escalations with sub-second TGS evaluations.</li>
-  <li><strong></strong> in Microsoft Dataverse enforce transaction-level gates using C# Plugins and Custom APIs that query TGS before database commit.</li>
-  <li><strong></strong> in Microsoft Copilot Studio invoke TGS tools via Declarative AI Plugins, generating conversational responses strictly grounded in verified architectural decision records (ADRs).</li>
-  <li><strong></strong> on Power Pages sovereign portals verify Ed25519 asymmetric cryptographic receipts issued by TGS for every automated change.</li>
+  <li><strong>Low-Code Makers</strong> in Canvas Apps trigger real-time Hegelian dialectical debates on code and architectural proposals via concise Power Fx formulas.</li>
+  <li><strong>Enterprise SREs</strong> in Power Automate automate pull request audits, blast-radius mitigation, and incident escalations with sub-second TGS evaluations.</li>
+  <li><strong>Enterprise Architects</strong> in Microsoft Dataverse enforce transaction-level gates using C# Plugins and Custom APIs that query TGS before database commit.</li>
+  <li><strong>AI Operators</strong> in Microsoft Copilot Studio invoke TGS tools via Declarative AI Plugins, generating conversational responses strictly grounded in verified architectural decision records (ADRs).</li>
+  <li><strong>Compliance Auditors</strong> on Power Pages sovereign portals verify Ed25519 asymmetric cryptographic receipts issued by TGS for every automated change.</li>
 </ul>
 
-<h3></h3>
+<h3>1.2 In-Platform Calling Topologies &amp; The 6 Invocation Modes</h3>
 <p>Subsystem 5 establishes six distinct in-platform invocation patterns, connecting low-code Microsoft cloud services to the sovereign Tagisan engine:</p>
 <ol>
-  <li><strong></strong>: Makers write declarative formulas invoking <code class="inline-code"></code> or <code class="inline-code"></code>, populating in-memory collections (<code class="inline-code"></code>) and driving reactive galleries.</li>
-  <li><strong></strong>: Flow triggers (GitHub PRs, Dataverse events, Jira webhooks) invoke the TGS Custom Connector action or authenticated HTTP endpoints with HMAC validation, parsing TGS response JSON and branching on consensus scores.</li>
-  <li><strong></strong>: AI plugins bind TGS tools (<code class="inline-code"></code>, <code class="inline-code"></code>, <code class="inline-code"></code>) to Copilot's Generative Orchestrator, enabling conversational prompts grounded in verified TGS audit trails.</li>
-  <li><strong></strong>: Synchronous C# Plugins (<code class="inline-code"></code>), Custom APIs, and Virtual Tables invoke TGS REST endpoints via <code class="inline-code"></code> using Entra ID service principal tokens to gate transactions before database commit.</li>
-  <li><strong></strong>: External sovereign portals execute portal Web API JavaScript and Liquid templates calling TGS endpoints to verify cryptographic signatures and display live compliance attestations.</li>
-  <li><strong></strong>: Power Query M scripts call TGS REST endpoints (<code class="inline-code"></code>), while Direct Lake semantic models read real-time Parquet Delta Lake tables with zero ETL delay.</li>
+  <li><strong>Power Apps Canvas Studio (Power Fx)</strong>: Makers write declarative formulas invoking <code class="inline-code">TGSConnector.ExecuteDebate(...)</code> or <code class="inline-code">TGSConnector.AnalyzeAST(...)</code>, populating in-memory collections (<code class="inline-code">ClearCollect(colTgsNodes, ...)</code>) and driving reactive galleries.</li>
+  <li><strong>Power Automate Cloud Flows</strong>: Flow triggers (GitHub PRs, Dataverse events, Jira webhooks) invoke the TGS Custom Connector action or authenticated HTTP endpoints with HMAC validation, parsing TGS response JSON and branching on consensus scores.</li>
+  <li><strong>Microsoft Copilot Studio AI Plugins</strong>: AI plugins bind TGS tools (<code class="inline-code">CallTGSEngine</code>, <code class="inline-code">AnalyzeCodeAST</code>, <code class="inline-code">ResolveArchitecturalDebate</code>) to Copilot's Generative Orchestrator, enabling conversational prompts grounded in verified TGS audit trails.</li>
+  <li><strong>Microsoft Dataverse Native Extensions</strong>: Synchronous C# Plugins (<code class="inline-code">IPlugin</code>), Custom APIs, and Virtual Tables invoke TGS REST endpoints via <code class="inline-code">HttpClient</code> using Entra ID service principal tokens to gate transactions before database commit.</li>
+  <li><strong>Power Pages Compliance Portals</strong>: External sovereign portals execute portal Web API JavaScript and Liquid templates calling TGS endpoints to verify cryptographic signatures and display live compliance attestations.</li>
+  <li><strong>Power BI &amp; Microsoft Fabric OneLake</strong>: Power Query M scripts call TGS REST endpoints (<code class="inline-code">Json.Document(Web.Contents(...))</code>), while Direct Lake semantic models read real-time Parquet Delta Lake tables with zero ETL delay.</li>
 </ol>
 
 <div class="diagram-box">
@@ -399,14 +399,14 @@ li { margin: 2px 0; line-height: 1.4; }
 
 ### 1.3 Zero-Trust Architectural Tenets for In-Platform Invocations
 <ul>
-  <li><strong></strong>: Power Platform never stores raw passwords. All invocations leverage Microsoft Entra ID Managed Identities, Continuous Access Evaluation (CAE), or Azure Workload Identity Federation (WIF).</li>
-  <li><strong></strong>: High blast-radius code modifications are blocked from reaching production Dataverse tables unless a 5-stage Hegelian multi-agent debate reaches an approved consensus score.</li>
-  <li><strong></strong>: Every execution emits an Ed25519 digital signature verified against sovereign public keys, establishing non-repudiable audit trails.</li>
+  <li><strong>Zero Plaintext Secrets</strong>: Power Platform never stores raw passwords. All invocations leverage Microsoft Entra ID Managed Identities, Continuous Access Evaluation (CAE), or Azure Workload Identity Federation (WIF).</li>
+  <li><strong>Dialectical Verification</strong>: High blast-radius code modifications are blocked from reaching production Dataverse tables unless a 5-stage Hegelian multi-agent debate reaches an approved consensus score.</li>
+  <li><strong>Cryptographic Receipt Ledger</strong>: Every execution emits an Ed25519 digital signature verified against sovereign public keys, establishing non-repudiable audit trails.</li>
 </ul>
 
 <h2>Module 2: Complete Installation, Toolchains & Entra ID Setup for Calling TGS</h2>
 
-<h3></h3>
+<h3>2.1 Developer Toolchain Installation &amp; Prerequisites</h3>
 <p>To call TGS from inside Microsoft Power Platform, professional developers and administrators must establish the dual CLI orchestration environment:</p>
 
 <div class="ide-code-window">
@@ -455,8 +455,8 @@ li { margin: 2px 0; line-height: 1.4; }
   </div>
 </div>
 
-<h3></h3>
-<p>To enable secure service-to-service communication between Power Platform and the TGS API Gateway, configure an Entra ID Application Registration using Azure CLI (<code class="inline-code"></code>):</p>
+<h3>2.2 Microsoft Entra ID App Registration for Calling TGS</h3>
+<p>To enable secure service-to-service communication between Power Platform and the TGS API Gateway, configure an Entra ID Application Registration using Azure CLI (<code class="inline-code">az ad</code>):</p>
 
 <div class="ide-code-window">
   <div class="ide-titlebar">
@@ -529,20 +529,20 @@ li { margin: 2px 0; line-height: 1.4; }
 <tr><td class="line-num">59</td><td class="line-code"><span style="color: #A6E22E">echo</span><span style="color: #F8F8F2"> </span><span style="color: #E6DB74">"  Tenant ID     : ${</span><span style="color: #F8F8F2">TENANT_ID</span><span style="color: #E6DB74">}"</span></td></tr>
 <tr><td class="line-num">60</td><td class="line-code"><span style="color: #A6E22E">echo</span><span style="color: #F8F8F2"> </span><span style="color: #E6DB74">"  Application ID: ${</span><span style="color: #F8F8F2">APP_ID</span><span style="color: #E6DB74">}"</span></td></tr>
 <tr><td class="line-num">61</td><td class="line-code"><span style="color: #A6E22E">echo</span><span style="color: #F8F8F2"> </span><span style="color: #E6DB74">"  App ID URI    : ${</span><span style="color: #F8F8F2">APP_URI</span><span style="color: #E6DB74">}"</span></td></tr>
-<tr><td class="line-num">62</td><td class="line-code"><span style="color: #A6E22E">echo</span><span style="color: #F8F8F2"> </span><span style="color: #E6DB74">"  Client Secret : <strong></strong><strong></strong><strong></strong><strong></strong><strong></strong><strong></strong><strong></strong><strong></strong><strong></strong><strong></strong>"</span></td></tr>
+<tr><td class="line-num">62</td><td class="line-code"><span style="color: #A6E22E">echo</span><span style="color: #F8F8F2"> </span><span style="color: #E6DB74">"  Client Secret : ****************************************"</span></td></tr>
 <tr><td class="line-num">63</td><td class="line-code"><span style="color: #A6E22E">echo</span><span style="color: #F8F8F2"> </span><span style="color: #E6DB74">"=============================================================================="</span></td></tr>
     </table>
   </div>
 </div>
 
-<h3></h3>
+<h3>2.3 Hybrid Connectivity: On-Premises Data Gateway &amp; Azure VNet Gateways</h3>
 <p>In sovereign enterprise topologies where the TGS engine runs within private corporate datacenters or isolated Azure Virtual Networks:</p>
 <ul>
-  <li><strong></strong>: Install the OPDG cluster on a dedicated Linux/Windows host with outbound HTTPS (port 443) to the Power Platform cloud. The gateway proxies inbound Custom Connector requests directly to <code class="inline-code"></code> without opening public inbound firewall ports.</li>
-  <li><strong></strong>: For Azure-hosted containerized TGS clusters, deploy an Azure VNet Data Gateway in the delegated subnet to route Power Platform traffic over private IP backbones with zero public ingress.</li>
+  <li><strong>On-Premises Data Gateway (OPDG)</strong>: Install the OPDG cluster on a dedicated Linux/Windows host with outbound HTTPS (port 443) to the Power Platform cloud. The gateway proxies inbound Custom Connector requests directly to <code class="inline-code">http://localhost:8080</code> without opening public inbound firewall ports.</li>
+  <li><strong>Azure VNet Data Gateway</strong>: For Azure-hosted containerized TGS clusters, deploy an Azure VNet Data Gateway in the delegated subnet to route Power Platform traffic over private IP backbones with zero public ingress.</li>
 </ul>
 
-<h3></h3>
+<h3>2.4 PAC CLI Authentication Handshake</h3>
 <p>Authenticate the PAC CLI with your Dataverse tenant using the Entra ID service principal:</p>
 
 <div class="terminal-window">
@@ -612,8 +612,8 @@ li { margin: 2px 0; line-height: 1.4; }
 
 <h2>Module 3: Building & Certifying the TGS Custom Connector to Enable In-Platform Calls</h2>
 
-<h3></h3>
-<p>Power Apps, Power Automate, and Copilot Studio interact with external REST services through <strong></strong>. A production-grade connector wraps the Tagisan REST Gateway using an OpenAPI 3.0 (Swagger) specification annotated with Microsoft vendor extensions (<code class="inline-code"></code>).</p>
+<h3>3.1 Certified Custom Connectors: The Bridge for Calling TGS</h3>
+<p>Power Apps, Power Automate, and Copilot Studio interact with external REST services through <strong>Custom Connectors</strong>. A production-grade connector wraps the Tagisan REST Gateway using an OpenAPI 3.0 (Swagger) specification annotated with Microsoft vendor extensions (<code class="inline-code">x-ms-*</code>).</p>
 
 <div class="ide-code-window">
   <div class="ide-titlebar">
@@ -724,18 +724,18 @@ li { margin: 2px 0; line-height: 1.4; }
   </div>
 </div>
 
-<h3></h3>
+<h3>3.2 Step-by-Step Maker Portal Configuration &amp; Live Test</h3>
 <ol>
-  <li>Sign in to the <strong></strong> (<code class="inline-code"></code>).</li>
-  <li>In the left navigation, select <strong></strong> $	o$ <strong></strong> $	o$ <strong></strong> $	o$ <strong></strong>.</li>
-  <li>In <strong></strong>, set Host to <code class="inline-code"></code> and Base URL to <code class="inline-code"></code>.</li>
-  <li>In <strong></strong>, select <strong></strong> with <strong></strong>:</li>
+  <li>Sign in to the <strong>Power Apps Maker Portal</strong> (<code class="inline-code">https://make.powerapps.com</code>).</li>
+  <li>In the left navigation, select <strong>Dataverse</strong> &rarr; <strong>Custom Connectors</strong> &rarr; <strong>New custom connector</strong> &rarr; <strong>Import an OpenAPI file</strong>.</li>
+  <li>In <strong>General information</strong>, set Host to <code class="inline-code">api.tagisan.internal</code> and Base URL to <code class="inline-code">/v1</code>.</li>
+  <li>In <strong>Security</strong>, select <strong>OAuth 2.0</strong> with <strong>Azure Active Directory</strong>:</li>
 <ul>
   <li>Client ID & Client Secret from Entra ID app registration.</li>
-  <li>Resource URL: <code class="inline-code"></code>.</li>
-  <li>Scope: <code class="inline-code"></code>.</li>
-  <li>In <strong></strong>, create a new connection and execute <code class="inline-code"></code> with a sample payload.</li>
-  <li>Verify the HTTP <code class="inline-code"></code> response returning the synthesized verdict, confidence score, and Ed25519 signature proof.</li>
+  <li>Resource URL: <code class="inline-code">https://api.tagisan.internal</code>.</li>
+  <li>Scope: <code class="inline-code">api://tagisan.internal/Consensus.Execute</code>.</li>
+  <li>In <strong>Test</strong>, create a new connection and execute <code class="inline-code">ExecuteDialecticalDebate</code> with a sample payload.</li>
+  <li>Verify the HTTP <code class="inline-code">200 OK</code> response returning the synthesized verdict, confidence score, and Ed25519 signature proof.</li>
 </ul>
 </ol>
 
@@ -824,18 +824,18 @@ li { margin: 2px 0; line-height: 1.4; }
 
 <h2>Module 4: Calling TGS Inside Power Apps Canvas Apps & Model-Driven Apps via Power Fx</h2>
 
-<h3></h3>
-<p>Enterprise governance requires all low-code components, Custom Connectors, and PCF widgets to be bundled into managed, versioned Solution packages (<code class="inline-code"></code>) containing <code class="inline-code"></code> and <code class="inline-code"></code>. Tagisan automates this assembly, ensuring seamless deployment across DEV, TEST, and PROD environments.</p>
+<h3>4.1 Solution Packaging Engine &amp; Power Apps Canvas Studio</h3>
+<p>Enterprise governance requires all low-code components, Custom Connectors, and PCF widgets to be bundled into managed, versioned Solution packages (<code class="inline-code">.zip</code>) containing <code class="inline-code">solution.xml</code> and <code class="inline-code">customizations.xml</code>. Tagisan automates this assembly, ensuring seamless deployment across DEV, TEST, and PROD environments.</p>
 
-<h3></h3>
-<p>Citizen developers and SRE engineers invoke TGS directly from Canvas App button clicks, screen transitions, and timer ticks using declarative <strong></strong>.</p>
+<h3>4.2 Calling TGS Inside Canvas Studio via Power Fx</h3>
+<p>Citizen developers and SRE engineers invoke TGS directly from Canvas App button clicks, screen transitions, and timer ticks using declarative <strong>Power Fx formulas</strong>.</p>
 
 <p>Step-by-Step Power Fx Implementation:</p>
 <ol>
   <li>Open the Canvas App in Power Apps Studio.</li>
-  <li>In the <strong></strong> pane, click <strong></strong> and select the <code class="inline-code"></code>.</li>
-  <li>Add a Multi-line Text Input (<code class="inline-code"></code>), a Slider (<code class="inline-code"></code>), an "Execute Audit" Button (<code class="inline-code"></code>), and a Gallery (<code class="inline-code"></code>).</li>
-  <li>Set the <code class="inline-code"></code> property of <code class="inline-code"></code> to call TGS:</li>
+  <li>In the <strong>Data</strong> pane, click <strong>Add data</strong> and select the <code class="inline-code">TGSConnector</code>.</li>
+  <li>Add a Multi-line Text Input (<code class="inline-code">txtCodeInput</code>), a Slider (<code class="inline-code">sldRiskLimit</code>), an "Execute Audit" Button (<code class="inline-code">btnExecuteAudit</code>), and a Gallery (<code class="inline-code">galArguments</code>).</li>
+  <li>Set the <code class="inline-code">OnSelect</code> property of <code class="inline-code">btnExecuteAudit</code> to call TGS:</li>
 </ol>
 
 <div class="ide-code-window">
@@ -941,11 +941,11 @@ li { margin: 2px 0; line-height: 1.4; }
   </div>
 </div>
 
-<h3></h3>
+<h3>4.3 Binding TGS Results to Visual Gallery &amp; Gauges</h3>
 <ul>
-  <li><strong></strong>: Set <code class="inline-code"></code> of <code class="inline-code"></code> to <code class="inline-code"></code>, binding <code class="inline-code"></code> to <code class="inline-code"></code> and <code class="inline-code"></code> to <code class="inline-code"></code>.</li>
-  <li><strong></strong>: Bind a circular SVG progress meter to <code class="inline-code"></code>.</li>
-  <li><strong></strong>: Render a badge displaying <code class="inline-code"></code> with a verified green checkmark.</li>
+  <li><strong>AST Nodes Gallery</strong>: Set <code class="inline-code">Items</code> of <code class="inline-code">galArguments</code> to <code class="inline-code">colThesisPoints</code>, binding <code class="inline-code">Title</code> to <code class="inline-code">ThisItem.ArgumentTitle</code> and <code class="inline-code">Subtitle</code> to <code class="inline-code">ThisItem.EvidenceCodeSnippet</code>.</li>
+  <li><strong>Hegelian Confidence Gauge</strong>: Bind a circular SVG progress meter to <code class="inline-code">varTgsResponse.synthesis.confidence_pct</code>.</li>
+  <li><strong>Cryptographic Stamp</strong>: Render a badge displaying <code class="inline-code">Left(varCryptoProof, 16) &amp; "..."</code> with a verified green checkmark.</li>
 </ul>
 
 <div class="diagram-box">
@@ -1039,10 +1039,10 @@ li { margin: 2px 0; line-height: 1.4; }
 
 <h2>Module 5: Modern PCF Controls Calling TGS Inside Dataverse Forms (React 18 & Fluent UI v9)</h2>
 
-<h3></h3>
-<p>While Canvas Apps handle low-code forms, Model-Driven Apps and Dataverse standard entity forms require high-performance, responsive custom UI components. The <strong></strong> allows pro-developers to write TypeScript controls that call TGS endpoints directly and render complex interactive visualizations.</p>
+<h3>5.1 Modern PCF Custom Controls with React 18 &amp; Fluent UI v9</h3>
+<p>While Canvas Apps handle low-code forms, Model-Driven Apps and Dataverse standard entity forms require high-performance, responsive custom UI components. The <strong>Power Apps Component Framework (PCF)</strong> allows pro-developers to write TypeScript controls that call TGS endpoints directly and render complex interactive visualizations.</p>
 
-<h3></h3>
+<h3>5.2 Scaffolding &amp; Manifest Modeling</h3>
 <p>Initialize the PCF field control using PAC CLI:</p>
 <div class="ide-code-window">
   <div class="ide-titlebar">
@@ -1059,7 +1059,7 @@ li { margin: 2px 0; line-height: 1.4; }
   </div>
 </div>
 
-<p>Configure <code class="inline-code"></code> to declare bound Dataverse columns and Web API capabilities:</p>
+<p>Configure <code class="inline-code">ControlManifest.Input.xml</code> to declare bound Dataverse columns and Web API capabilities:</p>
 <div class="ide-code-window">
   <div class="ide-titlebar">
     <span class="ide-dot dot-red"></span>
@@ -1094,8 +1094,8 @@ li { margin: 2px 0; line-height: 1.4; }
   </div>
 </div>
 
-<h3></h3>
-<p>The component uses React 18 and Fluent UI v9 (<code class="inline-code"></code>) to call TGS and render an interactive AST dependency tree:</p>
+<h3>5.3 Calling TGS Inside <code>TagisanAstConsensusWidget.tsx</code></h3>
+<p>The component uses React 18 and Fluent UI v9 (<code class="inline-code">@fluentui/react-components</code>) to call TGS and render an interactive AST dependency tree:</p>
 
 <div class="ide-code-window">
   <div class="ide-titlebar">
@@ -1355,7 +1355,7 @@ li { margin: 2px 0; line-height: 1.4; }
 </div>
 
 ### 5.4 The 5-Stage Dialectical Consensus Workflow
-<p>Tagisan implements Georg Wilhelm Friedrich Hegel's dialectical triad (<strong></strong>) as an autonomous multi-agent consensus loop. In Power Automate and PCF controls, this ensures that every code change is rigorously stress-tested before being merged or approved.</p>
+<p>Tagisan implements Georg Wilhelm Friedrich Hegel's dialectical triad (<strong>Thesis &rarr; Antithesis &rarr; Synthesis</strong>) as an autonomous multi-agent consensus loop. In Power Automate and PCF controls, this ensures that every code change is rigorously stress-tested before being merged or approved.</p>
 
 <div class="diagram-box">
 <svg width="680" height="280" viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
@@ -1450,8 +1450,8 @@ li { margin: 2px 0; line-height: 1.4; }
 
 <h2>Module 6: Calling TGS Inside Power Automate Cloud Flows & Desktop Flows</h2>
 
-<h3></h3>
-<p>Tagisan can automatically transpile complex engineering pipelines into native Power Automate Cloud Flow JSON definitions (<code class="inline-code"></code>).</p>
+<h3>6.1 Power Automate Cloud Flow Transpilation &amp; Calling TGS</h3>
+<p>Tagisan can automatically transpile complex engineering pipelines into native Power Automate Cloud Flow JSON definitions (<code class="inline-code">workflowDefinition.json</code>).</p>
 <p>These flows respond to GitHub webhooks, validate HMAC-SHA256 signatures, invoke the Tagisan REST API, dispatch interactive Teams Adaptive Cards, and update Dataverse audit records.</p>
 
 <div class="ide-code-window">
@@ -1596,7 +1596,7 @@ li { margin: 2px 0; line-height: 1.4; }
   </div>
 </div>
 
-<h3></h3>
+<h3>6.2 Live Power Automate Flow Execution &amp; Run History</h3>
 <p>The Power Automate Run History page provides complete visibility into flow execution, showing execution timing, HTTP status codes, and raw JSON input/output payloads.</p>
 
 <div class="diagram-box">
@@ -1682,10 +1682,10 @@ li { margin: 2px 0; line-height: 1.4; }
 
 <h2>Module 7: Calling TGS Inside Microsoft Dataverse (C# Plugins, Custom APIs & Virtual Tables)</h2>
 
-<h3></h3>
+<h3>7.1 Calling TGS from Microsoft Dataverse: C# Plugins, Custom APIs &amp; Virtual Tables</h3>
 <p>Deep backend enterprise integration allows Microsoft Dataverse itself to invoke TGS synchronously or asynchronously:</p>
 
-<h4></h4>
+<h4>7.1.1 Synchronous C# Plugin Execution Pipeline (<code>IPlugin</code>)</h4>
 <p>When an architectural record is created or updated in Dataverse, a synchronous C# plugin can call the TGS API Gateway to execute pre-validation before committing the transaction:</p>
 
 <div class="ide-code-window">
@@ -1811,18 +1811,18 @@ li { margin: 2px 0; line-height: 1.4; }
   </div>
 </div>
 
-<h4></h4>
-<p>Expose <code class="inline-code"></code> directly as an unmanaged/managed Custom API in Dataverse, making it callable via OData v4 Web API (<code class="inline-code"></code>).</p>
+<h4>7.1.2 Custom API Declaration for Calling TGS</h4>
+<p>Expose <code class="inline-code">tgs_ExecuteAstAudit</code> directly as an unmanaged/managed Custom API in Dataverse, making it callable via OData v4 Web API (<code class="inline-code">POST /api/data/v9.2/tgs_ExecuteAstAudit</code>).</p>
 
-<h4></h4>
+<h4>7.1.3 Virtual Table Data Provider</h4>
 <p>Map TGS internal agent sessions, active debates, and audit ledgers directly in Dataverse without data replication, allowing Power Apps to query TGS data as native relational tables.</p>
 
-<h3></h3>
+<h3>7.2 Power Pages Sovereign Compliance Portal</h3>
 <p>External auditors and third-party compliance assessors verify Tagisan architectural decisions and Ed25519 cryptographic receipts through a hardened, read-only Power Pages sovereign portal:</p>
 <ul>
   <li>Authenticated via Azure B2B / Entra External ID.</li>
   <li>Displays live compliance certificates (SOC2 Type II, ISO 27001, FedRAMP High).</li>
-  <li>Portal Web API JavaScript calls <code class="inline-code"></code> to validate signature authenticity in real time.</li>
+  <li>Portal Web API JavaScript calls <code class="inline-code">tgs_VerifyReceipt</code> to validate signature authenticity in real time.</li>
 </ul>
 
 <div class="diagram-box">
@@ -1909,7 +1909,7 @@ li { margin: 2px 0; line-height: 1.4; }
 
 <h2>Module 8: Calling TGS Inside Power BI: Direct Lake, M Query & Real-Time SRE Observability</h2>
 
-<h3></h3>
+<h3>8.1 Ingesting TGS Telemetry into Power BI via Power Query M</h3>
 <p>Power BI allows business leaders and SRE teams to analyze multi-agent consensus telemetry. Power Query M functions call the TGS REST API Gateway directly to pull real-time metrics:</p>
 
 <div class="ide-code-window">
@@ -1984,11 +1984,11 @@ li { margin: 2px 0; line-height: 1.4; }
   </div>
 </div>
 
-<h3></h3>
-<p>Tagisan streams high-velocity telemetry into <strong></strong>:</p>
+<h3>8.2 Microsoft Fabric OneLake Direct Lake SRE Observability</h3>
+<p>Tagisan streams high-velocity telemetry into <strong>Microsoft Fabric OneLake</strong>:</p>
 <ul>
-  <li><strong></strong>: Power BI reports read Parquet Delta Lake files directly from OneLake storage with zero ETL latency and sub-second query speeds.</li>
-  <li><strong></strong>: SRE measures compute rolling MTTR, Hegelian consensus confidence percentiles (P50, P95, P99), and Purview DLP compliance scores:</li>
+  <li><strong>Direct Lake Semantic Models</strong>: Power BI reports read Parquet Delta Lake files directly from OneLake storage with zero ETL latency and sub-second query speeds.</li>
+  <li><strong>Real-Time SRE Metrics</strong>: SRE measures compute rolling MTTR, Hegelian consensus confidence percentiles (P50, P95, P99), and Purview DLP compliance scores:</li>
 </ul>
 
 <div class="ide-code-window">
@@ -2108,12 +2108,12 @@ li { margin: 2px 0; line-height: 1.4; }
 
 <h2>Module 9: Calling TGS Inside Microsoft Copilot Studio: Declarative AI Plugins & Generative Grounding</h2>
 
-<h3></h3>
-<p>Tagisan acts as an autonomous knowledge and execution engine for <strong></strong>:</p>
+<h3>9.1 Microsoft Copilot Studio Declarative AI Plugins Calling TGS</h3>
+<p>Tagisan acts as an autonomous knowledge and execution engine for <strong>Microsoft Copilot Studio</strong>:</p>
 <ul>
-  <li><strong></strong>: Exposing Tagisan tools directly to Copilot using OpenAPI 3.0 plugin manifests (<code class="inline-code"></code>).</li>
-  <li><strong></strong>: Binding <code class="inline-code"></code>, <code class="inline-code"></code>, and <code class="inline-code"></code> to the Copilot Generative Orchestrator.</li>
-  <li><strong></strong>: Grounding Copilot responses in verified Dataverse ADR tables to completely eliminate LLM hallucinations.</li>
+  <li><strong>OpenAPI 3.0 Tool Binding</strong>: Exposing Tagisan tools directly to Copilot using OpenAPI 3.0 plugin manifests (<code class="inline-code">ai-plugin.json</code>).</li>
+  <li><strong>Orchestrator Tool Calling</strong>: Binding <code class="inline-code">CallTGSEngine</code>, <code class="inline-code">AnalyzeCodeAST</code>, and <code class="inline-code">ResolveArchitecturalDebate</code> to the Copilot Generative Orchestrator.</li>
+  <li><strong>ADR Table Grounding</strong>: Grounding Copilot responses in verified Dataverse ADR tables to completely eliminate LLM hallucinations.</li>
 </ul>
 
 <div class="ide-code-window">
@@ -2184,12 +2184,12 @@ li { margin: 2px 0; line-height: 1.4; }
   </div>
 </div>
 
-<h3></h3>
+<h3>9.2 Conversational Prompt Lifecycle Calling TGS Inside Copilot</h3>
 <ol>
-  <li><strong></strong>: SRE Engineer asks: *"Copilot, audit the checkout microservice refactoring proposal for high-risk AST dependencies using Tagisan."*</li>
-  <li><strong></strong>: Copilot identifies the intent and invokes the <code class="inline-code"></code> tool with the source repository URL.</li>
-  <li><strong></strong>: TGS parses syntax trees, computes blast-radius score (3.2 / Low), and returns synthesized evidence.</li>
-  <li><strong></strong>: Copilot renders an interactive Adaptive Card with verified green status badges, blast radius breakdown, and an "Approve Merge" action button.</li>
+  <li><strong>User Prompt</strong>: SRE Engineer asks: <em>"Copilot, audit the checkout microservice refactoring proposal for high-risk AST dependencies using Tagisan."</em></li>
+  <li><strong>Intent &amp; Tool Selection</strong>: Copilot identifies the intent and invokes the <code class="inline-code">AnalyzeCodeAST</code> tool with the source repository URL.</li>
+  <li><strong>TGS Autonomous Execution</strong>: TGS parses syntax trees, computes blast-radius score (3.2 / Low), and returns synthesized evidence.</li>
+  <li><strong>Adaptive Card Grounded Output</strong>: Copilot renders an interactive Adaptive Card with verified green status badges, blast radius breakdown, and an "Approve Merge" action button.</li>
 </ol>
 
 <div class="diagram-box">
@@ -2272,26 +2272,26 @@ li { margin: 2px 0; line-height: 1.4; }
 
 <h2>Module 10: Enterprise Security, ALM Pipelines & Purview Data Loss Prevention (DLP)</h2>
 
-<h3></h3>
+<h3>10.1 Enterprise ALM Pipelines &amp; Purview Data Loss Prevention (DLP)</h3>
 <p>Calling TGS from inside Power Platform requires enterprise-grade security and automated lifecycle management:</p>
 
-<h4></h4>
+<h4>10.1.1 Microsoft Purview Data Loss Prevention (DLP) Policy Configuration</h4>
 <p>To ensure sensitive corporate source code sent to TGS never leaks to unauthorized external connectors:</p>
 <ul>
-  <li>Classify the <code class="inline-code"></code> into the <strong></strong> alongside Microsoft Dataverse, Azure DevOps, and Office 365.</li>
-  <li>Isolate social and personal cloud connectors (Twitter, Google Drive, Personal Dropbox) in the <strong></strong> or <strong></strong> groups.</li>
+  <li>Classify the <code class="inline-code">TGSConnector</code> into the <strong>Business</strong> group alongside Microsoft Dataverse, Azure DevOps, and Office 365.</li>
+  <li>Isolate social and personal cloud connectors (Twitter, Google Drive, Personal Dropbox) in the <strong>Non-Business</strong> or <strong>Blocked</strong> groups.</li>
   <li>If a maker attempts to create a flow passing TGS audit data to an unapproved connector, Power Platform DLP immediately blocks flow activation.</li>
 </ul>
 
-<h4></h4>
+<h4>10.1.2 Automated ALM via GitHub Actions &amp; PAC CLI</h4>
 <ul>
   <li>In multi-tier Canvas App calls, the user's Entra ID identity is preserved using OAuth 2.0 On-Behalf-Of (OBO) token exchange, ensuring user-level RBAC is respected inside TGS.</li>
   <li>Real-time token revocation (CAE) terminates sessions within seconds if user risk changes or device compliance lapses.</li>
 </ul>
 
-<h4></h4>
+<h4>10.1.3 Continuous Security Attestation &amp; Rollback Circuit Breakers</h4>
 <ul>
-  <li>Manage automated multi-stage deployment environments (DEV $	o$ TEST $	o$ PROD) directly in the Power Platform Admin Center.</li>
+  <li>Manage automated multi-stage deployment environments (DEV &rarr; TEST &rarr; PROD) directly in the Power Platform Admin Center.</li>
   <li>Automated PAC CLI solution export/import with pre-deployment automated regression test validation.</li>
 </ul>
 
