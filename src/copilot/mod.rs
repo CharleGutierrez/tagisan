@@ -55,6 +55,14 @@ pub mod wam;
 pub mod ms_enterprise;
 pub mod ms_frontier;
 pub mod ms_hardened;
+pub mod ms_soar_frontier;
+
+pub use ms_soar_frontier::{
+    ArcMachineRecord, AzureEventGridEngine, AzureResourceGraphEngine, CloudEventEnvelope,
+    CopilotMsSoarTool, EntraPimEngine, FluentPcfEngine, LogicAppsWorkflowEngine,
+    MipRmsCompoundParser, PimRoleRequest, RemediationAction, RmsPfileEnvelope, TsqlAnalysis,
+    TsqlInvariantEngine,
+};
 
 pub use ms_hardened::{
     AsyncOperationStatus, AsyncOperationTicket, AzureManagedIdentityEngine,

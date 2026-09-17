@@ -1254,6 +1254,22 @@ pub enum CopilotAction {
         #[arg(long)]
         target: Option<String>,
     },
+
+    /// Microsoft Frontier SOAR & Hybrid Cloud Engine (Sentinel Logic Apps Standard, Event Grid CloudEvents v1.0, Event Hubs SAS, Entra PIM JIT, Purview RMS, Fluent UI v9 PCF, Azure Arc ARG, T-SQL Invariants)
+    #[command(name = "soar")]
+    Soar {
+        /// Subsystem action: 'sentinel_workflow', 'cloud_event', 'eventgrid_handshake', 'eventhubs_sas', 'pim_elevation', 'fluent_v9_pcf', 'arc_audit', 'tsql_invariants'
+        #[arg(long, default_value = "sentinel_workflow")]
+        action: String,
+
+        /// Optional workflow name, event ID, or control name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Optional severity, resource URI, or SQL snippet
+        #[arg(long)]
+        target: Option<String>,
+    },
 }
 
 
@@ -6388,6 +6404,43 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
             if let Some(t) = target {
                 args.as_object_mut().unwrap().insert("resource".to_string(), serde_json::json!(t));
                 args.as_object_mut().unwrap().insert("title".to_string(), serde_json::json!(t));
+            }
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Soar { action, name, target } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🚨 MICROSOFT FRONTIER SOAR & HYBRID CLOUD ENGINE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::ms_soar_frontier::CopilotMsSoarTool::new();
+            let tool_action = match action.as_str() {
+                "sentinel" | "sentinel_workflow" | "generate_sentinel_workflow" => "generate_sentinel_workflow",
+                "event" | "cloud_event" | "emit_cloud_event" => "emit_cloud_event",
+                "handshake" | "eventgrid_handshake" | "validate_eventgrid_handshake" => "validate_eventgrid_handshake",
+                "sas" | "eventhubs_sas" | "generate_eventhubs_sas" => "generate_eventhubs_sas",
+                "pim" | "pim_elevation" | "build_pim_elevation" => "build_pim_elevation",
+                "pcf" | "fluent_v9_pcf" | "generate_fluent_v9_pcf" => "generate_fluent_v9_pcf",
+                "arc" | "arc_audit" | "audit_arc_fleet" => "audit_arc_fleet",
+                "tsql" | "tsql_invariants" | "analyze_tsql_invariants" => "analyze_tsql_invariants",
+                other => other,
+            };
+
+            let mut args = serde_json::json!({
+                "action": tool_action,
+            });
+            if let Some(n) = name {
+                args.as_object_mut().unwrap().insert("workflow_name".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("control_name".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("event_id".to_string(), serde_json::json!(n));
+            }
+            if let Some(t) = target {
+                args.as_object_mut().unwrap().insert("severity".to_string(), serde_json::json!(t));
+                args.as_object_mut().unwrap().insert("resource_uri".to_string(), serde_json::json!(t));
+                args.as_object_mut().unwrap().insert("sql".to_string(), serde_json::json!(t));
+                args.as_object_mut().unwrap().insert("request_body".to_string(), serde_json::json!(t));
             }
             let out = tool.execute(args).await?;
             println!("\n{out}");
