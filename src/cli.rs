@@ -1238,6 +1238,22 @@ pub enum CopilotAction {
         #[arg(long, default_value = ".tagisan/powerplatform_export")]
         output_dir: String,
     },
+
+    /// Hardened Microsoft Enterprise Integration (Async 202 Webhooks, Graph Connectors, Zero-Trust Identity, Dataverse Virtual Tables, Fabric Delta, Loop Components)
+    #[command(name = "hardened")]
+    Hardened {
+        /// Subsystem action: 'async_op', 'graph_connector', 'managed_identity', 'dataverse_plugin', 'fabric_delta', 'loop_component'
+        #[arg(long, default_value = "graph_connector")]
+        action: String,
+
+        /// Optional task, table, or entity name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Optional target resource or title
+        #[arg(long)]
+        target: Option<String>,
+    },
 }
 
 
@@ -6340,6 +6356,39 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
                 "solution_name": solution_name,
                 "output_dir": output_dir,
             });
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Hardened { action, name, target } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🛡️ HARDENED MICROSOFT ENTERPRISE INTEGRATION ENGINE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::CopilotMsHardenedTool::new();
+            let tool_action = match action.as_str() {
+                "async_op" | "create_async_operation" => "create_async_operation",
+                "poll_async" | "poll_async_operation" => "poll_async_operation",
+                "graph" | "graph_connector" | "build_graph_connector_manifest" => "build_graph_connector_manifest",
+                "identity" | "managed_identity" | "generate_azure_managed_identity_request" => "generate_azure_managed_identity_request",
+                "dataverse" | "dataverse_plugin" | "generate_dataverse_virtual_plugin" => "generate_dataverse_virtual_plugin",
+                "delta" | "fabric_delta" | "commit_fabric_delta_batch" => "commit_fabric_delta_batch",
+                "loop" | "loop_component" | "generate_loop_component" => "generate_loop_component",
+                other => other,
+            };
+
+            let mut args = serde_json::json!({
+                "action": tool_action,
+            });
+            if let Some(n) = name {
+                args.as_object_mut().unwrap().insert("name".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("table_name".to_string(), serde_json::json!(n));
+            }
+            if let Some(t) = target {
+                args.as_object_mut().unwrap().insert("resource".to_string(), serde_json::json!(t));
+                args.as_object_mut().unwrap().insert("title".to_string(), serde_json::json!(t));
+            }
             let out = tool.execute(args).await?;
             println!("\n{out}");
         }

@@ -54,6 +54,16 @@ pub mod visio;
 pub mod wam;
 pub mod ms_enterprise;
 pub mod ms_frontier;
+pub mod ms_hardened;
+
+pub use ms_hardened::{
+    AsyncOperationStatus, AsyncOperationTicket, AzureManagedIdentityEngine,
+    ClientCertificateAssertion, CopilotMsHardenedTool, DataverseVirtualEntityProvider,
+    DeltaLogCommit, FabricDeltaStreamer, GraphExternalConnection, GraphExternalItem,
+    GraphItemAcl, GraphPropertyDefinition, ImdsTokenResponse, ManagedIdentityType,
+    MsAsyncWebhookEngine, MsGraphConnectorEngine, OfficeJsApp, OfficeJsManifestEngine,
+    VirtualEntitySchema, VirtualTableField, WebhookDeliveryPackage,
+};
 
 pub use ms_enterprise::{
     A2AAgentCard, A2AAgentRole, A2AConsensusVerdict, A2ADebateRound, A2ADelegationTask,

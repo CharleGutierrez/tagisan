@@ -75,6 +75,7 @@ pub use crate::copilot::{
     CopilotWorkloadIdentityTool, CopilotAccessTool, CopilotBicepTool, CopilotDefenderTool,
     CopilotPowerBiTool, CopilotVsCodeTool, CopilotVisioTool,
     CopilotSarifTool, CopilotJetBinaryTool, CopilotCallingTool, CopilotDeltaLakeTool,
+    CopilotMsHardenedTool,
 };
 
 
@@ -264,6 +265,7 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotJetBinaryTool::default());
         registry.register_tool(crate::copilot::CopilotCallingTool::default());
         registry.register_tool(crate::copilot::CopilotDeltaLakeTool::default());
+        registry.register_tool(crate::copilot::CopilotMsHardenedTool::default());
         registry
     }
 
@@ -423,6 +425,7 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotJetBinaryTool::default());
         registry.register_tool(crate::copilot::CopilotCallingTool::default());
         registry.register_tool(crate::copilot::CopilotDeltaLakeTool::default());
+        registry.register_tool(crate::copilot::CopilotMsHardenedTool::default());
         registry
     }
 

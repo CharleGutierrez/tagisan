@@ -52,6 +52,7 @@ pub use crate::copilot::sarif::CopilotSarifTool;
 pub use crate::copilot::jet_binary::CopilotJetBinaryTool;
 pub use crate::copilot::calling::CopilotCallingTool;
 pub use crate::copilot::delta_lake::CopilotDeltaLakeTool;
+pub use crate::copilot::ms_hardened::CopilotMsHardenedTool;
 
 use crate::copilot::graph::{ActionItem, GraphClient, TranscriptEntry};
 use crate::ecc::agentshield::{AgentShieldScanner, AgentShieldVerdict};
