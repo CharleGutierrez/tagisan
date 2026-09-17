@@ -77,6 +77,7 @@ pub use crate::copilot::{
     CopilotSarifTool, CopilotJetBinaryTool, CopilotCallingTool, CopilotDeltaLakeTool,
     CopilotMsHardenedTool,
     CopilotMsSoarTool,
+    CopilotMsEcosystemTool,
 };
 
 
@@ -268,6 +269,7 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotDeltaLakeTool::default());
         registry.register_tool(crate::copilot::CopilotMsHardenedTool::default());
         registry.register_tool(crate::copilot::CopilotMsSoarTool::default());
+        registry.register_tool(crate::copilot::CopilotMsEcosystemTool::default());
         registry
     }
 
@@ -429,6 +431,7 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotDeltaLakeTool::default());
         registry.register_tool(crate::copilot::CopilotMsHardenedTool::default());
         registry.register_tool(crate::copilot::CopilotMsSoarTool::default());
+        registry.register_tool(crate::copilot::CopilotMsEcosystemTool::default());
         registry
     }
 

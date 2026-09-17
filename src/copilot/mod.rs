@@ -56,6 +56,15 @@ pub mod ms_enterprise;
 pub mod ms_frontier;
 pub mod ms_hardened;
 pub mod ms_soar_frontier;
+pub mod ms_ecosystem_frontier;
+
+pub use ms_ecosystem_frontier::{
+    AzureAiFoundryEngine, AzureApimPolicyEngine, AzureRateLimitState, CopilotMsEcosystemTool,
+    DataverseSolutionPackagerEngine, DefenderHuntingRecord, DefenderXdrHuntingEngine,
+    FabricLakehouseMedallionEngine, KedaKubernetesScalerEngine, LiveResponseAction,
+    SkFunctionDef, SolutionAuditReport, TypeSpecEndpoint, UnpackedSolution,
+    WinUiDeepLinkTarget, WindowsNamedPipeIpcEngine,
+};
 
 pub use ms_soar_frontier::{
     ArcMachineRecord, AzureEventGridEngine, AzureResourceGraphEngine, CloudEventEnvelope,

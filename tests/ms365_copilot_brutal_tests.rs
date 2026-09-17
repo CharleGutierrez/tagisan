@@ -2318,7 +2318,7 @@ async fn test_sentinel_siem_telemetry_bridge() {
     assert!(syslog.contains("SEC-AST-001"));
 
     // 4. Verify Azure Monitor Record
-    let dcr_record = event.to_azure_monitor_record();
+    let dcr_record = event.to_azure_monitor_log();
     assert_eq!(dcr_record["EventVendor"], "Tagisan");
     assert_eq!(dcr_record["EventClassId"], "SEC-AST-001");
     assert_eq!(dcr_record["EventSeverity"], "High");

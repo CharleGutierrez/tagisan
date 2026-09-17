@@ -1270,6 +1270,22 @@ pub enum CopilotAction {
         #[arg(long)]
         target: Option<String>,
     },
+
+    /// Microsoft Frontier Cloud & Enterprise Ecosystem Engine (Azure AI Foundry TypeSpec, APIM Policies, Defender XDR Hunting, Fabric Medallion PySpark, KEDA Scaler, Dataverse SolutionPackager, Win32 Named Pipes)
+    #[command(name = "ecosystem")]
+    Ecosystem {
+        /// Subsystem action: 'typespec_synthesize', 'apim_policy_generate', 'defender_hunting_query', 'fabric_medallion_notebook', 'keda_manifest_generate', 'dataverse_solution_audit', 'ipc_frame_encode_decode'
+        #[arg(long, default_value = "typespec_synthesize")]
+        action: String,
+
+        /// Optional service name, app name, or table name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Optional filter, target, or KQL query
+        #[arg(long)]
+        target: Option<String>,
+    },
 }
 
 
@@ -6441,6 +6457,43 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
                 args.as_object_mut().unwrap().insert("resource_uri".to_string(), serde_json::json!(t));
                 args.as_object_mut().unwrap().insert("sql".to_string(), serde_json::json!(t));
                 args.as_object_mut().unwrap().insert("request_body".to_string(), serde_json::json!(t));
+            }
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::Ecosystem { action, name, target } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🌐 MICROSOFT FRONTIER CLOUD & ECOSYSTEM ENGINE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::ms_ecosystem_frontier::CopilotMsEcosystemTool::new();
+            let tool_action = match action.as_str() {
+                "typespec" | "typespec_synthesize" => "typespec_synthesize",
+                "apim" | "apim_policy" | "apim_policy_generate" => "apim_policy_generate",
+                "defender" | "hunting" | "defender_hunting_query" => "defender_hunting_query",
+                "fabric" | "medallion" | "fabric_medallion_notebook" => "fabric_medallion_notebook",
+                "keda" | "scaler" | "keda_manifest_generate" => "keda_manifest_generate",
+                "solution" | "dataverse" | "dataverse_solution_audit" => "dataverse_solution_audit",
+                "ipc" | "named_pipe" | "ipc_frame_encode_decode" => "ipc_frame_encode_decode",
+                other => other,
+            };
+
+            let mut args = serde_json::json!({
+                "action": tool_action,
+            });
+            if let Some(n) = name {
+                args.as_object_mut().unwrap().insert("service_name".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("app_name".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("table_name".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("ipc_action".to_string(), serde_json::json!(n));
+            }
+            if let Some(t) = target {
+                args.as_object_mut().unwrap().insert("filter".to_string(), serde_json::json!(t));
+                args.as_object_mut().unwrap().insert("table".to_string(), serde_json::json!(t));
+                args.as_object_mut().unwrap().insert("queue_name".to_string(), serde_json::json!(t));
+                args.as_object_mut().unwrap().insert("publisher_prefix".to_string(), serde_json::json!(t));
             }
             let out = tool.execute(args).await?;
             println!("\n{out}");
