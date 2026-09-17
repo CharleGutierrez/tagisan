@@ -270,6 +270,7 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotMsHardenedTool::default());
         registry.register_tool(crate::copilot::CopilotMsSoarTool::default());
         registry.register_tool(crate::copilot::CopilotMsEcosystemTool::default());
+        registry.register_tool(crate::copilot::CopilotMsDeepTechTool::default());
         registry
     }
 
@@ -432,6 +433,7 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotMsHardenedTool::default());
         registry.register_tool(crate::copilot::CopilotMsSoarTool::default());
         registry.register_tool(crate::copilot::CopilotMsEcosystemTool::default());
+        registry.register_tool(crate::copilot::CopilotMsDeepTechTool::default());
         registry
     }
 

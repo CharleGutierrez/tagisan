@@ -57,6 +57,22 @@ pub mod ms_frontier;
 pub mod ms_hardened;
 pub mod ms_soar_frontier;
 pub mod ms_ecosystem_frontier;
+pub mod ms_deeptech_frontier;
+
+pub use ms_deeptech_frontier::{
+    AutopilotProfile, AzureDigitalTwinsEngine, AzureIotEdgeIndustrialBridge,
+    AzureQuantumEngine, AzureSovereignCloudEngine, AzureStackHciBridge,
+    BusinessCentralAlEngine, BusinessCentralObject, CiemIdentity, CiemPciReport,
+    CopilotMsDeepTechTool, CredentialGuardAuditor, CredentialGuardStatus,
+    DeepTechVerifiedCredential, DeepTechVerifiedIdEngine, DisconnectedSyncBundle,
+    DmfBatchPackage, DmfEntityDefinition, DtdlContent, DtdlInterface, DualWriteMapping,
+    DynamicsDmfBatchEngine, DynamicsDualWriteCoordinator, EntraCiemEngine,
+    IntuneAppInfo, IntuneCompliancePolicy, IntuneDetectionRule, IntuneWinPackageResult,
+    IntuneWinPackager, OpcUaTelemetryRecord, QuantumArchitecture,
+    QuantumResourceEstimationRequest, QuantumResourceReport, SovereignCloudType,
+    SovereignEndpoints, Tpm2SecurityEngine, TpmPcrState, TpmSealedEnvelope,
+    WdacCodeIntegrityEngine, WdacPolicy,
+};
 
 pub use ms_ecosystem_frontier::{
     AzureAiFoundryEngine, AzureApimPolicyEngine, AzureRateLimitState, CopilotMsEcosystemTool,

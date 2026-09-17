@@ -1286,6 +1286,22 @@ pub enum CopilotAction {
         #[arg(long)]
         target: Option<String>,
     },
+
+    /// Microsoft Deep-Tech Enterprise & Frontier Systems Engine (Intune Win32 Packager, Dynamics 365 DMF & Dual-Write, Azure IoT DTDL, TPM 2.0 & WDAC, Entra CIEM & Verified ID, Azure Quantum Q# Estimator, Sovereign Cloud GCC High / Stack HCI)
+    #[command(name = "deeptech")]
+    DeepTech {
+        /// Subsystem action: 'intune_package', 'intune_compliance', 'dynamics_dmf', 'dynamics_dualwrite', 'business_central_al', 'dtdl_model', 'opcua_telemetry', 'tpm_seal', 'wdac_policy', 'credential_guard_audit', 'ciem_pci_calc', 'verified_id_issue', 'quantum_estimate', 'qsharp_generate', 'sovereign_endpoint_rewrite', 'stack_hci_manifest', 'disconnected_bundle'
+        #[arg(long, default_value = "intune_package")]
+        action: String,
+
+        /// Optional service name, app name, or entity name
+        #[arg(long)]
+        name: Option<String>,
+
+        /// Optional target, filter, principal ID, or algorithm
+        #[arg(long)]
+        target: Option<String>,
+    },
 }
 
 
@@ -6494,6 +6510,55 @@ async fn handle_copilot_command(action: CopilotAction) -> Result<(), Box<dyn std
                 args.as_object_mut().unwrap().insert("table".to_string(), serde_json::json!(t));
                 args.as_object_mut().unwrap().insert("queue_name".to_string(), serde_json::json!(t));
                 args.as_object_mut().unwrap().insert("publisher_prefix".to_string(), serde_json::json!(t));
+            }
+            let out = tool.execute(args).await?;
+            println!("\n{out}");
+        }
+
+        CopilotAction::DeepTech { action, name, target } => {
+            println!("{}", "=========================================================".cyan());
+            println!("{}", "  🔬 MICROSOFT DEEP-TECH ENTERPRISE SYSTEMS ENGINE".bold().yellow());
+            println!("{}", "=========================================================".cyan());
+
+            use crate::tools::ToolHandler;
+            let tool = crate::copilot::ms_deeptech_frontier::CopilotMsDeepTechTool::new();
+            let tool_action = match action.as_str() {
+                "intune" | "intune_package" => "intune_package",
+                "compliance" | "intune_compliance" => "intune_compliance",
+                "dmf" | "dynamics_dmf" => "dynamics_dmf",
+                "dualwrite" | "dynamics_dualwrite" => "dynamics_dualwrite",
+                "bc" | "al" | "business_central_al" => "business_central_al",
+                "dtdl" | "dtdl_model" => "dtdl_model",
+                "opcua" | "opcua_telemetry" => "opcua_telemetry",
+                "tpm" | "tpm_seal" => "tpm_seal",
+                "wdac" | "wdac_policy" => "wdac_policy",
+                "vbs" | "credential_guard" | "credential_guard_audit" => "credential_guard_audit",
+                "ciem" | "pci" | "ciem_pci_calc" => "ciem_pci_calc",
+                "verified_id" | "verified_id_issue" => "verified_id_issue",
+                "quantum" | "quantum_estimate" => "quantum_estimate",
+                "qsharp" | "qsharp_generate" => "qsharp_generate",
+                "sovereign" | "sovereign_endpoint_rewrite" => "sovereign_endpoint_rewrite",
+                "hci" | "stack_hci" | "stack_hci_manifest" => "stack_hci_manifest",
+                "bundle" | "disconnected" | "disconnected_bundle" => "disconnected_bundle",
+                other => other,
+            };
+
+            let mut args = serde_json::json!({
+                "action": tool_action,
+            });
+            if let Some(n) = name {
+                args.as_object_mut().unwrap().insert("app_name".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("definition_group".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("object_name".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("model_name".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("policy_name".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("principal_id".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("algorithm".to_string(), serde_json::json!(n));
+                args.as_object_mut().unwrap().insert("operation".to_string(), serde_json::json!(n));
+            }
+            if let Some(t) = target {
+                args.as_object_mut().unwrap().insert("version".to_string(), serde_json::json!(t));
+                args.as_object_mut().unwrap().insert("target".to_string(), serde_json::json!(t));
             }
             let out = tool.execute(args).await?;
             println!("\n{out}");
