@@ -22,6 +22,25 @@ use crate::engine::autofix::{detect_project_type, ProjectType};
 // 1. Multimodal Screen Perception (tgs screen)
 // ---------------------------------------------------------------------------
 
+struct TempFileGuard {
+    path: PathBuf,
+    armed: bool,
+}
+
+impl TempFileGuard {
+    fn new(path: PathBuf) -> Self {
+        Self { path, armed: true }
+    }
+}
+
+impl Drop for TempFileGuard {
+    fn drop(&mut self) {
+        if self.armed && self.path.exists() {
+            let _ = std::fs::remove_file(&self.path);
+        }
+    }
+}
+
 pub async fn handle_screen_command(
     mode: String,
     provider: String,
@@ -29,12 +48,14 @@ pub async fn handle_screen_command(
     output: Option<String>,
     cli_max_budget: f64,
 ) -> Result<()> {
-    let temp_path = match output {
-        Some(ref p) => PathBuf::from(p),
+    let (temp_path, _guard) = match output {
+        Some(ref p) => (PathBuf::from(p), None),
         None => {
             let pid = std::process::id();
             let timestamp = Local::now().format("%Y%m%d_%H%M%S");
-            std::env::temp_dir().join(format!("tgs_screen_{}_{}.png", pid, timestamp))
+            let p = std::env::temp_dir().join(format!("tgs_screen_{}_{}.png", pid, timestamp));
+            let g = TempFileGuard::new(p.clone());
+            (p, Some(g))
         }
     };
 
@@ -141,11 +162,6 @@ pub async fn handle_screen_command(
         "✔".green().bold(),
         elapsed.as_secs_f64()
     );
-
-    // Clean up temporary image unless user explicitly specified output path
-    if output.is_none() && temp_path.exists() {
-        let _ = std::fs::remove_file(&temp_path);
-    }
 
     Ok(())
 }
@@ -376,6 +392,14 @@ pub async fn handle_review_command(
         "Found {} lines of diff to review.\n",
         total_lines.to_string().yellow().bold()
     );
+
+    // AgentShield DLP check on review diff
+    let dlp_verdict = AgentShieldScanner::scan_outbound_dlp(&diff);
+    if let crate::ecc::AgentShieldVerdict::Block { reason, threat_level } = dlp_verdict {
+        eprintln!("\n{}", "🚨 AgentShield Blocked Outbound Code Review:".bold().red());
+        eprintln!("Threat Level: {:?} | Reason: {}", threat_level, reason.yellow());
+        return Err(TagisanError::Security(format!("AgentShield DLP: Sensitive code blocked from outbound review ({})", reason)));
+    }
 
     if diff.len() > 35_000 {
         diff = format!("{}\n\n[... Diff truncated at 35,000 characters ...]", &diff[..35_000]);
