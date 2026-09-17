@@ -560,6 +560,46 @@ enum Commands {
         #[command(subcommand)]
         action: CopilotAction,
     },
+    /// Capture the screen or window and analyze it with Multimodal Vision
+    Screen {
+        /// Capture mode: fullscreen (default), active (active window), region (interactive area)
+        #[arg(short, long, default_value = "fullscreen")]
+        mode: String,
+
+        /// Provider ID: auto, gemini, ollama (default: auto)
+        #[arg(short, long, default_value = "auto")]
+        provider: String,
+
+        /// Optional file path to save the captured screenshot
+        #[arg(short, long)]
+        output: Option<String>,
+
+        /// Prompt or question for the vision model
+        #[arg(default_value = "Analyze and explain what is visible on this screen in detail.")]
+        prompt: String,
+    },
+    /// Autonomously audit staged changes with AgentShield and generate conventional commit messages
+    Commit {
+        /// Automatically execute the commit without interactive confirmation
+        #[arg(short, long)]
+        yes: bool,
+
+        /// Optional user intent or context hint for the commit
+        #[arg(short = 'm', long)]
+        hint: Option<String>,
+    },
+    /// Perform an automated multi-agent code review of branch diffs with Lakandiwa synthesis
+    Review {
+        /// Target branch or commit reference to compare against (default: main)
+        #[arg(short, long, default_value = "main")]
+        target: String,
+    },
+    /// Proactive background sentinel that runs checks on file save and auto-diagnoses compiler/test errors
+    Watch {
+        /// Project directory to monitor (default: current directory)
+        #[arg(default_value = ".")]
+        path: String,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -5520,6 +5560,18 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
 
         Commands::Copilot { action } => {
             handle_copilot_command(action).await?;
+        }
+        Commands::Screen { mode, provider, output, prompt } => {
+            crate::frontier::handle_screen_command(mode, provider, prompt, output, cli.max_budget).await?;
+        }
+        Commands::Commit { yes, hint } => {
+            crate::frontier::handle_commit_command(yes, hint, cli.max_budget).await?;
+        }
+        Commands::Review { target } => {
+            crate::frontier::handle_review_command(target, cli.max_budget).await?;
+        }
+        Commands::Watch { path } => {
+            crate::frontier::handle_watch_command(path, cli.max_budget).await?;
         }
     }
 
