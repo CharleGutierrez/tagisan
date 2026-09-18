@@ -199,6 +199,11 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         agentic_engineering_pro_max(),
         ui_ux_pro_max(),
         computer_control_os_automation_pro_max_skill(),
+        lsp_code_intelligence_pro_max_skill(),
+        pty_process_supervisor_pro_max_skill(),
+        headless_browser_playwright_pro_max_skill(),
+        github_forge_cicd_pro_max_skill(),
+        security_sast_semgrep_pro_max_skill(),
         local_llm_supercharger(),
         tdd_workflow(),
         security_review(),
@@ -2280,6 +2285,22 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     });
     if let Some(skill) = map.get(&lower).cloned() {
         return Some(skill);
+    }
+
+    if lower == "lsp" || lower == "code-intelligence" || lower == "language-server" || lower == "diagnostics" || lower == "compiler-check" || lower == "symbol-lookup" || lower == "definition" || lower == "references" || lower == "hover-docs" || lower == "ast-analysis" || lower == "typecheck" || lower == "lsp-pro-max" || lower == "lsp-code-intelligence" {
+        return find_built_in_skill("lsp-code-intelligence-pro-max");
+    }
+    if lower == "pty" || lower == "terminal" || lower == "process-supervisor" || lower == "background-process" || lower == "dev-server" || lower == "daemon-runner" || lower == "process-manager" || lower == "pty-supervisor" || lower == "ring-buffer" || lower == "task-runner" || lower == "pty-pro-max" {
+        return find_built_in_skill("pty-process-supervisor-pro-max");
+    }
+    if lower == "browser" || lower == "headless-browser" || lower == "playwright" || lower == "puppeteer" || lower == "web-scraping" || lower == "dom-extraction" || lower == "screenshot-verification" || lower == "browser-automation" || lower == "e2e-testing" || lower == "browser-pro-max" {
+        return find_built_in_skill("headless-browser-playwright-pro-max");
+    }
+    if lower == "github" || lower == "git" || lower == "forge" || lower == "pull-request" || lower == "pr-review" || lower == "issue-tracker" || lower == "ci-status" || lower == "github-actions" || lower == "git-diff" || lower == "commit-history" || lower == "github-pro-max" || lower == "github-forge" {
+        return find_built_in_skill("github-forge-cicd-pro-max");
+    }
+    if lower == "sast" || lower == "security-scan" || lower == "secret-scanner" || lower == "vulnerability-scan" || lower == "semgrep" || lower == "owasp" || lower == "dependency-audit" || lower == "security-sast" || lower == "cve-audit" || lower == "injection-defense" || lower == "sast-pro-max" {
+        return find_built_in_skill("security-sast-semgrep-pro-max");
     }
 
     if lower == "computer-control" || lower == "computer-use" || lower == "os-automation" || lower == "desktop-automation" || lower == "rpa-automation" || lower == "gui-automation" || lower == "win32-automation" || lower == "screen-control" || lower == "mouse-keyboard-control" || lower == "computer-pro-max" || lower == "os-pro-max" {
@@ -8782,6 +8803,56 @@ pub fn computer_control_os_automation_pro_max_skill() -> EccSkill {
             "computer-control-os-automation-pro-max",
             "Autonomous Master Engine for Operating System Automation, Native Win32/X11/macOS Computer Control, Screen Perception, Multimodal GUI Grounding, Process Supervision, and Job Isolation. Enforces deterministic UI tree introspection, SendInput/xdotool event synthesis, Windows Job Objects / cgroups v2 resource governance, headless fallback resilience, shell sanitization, and circuit-breaker protected execution.",
             include_str!("../../assets/skills/computer-control-os-automation-pro-max/SKILL.md"),
+        ))
+}
+
+/// LSP Code Intelligence Pro Max Master Skill
+pub fn lsp_code_intelligence_pro_max_skill() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/lsp-code-intelligence-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "lsp-code-intelligence-pro-max",
+            "Autonomous Master Engine for Language Server Protocol (LSP) Code Intelligence, Real-time Compiler Diagnostics, Definition & Cross-Reference Tracking, Workspace Symbol Indexing, and Hover Documentation. Enforces compiler-accurate AST analysis, cargo check/tsc/pyright integration, zero-hallucination code navigation, and resilient diagnostic self-healing across multi-language enterprise codebases.",
+            include_str!("../../assets/skills/lsp-code-intelligence-pro-max/SKILL.md"),
+        ))
+}
+
+/// PTY Process Supervisor Pro Max Master Skill
+pub fn pty_process_supervisor_pro_max_skill() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/pty-process-supervisor-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "pty-process-supervisor-pro-max",
+            "Autonomous Master Engine for PTY Process Supervision, Long-Running Background Daemons, Interactive Dev Servers, Ring-Buffered Stream Capture, and Job Lifecycle Isolation. Enforces deterministic process supervision, non-blocking asynchronous I/O, bidirectional stdin piping, zero-orphan process containment, and cross-platform process tree termination across Windows, Linux, and macOS.",
+            include_str!("../../assets/skills/pty-process-supervisor-pro-max/SKILL.md"),
+        ))
+}
+
+/// Headless Browser Playwright Pro Max Master Skill
+pub fn headless_browser_playwright_pro_max_skill() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/headless-browser-playwright-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "headless-browser-playwright-pro-max",
+            "Autonomous Master Engine for Headless Browser Automation, Playwright & Puppeteer Execution, DOM Extraction, Visual UI Verification, and Native HTTP Fallback Resilience. Enforces deterministic browser lifecycle management, CSS/XPath selector query execution, high-DPI full-page screenshots, console error telemetry, and zero-crash air-gapped HTTP DOM parsing across Windows, Linux, and macOS.",
+            include_str!("../../assets/skills/headless-browser-playwright-pro-max/SKILL.md"),
+        ))
+}
+
+/// GitHub Forge & CI/CD Pro Max Master Skill
+pub fn github_forge_cicd_pro_max_skill() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/github-forge-cicd-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "github-forge-cicd-pro-max",
+            "Autonomous Master Engine for GitHub Forge Integration, Pull Request Automation, Issue Triage, CI/CD Pipeline Telemetry, and Offline Git Repository Fallbacks. Enforces deterministic API authentication, GitHub CLI (gh) orchestration, git branch & diff analysis, commit history mining, workflow log inspection, and resilient air-gapped local VCS operations across Windows, Linux, and macOS.",
+            include_str!("../../assets/skills/github-forge-cicd-pro-max/SKILL.md"),
+        ))
+}
+
+/// Security SAST & Semgrep Pro Max Master Skill
+pub fn security_sast_semgrep_pro_max_skill() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/security-sast-semgrep-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "security-sast-semgrep-pro-max",
+            "Autonomous Master Engine for Static Application Security Testing (SAST), High-Entropy Secret Scanning, OWASP Top 10 Auditing, Dependency Vulnerability Analysis, and Semgrep Orchestration. Enforces zero-credential leakage, Shannon entropy evaluation, injection pattern detection, supply chain lockfile auditing, and native offline static analysis across Windows, Linux, and macOS.",
+            include_str!("../../assets/skills/security-sast-semgrep-pro-max/SKILL.md"),
         ))
 }
 
@@ -19050,6 +19121,113 @@ mod tests {
         assert_eq!(find_built_in_skill("mouse-keyboard-control").unwrap().name, "computer-control-os-automation-pro-max");
         assert_eq!(find_built_in_skill("computer-pro-max").unwrap().name, "computer-control-os-automation-pro-max");
         assert_eq!(find_built_in_skill("os-pro-max").unwrap().name, "computer-control-os-automation-pro-max");
+
+        // 15. Check lsp-code-intelligence-pro-max
+        let lsp = find_built_in_skill("lsp-code-intelligence-pro-max");
+        assert!(lsp.is_some(), "lsp-code-intelligence-pro-max should be registered");
+        let lsp_skill = lsp.unwrap();
+        assert!(!lsp_skill.description.is_empty());
+        assert!(!lsp_skill.instructions.is_empty());
+        assert!(lsp_skill.instructions.contains("LSP-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("lsp").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("code-intelligence").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("language-server").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("diagnostics").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("compiler-check").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("symbol-lookup").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("definition").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("references").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("hover-docs").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("ast-analysis").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("typecheck").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("lsp-pro-max").unwrap().name, "lsp-code-intelligence-pro-max");
+        assert_eq!(find_built_in_skill("lsp-code-intelligence").unwrap().name, "lsp-code-intelligence-pro-max");
+
+        // 16. Check pty-process-supervisor-pro-max
+        let pty = find_built_in_skill("pty-process-supervisor-pro-max");
+        assert!(pty.is_some(), "pty-process-supervisor-pro-max should be registered");
+        let pty_skill = pty.unwrap();
+        assert!(!pty_skill.description.is_empty());
+        assert!(!pty_skill.instructions.is_empty());
+        assert!(pty_skill.instructions.contains("PTY-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("pty").unwrap().name, "pty-process-supervisor-pro-max");
+        assert_eq!(find_built_in_skill("terminal").unwrap().name, "pty-process-supervisor-pro-max");
+        assert_eq!(find_built_in_skill("process-supervisor").unwrap().name, "pty-process-supervisor-pro-max");
+        assert_eq!(find_built_in_skill("background-process").unwrap().name, "pty-process-supervisor-pro-max");
+        assert_eq!(find_built_in_skill("dev-server").unwrap().name, "pty-process-supervisor-pro-max");
+        assert_eq!(find_built_in_skill("daemon-runner").unwrap().name, "pty-process-supervisor-pro-max");
+        assert_eq!(find_built_in_skill("process-manager").unwrap().name, "pty-process-supervisor-pro-max");
+        assert_eq!(find_built_in_skill("pty-supervisor").unwrap().name, "pty-process-supervisor-pro-max");
+        assert_eq!(find_built_in_skill("ring-buffer").unwrap().name, "pty-process-supervisor-pro-max");
+        assert_eq!(find_built_in_skill("task-runner").unwrap().name, "pty-process-supervisor-pro-max");
+        assert_eq!(find_built_in_skill("pty-pro-max").unwrap().name, "pty-process-supervisor-pro-max");
+
+        // 17. Check headless-browser-playwright-pro-max
+        let browser = find_built_in_skill("headless-browser-playwright-pro-max");
+        assert!(browser.is_some(), "headless-browser-playwright-pro-max should be registered");
+        let browser_skill = browser.unwrap();
+        assert!(!browser_skill.description.is_empty());
+        assert!(!browser_skill.instructions.is_empty());
+        assert!(browser_skill.instructions.contains("BRW-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("browser").unwrap().name, "headless-browser-playwright-pro-max");
+        assert_eq!(find_built_in_skill("headless-browser").unwrap().name, "headless-browser-playwright-pro-max");
+        assert_eq!(find_built_in_skill("playwright").unwrap().name, "headless-browser-playwright-pro-max");
+        assert_eq!(find_built_in_skill("puppeteer").unwrap().name, "headless-browser-playwright-pro-max");
+        assert_eq!(find_built_in_skill("web-scraping").unwrap().name, "headless-browser-playwright-pro-max");
+        assert_eq!(find_built_in_skill("dom-extraction").unwrap().name, "headless-browser-playwright-pro-max");
+        assert_eq!(find_built_in_skill("screenshot-verification").unwrap().name, "headless-browser-playwright-pro-max");
+        assert_eq!(find_built_in_skill("browser-automation").unwrap().name, "headless-browser-playwright-pro-max");
+        assert_eq!(find_built_in_skill("e2e-testing").unwrap().name, "headless-browser-playwright-pro-max");
+        assert_eq!(find_built_in_skill("browser-pro-max").unwrap().name, "headless-browser-playwright-pro-max");
+
+        // 18. Check github-forge-cicd-pro-max
+        let gh = find_built_in_skill("github-forge-cicd-pro-max");
+        assert!(gh.is_some(), "github-forge-cicd-pro-max should be registered");
+        let gh_skill = gh.unwrap();
+        assert!(!gh_skill.description.is_empty());
+        assert!(!gh_skill.instructions.is_empty());
+        assert!(gh_skill.instructions.contains("FORGE-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("github").unwrap().name, "github-forge-cicd-pro-max");
+        assert_eq!(find_built_in_skill("git").unwrap().name, "github-forge-cicd-pro-max");
+        assert_eq!(find_built_in_skill("forge").unwrap().name, "github-forge-cicd-pro-max");
+        assert_eq!(find_built_in_skill("pull-request").unwrap().name, "github-forge-cicd-pro-max");
+        assert_eq!(find_built_in_skill("pr-review").unwrap().name, "github-forge-cicd-pro-max");
+        assert_eq!(find_built_in_skill("issue-tracker").unwrap().name, "github-forge-cicd-pro-max");
+        assert_eq!(find_built_in_skill("ci-status").unwrap().name, "github-forge-cicd-pro-max");
+        assert_eq!(find_built_in_skill("github-actions").unwrap().name, "github-forge-cicd-pro-max");
+        assert_eq!(find_built_in_skill("git-diff").unwrap().name, "github-forge-cicd-pro-max");
+        assert_eq!(find_built_in_skill("commit-history").unwrap().name, "github-forge-cicd-pro-max");
+        assert_eq!(find_built_in_skill("github-pro-max").unwrap().name, "github-forge-cicd-pro-max");
+        assert_eq!(find_built_in_skill("github-forge").unwrap().name, "github-forge-cicd-pro-max");
+
+        // 19. Check security-sast-semgrep-pro-max
+        let sast = find_built_in_skill("security-sast-semgrep-pro-max");
+        assert!(sast.is_some(), "security-sast-semgrep-pro-max should be registered");
+        let sast_skill = sast.unwrap();
+        assert!(!sast_skill.description.is_empty());
+        assert!(!sast_skill.instructions.is_empty());
+        assert!(sast_skill.instructions.contains("SAST-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("sast").unwrap().name, "security-sast-semgrep-pro-max");
+        assert_eq!(find_built_in_skill("security-scan").unwrap().name, "security-sast-semgrep-pro-max");
+        assert_eq!(find_built_in_skill("secret-scanner").unwrap().name, "security-sast-semgrep-pro-max");
+        assert_eq!(find_built_in_skill("vulnerability-scan").unwrap().name, "security-sast-semgrep-pro-max");
+        assert_eq!(find_built_in_skill("semgrep").unwrap().name, "security-sast-semgrep-pro-max");
+        assert_eq!(find_built_in_skill("owasp").unwrap().name, "security-sast-semgrep-pro-max");
+        assert_eq!(find_built_in_skill("dependency-audit").unwrap().name, "security-sast-semgrep-pro-max");
+        assert_eq!(find_built_in_skill("security-sast").unwrap().name, "security-sast-semgrep-pro-max");
+        assert_eq!(find_built_in_skill("cve-audit").unwrap().name, "security-sast-semgrep-pro-max");
+        assert_eq!(find_built_in_skill("injection-defense").unwrap().name, "security-sast-semgrep-pro-max");
+        assert_eq!(find_built_in_skill("sast-pro-max").unwrap().name, "security-sast-semgrep-pro-max");
     }
 }
 

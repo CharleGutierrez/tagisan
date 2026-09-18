@@ -7,6 +7,7 @@ pub mod python;
 pub mod visual;
 pub mod wasm;
 pub mod web_search;
+pub mod mcp;
 
 #[path = "../python/mod.rs"]
 pub mod python_runtime;
@@ -79,6 +80,7 @@ pub use crate::copilot::{
     CopilotMsSoarTool,
     CopilotMsEcosystemTool,
 };
+pub use mcp::{McpBrowserTool, McpGithubTool, McpLspTool, McpPtyTool, McpSecurityTool};
 
 
 /// Trait implemented by all tools executable by autonomous agents
@@ -272,6 +274,12 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotMsSoarTool::default());
         registry.register_tool(crate::copilot::CopilotMsEcosystemTool::default());
         registry.register_tool(crate::copilot::CopilotMsDeepTechTool::default());
+        // Sovereign MCP Tools
+        registry.register_tool(mcp::McpLspTool::new());
+        registry.register_tool(mcp::McpPtyTool::new());
+        registry.register_tool(mcp::McpBrowserTool::new());
+        registry.register_tool(mcp::McpGithubTool::new());
+        registry.register_tool(mcp::McpSecurityTool::new());
         registry
     }
 
@@ -436,6 +444,12 @@ impl ToolRegistry {
         registry.register_tool(crate::copilot::CopilotMsSoarTool::default());
         registry.register_tool(crate::copilot::CopilotMsEcosystemTool::default());
         registry.register_tool(crate::copilot::CopilotMsDeepTechTool::default());
+        // Sovereign MCP Tools
+        registry.register_tool(mcp::McpLspTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(mcp::McpPtyTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(mcp::McpBrowserTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(mcp::McpGithubTool::new().with_working_dir(dir.clone()));
+        registry.register_tool(mcp::McpSecurityTool::new().with_working_dir(dir.clone()));
         registry
     }
 
