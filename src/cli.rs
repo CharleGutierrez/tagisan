@@ -725,6 +725,99 @@ enum Commands {
         #[arg(short, long)]
         check_boundaries: bool,
     },
+    /// Synthetic dataset distillation engine (DPO/KTO/ShareGPT/Alpaca) from commits and AST
+    Distill {
+        /// Git commit range (e.g. HEAD~20..HEAD) or source directory
+        #[arg(short, long)]
+        source: Option<String>,
+
+        /// Distillation format: dpo, kto, sharegpt, or alpaca (default: dpo)
+        #[arg(short, long, default_value = "dpo")]
+        format: String,
+
+        /// Output file to save the distilled JSONL corpus
+        #[arg(short, long)]
+        output: Option<String>,
+
+        /// Maximum number of dataset samples to synthesize (default: 50)
+        #[arg(short = 'n', long, default_value = "50")]
+        samples: usize,
+    },
+    /// Invariant & property-based test synthesis engine via AST analysis
+    Testgen {
+        /// Target source file or symbol to generate property tests for
+        target: String,
+
+        /// Testing framework: proptest, hypothesis, fast-check, or unit (default: proptest)
+        #[arg(short, long, default_value = "proptest")]
+        framework: String,
+
+        /// Output file to write generated tests
+        #[arg(short, long)]
+        output: Option<String>,
+
+        /// Infer and enforce mathematical and idempotency invariants
+        #[arg(short, long)]
+        invariants: bool,
+    },
+    /// Static performance hotspot profiler & zero-copy optimizer
+    Perf {
+        /// Scope path to scan for performance anti-patterns (default: src)
+        #[arg(short, long)]
+        path: Option<String>,
+
+        /// Minimum hotspot score threshold (1 to 5, default: 3)
+        #[arg(short, long, default_value = "3")]
+        threshold: usize,
+
+        /// Generate zero-copy and concurrency optimization diff suggestions
+        #[arg(short, long)]
+        optimize: bool,
+
+        /// Render ASCII flamegraph / call-tree hotspot distribution
+        #[arg(short, long)]
+        flame: bool,
+    },
+    /// Ephemeral Git worktree jail & sentinel guard for isolated execution
+    Sandbox {
+        /// Command and arguments to execute inside the sandbox
+        #[arg(trailing_var_arg = true, required = true)]
+        command: Vec<String>,
+
+        /// Use ephemeral Git worktree jail (default: true)
+        #[arg(long, default_value = "true")]
+        worktree: bool,
+
+        /// Allow outbound network connectivity
+        #[arg(long)]
+        allow_network: bool,
+
+        /// Security policy profile (e.g. strict-sovereign, audit)
+        #[arg(short, long)]
+        policy: Option<String>,
+    },
+    /// Autonomous SemVer bumping, KeepAChangelog generation & CycloneDX SBOM sentinel
+    Release {
+        /// Explicit SemVer bump: major, minor, patch, or auto (default: auto)
+        #[arg(short, long)]
+        bump: Option<String>,
+
+        /// Perform dry-run without writing changes to Cargo.toml or tagging Git
+        #[arg(short, long)]
+        dry_run: bool,
+
+        /// Generate CycloneDX 1.5 Software Bill of Materials (SBOM)
+        #[arg(short, long, default_value = "true")]
+        sbom: bool,
+
+        /// Synthesize and prepend KeepAChangelog release notes to CHANGELOG.md
+        #[arg(short, long, default_value = "true")]
+        changelog: bool,
+
+        /// Automatically create annotated Git release tag
+        #[arg(short, long)]
+        tag: bool,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -5724,6 +5817,21 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Arch { path, output, format, check_boundaries } => {
             crate::frontier::handle_arch_command(path, output, format, check_boundaries, cli.max_budget).await?;
+        }
+        Commands::Distill { source, format, output, samples } => {
+            crate::frontier::handle_distill_command(source, format, output, samples, cli.max_budget).await?;
+        }
+        Commands::Testgen { target, framework, output, invariants } => {
+            crate::frontier::handle_testgen_command(target, framework, output, invariants, cli.max_budget).await?;
+        }
+        Commands::Perf { path, threshold, optimize, flame } => {
+            crate::frontier::handle_perf_command(path, threshold, optimize, flame, cli.max_budget).await?;
+        }
+        Commands::Sandbox { command, worktree, allow_network, policy } => {
+            crate::frontier::handle_sandbox_command(command, worktree, allow_network, policy, cli.max_budget).await?;
+        }
+        Commands::Release { bump, dry_run, sbom, changelog, tag } => {
+            crate::frontier::handle_release_command(bump, dry_run, sbom, changelog, tag, cli.max_budget).await?;
         }
     }
 
