@@ -185,6 +185,7 @@ impl EccSkill {
 /// Return all built-in ECC engineering skills
 pub fn all_built_in_skills() -> Vec<EccSkill> {
     vec![
+        azure_cloud_pro_max(),
         google_cloud_pro_max(),
         reverse_engineering_pro_max(),
         agentic_engineering_pro_max(),
@@ -8510,6 +8511,9 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "gcp" || lower == "google-cloud" || lower == "gcp-pro-max" || lower == "gcp-engineering" || lower == "gcloud" || lower == "gcp-engineering-pro-max" {
         return find_built_in_skill("google-cloud-pro-max");
     }
+    if lower == "azure" || lower == "azure-cloud" || lower == "azure-pro-max" || lower == "azure-engineering" || lower == "az" || lower == "azure-engineering-pro-max" {
+        return find_built_in_skill("azure-cloud-pro-max");
+    }
 
     let map = BUILT_IN_SKILLS_CACHE.get_or_init(|| {
         let mut m = HashMap::new();
@@ -8550,6 +8554,16 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
 
     None
+}
+
+/// Azure Cloud Engineering Pro Max Master Skill (Top 5,500 Skills)
+pub fn azure_cloud_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/azure-cloud-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "azure-cloud-pro-max",
+            "Autonomous Master Engine for the Top 5,500 Azure Cloud Engineering Skills found across GitHub. Covers Azure Kubernetes Service (AKS), App Service & Functions v4, VMSS Fleet & GPU compute, Virtual Network (VNet) & Virtual WAN, Microsoft Fabric & Synapse Analytics, Event Hubs streaming & Stream Analytics, Azure Cosmos DB & Azure SQL Hyperscale, Azure OpenAI Service & Azure AI Foundry, Microsoft Entra ID & Defender for Cloud, Azure Blob Storage & ADLS Gen2, Bicep & Azure Verified Modules (AVM), Azure Monitor & Log Analytics (KQL), Azure DevOps Pipelines & GitHub Actions, Azure Arc & Stack HCI hybrid cloud, Microsoft Cost Management & FinOps, and multi-region Azure Site Recovery (ASR) disaster resilience. Triggers: azure, azure-cloud, az, aks, fabric, synapse, cosmosdb, bicep, event hubs, azure openai, entra, azure functions, defender, virtual wan, app service, blob storage.",
+            include_str!("../../assets/skills/azure-cloud-pro-max/SKILL.md"),
+        ))
 }
 
 /// Google Cloud Engineering Pro Max Master Skill (Top 5,500 Skills)
@@ -18666,6 +18680,21 @@ mod tests {
         assert_eq!(find_built_in_skill("google-cloud").unwrap().name, "google-cloud-pro-max");
         assert_eq!(find_built_in_skill("gcloud").unwrap().name, "google-cloud-pro-max");
         assert_eq!(find_built_in_skill("gcp-pro-max").unwrap().name, "google-cloud-pro-max");
+
+        // 5. Check azure-cloud-pro-max
+        let azure = find_built_in_skill("azure-cloud-pro-max");
+        assert!(azure.is_some(), "azure-cloud-pro-max should be registered");
+        let azure_skill = azure.unwrap();
+        assert!(!azure_skill.description.is_empty());
+        assert!(!azure_skill.instructions.is_empty());
+        assert!(azure_skill.instructions.contains("AZR-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("azure").unwrap().name, "azure-cloud-pro-max");
+        assert_eq!(find_built_in_skill("azure-cloud").unwrap().name, "azure-cloud-pro-max");
+        assert_eq!(find_built_in_skill("az").unwrap().name, "azure-cloud-pro-max");
+        assert_eq!(find_built_in_skill("azure-pro-max").unwrap().name, "azure-cloud-pro-max");
+        assert_eq!(find_built_in_skill("azure-engineering").unwrap().name, "azure-cloud-pro-max");
     }
 }
 
