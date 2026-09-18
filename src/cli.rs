@@ -818,6 +818,11 @@ enum Commands {
         #[arg(short, long)]
         tag: bool,
     },
+    /// UI/UX Design System Intelligence, WCAG 2.2, Static Linter & 500-Rule Engine
+    Ux {
+        #[command(subcommand)]
+        action: crate::ux::UxAction,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -5832,6 +5837,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Release { bump, dry_run, sbom, changelog, tag } => {
             crate::frontier::handle_release_command(bump, dry_run, sbom, changelog, tag, cli.max_budget).await?;
+        }
+        Commands::Ux { action } => {
+            crate::ux::handle_ux_command(action).await?;
         }
     }
 

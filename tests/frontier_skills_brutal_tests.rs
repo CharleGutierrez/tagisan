@@ -212,3 +212,44 @@ async fn test_frontier_release_semver_and_sbom() {
     let res = handle_release_command(Some("patch".into()), true, true, true, false, 1.0).await;
     assert!(res.is_ok(), "Release dry run with SBOM and Changelog must succeed");
 }
+
+#[tokio::test]
+async fn test_frontier_ux_commands_all_actions() {
+    // 1. Contrast calculation
+    let res_contrast = handle_ux_command(UxAction::Contrast {
+        foreground: "#5e6ad2".into(),
+        background: "#ffffff".into(),
+    }).await;
+    assert!(res_contrast.is_ok(), "Contrast command must execute successfully");
+
+    // 2. Scan command
+    let res_scan = handle_ux_command(UxAction::Scan {
+        path: "assets".into(),
+        severity: "error".into(),
+        format: "json".into(),
+    }).await;
+    assert!(res_scan.is_ok(), "Scan command must execute successfully");
+
+    // 3. Tokens export
+    let res_tokens = handle_ux_command(UxAction::Tokens {
+        preset: "linear".into(),
+        format: "tailwind".into(),
+        output: None,
+    }).await;
+    assert!(res_tokens.is_ok(), "Tokens command must execute successfully");
+
+    // 4. Readiness evaluation
+    let res_readiness = handle_ux_command(UxAction::Readiness {
+        path: "assets".into(),
+        strict: false,
+    }).await;
+    assert!(res_readiness.is_ok(), "Readiness command must execute successfully");
+
+    // 5. Rules catalog queries
+    let res_rules = handle_ux_command(UxAction::Rules {
+        query: Some("touch target".into()),
+        cluster: Some("a11y".into()),
+        severity: None,
+    }).await;
+    assert!(res_rules.is_ok(), "Rules command must execute successfully");
+}

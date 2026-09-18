@@ -185,6 +185,7 @@ impl EccSkill {
 /// Return all built-in ECC engineering skills
 pub fn all_built_in_skills() -> Vec<EccSkill> {
     vec![
+        ui_ux_pro_max(),
         local_llm_supercharger(),
         tdd_workflow(),
         security_review(),
@@ -8536,6 +8537,16 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
 
     None
+}
+
+/// UI/UX Pro Max Design Intelligence & Accessibility Skill
+pub fn ui_ux_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/ui-ux-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "ui-ux-pro-max",
+            "Autonomous UI/UX Design System Intelligence, WCAG 2.2 Accessibility Auditing, 8-Point Spatial Grid Enforcement, Multi-Brand Token Synthesis, and 500-Rule HCI Heuristics Engine.",
+            include_str!("../../assets/skills/ui-ux-pro-max/SKILL.md"),
+        ))
 }
 
 /// Local LLM Supercharger Skill

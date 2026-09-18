@@ -17,6 +17,7 @@
 //! - `tgs perf`: Static Performance Profiler & Zero-Copy Optimizer
 //! - `tgs sandbox`: Ephemeral Git Worktree Jail & Sentinel Guard
 //! - `tgs release`: Autonomous SemVer, KeepAChangelog & CycloneDX SBOM Sentinel
+//! - `tgs ux`: UI/UX Design System Intelligence, WCAG 2.2, Static Linter & 500-Rule Engine
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -2924,4 +2925,10 @@ pub async fn handle_release_command(
     println!("\n{} Release Sentinel Pipeline Completed Successfully!", "✔".green().bold());
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// 20. UI/UX Design System Intelligence (tgs ux)
+// ---------------------------------------------------------------------------
+
+pub use crate::ux::{handle_ux_command, UxAction};
 
