@@ -188,6 +188,7 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         aws_cloud_pro_max(),
         azure_cloud_pro_max(),
         google_cloud_pro_max(),
+        aliyun_cloud_pro_max(),
         reverse_engineering_pro_max(),
         agentic_engineering_pro_max(),
         ui_ux_pro_max(),
@@ -8518,6 +8519,9 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "aws" || lower == "amazon-web-services" || lower == "aws-cloud" || lower == "aws-pro-max" || lower == "aws-engineering" || lower == "aws-engineering-pro-max" {
         return find_built_in_skill("aws-cloud-pro-max");
     }
+    if lower == "aliyun" || lower == "alibaba" || lower == "alicloud" || lower == "alibaba-cloud" || lower == "aliyun-cloud" || lower == "aliyun-pro-max" || lower == "aliyun-engineering" || lower == "alicloud-pro-max" || lower == "alibaba-cloud-pro-max" || lower == "china-cloud" {
+        return find_built_in_skill("aliyun-cloud-pro-max");
+    }
 
     let map = BUILT_IN_SKILLS_CACHE.get_or_init(|| {
         let mut m = HashMap::new();
@@ -8558,6 +8562,16 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
 
     None
+}
+
+/// Alibaba Cloud & China Cloud Engineering Pro Max Master Skill (Top 5,500 Skills)
+pub fn aliyun_cloud_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/aliyun-cloud-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "aliyun-cloud-pro-max",
+            "Autonomous Master Engine for the Top 5,500 Alibaba Cloud & China Cloud Engineering Skills found across GitHub. Covers Container Service for Kubernetes (ACK) with Terway CNI & OpenKruise, Function Compute (FC 3.0) & Serverless App Engine (SAE), Elastic Compute Service (ECS) with CIPU & eRDMA 750Gbps, VPC Networking & Cloud Enterprise Network (CEN) Transit Router, MaxCompute (ODPS) lakehouse & Hologres real-time HSAP analytics, Apache RocketMQ 5.0 event streaming & Canal CDC, PolarDB distributed compute-storage separation & OceanBase, Qwen 2.5 foundation models, Model Studio (Bailian) & PAI AI platform, Resource Access Management (RAM) & KMS with SM2/SM3/SM4 cryptography, Object Storage Service (OSS) with OSS-HDFS & JindoFS, Terraform Provider Alicloud & ROS IaC, Simple Log Service (SLS) & ARMS APM observability, Spring Cloud Alibaba with Nacos, Sentinel & Seata, Apsara Stack hybrid cloud, BSS FinOps cost governance, and \"Two Locations Three Centers\" (两地三中心) disaster resilience. Triggers: aliyun, alibaba-cloud, alicloud, ack, polardb, rocketmq, qwen, maxcompute, oss, nacos, sentinel, seata, hologres, bailian, arms, sls, apsara, cen, fc.",
+            include_str!("../../assets/skills/aliyun-cloud-pro-max/SKILL.md"),
+        ))
 }
 
 /// AWS Cloud Engineering Pro Max Master Skill (Top 5,500 Skills)
@@ -18724,6 +18738,26 @@ mod tests {
         assert_eq!(find_built_in_skill("aws-cloud").unwrap().name, "aws-cloud-pro-max");
         assert_eq!(find_built_in_skill("aws-pro-max").unwrap().name, "aws-cloud-pro-max");
         assert_eq!(find_built_in_skill("aws-engineering").unwrap().name, "aws-cloud-pro-max");
+
+        // 7. Check aliyun-cloud-pro-max
+        let aliyun = find_built_in_skill("aliyun-cloud-pro-max");
+        assert!(aliyun.is_some(), "aliyun-cloud-pro-max should be registered");
+        let aliyun_skill = aliyun.unwrap();
+        assert!(!aliyun_skill.description.is_empty());
+        assert!(!aliyun_skill.instructions.is_empty());
+        assert!(aliyun_skill.instructions.contains("ALI-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("aliyun").unwrap().name, "aliyun-cloud-pro-max");
+        assert_eq!(find_built_in_skill("alibaba").unwrap().name, "aliyun-cloud-pro-max");
+        assert_eq!(find_built_in_skill("alicloud").unwrap().name, "aliyun-cloud-pro-max");
+        assert_eq!(find_built_in_skill("alibaba-cloud").unwrap().name, "aliyun-cloud-pro-max");
+        assert_eq!(find_built_in_skill("aliyun-cloud").unwrap().name, "aliyun-cloud-pro-max");
+        assert_eq!(find_built_in_skill("aliyun-pro-max").unwrap().name, "aliyun-cloud-pro-max");
+        assert_eq!(find_built_in_skill("aliyun-engineering").unwrap().name, "aliyun-cloud-pro-max");
+        assert_eq!(find_built_in_skill("alicloud-pro-max").unwrap().name, "aliyun-cloud-pro-max");
+        assert_eq!(find_built_in_skill("alibaba-cloud-pro-max").unwrap().name, "aliyun-cloud-pro-max");
+        assert_eq!(find_built_in_skill("china-cloud").unwrap().name, "aliyun-cloud-pro-max");
     }
 }
 
