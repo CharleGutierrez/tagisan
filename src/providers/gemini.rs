@@ -135,6 +135,9 @@ impl GeminiProvider {
             for block in &msg.content {
                 if let ContentBlock::ToolCall { id, name, .. } = block {
                     tool_id_to_name.insert(id.clone(), name.clone());
+                    if let Some((clean_id, _)) = id.split_once("##sig##") {
+                        tool_id_to_name.insert(clean_id.to_string(), name.clone());
+                    }
                 }
             }
         }
@@ -160,9 +163,11 @@ impl GeminiProvider {
                             ..Default::default()
                         });
                     }
-                    ContentBlock::Thinking { thinking, .. } => {
+                    ContentBlock::Thinking { thinking, signature } => {
                         parts.push(GeminiPart {
                             text: Some(format!("<think>\n{}\n</think>", thinking)),
+                            thought: Some(true),
+                            thought_signature: signature.clone(),
                             ..Default::default()
                         });
                     }
@@ -175,8 +180,18 @@ impl GeminiProvider {
                             ..Default::default()
                         });
                     }
-                    ContentBlock::ToolCall { name, arguments, .. } => {
+                    ContentBlock::ToolCall { id, name, arguments } => {
+                        let thought_signature = if let Some((_, sig)) = id.split_once("##sig##") {
+                            if !sig.is_empty() {
+                                Some(sig.to_string())
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        };
                         parts.push(GeminiPart {
+                            thought_signature,
                             function_call: Some(GeminiFunctionCall {
                                 name: name.clone(),
                                 args: arguments.clone(),
@@ -185,14 +200,20 @@ impl GeminiProvider {
                         });
                     }
                     ContentBlock::ToolResult { tool_call_id, content, is_error } => {
+                        let base_id = if let Some((clean_id, _)) = tool_call_id.split_once("##sig##") {
+                            clean_id
+                        } else {
+                            tool_call_id.as_str()
+                        };
                         let fn_name = tool_id_to_name
                             .get(tool_call_id)
+                            .or_else(|| tool_id_to_name.get(base_id))
                             .cloned()
                             .unwrap_or_else(|| {
-                                if let Some((name, _)) = tool_call_id.split_once(':') {
+                                if let Some((name, _)) = base_id.split_once(':') {
                                     name.to_string()
                                 } else {
-                                    tool_call_id.clone()
+                                    base_id.to_string()
                                 }
                             });
 
@@ -255,7 +276,108 @@ struct GeminiToolWrapper<'a> {
 struct GeminiFunctionDeclaration<'a> {
     name: &'a str,
     description: &'a str,
-    parameters: &'a serde_json::Value,
+    parameters: serde_json::Value,
+}
+
+fn sanitize_gemini_schema(val: &mut serde_json::Value) {
+    match val {
+        serde_json::Value::Object(map) => {
+            map.remove("$schema");
+            map.remove("$id");
+            map.remove("title");
+            map.remove("definitions");
+            map.remove("$defs");
+
+            // Strip boolean required if present
+            if let Some(req) = map.get("required") {
+                if req.is_boolean() {
+                    map.remove("required");
+                }
+            }
+
+            let is_array = map
+                .get("type")
+                .and_then(|t| t.as_str())
+                .map(|s| s.eq_ignore_ascii_case("array"))
+                .unwrap_or(false);
+
+            if is_array {
+                match map.get_mut("items") {
+                    None => {
+                        map.insert("items".to_string(), serde_json::json!({ "type": "string" }));
+                    }
+                    Some(items_val) => {
+                        if let serde_json::Value::Object(items_map) = items_val {
+                            if !items_map.contains_key("type") {
+                                items_map.insert("type".to_string(), serde_json::Value::String("string".to_string()));
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If this object has "properties"
+            if map.contains_key("properties") && !map.contains_key("type") {
+                map.insert("type".to_string(), serde_json::Value::String("object".to_string()));
+            }
+
+            let mut valid_prop_keys: Option<std::collections::HashSet<String>> = None;
+            if let Some(serde_json::Value::Object(props_map)) = map.get_mut("properties") {
+                for (_, prop_val) in props_map.iter_mut() {
+                    if let serde_json::Value::Object(prop_obj) = prop_val {
+                        if let Some(r) = prop_obj.get("required") {
+                            if r.is_boolean() {
+                                prop_obj.remove("required");
+                            }
+                        }
+                        if !prop_obj.contains_key("type") {
+                            if prop_obj.contains_key("properties") {
+                                prop_obj.insert("type".to_string(), serde_json::Value::String("object".to_string()));
+                            } else if prop_obj.contains_key("items") {
+                                prop_obj.insert("type".to_string(), serde_json::Value::String("array".to_string()));
+                            } else {
+                                prop_obj.insert("type".to_string(), serde_json::Value::String("string".to_string()));
+                            }
+                        }
+                    }
+                    // Sanitize the property schema itself
+                    sanitize_gemini_schema(prop_val);
+                }
+                valid_prop_keys = Some(props_map.keys().cloned().collect());
+            }
+
+            // Check and prune required list against actual properties
+            if let Some(prop_keys) = valid_prop_keys {
+                if let Some(serde_json::Value::Array(req_arr)) = map.get_mut("required") {
+                    req_arr.retain(|x| {
+                        x.as_str().map(|s| prop_keys.contains(s)).unwrap_or(false)
+                    });
+                }
+            }
+
+            // Remove required if empty or invalid
+            if let Some(req_val) = map.get("required") {
+                if let serde_json::Value::Array(req_arr) = req_val {
+                    if req_arr.is_empty() {
+                        map.remove("required");
+                    }
+                } else {
+                    map.remove("required");
+                }
+            }
+
+            // Recurse into items schema if present
+            if let Some(items_val) = map.get_mut("items") {
+                sanitize_gemini_schema(items_val);
+            }
+        }
+        serde_json::Value::Array(arr) => {
+            for v in arr.iter_mut() {
+                sanitize_gemini_schema(v);
+            }
+        }
+        _ => {}
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -268,9 +390,9 @@ struct GeminiContent {
 struct GeminiPart {
     #[serde(skip_serializing_if = "Option::is_none")]
     text: Option<String>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     thought: Option<bool>,
-    #[serde(rename = "thoughtSignature", default)]
+    #[serde(rename = "thoughtSignature", alias = "thought_signature", default, skip_serializing_if = "Option::is_none")]
     thought_signature: Option<String>,
     #[serde(rename = "inlineData", skip_serializing_if = "Option::is_none")]
     inline_data: Option<GeminiBlob>,
@@ -378,10 +500,27 @@ impl LlmProvider for GeminiProvider {
                 function_declarations: req
                     .tools
                     .iter()
-                    .map(|t| GeminiFunctionDeclaration {
-                        name: &t.name,
-                        description: &t.description,
-                        parameters: &t.parameters,
+                    .map(|t| {
+                        let mut params = t.parameters.clone();
+                        if let serde_json::Value::Object(ref mut map) = params {
+                            if !map.contains_key("type") {
+                                map.insert("type".to_string(), serde_json::Value::String("object".to_string()));
+                            }
+                            if !map.contains_key("properties") {
+                                map.insert("properties".to_string(), serde_json::json!({}));
+                            }
+                        } else {
+                            params = serde_json::json!({
+                                "type": "object",
+                                "properties": {}
+                            });
+                        }
+                        sanitize_gemini_schema(&mut params);
+                        GeminiFunctionDeclaration {
+                            name: &t.name,
+                            description: &t.description,
+                            parameters: params,
+                        }
                     })
                     .collect(),
             }])
@@ -455,14 +594,27 @@ impl LlmProvider for GeminiProvider {
         let mut has_tool_calls = false;
 
         if let Some(content) = candidate.content {
+            let mut latest_thought_sig = None;
+            for part in &content.parts {
+                if let Some(ref s) = part.thought_signature {
+                    latest_thought_sig = Some(s.clone());
+                }
+            }
+
             for (idx, part) in content.parts.into_iter().enumerate() {
                 if let Some(t) = part.text {
                     content_blocks.push(ContentBlock::Text { text: t });
                 }
                 if let Some(fc) = part.function_call {
                     has_tool_calls = true;
+                    let sig_opt = part.thought_signature.or_else(|| latest_thought_sig.clone());
+                    let id = if let Some(sig) = sig_opt {
+                        format!("{}:gemini_{}##sig##{}", fc.name, idx, sig)
+                    } else {
+                        format!("{}:gemini_{}", fc.name, idx)
+                    };
                     content_blocks.push(ContentBlock::ToolCall {
-                        id: format!("{}:gemini_{}", fc.name, idx),
+                        id,
                         name: fc.name,
                         arguments: fc.args,
                     });
@@ -534,10 +686,27 @@ impl LlmProvider for GeminiProvider {
                 function_declarations: req
                     .tools
                     .iter()
-                    .map(|t| GeminiFunctionDeclaration {
-                        name: &t.name,
-                        description: &t.description,
-                        parameters: &t.parameters,
+                    .map(|t| {
+                        let mut params = t.parameters.clone();
+                        if let serde_json::Value::Object(ref mut map) = params {
+                            if !map.contains_key("type") {
+                                map.insert("type".to_string(), serde_json::Value::String("object".to_string()));
+                            }
+                            if !map.contains_key("properties") {
+                                map.insert("properties".to_string(), serde_json::json!({}));
+                            }
+                        } else {
+                            params = serde_json::json!({
+                                "type": "object",
+                                "properties": {}
+                            });
+                        }
+                        sanitize_gemini_schema(&mut params);
+                        GeminiFunctionDeclaration {
+                            name: &t.name,
+                            description: &t.description,
+                            parameters: params,
+                        }
                     })
                     .collect(),
             }])
@@ -658,10 +827,15 @@ impl LlmProvider for GeminiProvider {
                                                 }
                                             }
                                             if let Some(fc) = part.function_call {
+                                                let id = if let Some(ref sig) = part.thought_signature {
+                                                    format!("{}:gemini_{}##sig##{}", fc.name, idx, sig)
+                                                } else {
+                                                    format!("{}:gemini_{}", fc.name, idx)
+                                                };
                                                 yield Ok(StreamChunk {
                                                     delta: StreamChunkDelta::ToolCallDelta {
                                                         index: idx,
-                                                        id: Some(format!("{}:gemini_{}", fc.name, idx)),
+                                                        id: Some(id),
                                                         name: Some(fc.name),
                                                         arguments_delta: Some(fc.args.to_string()),
                                                     },
@@ -686,5 +860,88 @@ impl LlmProvider for GeminiProvider {
         };
 
         Ok(Box::pin(output_stream))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tools::ToolRegistry;
+
+    #[test]
+    fn test_all_builtin_tools_pass_gemini_sanitization() {
+        let registry = ToolRegistry::with_builtins();
+        let definitions = registry.definitions();
+        assert!(!definitions.is_empty(), "Builtin tool registry should not be empty");
+
+        for tool in &definitions {
+            let mut params = tool.parameters.clone();
+            if let serde_json::Value::Object(ref mut map) = params {
+                if !map.contains_key("type") {
+                    map.insert("type".to_string(), serde_json::Value::String("object".to_string()));
+                }
+                if !map.contains_key("properties") {
+                    map.insert("properties".to_string(), serde_json::json!({}));
+                }
+            } else {
+                params = serde_json::json!({
+                    "type": "object",
+                    "properties": {}
+                });
+            }
+
+            sanitize_gemini_schema(&mut params);
+
+            // 1. Root must be type: "object"
+            assert_eq!(
+                params.get("type").and_then(|v| v.as_str()),
+                Some("object"),
+                "Tool '{}' parameters must have type 'object'",
+                tool.name
+            );
+
+            // 2. Properties must be an object
+            let props = params
+                .get("properties")
+                .and_then(|v| v.as_object())
+                .unwrap_or_else(|| panic!("Tool '{}' properties must be an object", tool.name));
+
+            // 3. Every property must have a type
+            for (pname, pval) in props {
+                let pobj = pval
+                    .as_object()
+                    .unwrap_or_else(|| panic!("Tool '{}' prop '{}' is not an object", tool.name, pname));
+                assert!(
+                    pobj.contains_key("type"),
+                    "Tool '{}' prop '{}' is missing 'type'",
+                    tool.name,
+                    pname
+                );
+            }
+
+            // 4. If required is present, every required item must exist in properties
+            if let Some(req_val) = params.get("required") {
+                let req_arr = req_val
+                    .as_array()
+                    .unwrap_or_else(|| panic!("Tool '{}' required must be an array", tool.name));
+                assert!(
+                    !req_arr.is_empty(),
+                    "Tool '{}' required array should not be empty",
+                    tool.name
+                );
+                for r in req_arr {
+                    let r_str = r
+                        .as_str()
+                        .unwrap_or_else(|| panic!("Tool '{}' required item is not a string", tool.name));
+                    assert!(
+                        props.contains_key(r_str),
+                        "Tool '{}' required property '{}' is not in properties: {:?}",
+                        tool.name,
+                        r_str,
+                        props.keys().collect::<Vec<_>>()
+                    );
+                }
+            }
+        }
     }
 }

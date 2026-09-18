@@ -1172,6 +1172,7 @@ impl ToolHandler for CopilotDefenderTool {
                 },
                 "alerts": {
                     "type": "array",
+                    "items": { "type": "object" },
                     "description": "Batch list of Defender alerts for batch_triage."
                 },
                 "webhook_payload": {

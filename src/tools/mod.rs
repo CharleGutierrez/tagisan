@@ -508,7 +508,15 @@ impl ToolRegistry {
 
     /// Execute a tool call and produce a `ContentBlock::ToolResult`
     pub async fn execute_call(&self, tool_call_id: &str, name: &str, arguments: &Value) -> ContentBlock {
-        match self.tools.get(name) {
+        let tool = self.tools.get(name).or_else(|| {
+            if let Some((_, base)) = name.split_once(':') {
+                self.tools.get(base)
+            } else {
+                None
+            }
+        });
+
+        match tool {
             Some(tool) => match tool.execute(arguments.clone()).await {
                 Ok(content) => ContentBlock::tool_result(tool_call_id, content, false),
                 Err(err) => {

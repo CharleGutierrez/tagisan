@@ -5094,6 +5094,7 @@ impl ToolHandler for BinaryProtocolSynthesizerTool {
                     "description": "Name of the protocol or wire struct (e.g. 'NetworkFrame', 'SensorTelemetry')."
                 },
                 "wire_spec": {
+                    "type": "string",
                     "description": "Specification of wire fields (JSON object with 'fields' array or string specification)."
                 },
                 "endianness": {
@@ -7962,18 +7963,22 @@ impl ToolHandler for Z3SmtSolverTool {
                 },
                 "declarations": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Variable declarations for synthesize_smt_lib."
                 },
                 "assertions": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Assertion strings for synthesize_smt_lib."
                 },
                 "variables": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Variable declarations or names for solve_constraints or verify_equivalence."
                 },
                 "constraints": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "List of constraint expressions for solve_constraints."
                 },
                 "expression_a": {
@@ -8264,6 +8269,7 @@ impl ToolHandler for RrTimeTravelDebuggerTool {
                 },
                 "arguments": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Command-line arguments for target binary."
                 },
                 "cpu_core": {
@@ -8280,14 +8286,17 @@ impl ToolHandler for RrTimeTravelDebuggerTool {
                 },
                 "breakpoints": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "List of breakpoint symbols or lines."
                 },
                 "watchpoints": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "List of memory watchpoints (e.g. '*0x7fffffffe048')."
                 },
                 "reverse_commands": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Reverse debugging commands sequence."
                 },
                 "event_target": {
@@ -8773,14 +8782,17 @@ impl ToolHandler for QemuBaremetalEmulatorTool {
                 },
                 "hardware_regions": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Physical SoC hardware memory banks for validate_memory_map."
                 },
                 "linker_regions": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Linker script memory segments for validate_memory_map."
                 },
                 "expected_boot_strings": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Expected boot messages in UART test harness."
                 },
                 "timeout_seconds": {
@@ -8789,6 +8801,7 @@ impl ToolHandler for QemuBaremetalEmulatorTool {
                 },
                 "panic_keywords": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Panic and fault signature keywords to trap."
                 }
             },
@@ -9231,10 +9244,12 @@ impl ToolHandler for TlaConsensusCheckerTool {
                 },
                 "invariants": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Invariant formulas to verify in TLC config."
                 },
                 "properties": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Temporal properties to check in TLC config."
                 },
                 "symmetry_set": {

@@ -1322,6 +1322,7 @@ impl ToolHandler for CopilotBicepTool {
                 },
                 "function_args": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Arguments for Bicep function evaluation."
                 },
                 "evaluation_context": {

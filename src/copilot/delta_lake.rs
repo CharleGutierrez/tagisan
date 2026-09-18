@@ -655,10 +655,12 @@ impl ToolHandler for CopilotDeltaLakeTool {
                 },
                 "added_files": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "List of DeltaAddAction parquet files to register."
                 },
                 "removed_files": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "List of DeltaRemoveAction parquet files to remove."
                 },
                 "workspace": {

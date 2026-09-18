@@ -1068,6 +1068,7 @@ impl ToolHandler for CopilotVsCodeTool {
                 },
                 "diagnostics": {
                     "type": "array",
+                    "items": { "type": "object" },
                     "description": "Current active diagnostics at cursor position."
                 },
                 "chat_request": {

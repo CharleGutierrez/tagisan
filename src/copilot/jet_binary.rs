@@ -995,10 +995,12 @@ impl ToolHandler for CopilotJetBinaryTool {
                 },
                 "columns": {
                     "type": "array",
+                    "items": { "type": "string" },
                     "description": "Column definitions for synthesizing .accdb."
                 },
                 "rows": {
                     "type": "array",
+                    "items": { "type": "object" },
                     "description": "Row records for synthesizing .accdb."
                 },
                 "output_path": {

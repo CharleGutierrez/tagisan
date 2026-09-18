@@ -381,6 +381,7 @@ impl ToolHandler for BunStreamBusTool {
                     "description": "Pub/Sub topic (default: 'default')."
                 },
                 "message": {
+                    "type": "string",
                     "description": "Message payload to publish (string or JSON object)."
                 }
             },
