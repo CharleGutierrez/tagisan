@@ -189,6 +189,7 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         azure_cloud_pro_max(),
         google_cloud_pro_max(),
         aliyun_cloud_pro_max(),
+        sovereign_defense_c4istar_pro_max(),
         reverse_engineering_pro_max(),
         agentic_engineering_pro_max(),
         ui_ux_pro_max(),
@@ -8522,6 +8523,9 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "aliyun" || lower == "alibaba" || lower == "alicloud" || lower == "alibaba-cloud" || lower == "aliyun-cloud" || lower == "aliyun-pro-max" || lower == "aliyun-engineering" || lower == "alicloud-pro-max" || lower == "alibaba-cloud-pro-max" || lower == "china-cloud" {
         return find_built_in_skill("aliyun-cloud-pro-max");
     }
+    if lower == "sovereign-defense" || lower == "military-defense" || lower == "c4istar" || lower == "tactical-defense" || lower == "afp-cyber" || lower == "national-defense" || lower == "defense-pro-max" || lower == "c4istar-pro-max" || lower == "military-c4istar" || lower == "sovereign-c4istar" {
+        return find_built_in_skill("sovereign-defense-c4istar-pro-max");
+    }
 
     let map = BUILT_IN_SKILLS_CACHE.get_or_init(|| {
         let mut m = HashMap::new();
@@ -8562,6 +8566,16 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
 
     None
+}
+
+/// Sovereign Defense & C4ISTAR Engineering Pro Max Master Skill (Top 5,500 Skills)
+pub fn sovereign_defense_c4istar_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/sovereign-defense-c4istar-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "sovereign-defense-c4istar-pro-max",
+            "Autonomous Master Engine for the Top 5,500 Military, Sovereign Defense, and C4ISTAR Cyber Engineering Skills found across global defense and aerospace repositories. Covers Tactical Data Links (Link 16, Link 22, MIL-STD-6016, DDS), SCADA/ICS OT defense (OPC UA, Modbus, DNP3), DDIL disruption-tolerant networking (DTN RFC 9171), Sovereign Post-Quantum Cryptography (NIST FIPS 203 ML-KEM, FIPS 204 ML-DSA, FIPS 140-3 HSM), Red/Black TEMPEST separation & hardware optical data diodes, Ruggedized Tactical Edge & Air-Gapped K8s (MIL-STD-810H), Cross-Domain Solutions (CDS) & Multi-Level Security (MLS), In-Memory eBPF Threat Hunting, Active Cyber Deception & Tarpitting, Maritime Domain Awareness (MDA) & AIS/Radar anti-spoofing, Tactical Autonomous Systems (MAVLink 2.0 / STANAG 4586), Human-in-the-Loop (HITL) M-of-N dual-custody gatekeepers, Law of Armed Conflict (LOAC) & ROE formal verification, Tamper-Evident Black-Box Merkle Mission Logging, Counter-EW & Anti-Jamming SATCOM, and Sovereign Cyber Range adversary emulation.",
+            include_str!("../../assets/skills/sovereign-defense-c4istar-pro-max/SKILL.md"),
+        ))
 }
 
 /// Alibaba Cloud & China Cloud Engineering Pro Max Master Skill (Top 5,500 Skills)
@@ -18758,6 +18772,26 @@ mod tests {
         assert_eq!(find_built_in_skill("alicloud-pro-max").unwrap().name, "aliyun-cloud-pro-max");
         assert_eq!(find_built_in_skill("alibaba-cloud-pro-max").unwrap().name, "aliyun-cloud-pro-max");
         assert_eq!(find_built_in_skill("china-cloud").unwrap().name, "aliyun-cloud-pro-max");
+
+        // 8. Check sovereign-defense-c4istar-pro-max
+        let sov_def = find_built_in_skill("sovereign-defense-c4istar-pro-max");
+        assert!(sov_def.is_some(), "sovereign-defense-c4istar-pro-max should be registered");
+        let sov_def_skill = sov_def.unwrap();
+        assert!(!sov_def_skill.description.is_empty());
+        assert!(!sov_def_skill.instructions.is_empty());
+        assert!(sov_def_skill.instructions.contains("MIL-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("sovereign-defense").unwrap().name, "sovereign-defense-c4istar-pro-max");
+        assert_eq!(find_built_in_skill("military-defense").unwrap().name, "sovereign-defense-c4istar-pro-max");
+        assert_eq!(find_built_in_skill("c4istar").unwrap().name, "sovereign-defense-c4istar-pro-max");
+        assert_eq!(find_built_in_skill("tactical-defense").unwrap().name, "sovereign-defense-c4istar-pro-max");
+        assert_eq!(find_built_in_skill("afp-cyber").unwrap().name, "sovereign-defense-c4istar-pro-max");
+        assert_eq!(find_built_in_skill("national-defense").unwrap().name, "sovereign-defense-c4istar-pro-max");
+        assert_eq!(find_built_in_skill("defense-pro-max").unwrap().name, "sovereign-defense-c4istar-pro-max");
+        assert_eq!(find_built_in_skill("c4istar-pro-max").unwrap().name, "sovereign-defense-c4istar-pro-max");
+        assert_eq!(find_built_in_skill("military-c4istar").unwrap().name, "sovereign-defense-c4istar-pro-max");
+        assert_eq!(find_built_in_skill("sovereign-c4istar").unwrap().name, "sovereign-defense-c4istar-pro-max");
     }
 }
 
