@@ -185,6 +185,7 @@ impl EccSkill {
 /// Return all built-in ECC engineering skills
 pub fn all_built_in_skills() -> Vec<EccSkill> {
     vec![
+        aws_cloud_pro_max(),
         azure_cloud_pro_max(),
         google_cloud_pro_max(),
         reverse_engineering_pro_max(),
@@ -8514,6 +8515,9 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "azure" || lower == "azure-cloud" || lower == "azure-pro-max" || lower == "azure-engineering" || lower == "az" || lower == "azure-engineering-pro-max" {
         return find_built_in_skill("azure-cloud-pro-max");
     }
+    if lower == "aws" || lower == "amazon-web-services" || lower == "aws-cloud" || lower == "aws-pro-max" || lower == "aws-engineering" || lower == "aws-engineering-pro-max" {
+        return find_built_in_skill("aws-cloud-pro-max");
+    }
 
     let map = BUILT_IN_SKILLS_CACHE.get_or_init(|| {
         let mut m = HashMap::new();
@@ -8554,6 +8558,16 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
 
     None
+}
+
+/// AWS Cloud Engineering Pro Max Master Skill (Top 5,500 Skills)
+pub fn aws_cloud_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/aws-cloud-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "aws-cloud-pro-max",
+            "Autonomous Master Engine for the Top 5,500 AWS Cloud Engineering Skills found across GitHub. Covers Amazon Elastic Kubernetes Service (EKS) with Karpenter & Bottlerocket, AWS Lambda serverless & EventBridge Pipes, Amazon EC2 Fleet & P5/Trn1/Inf2 GPU/EFA compute, VPC Networking & Transit Gateway hub-and-spoke with CloudFront OAC & AWS Network Firewall, Modern Data Lakehouse with AWS Glue, Amazon Redshift Serverless & Apache Iceberg, Real-Time Streaming with Amazon MSK (Kafka) & Kinesis Data Streams, Globally Distributed Amazon Aurora Global Database & DynamoDB Global Tables, Generative AI with Amazon Bedrock, Claude 3.5 Sonnet RAG & SageMaker Ops, AWS IAM Identity Center (SSO), Zero Trust ABAC & KMS HSM, Amazon S3 Express One Zone & Glacier Flexible Archive, Infrastructure as Code with AWS CDK v2 & Terraform AWS Provider, CloudWatch Logs Insights, ADOT OpenTelemetry & Managed Prometheus/Grafana, CI/CD with GitHub Actions OIDC & AWS CodePipeline, Hybrid Cloud with AWS Outposts & Local Zones, Cloud FinOps with Cost and Usage Report (CUR) 2.0 & Compute Savings Plans, and Multi-Region Disaster Recovery with AWS Elastic Disaster Recovery (DRS) & Route 53 ARC. Triggers: aws, amazon-web-services, aws-cloud, eks, lambda, s3, dynamodb, aurora, bedrock, cdk, cloudwatch, iam, msk, redshift, kinesis, sagemaker, fargate, transit-gateway.",
+            include_str!("../../assets/skills/aws-cloud-pro-max/SKILL.md"),
+        ))
 }
 
 /// Azure Cloud Engineering Pro Max Master Skill (Top 5,500 Skills)
@@ -18695,6 +18709,21 @@ mod tests {
         assert_eq!(find_built_in_skill("az").unwrap().name, "azure-cloud-pro-max");
         assert_eq!(find_built_in_skill("azure-pro-max").unwrap().name, "azure-cloud-pro-max");
         assert_eq!(find_built_in_skill("azure-engineering").unwrap().name, "azure-cloud-pro-max");
+
+        // 6. Check aws-cloud-pro-max
+        let aws = find_built_in_skill("aws-cloud-pro-max");
+        assert!(aws.is_some(), "aws-cloud-pro-max should be registered");
+        let aws_skill = aws.unwrap();
+        assert!(!aws_skill.description.is_empty());
+        assert!(!aws_skill.instructions.is_empty());
+        assert!(aws_skill.instructions.contains("AWS-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("aws").unwrap().name, "aws-cloud-pro-max");
+        assert_eq!(find_built_in_skill("amazon-web-services").unwrap().name, "aws-cloud-pro-max");
+        assert_eq!(find_built_in_skill("aws-cloud").unwrap().name, "aws-cloud-pro-max");
+        assert_eq!(find_built_in_skill("aws-pro-max").unwrap().name, "aws-cloud-pro-max");
+        assert_eq!(find_built_in_skill("aws-engineering").unwrap().name, "aws-cloud-pro-max");
     }
 }
 
