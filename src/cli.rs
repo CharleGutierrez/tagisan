@@ -823,6 +823,11 @@ enum Commands {
         #[command(subcommand)]
         action: crate::ux::UxAction,
     },
+    /// Top 5,500 Agentic Engineering Skills across GitHub, Inverted Index & REPL/MCP Engine
+    Agentic {
+        #[command(subcommand)]
+        action: crate::agentic::AgenticAction,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -5840,6 +5845,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Ux { action } => {
             crate::ux::handle_ux_command(action).await?;
+        }
+        Commands::Agentic { action } => {
+            crate::agentic::handle_agentic_command(action).await?;
         }
     }
 

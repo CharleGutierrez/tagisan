@@ -30,6 +30,7 @@ pub mod ide;
 pub mod copilot;
 pub mod frontier;
 pub mod ux;
+pub mod agentic;
 
 pub use harness::*;
 pub use otp::*;
@@ -38,6 +39,7 @@ pub use ide::*;
 pub use copilot::*;
 pub use frontier::*;
 pub use ux::*;
+pub use agentic::*;
 pub use plugins::{
     handle_plugin_command, CuratedCatalogItem, InstallScope, LoadedPlugin, PluginAction,
     PluginCapabilities, PluginDebateJudge, PluginEngine, PluginExecutionContext,

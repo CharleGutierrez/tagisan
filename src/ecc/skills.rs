@@ -185,6 +185,7 @@ impl EccSkill {
 /// Return all built-in ECC engineering skills
 pub fn all_built_in_skills() -> Vec<EccSkill> {
     vec![
+        agentic_engineering_pro_max(),
         ui_ux_pro_max(),
         local_llm_supercharger(),
         tdd_workflow(),
@@ -8495,8 +8496,9 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "tla" || lower == "tla+" || lower == "tlc" || lower == "consensus-checker" || lower == "tla-checker" || lower == "formal-consensus" {
         return find_built_in_skill("tla-consensus-formal-model-checker");
     }
-
-
+    if lower == "agentic" || lower == "agentic-engineering" || lower == "agentic-pro" || lower == "codeact" {
+        return find_built_in_skill("agentic-engineering-pro-max");
+    }
 
     let map = BUILT_IN_SKILLS_CACHE.get_or_init(|| {
         let mut m = HashMap::new();
@@ -8537,6 +8539,16 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
 
     None
+}
+
+/// Agentic Engineering Pro Max Master Skill (Top 5,500 Skills)
+pub fn agentic_engineering_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/agentic-engineering-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "agentic-engineering-pro-max",
+            "Autonomous Master Engine for the Top 5,500 Agentic Engineering Skills found across GitHub. Enforces deterministic CodeAct REPL grounding, Model Context Protocol (MCP) tool contracts, AST semantic call graph indexing, autonomous RCA traceback healing, formal verification with Z3/Kani, and multi-agent swarm orchestration. Triggers: agentic, skills, mcp, codeact, repl, ast, rca, traceback healing, formal verification, guardrails, swarm, graphrag, devops agents.",
+            include_str!("../../assets/skills/agentic-engineering-pro-max/SKILL.md"),
+        ))
 }
 
 /// UI/UX Pro Max Design Intelligence & Accessibility Skill
