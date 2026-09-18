@@ -3,50 +3,95 @@
     "lsp": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-lsp"],
+      "env": {},
       "description": "Production LSP Code Intelligence Server providing real-time diagnostics, definition jumps, and hover documentation"
     },
     "terminal": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-terminal"],
+      "env": {},
       "description": "Production PTY Terminal Supervisor managing background daemons, watchers, and non-blocking I/O streams"
     },
     "puppeteer": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-puppeteer"],
+      "env": {},
       "description": "Headless Browser Automation Engine for full-page screenshots, DOM extraction, and visual verification"
     },
     "github": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-github"],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN:-}"
       },
       "description": "GitHub Forge CI/CD integration for PR reviews, issue triage, and workflow run telemetry"
     },
     "semgrep": {
       "command": "uvx",
       "args": ["semgrep-mcp"],
+      "env": {},
       "description": "Static Application Security Testing (SAST) and high-entropy secret scanner"
     },
     "filesystem": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
+      "env": {},
       "description": "Local workspace filesystem provider with sandboxed read/write capabilities"
     },
     "git": {
       "command": "uvx",
       "args": ["mcp-server-git", "--repository", "."],
+      "env": {},
       "description": "Local Git repository introspection, branch log, and diff provider"
     },
     "sqlite": {
       "command": "uvx",
       "args": ["mcp-server-sqlite", "--db-path", "test.db"],
+      "env": {},
       "description": "Embedded relational database query and schema provider"
     },
     "fetch": {
       "command": "uvx",
       "args": ["mcp-server-fetch"],
+      "env": {},
       "description": "Resilient HTTP/HTTPS web resource and API content fetcher"
+    },
+    "blender": {
+      "command": "uvx",
+      "args": ["mcp-for-blender"],
+      "env": {},
+      "description": "Blender 3D MCP bridge for scene inspection, mesh manipulation, material assignment, and bpy Python execution"
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY:-}"
+      },
+      "description": "Live web search, developer documentation lookup, and real-time error query engine"
+    },
+    "sequentialthinking": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "env": {},
+      "description": "Dynamic thought branching, step-by-step hypothesis validation, and cognitive problem decomposition"
+    },
+    "docker": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-docker"],
+      "env": {
+        "DOCKER_HOST": "${DOCKER_HOST:-npipe:////./pipe/docker_engine}"
+      },
+      "description": "Container sandbox, ephemeral isolated testbed runner, and image lifecycle supervisor"
+    },
+    "qdrant": {
+      "command": "uvx",
+      "args": ["mcp-server-qdrant"],
+      "env": {
+        "QDRANT_URL": "${QDRANT_URL:-http://localhost:6333}",
+        "QDRANT_API_KEY": "${QDRANT_API_KEY:-}"
+      },
+      "description": "Dense vector storage, semantic codebase memory, and hybrid BM25 neural search engine"
     }
   }
 }
