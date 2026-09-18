@@ -185,6 +185,7 @@ impl EccSkill {
 /// Return all built-in ECC engineering skills
 pub fn all_built_in_skills() -> Vec<EccSkill> {
     vec![
+        google_cloud_pro_max(),
         reverse_engineering_pro_max(),
         agentic_engineering_pro_max(),
         ui_ux_pro_max(),
@@ -8506,6 +8507,9 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "ui-ux" || lower == "ux" || lower == "ui" || lower == "ui-ux-pro" || lower == "ux-pro-max" || lower == "design-system" {
         return find_built_in_skill("ui-ux-pro-max");
     }
+    if lower == "gcp" || lower == "google-cloud" || lower == "gcp-pro-max" || lower == "gcp-engineering" || lower == "gcloud" || lower == "gcp-engineering-pro-max" {
+        return find_built_in_skill("google-cloud-pro-max");
+    }
 
     let map = BUILT_IN_SKILLS_CACHE.get_or_init(|| {
         let mut m = HashMap::new();
@@ -8546,6 +8550,16 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
 
     None
+}
+
+/// Google Cloud Engineering Pro Max Master Skill (Top 5,500 Skills)
+pub fn google_cloud_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/google-cloud-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "google-cloud-pro-max",
+            "Autonomous Master Engine for the Top 5,500 Google Cloud Engineering Skills found across GitHub. Covers Google Kubernetes Engine (GKE), Cloud Run gen2 serverless, Compute Engine fleet management, VPC global networking & Cloud Armor, BigQuery lakehouse & BigFrames, Dataflow streaming & Pub/Sub, Cloud Spanner multi-region & AlloyDB, Vertex AI & Gemini foundation model ops, Security Command Center & Cloud KMS, Cloud Storage tiered lifecycle, Terraform Google Foundation Toolkit, Cloud Operations observability (MQL), Cloud Build & Cloud Deploy CI/CD, Anthos/GDC hybrid migration, BigQuery FinOps cost optimization, and multi-region active-active enterprise disaster recovery. Triggers: gcp, google-cloud, gcloud, bigquery, gke, cloud run, spanner, vertex ai, dataflow, pubsub, cloud storage, alloydb, cloud armor, anthos, cloud build.",
+            include_str!("../../assets/skills/google-cloud-pro-max/SKILL.md"),
+        ))
 }
 
 /// Reverse Engineering Pro Max Master Skill (Top 5,500 Skills)
@@ -18638,6 +18652,20 @@ mod tests {
         assert_eq!(find_built_in_skill("ui-ux").unwrap().name, "ui-ux-pro-max");
         assert_eq!(find_built_in_skill("ux").unwrap().name, "ui-ux-pro-max");
         assert_eq!(find_built_in_skill("ui").unwrap().name, "ui-ux-pro-max");
+
+        // 4. Check google-cloud-pro-max
+        let gcp = find_built_in_skill("google-cloud-pro-max");
+        assert!(gcp.is_some(), "google-cloud-pro-max should be registered");
+        let gcp_skill = gcp.unwrap();
+        assert!(!gcp_skill.description.is_empty());
+        assert!(!gcp_skill.instructions.is_empty());
+        assert!(gcp_skill.instructions.contains("GCP-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("gcp").unwrap().name, "google-cloud-pro-max");
+        assert_eq!(find_built_in_skill("google-cloud").unwrap().name, "google-cloud-pro-max");
+        assert_eq!(find_built_in_skill("gcloud").unwrap().name, "google-cloud-pro-max");
+        assert_eq!(find_built_in_skill("gcp-pro-max").unwrap().name, "google-cloud-pro-max");
     }
 }
 
