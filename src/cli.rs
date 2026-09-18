@@ -645,6 +645,86 @@ enum Commands {
         #[arg(short, long)]
         prompt: Option<String>,
     },
+    /// Autonomous debugging & root-cause investigator for compiler errors, test failures, and git regressions
+    Debug {
+        /// Target file, directory, or test command to inspect (e.g. "src/lib.rs" or "test_my_feature")
+        #[arg(short, long)]
+        target: Option<String>,
+
+        /// Direct error text or compiler diagnostics to analyze
+        #[arg(short, long)]
+        error: Option<String>,
+
+        /// Actively execute tests/build to reproduce the error
+        #[arg(short, long)]
+        reproduce: bool,
+
+        /// Correlate error with recent git commits and diffs
+        #[arg(short, long)]
+        bisect: bool,
+    },
+    /// Blast-radius safe codebase refactoring with AST impact analysis and atomic rollback
+    Refactor {
+        /// Target file or directory to refactor
+        path: String,
+
+        /// Goal, requirements, or architecture pattern for refactoring
+        goal: String,
+
+        /// Preview changes and blast radius without modifying files
+        #[arg(short, long)]
+        dry_run: bool,
+
+        /// Automatically compile and verify changes; rollback if compiler fails
+        #[arg(short, long)]
+        atomic: bool,
+    },
+    /// Self-healing CI/CD and compiler watcher that autonomously remediates broken builds
+    Heal {
+        /// Path to CI build log file (optional; defaults to running local build check)
+        #[arg(short, long)]
+        ci_log: Option<String>,
+
+        /// Continuously watch project and auto-heal on failure
+        #[arg(short, long)]
+        watch: bool,
+
+        /// Automatically commit healed changes if AgentShield secret scan passes
+        #[arg(short, long)]
+        auto_commit: bool,
+    },
+    /// Autonomous security audit, AgentShield secret scanner, dependency checker, and adversarial red-team fuzzer
+    Audit {
+        /// Perform deep recursive file and dependency scan
+        #[arg(short, long)]
+        deep: bool,
+
+        /// Execute adversarial prompt injection and input fuzzing tests
+        #[arg(short = 'z', long)]
+        fuzz: bool,
+
+        /// Attempt to automatically sanitize or remediate detected security violations
+        #[arg(short = 'f', long)]
+        fix: bool,
+    },
+    /// Living architecture mapper & dependency boundary drift sentinel (generates Mermaid/ASCII/JSON)
+    Arch {
+        /// Root path of the codebase to analyze (default: current directory)
+        #[arg(short, long)]
+        path: Option<String>,
+
+        /// Optional output file to write diagram/report
+        #[arg(short, long)]
+        output: Option<String>,
+
+        /// Output format: mermaid, ascii, or json (default: mermaid)
+        #[arg(short, long, default_value = "mermaid")]
+        format: String,
+
+        /// Enforce strict layer boundaries and check for circular dependency violations
+        #[arg(short, long)]
+        check_boundaries: bool,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -5629,6 +5709,21 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Voice { duration, prompt } => {
             crate::frontier::handle_voice_command(duration, prompt, cli.max_budget).await?;
+        }
+        Commands::Debug { target, error, reproduce, bisect } => {
+            crate::frontier::handle_debug_command(target, error, reproduce, bisect, cli.max_budget).await?;
+        }
+        Commands::Refactor { path, goal, dry_run, atomic } => {
+            crate::frontier::handle_refactor_command(path, goal, dry_run, atomic, cli.max_budget).await?;
+        }
+        Commands::Heal { ci_log, watch, auto_commit } => {
+            crate::frontier::handle_heal_command(ci_log, watch, auto_commit, cli.max_budget).await?;
+        }
+        Commands::Audit { deep, fuzz, fix } => {
+            crate::frontier::handle_audit_command(deep, fuzz, fix, cli.max_budget).await?;
+        }
+        Commands::Arch { path, output, format, check_boundaries } => {
+            crate::frontier::handle_arch_command(path, output, format, check_boundaries, cli.max_budget).await?;
         }
     }
 

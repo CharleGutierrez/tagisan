@@ -148,7 +148,12 @@ impl AgentShieldScanner {
                     }
                 }
                 let step = leading_ws + candidate.len();
-                search_idx = after_marker + if step == 0 { 1 } else { step };
+                let advance = if step == 0 { 1 } else { step };
+                let mut next_idx = after_marker + advance;
+                while next_idx < text.len() && !text.is_char_boundary(next_idx) {
+                    next_idx += 1;
+                }
+                search_idx = next_idx;
                 if search_idx >= text.len() {
                     break;
                 }
@@ -178,7 +183,11 @@ impl AgentShieldScanner {
                         }
                     }
                 }
-                comment_idx = abs_start + end + 3;
+                let mut next_comment = abs_start + end + 3;
+                while next_comment < text.len() && !text.is_char_boundary(next_comment) {
+                    next_comment += 1;
+                }
+                comment_idx = next_comment;
             } else {
                 break;
             }
