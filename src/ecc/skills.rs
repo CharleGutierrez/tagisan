@@ -185,6 +185,7 @@ impl EccSkill {
 /// Return all built-in ECC engineering skills
 pub fn all_built_in_skills() -> Vec<EccSkill> {
     vec![
+        reverse_engineering_pro_max(),
         agentic_engineering_pro_max(),
         ui_ux_pro_max(),
         local_llm_supercharger(),
@@ -8499,6 +8500,12 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "agentic" || lower == "agentic-engineering" || lower == "agentic-pro" || lower == "codeact" {
         return find_built_in_skill("agentic-engineering-pro-max");
     }
+    if lower == "reverse" || lower == "reverse-engineering" || lower == "reverse-pro" || lower == "reversing" || lower == "ghidra" || lower == "binary-reversing" {
+        return find_built_in_skill("reverse-engineering-pro-max");
+    }
+    if lower == "ui-ux" || lower == "ux" || lower == "ui" || lower == "ui-ux-pro" || lower == "ux-pro-max" || lower == "design-system" {
+        return find_built_in_skill("ui-ux-pro-max");
+    }
 
     let map = BUILT_IN_SKILLS_CACHE.get_or_init(|| {
         let mut m = HashMap::new();
@@ -8539,6 +8546,16 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
 
     None
+}
+
+/// Reverse Engineering Pro Max Master Skill (Top 5,500 Skills)
+pub fn reverse_engineering_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/reverse-engineering-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "reverse-engineering-pro-max",
+            "Autonomous Master Engine for the Top 5,500 Reverse Engineering Skills found across GitHub. Covers binary analysis, decompilation theory, dynamic instrumentation (Frida, DynamoRIO), symbolic execution (angr, Z3), firmware extraction (Binwalk), defensive triage (Volatility, YARA, capa), protocol reverse engineering, mobile app analysis (JADX), VM/bytecode reversing, deobfuscation, kernel rootkit analysis, cryptographic primitive identification, file format templates, SCADA/automotive reversing, and game asset analysis. Triggers: reverse, reversing, ghidra, radare2, frida, ida, decompilation, binary analysis, disassembly, angr, z3, binwalk, yara, volatility, jadx, smali, capa, protocol reversing, deobfuscation.",
+            include_str!("../../assets/skills/reverse-engineering-pro-max/SKILL.md"),
+        ))
 }
 
 /// Agentic Engineering Pro Max Master Skill (Top 5,500 Skills)
@@ -18579,6 +18596,48 @@ mod tests {
         let dispatched_sys = dispatcher.dispatch("caching topologies thundering herd rate limiting token bucket", 3, None);
         assert!(!dispatched_sys.is_empty());
         assert!(dispatched_sys.iter().any(|d| d.skill.name == "system-design-building-blocks"));
+    }
+
+    #[test]
+    fn test_pro_max_skills_registered_and_dispatchable() {
+        // 1. Check agentic-engineering-pro-max
+        let agentic = find_built_in_skill("agentic-engineering-pro-max");
+        assert!(agentic.is_some(), "agentic-engineering-pro-max should be registered");
+        let agentic_skill = agentic.unwrap();
+        assert!(!agentic_skill.description.is_empty());
+        assert!(!agentic_skill.instructions.is_empty());
+        assert!(agentic_skill.instructions.contains("AGT-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("agentic").unwrap().name, "agentic-engineering-pro-max");
+        assert_eq!(find_built_in_skill("agentic-engineering").unwrap().name, "agentic-engineering-pro-max");
+        assert_eq!(find_built_in_skill("codeact").unwrap().name, "agentic-engineering-pro-max");
+
+        // 2. Check reverse-engineering-pro-max
+        let rev = find_built_in_skill("reverse-engineering-pro-max");
+        assert!(rev.is_some(), "reverse-engineering-pro-max should be registered");
+        let rev_skill = rev.unwrap();
+        assert!(!rev_skill.description.is_empty());
+        assert!(!rev_skill.instructions.is_empty());
+        assert!(rev_skill.instructions.contains("REV-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("reverse").unwrap().name, "reverse-engineering-pro-max");
+        assert_eq!(find_built_in_skill("reverse-engineering").unwrap().name, "reverse-engineering-pro-max");
+        assert_eq!(find_built_in_skill("ghidra").unwrap().name, "reverse-engineering-pro-max");
+        assert_eq!(find_built_in_skill("reversing").unwrap().name, "reverse-engineering-pro-max");
+
+        // 3. Check ui-ux-pro-max
+        let ui = find_built_in_skill("ui-ux-pro-max");
+        assert!(ui.is_some(), "ui-ux-pro-max should be registered");
+        let ui_skill = ui.unwrap();
+        assert!(!ui_skill.description.is_empty());
+        assert!(!ui_skill.instructions.is_empty());
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("ui-ux").unwrap().name, "ui-ux-pro-max");
+        assert_eq!(find_built_in_skill("ux").unwrap().name, "ui-ux-pro-max");
+        assert_eq!(find_built_in_skill("ui").unwrap().name, "ui-ux-pro-max");
     }
 }
 
