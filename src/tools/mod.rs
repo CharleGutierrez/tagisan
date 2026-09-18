@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub use builtin::{
-    CalculatorTool, CalculateBlastRadiusTool, DeleteFileTool, EditFileTool, FetchSkillTool,
+    CalculatorTool, CalculateBlastRadiusTool, ComputerControlTool, DeleteFileTool, EditFileTool, FetchSkillTool,
     FindByNameTool, GitWorktreeTool, GrepSearchTool, GroundedInferenceTool, ListDirTool,
     QueryCodeGraphTool, ReadFileTool, ReflexionVaultTool, ReplaceFileContentTool, RunCommandTool,
     SaveMemoryTool, SearchMemoryTool, SearchSkillsTool, ViewFileTool, ViewImageTool,
@@ -127,6 +127,7 @@ impl ToolRegistry {
         registry.register_tool(builtin::QueryCodeGraphTool::new());
         registry.register_tool(builtin::CalculateBlastRadiusTool::new());
         registry.register_tool(builtin::RunCommandTool::default());
+        registry.register_tool(builtin::ComputerControlTool::default());
         registry.register_tool(builtin::CalculatorTool::new());
         registry.register_tool(builtin::ViewImageTool::new());
         registry.register_tool(builtin::GroundedInferenceTool::new());
@@ -291,6 +292,7 @@ impl ToolRegistry {
         registry.register_tool(builtin::QueryCodeGraphTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::CalculateBlastRadiusTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::RunCommandTool::default().with_working_dir(dir.clone()));
+        registry.register_tool(builtin::ComputerControlTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::CalculatorTool::new());
         registry.register_tool(builtin::ViewImageTool::new());
         registry.register_tool(builtin::GroundedInferenceTool::new().with_working_dir(dir.clone()));

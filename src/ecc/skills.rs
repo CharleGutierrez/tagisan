@@ -190,9 +190,15 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         google_cloud_pro_max(),
         aliyun_cloud_pro_max(),
         sovereign_defense_c4istar_pro_max(),
+        ai_infra_llm_runtime_pro_max(),
+        quant_trading_hft_pro_max(),
+        distributed_systems_consensus_pro_max(),
+        embedded_firmware_silicon_pro_max(),
+        defensive_security_blue_team_pro_max(),
         reverse_engineering_pro_max(),
         agentic_engineering_pro_max(),
         ui_ux_pro_max(),
+        computer_control_os_automation_pro_max_skill(),
         local_llm_supercharger(),
         tdd_workflow(),
         security_review(),
@@ -2264,6 +2270,62 @@ static BUILT_IN_SKILLS_CACHE: OnceLock<HashMap<String, EccSkill>> = OnceLock::ne
 /// Retrieve a built-in skill by name
 pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     let lower = name.to_lowercase().replace('_', "-");
+
+    let map = BUILT_IN_SKILLS_CACHE.get_or_init(|| {
+        let mut m = HashMap::new();
+        for s in all_built_in_skills() {
+            m.insert(s.name.clone(), s);
+        }
+        m
+    });
+    if let Some(skill) = map.get(&lower).cloned() {
+        return Some(skill);
+    }
+
+    if lower == "computer-control" || lower == "computer-use" || lower == "os-automation" || lower == "desktop-automation" || lower == "rpa-automation" || lower == "gui-automation" || lower == "win32-automation" || lower == "screen-control" || lower == "mouse-keyboard-control" || lower == "computer-pro-max" || lower == "os-pro-max" {
+        return find_built_in_skill("computer-control-os-automation-pro-max");
+    }
+
+    if lower == "agentic" || lower == "agentic-engineering" || lower == "agentic-pro" || lower == "codeact" {
+        return find_built_in_skill("agentic-engineering-pro-max");
+    }
+    if lower == "reverse" || lower == "reverse-engineering" || lower == "reverse-pro" || lower == "reversing" || lower == "ghidra" || lower == "binary-reversing" {
+        return find_built_in_skill("reverse-engineering-pro-max");
+    }
+    if lower == "ui-ux" || lower == "ux" || lower == "ui" || lower == "ui-ux-pro" || lower == "ux-pro-max" || lower == "design-system" {
+        return find_built_in_skill("ui-ux-pro-max");
+    }
+    if lower == "gcp" || lower == "google-cloud" || lower == "gcp-pro-max" || lower == "gcp-engineering" || lower == "gcloud" || lower == "gcp-engineering-pro-max" {
+        return find_built_in_skill("google-cloud-pro-max");
+    }
+    if lower == "azure" || lower == "azure-cloud" || lower == "azure-pro-max" || lower == "azure-engineering" || lower == "az" || lower == "azure-engineering-pro-max" {
+        return find_built_in_skill("azure-cloud-pro-max");
+    }
+    if lower == "aws" || lower == "amazon-web-services" || lower == "aws-cloud" || lower == "aws-pro-max" || lower == "aws-engineering" || lower == "aws-engineering-pro-max" {
+        return find_built_in_skill("aws-cloud-pro-max");
+    }
+    if lower == "aliyun" || lower == "alibaba" || lower == "alicloud" || lower == "alibaba-cloud" || lower == "aliyun-cloud" || lower == "aliyun-pro-max" || lower == "aliyun-engineering" || lower == "alicloud-pro-max" || lower == "alibaba-cloud-pro-max" || lower == "china-cloud" {
+        return find_built_in_skill("aliyun-cloud-pro-max");
+    }
+    if lower == "sovereign-defense" || lower == "military-defense" || lower == "c4istar" || lower == "tactical-defense" || lower == "afp-cyber" || lower == "national-defense" || lower == "defense-pro-max" || lower == "c4istar-pro-max" || lower == "military-c4istar" || lower == "sovereign-c4istar" {
+        return find_built_in_skill("sovereign-defense-c4istar-pro-max");
+    }
+    if lower == "ai-infra" || lower == "llm-runtime" || lower == "vllm" || lower == "tensorrt-llm" || lower == "ai-infrastructure" || lower == "llm-inference" || lower == "triton-kernels" || lower == "cuda-llm" || lower == "ai-infra-pro-max" || lower == "llm-serving" {
+        return find_built_in_skill("ai-infra-llm-runtime-pro-max");
+    }
+    if lower == "quant-trading" || lower == "hft" || lower == "algorithmic-trading" || lower == "orderbook" || lower == "fix-protocol" || lower == "market-making" || lower == "defi-quant" || lower == "vella-quant" || lower == "quant-pro-max" || lower == "hft-pro-max" {
+        return find_built_in_skill("quant-trading-hft-pro-max");
+    }
+    if lower == "distributed-systems" || lower == "consensus" || lower == "raft" || lower == "paxos" || lower == "pbft" || lower == "crdt" || lower == "distributed-consensus" || lower == "spanner" || lower == "distributed-pro-max" || lower == "consensus-pro-max" {
+        return find_built_in_skill("distributed-systems-consensus-pro-max");
+    }
+    if lower == "embedded-firmware" || lower == "silicon" || lower == "riscv" || lower == "rtos" || lower == "bare-metal" || lower == "embedded-rust" || lower == "firmware" || lower == "fpga-hardware" || lower == "embedded-pro-max" || lower == "silicon-pro-max" {
+        return find_built_in_skill("embedded-firmware-silicon-pro-max");
+    }
+    if lower == "defensive-security" || lower == "blue-team" || lower == "soc-engineering" || lower == "detection-engineering" || lower == "threat-hunting" || lower == "incident-response" || lower == "siem-soar" || lower == "zero-trust-defense" || lower == "blue-team-pro-max" || lower == "defensive-pro-max" {
+        return find_built_in_skill("defensive-security-blue-team-pro-max");
+    }
+
     // Top 350 Skills for Microsoft Visio 365 & Vibe Code Developers Aliases
     if lower == "shapesheet-evaluation-order" || lower == "cell-dependency-tree" || lower == "shapesheet-calc-chain" {
         return find_built_in_skill("visio-ss-core-formula-evaluation-order");
@@ -8526,6 +8588,21 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if lower == "sovereign-defense" || lower == "military-defense" || lower == "c4istar" || lower == "tactical-defense" || lower == "afp-cyber" || lower == "national-defense" || lower == "defense-pro-max" || lower == "c4istar-pro-max" || lower == "military-c4istar" || lower == "sovereign-c4istar" {
         return find_built_in_skill("sovereign-defense-c4istar-pro-max");
     }
+    if lower == "ai-infra" || lower == "llm-runtime" || lower == "vllm" || lower == "tensorrt-llm" || lower == "ai-infrastructure" || lower == "llm-inference" || lower == "triton-kernels" || lower == "cuda-llm" || lower == "ai-infra-pro-max" || lower == "llm-serving" {
+        return find_built_in_skill("ai-infra-llm-runtime-pro-max");
+    }
+    if lower == "quant-trading" || lower == "hft" || lower == "algorithmic-trading" || lower == "orderbook" || lower == "fix-protocol" || lower == "market-making" || lower == "defi-quant" || lower == "vella-quant" || lower == "quant-pro-max" || lower == "hft-pro-max" {
+        return find_built_in_skill("quant-trading-hft-pro-max");
+    }
+    if lower == "distributed-systems" || lower == "consensus" || lower == "raft" || lower == "paxos" || lower == "pbft" || lower == "crdt" || lower == "distributed-consensus" || lower == "spanner" || lower == "distributed-pro-max" || lower == "consensus-pro-max" {
+        return find_built_in_skill("distributed-systems-consensus-pro-max");
+    }
+    if lower == "embedded-firmware" || lower == "silicon" || lower == "riscv" || lower == "rtos" || lower == "bare-metal" || lower == "embedded-rust" || lower == "firmware" || lower == "fpga-hardware" || lower == "embedded-pro-max" || lower == "silicon-pro-max" {
+        return find_built_in_skill("embedded-firmware-silicon-pro-max");
+    }
+    if lower == "defensive-security" || lower == "blue-team" || lower == "soc-engineering" || lower == "detection-engineering" || lower == "threat-hunting" || lower == "incident-response" || lower == "siem-soar" || lower == "zero-trust-defense" || lower == "blue-team-pro-max" || lower == "defensive-pro-max" {
+        return find_built_in_skill("defensive-security-blue-team-pro-max");
+    }
 
     let map = BUILT_IN_SKILLS_CACHE.get_or_init(|| {
         let mut m = HashMap::new();
@@ -8575,6 +8652,56 @@ pub fn sovereign_defense_c4istar_pro_max() -> EccSkill {
             "sovereign-defense-c4istar-pro-max",
             "Autonomous Master Engine for the Top 5,500 Military, Sovereign Defense, and C4ISTAR Cyber Engineering Skills found across global defense and aerospace repositories. Covers Tactical Data Links (Link 16, Link 22, MIL-STD-6016, DDS), SCADA/ICS OT defense (OPC UA, Modbus, DNP3), DDIL disruption-tolerant networking (DTN RFC 9171), Sovereign Post-Quantum Cryptography (NIST FIPS 203 ML-KEM, FIPS 204 ML-DSA, FIPS 140-3 HSM), Red/Black TEMPEST separation & hardware optical data diodes, Ruggedized Tactical Edge & Air-Gapped K8s (MIL-STD-810H), Cross-Domain Solutions (CDS) & Multi-Level Security (MLS), In-Memory eBPF Threat Hunting, Active Cyber Deception & Tarpitting, Maritime Domain Awareness (MDA) & AIS/Radar anti-spoofing, Tactical Autonomous Systems (MAVLink 2.0 / STANAG 4586), Human-in-the-Loop (HITL) M-of-N dual-custody gatekeepers, Law of Armed Conflict (LOAC) & ROE formal verification, Tamper-Evident Black-Box Merkle Mission Logging, Counter-EW & Anti-Jamming SATCOM, and Sovereign Cyber Range adversary emulation.",
             include_str!("../../assets/skills/sovereign-defense-c4istar-pro-max/SKILL.md"),
+        ))
+}
+
+/// AI Infrastructure & LLM Runtime Pro Max Master Skill (Top 5,500 Skills)
+pub fn ai_infra_llm_runtime_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/ai-infra-llm-runtime-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "ai-infra-llm-runtime-pro-max",
+            "Autonomous Master Engine for the Top 5,500 AI Infrastructure, LLM Runtime, GPU Kernel & Serving Engineering Skills. Covers PagedAttention, continuous batching, prefix caching, speculative decoding, chunked prefill, AWQ/GPTQ/FP8/GGUF quantization, custom Triton & CUDA fused kernels, FlashAttention-2/3, Tensor & Pipeline Parallelism, Mixture-of-Experts (MoE) dynamic routing, TensorRT-LLM, vLLM, SGLang, and low-latency high-concurrency token streaming servers. Triggers: ai-infra, llm-runtime, vllm, tensorrt-llm, ai-infrastructure, llm-inference, triton-kernels, cuda-llm, ai-infra-pro-max, llm-serving.",
+            include_str!("../../assets/skills/ai-infra-llm-runtime-pro-max/SKILL.md"),
+        ))
+}
+
+/// Quantitative Trading & High-Frequency Trading (HFT) Pro Max Master Skill (Top 5,500 Skills)
+pub fn quant_trading_hft_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/quant-trading-hft-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "quant-trading-hft-pro-max",
+            "Autonomous Master Engine for the Top 5,500 Quantitative Trading, High-Frequency Trading (HFT), Financial Microstructure & Algorithmic Execution Skills. Covers L2/L3 order book reconstruction, FIX 4.2/4.4/5.0 and binary ITCH/OUCH parsing, lock-free matching engines, market making (Avellaneda-Stoikov), order flow toxicity (VPIN), VWAP/TWAP execution, statistical arbitrage, kernel-bypass networking (DPDK/Solarflare Onload), FPGA acceleration, multi-asset risk management (VaR/CVaR), and Web3 DeFi invariant guarding. Triggers: quant-trading, hft, algorithmic-trading, orderbook, fix-protocol, market-making, defi-quant, vella-quant, quant-pro-max, hft-pro-max.",
+            include_str!("../../assets/skills/quant-trading-hft-pro-max/SKILL.md"),
+        ))
+}
+
+/// Distributed Systems & Consensus Pro Max Master Skill (Top 5,500 Skills)
+pub fn distributed_systems_consensus_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/distributed-systems-consensus-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "distributed-systems-consensus-pro-max",
+            "Autonomous Master Engine for the Top 5,500 Distributed Systems, Consensus Protocols, Replication & High-Scale Coordination Skills. Covers Multi-Paxos, Raft log replication, Byzantine Fault Tolerance (PBFT/HotStuff), Conflict-Free Replicated Data Types (CRDTs), distributed 2PC/3PC transactions, Google Spanner TrueTime, Hybrid Logical Clocks (HLC), consistent hashing, gossip protocols (SWIM), zero-copy RPC, partitioned event meshes, and Jepsen linearizability verification. Triggers: distributed-systems, consensus, raft, paxos, pbft, crdt, distributed-consensus, spanner, distributed-pro-max, consensus-pro-max.",
+            include_str!("../../assets/skills/distributed-systems-consensus-pro-max/SKILL.md"),
+        ))
+}
+
+/// Embedded Firmware & Silicon Architecture Pro Max Master Skill (Top 5,500 Skills)
+pub fn embedded_firmware_silicon_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/embedded-firmware-silicon-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "embedded-firmware-silicon-pro-max",
+            "Autonomous Master Engine for the Top 5,500 Embedded Systems, Bare-Metal Firmware, Silicon Architecture & Hardware Engineering Skills. Covers #![no_std] bare-metal Rust, memory-mapped I/O, circular DMA, Real-Time Operating Systems (FreeRTOS, Zephyr, RTIC), RISC-V ISA extensions, FPGA synthesis (SystemVerilog/Chisel), CAN bus / Automotive Ethernet, hardware root of trust, secure boot, side-channel power analysis resistance, and fail-safe dual-bank OTA updates. Triggers: embedded-firmware, silicon, riscv, rtos, bare-metal, embedded-rust, firmware, fpga-hardware, embedded-pro-max, silicon-pro-max.",
+            include_str!("../../assets/skills/embedded-firmware-silicon-pro-max/SKILL.md"),
+        ))
+}
+
+/// Defensive Cyber Security & Blue Team Pro Max Master Skill (Top 5,500 Skills)
+pub fn defensive_security_blue_team_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/defensive-security-blue-team-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "defensive-security-blue-team-pro-max",
+            "Autonomous Master Engine for the Top 5,500 Defensive Cyber Security, Blue Team, SOC Engineering & Zero-Trust Defense Skills. Covers Sigma rule compilation, YARA-L, KQL, eBPF kernel security monitoring (aya/libbpf), EDR telemetry parsing, OCSF event normalization, SOAR automated playbooks, threat hunting graphs (Neo4j), Zeek/Suricata network monitoring, identity threat detection (ITDR), memory safety auditing, and cryptographic hardware enclave attestation. Triggers: defensive-security, blue-team, soc-engineering, detection-engineering, threat-hunting, incident-response, siem-soar, zero-trust-defense, blue-team-pro-max, defensive-pro-max.",
+            include_str!("../../assets/skills/defensive-security-blue-team-pro-max/SKILL.md"),
         ))
 }
 
@@ -8645,6 +8772,16 @@ pub fn ui_ux_pro_max() -> EccSkill {
             "ui-ux-pro-max",
             "Autonomous UI/UX Design System Intelligence, WCAG 2.2 Accessibility Auditing, 8-Point Spatial Grid Enforcement, Multi-Brand Token Synthesis, and 500-Rule HCI Heuristics Engine.",
             include_str!("../../assets/skills/ui-ux-pro-max/SKILL.md"),
+        ))
+}
+
+/// Computer Control & OS Automation Pro Max Master Skill (14th Sovereign Pro Max Skill)
+pub fn computer_control_os_automation_pro_max_skill() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/computer-control-os-automation-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "computer-control-os-automation-pro-max",
+            "Autonomous Master Engine for Operating System Automation, Native Win32/X11/macOS Computer Control, Screen Perception, Multimodal GUI Grounding, Process Supervision, and Job Isolation. Enforces deterministic UI tree introspection, SendInput/xdotool event synthesis, Windows Job Objects / cgroups v2 resource governance, headless fallback resilience, shell sanitization, and circuit-breaker protected execution.",
+            include_str!("../../assets/skills/computer-control-os-automation-pro-max/SKILL.md"),
         ))
 }
 
@@ -18792,6 +18929,127 @@ mod tests {
         assert_eq!(find_built_in_skill("c4istar-pro-max").unwrap().name, "sovereign-defense-c4istar-pro-max");
         assert_eq!(find_built_in_skill("military-c4istar").unwrap().name, "sovereign-defense-c4istar-pro-max");
         assert_eq!(find_built_in_skill("sovereign-c4istar").unwrap().name, "sovereign-defense-c4istar-pro-max");
+
+        // 9. Check ai-infra-llm-runtime-pro-max
+        let ai_infra = find_built_in_skill("ai-infra-llm-runtime-pro-max");
+        assert!(ai_infra.is_some(), "ai-infra-llm-runtime-pro-max should be registered");
+        let ai_infra_skill = ai_infra.unwrap();
+        assert!(!ai_infra_skill.description.is_empty());
+        assert!(!ai_infra_skill.instructions.is_empty());
+        assert!(ai_infra_skill.instructions.contains("LLM-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("ai-infra").unwrap().name, "ai-infra-llm-runtime-pro-max");
+        assert_eq!(find_built_in_skill("llm-runtime").unwrap().name, "ai-infra-llm-runtime-pro-max");
+        assert_eq!(find_built_in_skill("vllm").unwrap().name, "ai-infra-llm-runtime-pro-max");
+        assert_eq!(find_built_in_skill("tensorrt-llm").unwrap().name, "ai-infra-llm-runtime-pro-max");
+        assert_eq!(find_built_in_skill("ai-infrastructure").unwrap().name, "ai-infra-llm-runtime-pro-max");
+        assert_eq!(find_built_in_skill("llm-inference").unwrap().name, "ai-infra-llm-runtime-pro-max");
+        assert_eq!(find_built_in_skill("triton-kernels").unwrap().name, "ai-infra-llm-runtime-pro-max");
+        assert_eq!(find_built_in_skill("cuda-llm").unwrap().name, "ai-infra-llm-runtime-pro-max");
+        assert_eq!(find_built_in_skill("ai-infra-pro-max").unwrap().name, "ai-infra-llm-runtime-pro-max");
+        assert_eq!(find_built_in_skill("llm-serving").unwrap().name, "ai-infra-llm-runtime-pro-max");
+
+        // 10. Check quant-trading-hft-pro-max
+        let quant = find_built_in_skill("quant-trading-hft-pro-max");
+        assert!(quant.is_some(), "quant-trading-hft-pro-max should be registered");
+        let quant_skill = quant.unwrap();
+        assert!(!quant_skill.description.is_empty());
+        assert!(!quant_skill.instructions.is_empty());
+        assert!(quant_skill.instructions.contains("QNT-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("quant-trading").unwrap().name, "quant-trading-hft-pro-max");
+        assert_eq!(find_built_in_skill("hft").unwrap().name, "quant-trading-hft-pro-max");
+        assert_eq!(find_built_in_skill("algorithmic-trading").unwrap().name, "quant-trading-hft-pro-max");
+        assert_eq!(find_built_in_skill("orderbook").unwrap().name, "quant-trading-hft-pro-max");
+        assert_eq!(find_built_in_skill("fix-protocol").unwrap().name, "quant-trading-hft-pro-max");
+        assert_eq!(find_built_in_skill("market-making").unwrap().name, "quant-trading-hft-pro-max");
+        assert_eq!(find_built_in_skill("defi-quant").unwrap().name, "quant-trading-hft-pro-max");
+        assert_eq!(find_built_in_skill("vella-quant").unwrap().name, "quant-trading-hft-pro-max");
+        assert_eq!(find_built_in_skill("quant-pro-max").unwrap().name, "quant-trading-hft-pro-max");
+        assert_eq!(find_built_in_skill("hft-pro-max").unwrap().name, "quant-trading-hft-pro-max");
+
+        // 11. Check distributed-systems-consensus-pro-max
+        let dist = find_built_in_skill("distributed-systems-consensus-pro-max");
+        assert!(dist.is_some(), "distributed-systems-consensus-pro-max should be registered");
+        let dist_skill = dist.unwrap();
+        assert!(!dist_skill.description.is_empty());
+        assert!(!dist_skill.instructions.is_empty());
+        assert!(dist_skill.instructions.contains("DST-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("distributed-systems").unwrap().name, "distributed-systems-consensus-pro-max");
+        assert_eq!(find_built_in_skill("consensus").unwrap().name, "distributed-systems-consensus-pro-max");
+        assert_eq!(find_built_in_skill("raft").unwrap().name, "distributed-systems-consensus-pro-max");
+        assert_eq!(find_built_in_skill("paxos").unwrap().name, "distributed-systems-consensus-pro-max");
+        assert_eq!(find_built_in_skill("pbft").unwrap().name, "distributed-systems-consensus-pro-max");
+        assert_eq!(find_built_in_skill("crdt").unwrap().name, "distributed-systems-consensus-pro-max");
+        assert_eq!(find_built_in_skill("distributed-consensus").unwrap().name, "distributed-systems-consensus-pro-max");
+        assert_eq!(find_built_in_skill("spanner").unwrap().name, "distributed-systems-consensus-pro-max");
+        assert_eq!(find_built_in_skill("distributed-pro-max").unwrap().name, "distributed-systems-consensus-pro-max");
+        assert_eq!(find_built_in_skill("consensus-pro-max").unwrap().name, "distributed-systems-consensus-pro-max");
+
+        // 12. Check embedded-firmware-silicon-pro-max
+        let emb = find_built_in_skill("embedded-firmware-silicon-pro-max");
+        assert!(emb.is_some(), "embedded-firmware-silicon-pro-max should be registered");
+        let emb_skill = emb.unwrap();
+        assert!(!emb_skill.description.is_empty());
+        assert!(!emb_skill.instructions.is_empty());
+        assert!(emb_skill.instructions.contains("EMB-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("embedded-firmware").unwrap().name, "embedded-firmware-silicon-pro-max");
+        assert_eq!(find_built_in_skill("silicon").unwrap().name, "embedded-firmware-silicon-pro-max");
+        assert_eq!(find_built_in_skill("riscv").unwrap().name, "embedded-firmware-silicon-pro-max");
+        assert_eq!(find_built_in_skill("rtos").unwrap().name, "embedded-firmware-silicon-pro-max");
+        assert_eq!(find_built_in_skill("bare-metal").unwrap().name, "embedded-firmware-silicon-pro-max");
+        assert_eq!(find_built_in_skill("embedded-rust").unwrap().name, "embedded-firmware-silicon-pro-max");
+        assert_eq!(find_built_in_skill("firmware").unwrap().name, "embedded-firmware-silicon-pro-max");
+        assert_eq!(find_built_in_skill("fpga-hardware").unwrap().name, "embedded-firmware-silicon-pro-max");
+        assert_eq!(find_built_in_skill("embedded-pro-max").unwrap().name, "embedded-firmware-silicon-pro-max");
+        assert_eq!(find_built_in_skill("silicon-pro-max").unwrap().name, "embedded-firmware-silicon-pro-max");
+
+        // 13. Check defensive-security-blue-team-pro-max
+        let def = find_built_in_skill("defensive-security-blue-team-pro-max");
+        assert!(def.is_some(), "defensive-security-blue-team-pro-max should be registered");
+        let def_skill = def.unwrap();
+        assert!(!def_skill.description.is_empty());
+        assert!(!def_skill.instructions.is_empty());
+        assert!(def_skill.instructions.contains("DEF-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("defensive-security").unwrap().name, "defensive-security-blue-team-pro-max");
+        assert_eq!(find_built_in_skill("blue-team").unwrap().name, "defensive-security-blue-team-pro-max");
+        assert_eq!(find_built_in_skill("soc-engineering").unwrap().name, "defensive-security-blue-team-pro-max");
+        assert_eq!(find_built_in_skill("detection-engineering").unwrap().name, "defensive-security-blue-team-pro-max");
+        assert_eq!(find_built_in_skill("threat-hunting").unwrap().name, "defensive-security-blue-team-pro-max");
+        assert_eq!(find_built_in_skill("incident-response").unwrap().name, "defensive-security-blue-team-pro-max");
+        assert_eq!(find_built_in_skill("siem-soar").unwrap().name, "defensive-security-blue-team-pro-max");
+        assert_eq!(find_built_in_skill("zero-trust-defense").unwrap().name, "defensive-security-blue-team-pro-max");
+        assert_eq!(find_built_in_skill("blue-team-pro-max").unwrap().name, "defensive-security-blue-team-pro-max");
+        assert_eq!(find_built_in_skill("defensive-pro-max").unwrap().name, "defensive-security-blue-team-pro-max");
+
+        // 14. Check computer-control-os-automation-pro-max
+        let cc = find_built_in_skill("computer-control-os-automation-pro-max");
+        assert!(cc.is_some(), "computer-control-os-automation-pro-max should be registered");
+        let cc_skill = cc.unwrap();
+        assert!(!cc_skill.description.is_empty());
+        assert!(!cc_skill.instructions.is_empty());
+        assert!(cc_skill.instructions.contains("CC-01"));
+
+        // Alias resolution
+        assert_eq!(find_built_in_skill("computer-control").unwrap().name, "computer-control-os-automation-pro-max");
+        assert_eq!(find_built_in_skill("computer-use").unwrap().name, "computer-control-os-automation-pro-max");
+        assert_eq!(find_built_in_skill("os-automation").unwrap().name, "computer-control-os-automation-pro-max");
+        assert_eq!(find_built_in_skill("desktop-automation").unwrap().name, "computer-control-os-automation-pro-max");
+        assert_eq!(find_built_in_skill("rpa-automation").unwrap().name, "computer-control-os-automation-pro-max");
+        assert_eq!(find_built_in_skill("gui-automation").unwrap().name, "computer-control-os-automation-pro-max");
+        assert_eq!(find_built_in_skill("win32-automation").unwrap().name, "computer-control-os-automation-pro-max");
+        assert_eq!(find_built_in_skill("screen-control").unwrap().name, "computer-control-os-automation-pro-max");
+        assert_eq!(find_built_in_skill("mouse-keyboard-control").unwrap().name, "computer-control-os-automation-pro-max");
+        assert_eq!(find_built_in_skill("computer-pro-max").unwrap().name, "computer-control-os-automation-pro-max");
+        assert_eq!(find_built_in_skill("os-pro-max").unwrap().name, "computer-control-os-automation-pro-max");
     }
 }
 
