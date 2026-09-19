@@ -1,11 +1,15 @@
 use crate::agent::{AutonomousAgent, WorktreeSandbox};
 use crate::engine::EngineContext;
-use crate::error::Result;
+use crate::error::{Result, TagisanError};
 use crate::swarm::session::{SessionRecord, SessionStore};
 use crate::tui::Spinner;
 use crate::types::{Message, Role};
 use colored::Colorize;
-use std::io::{self, Write};
+use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use std::fs::OpenOptions;
+use std::io::{self, IsTerminal, Write};
+use std::path::PathBuf;
 use std::time::Instant;
 
 /// Slash commands supported inside the Interactive Agent REPL
@@ -134,8 +138,14 @@ impl InteractiveRepl {
         let spinner_msg = format!("🧠 Thinking & synthesizing with {}...", self.agent.model.bold().cyan());
         let spinner = Spinner::start(spinner_msg);
 
-        // Execute agent turn
-        let exec_result = self.agent.execute_session(&mut chat_session, &self.context).await;
+        // Execute agent turn with Ctrl+C interrupt handler
+        let exec_result = tokio::select! {
+            res = self.agent.execute_session(&mut chat_session, &self.context) => res,
+            _ = tokio::signal::ctrl_c() => {
+                spinner.failure("Aborted by user (Ctrl+C)");
+                return Ok(format!("\n{}", "⚠️  Agent execution cancelled by user (Ctrl+C). Ready for next instruction.".yellow().bold()));
+            }
+        };
 
         match &exec_result {
             Ok(_) => spinner.stop(),
@@ -197,7 +207,21 @@ impl InteractiveRepl {
                     {}      Clear conversational history\n\
                     {}      Display token usage and USD cost\n\
                     {}    Show conversational history overview\n\
-                    {}       Exit interactive session\n",
+                    {}       Propose rigorous step-by-step implementation plan\n\
+                    {}       Autonomously execute toward objective\n\
+                    {}       Exit interactive session\n\n\
+                    {}\n\
+                    {}          Recall previous / next commands from history\n\
+                    {}         Reverse incremental history search\n\
+                    {}         Clear terminal screen & reprint AGY banner\n\
+                    {}           Context-aware auto-complete (commands, personas, skills)\n\
+                    {}   Move cursor backward / forward by word\n\
+                    {}   Jump to line start / line end\n\
+                    {}   Cut text to line start / line end into kill ring\n\
+                    {}   Cut previous word into kill ring / Yank (paste)\n\
+                    {}         Cancel current prompt or abort thinking agent\n\
+                    {}         Exit session on empty line (or delete char under cursor)\n\
+                    {}     Multi-line prompt continuation (creates  │  block)\n",
                     "Tagisan Interactive Agent REPL Commands:".bold().cyan(),
                     "/help".bold().green(),
                     "/agent <name>".bold().green(),
@@ -214,7 +238,21 @@ impl InteractiveRepl {
                     "/clear".bold().green(),
                     "/budget".bold().green(),
                     "/history".bold().green(),
+                    "/plan [goal]".bold().green(),
+                    "/goal <goal>".bold().green(),
                     "/exit".bold().green(),
+                    "Google Antigravity (AGY) Keyboard Controls:".bold().yellow(),
+                    "↑ / ↓".bold().bright_cyan(),
+                    "Ctrl+R".bold().bright_cyan(),
+                    "Ctrl+L".bold().bright_cyan(),
+                    "Tab".bold().bright_cyan(),
+                    "Ctrl/Alt + ← / →".bold().bright_cyan(),
+                    "Home / End (Ctrl+A / Ctrl+E)".bold().bright_cyan(),
+                    "Ctrl+U / Ctrl+K".bold().bright_cyan(),
+                    "Ctrl+W / Ctrl+Y".bold().bright_cyan(),
+                    "Ctrl+C".bold().bright_cyan(),
+                    "Ctrl+D".bold().bright_cyan(),
+                    "\\ + Enter (Alt+Enter)".bold().bright_cyan(),
                 );
                 Ok(Some(help_text))
             }
@@ -547,9 +585,13 @@ impl InteractiveRepl {
         }
     }
 
-    /// Launch the live interactive terminal loop
-    pub async fn start(&mut self) -> Result<()> {
-        self.running = true;
+    /// Print AGY Dual-Core UX banner for current session
+    pub fn print_banner(&self) {
+        Self::print_banner_static(&self.agent.model, &self.session_record.id);
+    }
+
+    /// Static banner renderer supporting raw-mode screen repaints
+    pub fn print_banner_static(model: &str, session_id: &str) {
         let cwd_display = std::env::current_dir()
             .unwrap_or_default()
             .display()
@@ -565,11 +607,11 @@ impl InteractiveRepl {
         println!("{}", "├──────────────────────────────────────────────────────────────────────────┤".cyan());
         println!(
             "│  🤖 Model:     {:<54} │",
-            self.agent.model.green().bold()
+            model.green().bold()
         );
         println!(
             "│  ⚡ Session:   {:<54} │",
-            self.session_record.id.cyan().bold()
+            session_id.cyan().bold()
         );
         println!(
             "│  📁 Workspace: {:<54} │",
@@ -582,26 +624,51 @@ impl InteractiveRepl {
             "/goal".yellow().bold(),
             "/exit".dimmed()
         );
+        println!(
+            "│  ⌨️  Keys:      {} hist • {} search • {} clear • {} multi-line │",
+            "↑/↓".bright_white().bold(),
+            "Ctrl+R".bright_cyan().bold(),
+            "Ctrl+L".bright_yellow().bold(),
+            "\\+Enter".bright_green().bold()
+        );
         println!("{}", "╰──────────────────────────────────────────────────────────────────────────╯".cyan().bold());
+    }
 
-        let stdin = io::stdin();
-        let mut stdout = io::stdout();
+    /// Launch the live interactive terminal loop with AGY keyboard controls & readline engine
+    pub async fn start(&mut self) -> Result<()> {
+        self.running = true;
+        self.print_banner();
+
+        let mut editor = ReplEditor::new();
 
         while self.running {
-            print!("\n{} {} ", "▲".bold().magenta(), "tgs ❯".bold().cyan());
-            let _ = stdout.flush();
+            let prompt = format!("{} {} ", "▲".bold().magenta(), "tgs ❯".bold().cyan());
+            let current_model = self.agent.model.clone();
+            let current_session_id = self.session_record.id.clone();
 
-            let mut line = String::new();
-            if stdin.read_line(&mut line).is_err() {
-                break;
-            }
+            let repaint_banner = move || {
+                Self::print_banner_static(&current_model, &current_session_id);
+            };
 
-            let input = line.trim();
-            if input.is_empty() {
+            let line_result = editor.read_line(&prompt, &repaint_banner)?;
+
+            let input = match line_result {
+                ReadlineResult::Submit(s) => s,
+                ReadlineResult::Eof => {
+                    self.running = false;
+                    break;
+                }
+                ReadlineResult::Interrupted => {
+                    continue;
+                }
+            };
+
+            let trimmed = input.trim();
+            if trimmed.is_empty() {
                 continue;
             }
 
-            let cmd = Self::parse_command(input);
+            let cmd = Self::parse_command(trimmed);
             match self.execute_command(cmd).await {
                 Ok(Some(output)) => {
                     println!("{output}");
@@ -786,4 +853,816 @@ fn format_inline_markdown(text: &str) -> String {
     }
 
     res
+}
+
+/// Result of an interactive line edit
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ReadlineResult {
+    Submit(String),
+    Eof,
+    Interrupted,
+}
+
+/// RAII Guard for terminal raw mode ensuring raw mode is disabled on drop
+pub struct RawModeGuard {
+    active: bool,
+}
+
+impl RawModeGuard {
+    pub fn enter() -> io::Result<Self> {
+        enable_raw_mode()?;
+        Ok(Self { active: true })
+    }
+}
+
+impl Drop for RawModeGuard {
+    fn drop(&mut self) {
+        if self.active {
+            let _ = disable_raw_mode();
+            self.active = false;
+        }
+    }
+}
+
+/// Interactive readline and AGY keyboard navigation editor
+pub struct ReplEditor {
+    pub history: Vec<String>,
+    pub history_index: usize,
+    pub draft: Vec<char>,
+    pub kill_ring: String,
+    pub history_file: Option<PathBuf>,
+}
+
+impl Default for ReplEditor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ReplEditor {
+    pub fn new() -> Self {
+        let history_file = Self::resolve_history_path();
+        let history = if let Some(ref path) = history_file {
+            Self::load_history_from_file(path)
+        } else {
+            Vec::new()
+        };
+        let history_index = history.len();
+        Self {
+            history,
+            history_index,
+            draft: Vec::new(),
+            kill_ring: String::new(),
+            history_file,
+        }
+    }
+
+    pub fn with_history(history: Vec<String>) -> Self {
+        let history_index = history.len();
+        Self {
+            history,
+            history_index,
+            draft: Vec::new(),
+            kill_ring: String::new(),
+            history_file: None,
+        }
+    }
+
+    fn resolve_history_path() -> Option<PathBuf> {
+        if let Ok(home) = std::env::var("HOME") {
+            let dir = PathBuf::from(home).join(".tagisan");
+            let _ = std::fs::create_dir_all(&dir);
+            Some(dir.join("repl_history.txt"))
+        } else {
+            let dir = PathBuf::from(".tagisan");
+            let _ = std::fs::create_dir_all(&dir);
+            Some(dir.join("repl_history.txt"))
+        }
+    }
+
+    fn load_history_from_file(path: &PathBuf) -> Vec<String> {
+        if !path.exists() {
+            return Vec::new();
+        }
+        let content = std::fs::read_to_string(path).unwrap_or_default();
+        let mut lines: Vec<String> = content
+            .lines()
+            .map(|s| s.to_string())
+            .filter(|s| !s.trim().is_empty())
+            .collect();
+        if lines.len() > 5000 {
+            lines = lines.split_off(lines.len() - 5000);
+        }
+        lines
+    }
+
+    pub fn add_history(&mut self, line: &str) {
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            return;
+        }
+        if self.history.last().map(|s| s.as_str()) == Some(trimmed) {
+            self.history_index = self.history.len();
+            return;
+        }
+        self.history.push(trimmed.to_string());
+        self.history_index = self.history.len();
+
+        if let Some(ref path) = self.history_file {
+            if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(path) {
+                let _ = writeln!(file, "{}", trimmed);
+            }
+        }
+    }
+
+    pub fn find_word_backward(buffer: &[char], cursor: usize) -> usize {
+        if cursor == 0 {
+            return 0;
+        }
+        let mut i = cursor;
+        while i > 0 && buffer[i - 1].is_whitespace() {
+            i -= 1;
+        }
+        while i > 0 && !buffer[i - 1].is_whitespace() {
+            i -= 1;
+        }
+        i
+    }
+
+    pub fn find_word_forward(buffer: &[char], cursor: usize) -> usize {
+        let len = buffer.len();
+        if cursor >= len {
+            return len;
+        }
+        let mut i = cursor;
+        while i < len && !buffer[i].is_whitespace() {
+            i += 1;
+        }
+        while i < len && buffer[i].is_whitespace() {
+            i += 1;
+        }
+        i
+    }
+
+    pub fn longest_common_prefix(strings: &[String]) -> String {
+        if strings.is_empty() {
+            return String::new();
+        }
+        let first = &strings[0];
+        let mut len = 0;
+        for (i, c) in first.chars().enumerate() {
+            if strings.iter().all(|s| s.chars().nth(i) == Some(c)) {
+                len += c.len_utf8();
+            } else {
+                break;
+            }
+        }
+        first[..len].to_string()
+    }
+
+    pub fn get_completions(prefix: &str) -> Vec<(String, usize)> {
+        let mut results = Vec::new();
+        let trimmed_prefix = prefix.trim_start();
+
+        // 1. Slash commands: if typing `/...` and no space yet
+        if trimmed_prefix.starts_with('/') && !trimmed_prefix.contains(' ') {
+            let slash_cmds = [
+                ("/help", "Display help manual"),
+                ("/agent", "Switch agent persona"),
+                ("/skill", "Attach ECC skill"),
+                ("/forge", "Forge skill from binary/code/mcp"),
+                ("/model", "Switch active model"),
+                ("/tools", "List registered tools"),
+                ("/memory", "Display memory stats"),
+                ("/sandbox", "Inspect git worktree sandbox"),
+                ("/bun", "Evaluate TS/JS via Bun"),
+                ("/vella", "Vella Sovereign OS & E-Stop"),
+                ("/save", "Save session checkpoint"),
+                ("/load", "Load saved session"),
+                ("/clear", "Clear conversational history"),
+                ("/budget", "Display token usage and cost"),
+                ("/history", "Show conversational history"),
+                ("/plan", "Propose implementation plan"),
+                ("/goal", "Autonomous execution toward goal"),
+                ("/exit", "Exit interactive session"),
+            ];
+
+            for (cmd, _) in slash_cmds {
+                if cmd.starts_with(trimmed_prefix) {
+                    let completed = format!("{cmd} ");
+                    let len = completed.chars().count();
+                    results.push((completed, len));
+                }
+            }
+            return results;
+        }
+
+        // 2. /agent <persona>
+        if let Some(rest) = trimmed_prefix.strip_prefix("/agent ") {
+            let arg = rest.trim_start();
+            for preset in crate::ecc::all_presets() {
+                if preset.name.starts_with(arg) {
+                    let completed = format!("/agent {} ", preset.name);
+                    let len = completed.chars().count();
+                    results.push((completed, len));
+                }
+            }
+            return results;
+        }
+
+        // 3. /skill <name>
+        if let Some(rest) = trimmed_prefix.strip_prefix("/skill ") {
+            let arg = rest.trim_start();
+            for skill in crate::ecc::all_built_in_skills() {
+                if skill.name.starts_with(arg) {
+                    let completed = format!("/skill {} ", skill.name);
+                    let len = completed.chars().count();
+                    results.push((completed, len));
+                }
+            }
+            return results;
+        }
+
+        // 4. /vella <subcmd>
+        if let Some(rest) = trimmed_prefix.strip_prefix("/vella ") {
+            let arg = rest.trim_start();
+            let subcmds = ["status", "estop", "clear_estop", "schemas", "audit"];
+            for sc in subcmds {
+                if sc.starts_with(arg) {
+                    let completed = format!("/vella {} ", sc);
+                    let len = completed.chars().count();
+                    results.push((completed, len));
+                }
+            }
+            return results;
+        }
+
+        results
+    }
+
+    fn redraw_line(prompt: &str, buffer: &[char], cursor: usize) -> io::Result<()> {
+        let mut stdout = io::stdout();
+        let text: String = buffer.iter().collect();
+        write!(stdout, "\r\x1b[2K{}{}", prompt, text)?;
+
+        let backtracks = buffer.len().saturating_sub(cursor);
+        if backtracks > 0 {
+            write!(stdout, "\x1b[{}D", backtracks)?;
+        }
+        stdout.flush()?;
+        Ok(())
+    }
+
+    fn run_reverse_search(
+        history: &[String],
+        buffer: &mut Vec<char>,
+        cursor: &mut usize,
+        active_prompt: &str,
+    ) -> io::Result<()> {
+        let original_buf = buffer.clone();
+        let original_cursor = *cursor;
+
+        let mut query = String::new();
+        let mut search_idx: Option<usize> = None;
+
+        let find_match = |q: &str, start_from: Option<usize>| -> Option<usize> {
+            if q.is_empty() || history.is_empty() {
+                return None;
+            }
+            let end = start_from.unwrap_or(history.len().saturating_sub(1));
+            for i in (0..=end).rev() {
+                if history[i].contains(q) {
+                    return Some(i);
+                }
+            }
+            None
+        };
+
+        loop {
+            let mut stdout = io::stdout();
+            let match_display = if let Some(idx) = search_idx {
+                &history[idx]
+            } else {
+                ""
+            };
+            let prompt_str = if search_idx.is_some() || query.is_empty() {
+                format!("(reverse-i-search)`{}': {}", query.bold().green(), match_display)
+            } else {
+                format!("(failed reverse-i-search)`{}': {}", query.bold().red(), match_display)
+            };
+            write!(stdout, "\r\x1b[2K{}", prompt_str)?;
+            stdout.flush()?;
+
+            if let Event::Key(key_event) = event::read()? {
+                if key_event.kind == KeyEventKind::Release {
+                    continue;
+                }
+                match key_event.code {
+                    KeyCode::Char('r') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                        if let Some(idx) = search_idx {
+                            if idx > 0 {
+                                search_idx = find_match(&query, Some(idx - 1));
+                            }
+                        }
+                    }
+                    KeyCode::Char('c') | KeyCode::Char('g') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                        *buffer = original_buf;
+                        *cursor = original_cursor;
+                        Self::redraw_line(active_prompt, buffer, *cursor)?;
+                        return Ok(());
+                    }
+                    KeyCode::Esc => {
+                        *buffer = original_buf;
+                        *cursor = original_cursor;
+                        Self::redraw_line(active_prompt, buffer, *cursor)?;
+                        return Ok(());
+                    }
+                    KeyCode::Enter => {
+                        if let Some(idx) = search_idx {
+                            *buffer = history[idx].chars().collect();
+                            *cursor = buffer.len();
+                        }
+                        return Ok(());
+                    }
+                    KeyCode::Backspace => {
+                        query.pop();
+                        search_idx = find_match(&query, None);
+                    }
+                    KeyCode::Char(c) if !key_event.modifiers.contains(KeyModifiers::CONTROL) && !key_event.modifiers.contains(KeyModifiers::ALT) => {
+                        query.push(c);
+                        search_idx = find_match(&query, None);
+                    }
+                    _ => {
+                        if let Some(idx) = search_idx {
+                            *buffer = history[idx].chars().collect();
+                            *cursor = buffer.len();
+                        }
+                        return Ok(());
+                    }
+                }
+            }
+        }
+    }
+
+    /// Read an interactive line with AGY keyboard functionalities, history, and completions
+    pub fn read_line(
+        &mut self,
+        prompt: &str,
+        on_repaint: &dyn Fn(),
+    ) -> Result<ReadlineResult> {
+        if !io::stdin().is_terminal() {
+            let mut line = String::new();
+            match io::stdin().read_line(&mut line) {
+                Ok(0) => return Ok(ReadlineResult::Eof),
+                Ok(_) => {
+                    let trimmed = line.trim_end_matches(&['\r', '\n'][..]).to_string();
+                    self.add_history(&trimmed);
+                    return Ok(ReadlineResult::Submit(trimmed));
+                }
+                Err(e) => return Err(TagisanError::Execution(format!("Stdin read error: {e}"))),
+            }
+        }
+
+        let mut buffer: Vec<char> = Vec::new();
+        let mut cursor: usize = 0;
+        let mut continuation_lines: Vec<String> = Vec::new();
+        self.history_index = self.history.len();
+        self.draft.clear();
+
+        let _raw_guard = match RawModeGuard::enter() {
+            Ok(guard) => Some(guard),
+            Err(_) => None,
+        };
+
+        if _raw_guard.is_none() {
+            let mut line = String::new();
+            match io::stdin().read_line(&mut line) {
+                Ok(0) => return Ok(ReadlineResult::Eof),
+                Ok(_) => {
+                    let trimmed = line.trim_end_matches(&['\r', '\n'][..]).to_string();
+                    self.add_history(&trimmed);
+                    return Ok(ReadlineResult::Submit(trimmed));
+                }
+                Err(e) => return Err(TagisanError::Execution(format!("Stdin read error: {e}"))),
+            }
+        }
+
+        let continuation_prompt = "  │ ";
+        let active_prompt = |is_cont: bool| -> &str {
+            if is_cont {
+                continuation_prompt
+            } else {
+                prompt
+            }
+        };
+
+        Self::redraw_line(prompt, &buffer, cursor)
+            .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
+
+        loop {
+            let is_continuation = !continuation_lines.is_empty();
+            let cur_prompt = active_prompt(is_continuation);
+
+            let event = match event::read() {
+                Ok(ev) => ev,
+                Err(e) => return Err(TagisanError::Execution(format!("Failed to read terminal event: {e}"))),
+            };
+
+            match event {
+                Event::Paste(pasted_text) => {
+                    for ch in pasted_text.chars() {
+                        if ch == '\r' || ch == '\n' {
+                            let cur_line: String = buffer.iter().collect();
+                            continuation_lines.push(cur_line);
+                            buffer.clear();
+                            cursor = 0;
+                            let _ = write!(io::stdout(), "\r\n");
+                        } else {
+                            buffer.insert(cursor, ch);
+                            cursor += 1;
+                        }
+                    }
+                    let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                }
+                Event::Key(key_event) => {
+                    if key_event.kind == KeyEventKind::Release {
+                        continue;
+                    }
+
+                    match key_event.code {
+                        // ── Screen & Interrupt Handling ──────────────────
+                        KeyCode::Char('c') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            if !buffer.is_empty() || !continuation_lines.is_empty() {
+                                buffer.clear();
+                                cursor = 0;
+                                continuation_lines.clear();
+                                let _ = write!(io::stdout(), "^C\r\n");
+                                let _ = Self::redraw_line(prompt, &buffer, cursor);
+                            } else {
+                                let _ = write!(io::stdout(), "^C\r\n  💡 Press Ctrl+D or type /exit to quit\r\n");
+                                let _ = Self::redraw_line(prompt, &buffer, cursor);
+                            }
+                        }
+                        KeyCode::Char('d') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            if buffer.is_empty() && continuation_lines.is_empty() {
+                                let _ = write!(io::stdout(), "\r\n");
+                                return Ok(ReadlineResult::Eof);
+                            } else if cursor < buffer.len() {
+                                buffer.remove(cursor);
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            }
+                        }
+                        KeyCode::Char('l') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            let _ = write!(io::stdout(), "\x1b[2J\x1b[1;1H");
+                            on_repaint();
+                            for prev in &continuation_lines {
+                                let _ = writeln!(io::stdout(), "  │ {}\r", prev);
+                            }
+                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                        }
+
+                        // ── Inline Editing & Navigation ──────────────────
+                        KeyCode::Char('a') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            cursor = 0;
+                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                        }
+                        KeyCode::Char('e') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            cursor = buffer.len();
+                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                        }
+                        KeyCode::Home => {
+                            cursor = 0;
+                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                        }
+                        KeyCode::End => {
+                            cursor = buffer.len();
+                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                        }
+                        KeyCode::Left => {
+                            if key_event.modifiers.contains(KeyModifiers::CONTROL) || key_event.modifiers.contains(KeyModifiers::ALT) {
+                                cursor = Self::find_word_backward(&buffer, cursor);
+                            } else if cursor > 0 {
+                                cursor -= 1;
+                            }
+                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                        }
+                        KeyCode::Right => {
+                            if key_event.modifiers.contains(KeyModifiers::CONTROL) || key_event.modifiers.contains(KeyModifiers::ALT) {
+                                cursor = Self::find_word_forward(&buffer, cursor);
+                            } else if cursor < buffer.len() {
+                                cursor += 1;
+                            }
+                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                        }
+                        KeyCode::Char('b') if key_event.modifiers.contains(KeyModifiers::ALT) => {
+                            cursor = Self::find_word_backward(&buffer, cursor);
+                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                        }
+                        KeyCode::Char('f') if key_event.modifiers.contains(KeyModifiers::ALT) => {
+                            cursor = Self::find_word_forward(&buffer, cursor);
+                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                        }
+
+                        // ── Kill Ring & Deletion ────────────────────────
+                        KeyCode::Char('k') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            if cursor < buffer.len() {
+                                self.kill_ring = buffer[cursor..].iter().collect();
+                                buffer.truncate(cursor);
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            }
+                        }
+                        KeyCode::Char('u') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            if cursor > 0 {
+                                self.kill_ring = buffer[..cursor].iter().collect();
+                                buffer.drain(..cursor);
+                                cursor = 0;
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            }
+                        }
+                        KeyCode::Char('w') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            if cursor > 0 {
+                                let kill_start = Self::find_word_backward(&buffer, cursor);
+                                self.kill_ring = buffer[kill_start..cursor].iter().collect();
+                                buffer.drain(kill_start..cursor);
+                                cursor = kill_start;
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            }
+                        }
+                        KeyCode::Char('d') if key_event.modifiers.contains(KeyModifiers::ALT) => {
+                            let kill_end = Self::find_word_forward(&buffer, cursor);
+                            if kill_end > cursor {
+                                self.kill_ring = buffer[cursor..kill_end].iter().collect();
+                                buffer.drain(cursor..kill_end);
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            }
+                        }
+                        KeyCode::Char('y') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            if !self.kill_ring.is_empty() {
+                                for ch in self.kill_ring.chars() {
+                                    buffer.insert(cursor, ch);
+                                    cursor += 1;
+                                }
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            }
+                        }
+                        KeyCode::Backspace | KeyCode::Char('h') if key_event.code == KeyCode::Backspace || key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            if cursor > 0 {
+                                buffer.remove(cursor - 1);
+                                cursor -= 1;
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            }
+                        }
+                        KeyCode::Delete => {
+                            if cursor < buffer.len() {
+                                buffer.remove(cursor);
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            }
+                        }
+
+                        // ── History Navigation ──────────────────────────
+                        KeyCode::Up => {
+                            if self.history_index == self.history.len() {
+                                self.draft = buffer.clone();
+                            }
+                            if self.history_index > 0 {
+                                self.history_index -= 1;
+                                buffer = self.history[self.history_index].chars().collect();
+                                cursor = buffer.len();
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            }
+                        }
+                        KeyCode::Down => {
+                            if self.history_index + 1 < self.history.len() {
+                                self.history_index += 1;
+                                buffer = self.history[self.history_index].chars().collect();
+                                cursor = buffer.len();
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            } else if self.history_index + 1 == self.history.len() {
+                                self.history_index = self.history.len();
+                                buffer = self.draft.clone();
+                                cursor = buffer.len();
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            }
+                        }
+                        KeyCode::Char('r') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            let _ = Self::run_reverse_search(&self.history, &mut buffer, &mut cursor, cur_prompt);
+                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                        }
+
+                        // ── Tab Autocompletion ──────────────────────────
+                        KeyCode::Tab => {
+                            let current_text: String = buffer.iter().collect();
+                            let prefix = &current_text[..cursor];
+
+                            let completions = Self::get_completions(prefix);
+                            if completions.is_empty() {
+                                // No match
+                            } else if completions.len() == 1 {
+                                let (replacement, new_cursor) = completions[0].clone();
+                                buffer = replacement.chars().collect();
+                                cursor = new_cursor;
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            } else {
+                                let replacement_strings: Vec<String> = completions.iter().map(|(r, _)| r.clone()).collect();
+                                let common = Self::longest_common_prefix(&replacement_strings);
+                                if common.len() > prefix.len() {
+                                    buffer = common.chars().collect();
+                                    cursor = buffer.len();
+                                }
+
+                                let mut stdout = io::stdout();
+                                let _ = write!(stdout, "\r\n");
+                                let pills: Vec<String> = completions
+                                    .iter()
+                                    .map(|(r, _)| {
+                                        let label = r.split_whitespace().last().unwrap_or(r.as_str());
+                                        format!("  {} {}", "▸".cyan(), label.bold().white())
+                                    })
+                                    .collect();
+
+                                for chunk in pills.chunks(3) {
+                                    let _ = writeln!(stdout, "{}\r", chunk.join("    "));
+                                }
+                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            }
+                        }
+
+                        // ── Submission & Multi-Line Continuation ────────
+                        KeyCode::Enter => {
+                            let is_continuation_trigger = buffer.ends_with(&['\\'])
+                                || key_event.modifiers.contains(KeyModifiers::ALT)
+                                || key_event.modifiers.contains(KeyModifiers::SHIFT);
+
+                            if is_continuation_trigger {
+                                if buffer.ends_with(&['\\']) {
+                                    buffer.pop();
+                                }
+                                let cur_line: String = buffer.iter().collect();
+                                continuation_lines.push(cur_line);
+                                buffer.clear();
+                                cursor = 0;
+                                let _ = write!(io::stdout(), "\r\n");
+                                let _ = Self::redraw_line(continuation_prompt, &buffer, cursor);
+                            } else {
+                                let _ = write!(io::stdout(), "\r\n");
+                                let final_line = if continuation_lines.is_empty() {
+                                    buffer.iter().collect()
+                                } else {
+                                    let mut full = continuation_lines.join("\n");
+                                    full.push('\n');
+                                    full.push_str(&buffer.iter().collect::<String>());
+                                    full
+                                };
+                                self.add_history(&final_line);
+                                return Ok(ReadlineResult::Submit(final_line));
+                            }
+                        }
+
+                        // ── Regular Characters ──────────────────────────
+                        KeyCode::Char(c) if !key_event.modifiers.contains(KeyModifiers::CONTROL) && !key_event.modifiers.contains(KeyModifiers::ALT) => {
+                            buffer.insert(cursor, c);
+                            cursor += 1;
+                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                        }
+
+                        _ => {}
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_find_word_backward() {
+        let text: Vec<char> = "hello beautiful world".chars().collect();
+        // At end: cursor = 21 ('d')
+        let pos1 = ReplEditor::find_word_backward(&text, 21);
+        assert_eq!(pos1, 16); // start of "world"
+
+        // Cursor at 16 ('w')
+        let pos2 = ReplEditor::find_word_backward(&text, 16);
+        assert_eq!(pos2, 6); // start of "beautiful"
+
+        // Cursor at 6 ('b')
+        let pos3 = ReplEditor::find_word_backward(&text, 6);
+        assert_eq!(pos3, 0); // start of "hello"
+
+        // Cursor at 0
+        let pos4 = ReplEditor::find_word_backward(&text, 0);
+        assert_eq!(pos4, 0);
+    }
+
+    #[test]
+    fn test_find_word_forward() {
+        let text: Vec<char> = "hello beautiful world".chars().collect();
+        // At start: cursor = 0 ('h')
+        let pos1 = ReplEditor::find_word_forward(&text, 0);
+        assert_eq!(pos1, 6); // start of "beautiful"
+
+        // Cursor at 6 ('b')
+        let pos2 = ReplEditor::find_word_forward(&text, 6);
+        assert_eq!(pos2, 16); // start of "world"
+
+        // Cursor at 16 ('w')
+        let pos3 = ReplEditor::find_word_forward(&text, 16);
+        assert_eq!(pos3, 21); // end of "world"
+
+        // Cursor at end
+        let pos4 = ReplEditor::find_word_forward(&text, 21);
+        assert_eq!(pos4, 21);
+    }
+
+    #[test]
+    fn test_longest_common_prefix() {
+        let list1 = vec!["/help".to_string(), "/history".to_string()];
+        assert_eq!(ReplEditor::longest_common_prefix(&list1), "/h");
+
+        let list2 = vec!["/plan".to_string(), "/prompt".to_string()];
+        assert_eq!(ReplEditor::longest_common_prefix(&list2), "/p");
+
+        let list3 = vec!["single".to_string()];
+        assert_eq!(ReplEditor::longest_common_prefix(&list3), "single");
+
+        let list4: Vec<String> = vec![];
+        assert_eq!(ReplEditor::longest_common_prefix(&list4), "");
+    }
+
+    #[test]
+    fn test_get_completions_slash_commands() {
+        let comp_h = ReplEditor::get_completions("/h");
+        let names: Vec<String> = comp_h.into_iter().map(|(s, _)| s).collect();
+        assert!(names.contains(&"/help ".to_string()));
+        assert!(names.contains(&"/history ".to_string()));
+
+        let comp_p = ReplEditor::get_completions("/p");
+        let names: Vec<String> = comp_p.into_iter().map(|(s, _)| s).collect();
+        assert!(names.contains(&"/plan ".to_string()));
+
+        let comp_g = ReplEditor::get_completions("/g");
+        let names: Vec<String> = comp_g.into_iter().map(|(s, _)| s).collect();
+        assert!(names.contains(&"/goal ".to_string()));
+    }
+
+    #[test]
+    fn test_get_completions_agent_presets() {
+        let comp_arch = ReplEditor::get_completions("/agent arch");
+        assert!(!comp_arch.is_empty());
+        assert_eq!(comp_arch[0].0, "/agent architect ");
+    }
+
+    #[test]
+    fn test_get_completions_skills() {
+        let comp_sec = ReplEditor::get_completions("/skill security");
+        assert!(!comp_sec.is_empty());
+        let names: Vec<String> = comp_sec.into_iter().map(|(s, _)| s).collect();
+        assert!(names.contains(&"/skill security-review ".to_string()));
+    }
+
+    #[test]
+    fn test_get_completions_vella() {
+        let comp_estop = ReplEditor::get_completions("/vella est");
+        assert!(!comp_estop.is_empty());
+        assert_eq!(comp_estop[0].0, "/vella estop ");
+    }
+
+    #[test]
+    fn test_repl_editor_history_and_dedup() {
+        let mut editor = ReplEditor::with_history(vec!["first".to_string(), "second".to_string()]);
+        assert_eq!(editor.history.len(), 2);
+        assert_eq!(editor.history_index, 2);
+
+        // Deduplicate adjacent
+        editor.add_history("second");
+        assert_eq!(editor.history.len(), 2);
+
+        // Add distinct
+        editor.add_history("third");
+        assert_eq!(editor.history.len(), 3);
+        assert_eq!(editor.history[2], "third");
+    }
+
+    #[test]
+    fn test_kill_ring_and_line_editing() {
+        let mut buffer: Vec<char> = "the quick brown fox".chars().collect();
+        let mut kill_ring = String::new();
+        let cursor = 10; // at 'b'
+
+        // Kill to end (Ctrl+K)
+        kill_ring = buffer[cursor..].iter().collect();
+        buffer.truncate(cursor);
+        assert_eq!(kill_ring, "brown fox");
+        assert_eq!(buffer.iter().collect::<String>(), "the quick ");
+
+        // Yank (Ctrl+Y)
+        for ch in kill_ring.chars() {
+            buffer.push(ch);
+        }
+        assert_eq!(buffer.iter().collect::<String>(), "the quick brown fox");
+    }
 }
