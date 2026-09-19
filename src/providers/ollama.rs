@@ -1,4 +1,5 @@
 use crate::error::{Result, TagisanError};
+use crate::governor::{HostMemoryGovernor, LinuxMemInfo};
 use crate::providers::{BoxEventStream, LlmProvider};
 use crate::types::{
     CompletionRequest, CompletionResponse, ContentBlock, FinishReason, Message,
@@ -475,6 +476,10 @@ impl OllamaProvider {
     }
 
     fn build_options(&self, req: &CompletionRequest) -> OllamaOptions {
+        let metrics = LinuxMemInfo::read_host();
+        let gov = HostMemoryGovernor::new();
+        let is_8gb = gov.is_8gb_workstation(&metrics);
+
         let num_gpu = std::env::var("TAGISAN_OLLAMA_NUM_GPU")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -488,12 +493,16 @@ impl OllamaProvider {
         let num_ctx = std::env::var("TAGISAN_OLLAMA_NUM_CTX")
             .ok()
             .and_then(|s| s.parse().ok())
-            .or_else(|| req.max_tokens.map(|m| m.max(4096)))
-            .or(Some(8192));
+            .or_else(|| req.max_tokens.map(|m| m.max(if is_8gb { 2048 } else { 4096 })))
+            .or(Some(if is_8gb { 2048 } else { 8192 }));
 
         let num_thread = std::env::var("TAGISAN_OLLAMA_NUM_THREAD")
             .ok()
-            .and_then(|s| s.parse().ok());
+            .and_then(|s| s.parse().ok())
+            .or_else(|| {
+                let rec = gov.recommended_concurrency(&metrics);
+                Some(rec.clamp(2, 6) as u32)
+            });
 
         OllamaOptions {
             temperature: req.temperature,

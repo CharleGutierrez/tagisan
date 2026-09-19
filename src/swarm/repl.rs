@@ -149,24 +149,71 @@ impl InteractiveRepl {
         }
 
         let start_time = Instant::now();
+        let is_interactive = self.running;
 
         // 🌟 Start animated spinner with vibrant cycling colors and live timer
         let spinner_msg = format!("🧠 Thinking & synthesizing with {}...", self.agent.model.bold().cyan());
         let spinner = Spinner::start(spinner_msg);
 
+        let mut header_printed = false;
+        let mut is_thinking = false;
+        let model_name = self.agent.model.clone();
+
+        // Stream tokens live to terminal if in interactive mode
+        let on_delta = |delta: &crate::types::StreamChunkDelta| {
+            if is_interactive {
+                if !header_printed {
+                    spinner.stop();
+                    let model_tag = format!("[{model_name}]").bold().yellow();
+                    print!(
+                        "\n{}\n",
+                        format!("╭── ▲ ✦ Tagisan AI  {} ──────────────────────────────────────────", model_tag).bold().cyan()
+                    );
+                    header_printed = true;
+                }
+
+                match delta {
+                    crate::types::StreamChunkDelta::Thinking(th) => {
+                        if !is_thinking {
+                            print!("\n{}\n", "--- Model Thinking ---".italic().dimmed());
+                            is_thinking = true;
+                        }
+                        print!("{}", th.dimmed());
+                        let _ = std::io::stdout().flush();
+                    }
+                    crate::types::StreamChunkDelta::Text(t) => {
+                        if is_thinking {
+                            print!("\n{}\n", "--- Response ---".italic().green());
+                            is_thinking = false;
+                        }
+                        print!("{}", t);
+                        let _ = std::io::stdout().flush();
+                    }
+                    crate::types::StreamChunkDelta::ToolCallDelta { name, .. } => {
+                        if let Some(n) = name {
+                            print!("\n🔧 [{}] ", n.bold().yellow());
+                            let _ = std::io::stdout().flush();
+                        }
+                    }
+                }
+            }
+        };
+
         // Execute agent turn with Ctrl+C interrupt handler
         let exec_result = tokio::select! {
-            res = self.agent.execute_session(&mut chat_session, &self.context) => res,
+            res = self.agent.execute_session_streaming(&mut chat_session, &self.context, on_delta) => res,
             _ = tokio::signal::ctrl_c() => {
                 spinner.failure("Aborted by user (Ctrl+C)");
                 return Ok(format!("\n{}", "⚠️  Agent execution cancelled by user (Ctrl+C). Ready for next instruction.".yellow().bold()));
             }
         };
 
-        match &exec_result {
-            Ok(_) => spinner.stop(),
-            Err(e) => {
-                spinner.failure(format!("Generation failed: {e}"));
+        if !header_printed {
+            match &exec_result {
+                Ok(_) => spinner.stop(),
+                Err(e) => {
+                    spinner.failure(format!("Generation failed: {e}"));
+                }
             }
         }
         let result = exec_result?;
@@ -188,18 +235,36 @@ impl InteractiveRepl {
         // Auto-save checkpoint
         let _ = self.session_store.save(&self.session_record);
 
-        // Format result with appealing colors, card frame, and emojis
-        let formatted = format_appealing_repl_response(
-            &result.final_answer,
-            &self.agent.model,
-            elapsed,
-            prompt_tokens,
-            comp_tokens,
-            self.session_record.total_cost_usd,
-            &self.session_record.id,
-        );
-
-        Ok(formatted)
+        if is_interactive && header_printed {
+            let tok_per_sec = if elapsed > 0.0 {
+                comp_tokens as f64 / elapsed
+            } else {
+                0.0
+            };
+            println!(
+                "\n{}\n",
+                format!(
+                    "╰──────────────────────── ⚡ {} tokens ({:.1} tok/s) • {:.2}s • ${:.4} ─╯",
+                    comp_tokens.to_string().bold().green(),
+                    tok_per_sec,
+                    elapsed,
+                    self.session_record.total_cost_usd
+                ).dimmed()
+            );
+            Ok(String::new())
+        } else {
+            // Format result with appealing colors, card frame, and emojis
+            let formatted = format_appealing_repl_response(
+                &result.final_answer,
+                &self.agent.model,
+                elapsed,
+                prompt_tokens,
+                comp_tokens,
+                self.session_record.total_cost_usd,
+                &self.session_record.id,
+            );
+            Ok(formatted)
+        }
     }
 
     /// Process a parsed command
@@ -1378,7 +1443,9 @@ impl InteractiveRepl {
             let cmd = Self::parse_command(trimmed);
             match self.execute_command(cmd).await {
                 Ok(Some(output)) => {
-                    println!("{output}");
+                    if !output.is_empty() {
+                        println!("{output}");
+                    }
                 }
                 Ok(None) => {}
                 Err(err) => {
