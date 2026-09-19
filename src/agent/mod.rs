@@ -378,6 +378,7 @@ impl AutonomousAgent {
         let mut iteration = 0;
 
         let all_tool_definitions = self.tools.definitions();
+        let supports_tools = self.provider.capabilities(&self.model).contains(crate::types::ProviderCapabilities::FUNCTION_CALLING);
         let is_local = self.provider.provider_id() == "ollama"
             || self.model.to_ascii_lowercase().contains("ollama")
             || self.model.to_ascii_lowercase().contains("llama")
@@ -398,8 +399,10 @@ impl AutonomousAgent {
 
             debug!("Agent iteration {iteration}/{}", self.max_iterations);
 
-            // Adaptively prune tools for local models to maximize prompt evaluation speed
-            let active_tools = if is_local && !disable_pruning {
+            // If the model does not support tool calling, do not send any tools
+            let active_tools = if !supports_tools {
+                Vec::new()
+            } else if is_local && !disable_pruning {
                 Self::prune_tools_for_query(&all_tool_definitions, &session.history)
             } else {
                 all_tool_definitions.clone()
@@ -492,10 +495,14 @@ impl AutonomousAgent {
 
                     (msg, latest_usage)
                 }
-                Err(_stream_err) => {
-                    // Fallback to non-streaming complete()
-                    let req_non_stream = req.with_stream(false);
-                    let resp = self.provider.complete(req_non_stream).await?;
+                Err(stream_err) => {
+                    let err_str = stream_err.to_string();
+                    let req_fallback = if err_str.contains("does not support tools") {
+                        req.with_tools(Vec::new()).with_stream(false)
+                    } else {
+                        req.with_stream(false)
+                    };
+                    let resp = self.provider.complete(req_fallback).await?;
                     let text = resp.message.extract_text();
                     if !text.is_empty() {
                         on_delta(&StreamChunkDelta::Text(text));

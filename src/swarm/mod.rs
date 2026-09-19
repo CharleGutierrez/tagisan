@@ -1,10 +1,13 @@
 pub mod atlas;
+pub mod bridge;
 pub mod cluster;
 pub mod consensus;
 pub mod coordinator;
 pub mod harmony;
 pub mod repl;
 pub mod session;
+
+pub use bridge::*;
 
 pub use atlas::{AtlasEntry, SwarmAtlas, TopicCluster};
 pub use cluster::{

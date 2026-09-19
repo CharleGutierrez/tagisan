@@ -4,7 +4,12 @@ pub mod embedded;
 pub mod gguf;
 pub mod graph;
 pub mod grounding;
+pub mod layer_streaming;
+pub mod oracle;
 pub mod server;
+
+pub use layer_streaming::*;
+pub use oracle::*;
 
 pub use grounding::{
     CritiqueCategory, CritiqueFinding, CritiqueSeverity, GroundingEngine, GroundingOptions,

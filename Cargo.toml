@@ -89,12 +89,12 @@ wasm-sandbox = ["dep:wasmtime"]
 [profile.dev]
 opt-level = 0
 debug = false
-codegen-units = 1
+codegen-units = 16
 
 [profile.test]
 opt-level = 0
 debug = false
-codegen-units = 1
+codegen-units = 16
 
 [profile.release]
 opt-level = "s"

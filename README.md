@@ -68,6 +68,7 @@ tgs status
 | **16** | **Pre-Execution Shell Auditing** | **Yes (AST & Regex Intercept `tgs shield`)**| No | No | No | No |
 | **17** | **Real-Time Forensic Alerts** | **Yes (ANSI Banners & WinRT Toast)** | No | No | No | No |
 | **18** | **Model Context Protocol (MCP)** | **Bidirectional (Client + Server)** | None | Client only | Community wrappers | Community wrappers |
+| **19** | **Federated Agent Bridge** | **Native Mesh (Rust/MCP/A2A/IPC/REST)** | None | CrewAI only | AutoGen only | LangGraph only |
 
 ---
 
@@ -1030,6 +1031,13 @@ tgs gleam check
 # ==============================================================================
 # Launch interactive REPL with specialized persona
 tgs repl --agent security-auditor --memory
+
+# Inside REPL: Federated Agent Bridge Commands
+#   /bridge status              - Live Agent Bridge telemetry & health dashboard
+#   /bridge agents              - List all federated agents & circuit breaker states
+#   /bridge broadcast <top> <m> - Reactive Pub/Sub event bus broadcast
+#   /bridge route <task>        - Edge-to-Cloud hybrid routing with 0-stall failover
+#   /bridge help                - Full Agent Bridge command manual
 
 # Manage persistent sessions
 tgs session list

@@ -59,6 +59,12 @@ pub use python::{
     extract_missing_python_package, PythonAutoResolveTool, PythonEvalTool, PythonInstallTool,
     PythonRunTool,
 };
+pub use crate::swarm::bridge::{AgentBridgeDispatchTool, AgentBridgePublishTool};
+pub use crate::engine::oracle::{
+    Oracle23aiSearchTool, OracleErpMatchTool, OracleBlockchainTool, OracleApexGenTool, OracleHeatWaveTool,
+    OraclePropertyGraphTool, OracleExadataSmartScanTool, OracleTextTool, OracleSpatialTool, OracleKeyVaultTool,
+    OracleTxEqTool, OracleInMemoryTool, OracleSqlFirewallTool, OracleRasTool, OracleTrueCacheTool,
+};
 pub use wasm::{load_wasm_tools, WasmTool};
 pub use web_search::{WebSearchResult, WebSearchTool};
 pub use crate::vella::{
@@ -282,6 +288,25 @@ impl ToolRegistry {
         registry.register_tool(mcp::McpBrowserTool::new());
         registry.register_tool(mcp::McpGithubTool::new());
         registry.register_tool(mcp::McpSecurityTool::new());
+        // Swarm Agent Bridge Tools
+        registry.register_tool(crate::swarm::bridge::AgentBridgeDispatchTool::new());
+        registry.register_tool(crate::swarm::bridge::AgentBridgePublishTool::new());
+        // Oracle Enterprise Tools
+        registry.register_tool(crate::engine::oracle::Oracle23aiSearchTool::new());
+        registry.register_tool(crate::engine::oracle::OracleErpMatchTool::new());
+        registry.register_tool(crate::engine::oracle::OracleBlockchainTool::new());
+        registry.register_tool(crate::engine::oracle::OracleApexGenTool::new());
+        registry.register_tool(crate::engine::oracle::OracleHeatWaveTool::new());
+        registry.register_tool(crate::engine::oracle::OraclePropertyGraphTool::new());
+        registry.register_tool(crate::engine::oracle::OracleExadataSmartScanTool::new());
+        registry.register_tool(crate::engine::oracle::OracleTextTool::new());
+        registry.register_tool(crate::engine::oracle::OracleSpatialTool::new());
+        registry.register_tool(crate::engine::oracle::OracleKeyVaultTool::new());
+        registry.register_tool(crate::engine::oracle::OracleTxEqTool::new());
+        registry.register_tool(crate::engine::oracle::OracleInMemoryTool::new());
+        registry.register_tool(crate::engine::oracle::OracleSqlFirewallTool::new());
+        registry.register_tool(crate::engine::oracle::OracleRasTool::new());
+        registry.register_tool(crate::engine::oracle::OracleTrueCacheTool::new());
         registry
     }
 
@@ -453,6 +478,25 @@ impl ToolRegistry {
         registry.register_tool(mcp::McpBrowserTool::new().with_working_dir(dir.clone()));
         registry.register_tool(mcp::McpGithubTool::new().with_working_dir(dir.clone()));
         registry.register_tool(mcp::McpSecurityTool::new().with_working_dir(dir.clone()));
+        // Swarm Agent Bridge Tools
+        registry.register_tool(crate::swarm::bridge::AgentBridgeDispatchTool::new());
+        registry.register_tool(crate::swarm::bridge::AgentBridgePublishTool::new());
+        // Oracle Enterprise Tools
+        registry.register_tool(crate::engine::oracle::Oracle23aiSearchTool::new());
+        registry.register_tool(crate::engine::oracle::OracleErpMatchTool::new());
+        registry.register_tool(crate::engine::oracle::OracleBlockchainTool::new());
+        registry.register_tool(crate::engine::oracle::OracleApexGenTool::new());
+        registry.register_tool(crate::engine::oracle::OracleHeatWaveTool::new());
+        registry.register_tool(crate::engine::oracle::OraclePropertyGraphTool::new());
+        registry.register_tool(crate::engine::oracle::OracleExadataSmartScanTool::new());
+        registry.register_tool(crate::engine::oracle::OracleTextTool::new());
+        registry.register_tool(crate::engine::oracle::OracleSpatialTool::new());
+        registry.register_tool(crate::engine::oracle::OracleKeyVaultTool::new());
+        registry.register_tool(crate::engine::oracle::OracleTxEqTool::new());
+        registry.register_tool(crate::engine::oracle::OracleInMemoryTool::new());
+        registry.register_tool(crate::engine::oracle::OracleSqlFirewallTool::new());
+        registry.register_tool(crate::engine::oracle::OracleRasTool::new());
+        registry.register_tool(crate::engine::oracle::OracleTrueCacheTool::new());
         registry
     }
 

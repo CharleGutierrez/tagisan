@@ -123,8 +123,15 @@ pub use providers::anthropic::AnthropicProvider;
 pub use providers::cascade::{CascadeEntry, CascadeProvider};
 pub use providers::colibri::{ColibriConfig, ColibriProvider, StripingMode, StripingValidationReport};
 pub use providers::gemini::GeminiProvider;
-pub use providers::ollama::{default_ollama_model, parse_thinking_blocks, OllamaProvider};
 pub use providers::openai_compat::{OpenAiCompatibleProvider, StreamingThinkParser};
+pub use providers::ollama::{
+    default_ollama_model, ensure_flash_attention_env, is_flash_attention_enabled,
+    parse_thinking_blocks, tokenize_pld, CanonicalPrefix, ContextFitReport,
+    DeterministicKvPrefixCache, DynamicBatchOptimizer, DynamicContextConfig, DynamicContextFitter,
+    HyperOllamaConfig, KvCacheTelemetry, OllamaProvider, PldConfig, PldTelemetry,
+    PrefixAlignmentReport, PromptLookupDecoder, SpeculationCandidate, WarmthConfig, WarmthSentinel,
+    WarmthStatus,
+};
 pub use providers::{BoxEventStream, LlmProvider};
 pub use strategies::debate::DialecticalDebateStrategy;
 pub use strategies::harmony::StructuredHarmonyStrategy;
@@ -218,4 +225,8 @@ pub use notify::{
     NotificationHub, NotificationPayload, NotificationSeverity, OfflineLockDetails,
     SemanticGuardDetails, SkillTransitionDetails,
 };
+
+pub use swarm::bridge::*;
+pub use engine::oracle::*;
+
 
