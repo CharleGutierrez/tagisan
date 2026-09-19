@@ -1147,15 +1147,16 @@ impl InteractiveRepl {
             inner_width,
         );
 
-        println!("{}", top_border);
-        println!("{}", title_line);
-        println!("{}", div_border);
-        println!("{}", model_line);
-        println!("{}", session_line);
-        println!("{}", workspace_line);
-        println!("{}", shortcuts_line);
-        println!("{}", keys_line);
-        println!("{}", bot_border);
+        print!("{}\r\n", top_border);
+        print!("{}\r\n", title_line);
+        print!("{}\r\n", div_border);
+        print!("{}\r\n", model_line);
+        print!("{}\r\n", session_line);
+        print!("{}\r\n", workspace_line);
+        print!("{}\r\n", shortcuts_line);
+        print!("{}\r\n", keys_line);
+        print!("{}\r\n", bot_border);
+        let _ = io::stdout().flush();
     }
 
     /// Launch the live interactive terminal loop with AGY keyboard controls & readline engine
@@ -1910,10 +1911,11 @@ impl ReplEditor {
                             }
                         }
                         KeyCode::Char('l') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
-                            let _ = write!(io::stdout(), "\x1b[2J\x1b[1;1H");
+                            let _ = write!(io::stdout(), "\x1b[2J\x1b[H\x1b[3J");
+                            let _ = io::stdout().flush();
                             on_repaint();
                             for prev in &continuation_lines {
-                                let _ = writeln!(io::stdout(), "  │ {}\r", prev);
+                                let _ = write!(io::stdout(), "  │ {}\r\n", prev);
                             }
                             let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
                         }
