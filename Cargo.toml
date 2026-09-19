@@ -54,6 +54,7 @@ dotenvy = "0.15"
 colored = "2.1"
 ratatui = "0.29"
 crossterm = { version = "0.28", features = ["event-stream"] }
+unicode-width = "0.2"
 
 # Logging & Telemetry
 tracing = "0.1"

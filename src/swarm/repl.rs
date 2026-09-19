@@ -1059,48 +1059,103 @@ impl InteractiveRepl {
         Self::print_banner_static(&self.agent.model, &self.session_record.id);
     }
 
+    /// Calculate the visible column width of a string on terminal display,
+    /// stripping all ANSI escape sequences and accounting for Unicode character widths.
+    pub fn visible_width(s: &str) -> usize {
+        use std::sync::OnceLock;
+        use unicode_width::UnicodeWidthStr;
+        static ANSI_RE: OnceLock<regex::Regex> = OnceLock::new();
+        let re = ANSI_RE.get_or_init(|| {
+            regex::Regex::new(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])").unwrap()
+        });
+        let stripped = re.replace_all(s, "");
+        UnicodeWidthStr::width(stripped.as_ref())
+    }
+
+    /// Formats a content line inside the box with exact padding to match `inner_width`.
+    /// Ensures the left and right border characters '│' align flawlessly across all rows,
+    /// preventing broken lines or box tear-down regardless of label length or ANSI colors.
+    pub fn format_box_line(content: &str, inner_width: usize) -> String {
+        let vis_w = Self::visible_width(content);
+        let padding = if vis_w < inner_width {
+            " ".repeat(inner_width - vis_w)
+        } else {
+            String::new()
+        };
+        format!("{}{}{}{}", "│".cyan().bold(), content, padding, "│".cyan().bold())
+    }
+
     /// Static banner renderer supporting raw-mode screen repaints
     pub fn print_banner_static(model: &str, session_id: &str) {
         let cwd_display = std::env::current_dir()
             .unwrap_or_default()
             .display()
             .to_string();
-        let short_cwd = if cwd_display.len() > 50 {
-            format!("...{}", &cwd_display[cwd_display.len() - 47..])
+
+        let inner_width: usize = 72;
+
+        let max_cwd_len = inner_width.saturating_sub(18); // 16 for "  📁 Workspace: " + 2
+        let short_cwd = if cwd_display.len() > max_cwd_len {
+            format!("...{}", &cwd_display[cwd_display.len() - (max_cwd_len - 3)..])
         } else {
             cwd_display
         };
 
-        println!("{}", "╭──────────────────────────────────────────────────────────────────────────╮".cyan().bold());
-        println!("{}", "│  ▲  TAGISAN INTERACTIVE CLI — Antigravity (AGY) Dual-Core UX            │".yellow().bold());
-        println!("{}", "├──────────────────────────────────────────────────────────────────────────┤".cyan());
-        println!(
-            "│  🤖 Model:     {:<54} │",
-            model.green().bold()
+        let top_border = format!("{}{}{}", "╭".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╮".cyan().bold());
+        let div_border = format!("{}{}{}", "├".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "┤".cyan().bold());
+        let bot_border = format!("{}{}{}", "╰".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╯".cyan().bold());
+
+        let title_line = Self::format_box_line(
+            &format!("  {}  {}", "▲".yellow().bold(), "TAGISAN INTERACTIVE CLI — Antigravity (AGY) Dual-Core UX".yellow().bold()),
+            inner_width,
         );
-        println!(
-            "│  ⚡ Session:   {:<54} │",
-            session_id.cyan().bold()
+
+        let model_line = Self::format_box_line(
+            &format!("  🤖 Model:     {}", model.green().bold()),
+            inner_width,
         );
-        println!(
-            "│  📁 Workspace: {:<54} │",
-            short_cwd.dimmed()
+
+        let session_line = Self::format_box_line(
+            &format!("  ⚡ Session:   {}", session_id.cyan().bold()),
+            inner_width,
         );
-        println!(
-            "│  💡 Shortcuts: {} help  •  {} plan  •  {} goal  •  {} exit │",
-            "/help".magenta().bold(),
-            "/plan".cyan().bold(),
-            "/goal".yellow().bold(),
-            "/exit".dimmed()
+
+        let workspace_line = Self::format_box_line(
+            &format!("  📁 Workspace: {}", short_cwd.dimmed()),
+            inner_width,
         );
-        println!(
-            "│  ⌨️  Keys:      {} hist • {} search • {} clear • {} multi-line │",
-            "↑/↓".bright_white().bold(),
-            "Ctrl+R".bright_cyan().bold(),
-            "Ctrl+L".bright_yellow().bold(),
-            "\\+Enter".bright_green().bold()
+
+        let shortcuts_line = Self::format_box_line(
+            &format!(
+                "  💡 Shortcuts: {} manual  •  {} specs  •  {} auto  •  {}",
+                "/help".magenta().bold(),
+                "/plan".cyan().bold(),
+                "/goal".yellow().bold(),
+                "/exit".dimmed()
+            ),
+            inner_width,
         );
-        println!("{}", "╰──────────────────────────────────────────────────────────────────────────╯".cyan().bold());
+
+        let keys_line = Self::format_box_line(
+            &format!(
+                "  💻 Keys:      {} hist  •  {} find  •  {} clear  •  {}",
+                "↑/↓".bright_white().bold(),
+                "Ctrl+R".bright_cyan().bold(),
+                "Ctrl+L".bright_yellow().bold(),
+                "\\+Enter".bright_green().bold()
+            ),
+            inner_width,
+        );
+
+        println!("{}", top_border);
+        println!("{}", title_line);
+        println!("{}", div_border);
+        println!("{}", model_line);
+        println!("{}", session_line);
+        println!("{}", workspace_line);
+        println!("{}", shortcuts_line);
+        println!("{}", keys_line);
+        println!("{}", bot_border);
     }
 
     /// Launch the live interactive terminal loop with AGY keyboard controls & readline engine
@@ -2217,5 +2272,45 @@ mod tests {
             buffer.push(ch);
         }
         assert_eq!(buffer.iter().collect::<String>(), "the quick brown fox");
+    }
+
+    #[test]
+    fn test_repl_banner_neat_box_alignment() {
+        let inner_width = 72;
+        let model = "gemini-2.5-flash";
+        let session_id = "repl-1789796957";
+        let short_cwd = "/home/dyna";
+
+        let title = format!("  ▲  TAGISAN INTERACTIVE CLI — Antigravity (AGY) Dual-Core UX");
+        let model_str = format!("  🤖 Model:     {}", model.green().bold());
+        let session_str = format!("  ⚡ Session:   {}", session_id.cyan().bold());
+        let workspace_str = format!("  📁 Workspace: {}", short_cwd.dimmed());
+        let shortcuts_str = format!(
+            "  💡 Shortcuts: {} manual  •  {} specs  •  {} auto  •  {}",
+            "/help".magenta().bold(),
+            "/plan".cyan().bold(),
+            "/goal".yellow().bold(),
+            "/exit".dimmed()
+        );
+        let keys_str = format!(
+            "  💻 Keys:      {} hist  •  {} find  •  {} clear  •  {}",
+            "↑/↓".bright_white().bold(),
+            "Ctrl+R".bright_cyan().bold(),
+            "Ctrl+L".bright_yellow().bold(),
+            "\\+Enter".bright_green().bold()
+        );
+
+        let lines = [title, model_str, session_str, workspace_str, shortcuts_str, keys_str];
+        for line in &lines {
+            let boxed = InteractiveRepl::format_box_line(line, inner_width);
+            let vis_w = InteractiveRepl::visible_width(&boxed);
+            assert_eq!(
+                vis_w,
+                inner_width + 2,
+                "Every boxed line must have identical visible width ({} cols). Failed for: {}",
+                inner_width + 2,
+                line
+            );
+        }
     }
 }
