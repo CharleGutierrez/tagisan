@@ -2727,6 +2727,58 @@ pub fn resolve_provider_and_model(
         );
     }
 
+    // Check if user_model explicitly specifies or implies a provider, e.g. "ollama", "gemini", "ollama/...", "smollm2:1.7b"
+    let (detected_provider_from_model, clean_user_model) = if let Some(ref m) = user_model {
+        let trimmed = m.trim();
+        if let Some(slash_idx) = trimmed.find('/') {
+            let p = &trimmed[..slash_idx];
+            let rest = &trimmed[slash_idx + 1..];
+            (Some(p.to_ascii_lowercase()), if rest.is_empty() { None } else { Some(rest.to_string()) })
+        } else if let Some(colon_idx) = trimmed.find(':') {
+            let p = &trimmed[..colon_idx];
+            let p_lower = p.to_ascii_lowercase();
+            if ["ollama", "gemini", "google", "deepseek", "anthropic", "claude", "openai", "gpt", "xai", "grok", "colibri"].contains(&p_lower.as_str()) {
+                let rest = &trimmed[colon_idx + 1..];
+                (Some(p_lower), if rest.is_empty() { None } else { Some(rest.to_string()) })
+            } else {
+                (None, Some(trimmed.to_string()))
+            }
+        } else {
+            let lower = trimmed.to_ascii_lowercase();
+            if lower == "ollama" || lower == "local" {
+                (Some("ollama".to_string()), None)
+            } else if lower == "gemini" || lower == "google" {
+                (Some("gemini".to_string()), None)
+            } else if lower == "deepseek" {
+                (Some("deepseek".to_string()), None)
+            } else if lower == "anthropic" || lower == "claude" {
+                (Some("anthropic".to_string()), None)
+            } else if lower == "openai" || lower == "gpt" {
+                (Some("openai".to_string()), None)
+            } else if lower == "xai" || lower == "grok" {
+                (Some("xai".to_string()), None)
+            } else if lower == "colibri" {
+                (Some("colibri".to_string()), None)
+            } else if lower.starts_with("gemini-") {
+                (Some("gemini".to_string()), Some(trimmed.to_string()))
+            } else if lower.starts_with("claude-") {
+                (Some("anthropic".to_string()), Some(trimmed.to_string()))
+            } else if lower.starts_with("gpt-") || lower.starts_with("o1-") || lower.starts_with("o3-") {
+                (Some("openai".to_string()), Some(trimmed.to_string()))
+            } else if lower.starts_with("grok-") {
+                (Some("xai".to_string()), Some(trimmed.to_string()))
+            } else if lower.starts_with("colibri") {
+                (Some("colibri".to_string()), Some(trimmed.to_string()))
+            } else if OllamaProvider::find_matching_model(trimmed, &OllamaProvider::discover_installed_models()).is_some() {
+                (Some("ollama".to_string()), Some(trimmed.to_string()))
+            } else {
+                (None, Some(trimmed.to_string()))
+            }
+        }
+    } else {
+        (None, None)
+    };
+
     let effective_user_provider = if local_only {
         // When local_only is enforced, override any cloud provider or auto detection to local (ollama or colibri)
         if user_provider != "auto" && (user_provider == "ollama" || user_provider == "colibri" || user_provider == "local") {
@@ -2742,6 +2794,8 @@ pub fn resolve_provider_and_model(
         }
     } else if user_provider != "auto" {
         user_provider
+    } else if let Some(ref dp) = detected_provider_from_model {
+        dp.as_str()
     } else if crate::auth::GeminiOAuthManager::is_authenticated() {
         "gemini"
     } else if let Some(ref ep) = env_provider {
@@ -2764,7 +2818,7 @@ pub fn resolve_provider_and_model(
                 OllamaProvider::notify_no_models_installed();
                 return Err(TagisanError::NoModelsInstalled);
             }
-            if let Some(m) = user_model {
+            if let Some(m) = clean_user_model {
                 if let Some(matched) = OllamaProvider::find_matching_model(&m, &installed) {
                     matched
                 } else {
@@ -2783,7 +2837,7 @@ pub fn resolve_provider_and_model(
                 OllamaProvider::default_model()
             }
         } else {
-            user_model.unwrap_or_else(|| default_model_for_provider(effective_user_provider))
+            clean_user_model.unwrap_or_else(|| default_model_for_provider(effective_user_provider))
         };
         return Ok((effective_user_provider.to_string(), model, prov));
     }

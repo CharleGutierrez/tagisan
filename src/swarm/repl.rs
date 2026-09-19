@@ -20,6 +20,7 @@ pub enum ReplCommand {
     Skill(String),
     Forge(String),
     Model(String),
+    Provider(String),
     Tools,
     Memory,
     HostMem(String),
@@ -99,6 +100,7 @@ impl InteractiveRepl {
             "/skill" => ReplCommand::Skill(arg),
             "/forge" => ReplCommand::Forge(arg),
             "/model" | "/m" => ReplCommand::Model(arg),
+            "/provider" | "/prov" => ReplCommand::Provider(arg),
             "/tools" | "/t" => ReplCommand::Tools,
             "/memory" => {
                 if arg.is_empty() {
@@ -210,7 +212,8 @@ impl InteractiveRepl {
                     {} Switch agent persona (e.g. architect, tdd-engineer)\n\
                     {}   Dynamically attach an ECC skill\n\
                     {}   Forge a skill live from binary, code, or MCP spec\n\
-                    {}   Switch model name\n\
+                    {}   Switch model name or provider\n\
+                    {} Switch active LLM provider (ollama, gemini, etc.)\n\
                     {}       List registered tools\n\
                     {}  Host memory governor, RAM/Swap telemetry & malloc_trim\n\
                     {}     Inspect git worktree sandbox status & diff\n\
@@ -245,6 +248,7 @@ impl InteractiveRepl {
                     "/skill <name>".bold().green(),
                     "/forge <path>".bold().green(),
                     "/model <name>".bold().green(),
+                    "/provider <name>".bold().green(),
                     "/tools".bold().green(),
                     "/mem <cmd>".bold().green(),
                     "/sandbox".bold().green(),
@@ -384,14 +388,8 @@ impl InteractiveRepl {
                     }
                 }
             }
-            ReplCommand::Model(name) => {
-                if name.is_empty() {
-                    return Ok(Some(format!("Current model: {}", self.agent.model.bold().yellow())));
-                }
-                self.agent.model = name.clone();
-                self.session_record.model = name.clone();
-                Ok(Some(format!("Switched active model to '{}'", name.bold().green())))
-            }
+            ReplCommand::Model(name) => self.switch_model_and_provider(&name),
+            ReplCommand::Provider(name) => self.switch_model_and_provider(&name),
             ReplCommand::Tools => {
                 let defs = self.agent.tools.definitions();
                 let mut out = format!("Registered Tools ({}):\n", defs.len());
@@ -1054,6 +1052,190 @@ impl InteractiveRepl {
         }
     }
 
+    /// Dynamically switch active model and/or LLM provider during an interactive session
+    pub fn switch_model_and_provider(&mut self, input: &str) -> Result<Option<String>> {
+        let trimmed = input.trim();
+        if trimmed.is_empty() {
+            let prov_id = self.agent.provider.provider_id();
+            let mut msg = format!(
+                "🤖 Active Model   : {}\n\
+                 🔌 Active Provider: {}\n\n\
+                 {}",
+                self.agent.model.bold().yellow(),
+                prov_id.bold().cyan(),
+                "Available Providers & Models:".bold().underline()
+            );
+
+            let installed = crate::providers::ollama::OllamaProvider::discover_installed_models();
+            if !installed.is_empty() {
+                msg.push_str(&format!("\n  • {} (local): {}", "ollama".bold().green(), installed.join(", ").dimmed()));
+            } else {
+                msg.push_str(&format!("\n  • {} (local): No models installed (run 'ollama pull smollm2:1.7b')", "ollama".bold().green()));
+            }
+            msg.push_str(&format!("\n  • {} (cloud): gemini-2.0-flash, gemini-2.5-flash", "gemini".bold().cyan()));
+            msg.push_str(&format!("\n  • {} (cloud): deepseek-chat, deepseek-reasoner", "deepseek".bold().blue()));
+            msg.push_str(&format!("\n  • {} (cloud): claude-3-5-sonnet-20241022", "anthropic".bold().magenta()));
+            msg.push_str(&format!("\n  • {} (cloud): gpt-4o, o3-mini", "openai".bold().green()));
+            msg.push_str(&format!("\n  • {} (cloud): grok-2-latest", "xai".bold().white()));
+            msg.push_str(&format!("\n  • {} (local MoE): deepseek-v4", "colibri".bold().yellow()));
+
+            let sample_local = installed.first().map(|s| s.as_str()).unwrap_or("smollm2:1.7b");
+            msg.push_str(&format!(
+                "\n\n💡 Tip: Use '/model <name>' or '/provider <name>' to switch.\n\
+                     Examples: '/model ollama', '/model {}', '/model gemini-2.0-flash'",
+                sample_local
+            ));
+            return Ok(Some(msg));
+        }
+
+        // Parse optional provider prefix: e.g. "ollama/smollm2:1.7b", "gemini/gemini-2.0-flash", "ollama:smollm2"
+        let (prov_prefix, candidate_model) = if let Some(slash_idx) = trimmed.find('/') {
+            (Some(&trimmed[..slash_idx]), &trimmed[slash_idx + 1..])
+        } else if let Some(colon_idx) = trimmed.find(':') {
+            let prefix = &trimmed[..colon_idx];
+            if ["ollama", "gemini", "google", "deepseek", "anthropic", "claude", "openai", "gpt", "xai", "grok", "colibri"]
+                .contains(&prefix.to_ascii_lowercase().as_str())
+            {
+                (Some(prefix), &trimmed[colon_idx + 1..])
+            } else {
+                (None, trimmed)
+            }
+        } else {
+            (None, trimmed)
+        };
+
+        // Determine target provider and model
+        let (target_provider, target_model) = if let Some(p) = prov_prefix {
+            let norm_prov = match p.to_ascii_lowercase().as_str() {
+                "google" => "gemini".to_string(),
+                "claude" => "anthropic".to_string(),
+                "gpt" => "openai".to_string(),
+                "grok" => "xai".to_string(),
+                "local" => "ollama".to_string(),
+                other => other.to_string(),
+            };
+            let m = if candidate_model.is_empty() {
+                if norm_prov == "ollama" {
+                    crate::providers::ollama::OllamaProvider::default_model()
+                } else {
+                    crate::cli::default_model_for_provider(&norm_prov)
+                }
+            } else if norm_prov == "ollama" {
+                let installed = crate::providers::ollama::OllamaProvider::discover_installed_models();
+                crate::providers::ollama::OllamaProvider::find_matching_model(candidate_model, &installed)
+                    .unwrap_or_else(|| candidate_model.to_string())
+            } else {
+                candidate_model.to_string()
+            };
+            (norm_prov, m)
+        } else {
+            let lower = candidate_model.to_ascii_lowercase();
+            if lower == "ollama" || lower == "local" {
+                let installed = crate::providers::ollama::OllamaProvider::discover_installed_models();
+                let m = if let Some(first) = installed.first() {
+                    if let Ok(env_m) = std::env::var("OLLAMA_MODEL") {
+                        crate::providers::ollama::OllamaProvider::find_matching_model(&env_m, &installed)
+                            .unwrap_or_else(|| first.clone())
+                    } else {
+                        first.clone()
+                    }
+                } else {
+                    crate::providers::ollama::OllamaProvider::default_model()
+                };
+                ("ollama".to_string(), m)
+            } else if lower == "gemini" || lower == "google" {
+                ("gemini".to_string(), crate::cli::default_model_for_provider("gemini"))
+            } else if lower == "deepseek" {
+                ("deepseek".to_string(), crate::cli::default_model_for_provider("deepseek"))
+            } else if lower == "anthropic" || lower == "claude" {
+                ("anthropic".to_string(), crate::cli::default_model_for_provider("anthropic"))
+            } else if lower == "openai" || lower == "gpt" {
+                ("openai".to_string(), crate::cli::default_model_for_provider("openai"))
+            } else if lower == "xai" || lower == "grok" {
+                ("xai".to_string(), crate::cli::default_model_for_provider("xai"))
+            } else if lower == "colibri" {
+                ("colibri".to_string(), crate::cli::default_model_for_provider("colibri"))
+            } else {
+                // Check if candidate_model matches an installed Ollama model
+                let installed = crate::providers::ollama::OllamaProvider::discover_installed_models();
+                if let Some(matched) = crate::providers::ollama::OllamaProvider::find_matching_model(candidate_model, &installed) {
+                    ("ollama".to_string(), matched)
+                } else if lower.starts_with("gemini-") {
+                    ("gemini".to_string(), candidate_model.to_string())
+                } else if lower.starts_with("claude-") {
+                    ("anthropic".to_string(), candidate_model.to_string())
+                } else if lower.starts_with("gpt-") || lower.starts_with("o1-") || lower.starts_with("o3-") {
+                    ("openai".to_string(), candidate_model.to_string())
+                } else if lower.starts_with("grok-") {
+                    ("xai".to_string(), candidate_model.to_string())
+                } else if lower.starts_with("colibri") {
+                    ("colibri".to_string(), candidate_model.to_string())
+                } else if lower.starts_with("deepseek-") {
+                    if self.context.get_provider("deepseek").is_ok() {
+                        ("deepseek".to_string(), candidate_model.to_string())
+                    } else if let Some(m) = crate::providers::ollama::OllamaProvider::find_matching_model(candidate_model, &installed) {
+                        ("ollama".to_string(), m)
+                    } else {
+                        ("deepseek".to_string(), candidate_model.to_string())
+                    }
+                } else if lower.starts_with("llama")
+                    || lower.starts_with("qwen")
+                    || lower.starts_with("smollm")
+                    || lower.starts_with("mistral")
+                    || lower.starts_with("gemma")
+                    || lower.starts_with("phi")
+                    || lower.starts_with("starcoder")
+                    || lower.starts_with("codellama")
+                {
+                    ("ollama".to_string(), candidate_model.to_string())
+                } else {
+                    // Fallback to current provider with user's model name
+                    (self.agent.provider.provider_id().to_string(), candidate_model.to_string())
+                }
+            }
+        };
+
+        // Obtain target provider handle
+        let prov = if target_provider == "ollama" {
+            Some(
+                self.context
+                    .get_provider("ollama")
+                    .unwrap_or_else(|_| std::sync::Arc::new(crate::providers::ollama::OllamaProvider::default_local())),
+            )
+        } else {
+            self.context.get_provider(&target_provider).ok()
+        };
+
+        if let Some(p) = prov {
+            self.agent.provider = p;
+        }
+
+        self.agent.model = target_model.clone();
+        self.session_record.model = target_model.clone();
+
+        let mut response = format!(
+            "Switched active model to '{}' (Provider: '{}')",
+            target_model.bold().green(),
+            target_provider.bold().cyan()
+        );
+
+        if target_provider == "ollama" {
+            let installed = crate::providers::ollama::OllamaProvider::discover_installed_models();
+            if !installed.is_empty() {
+                response.push_str(&format!(
+                    "\n📦 Installed Ollama models: {}",
+                    installed.join(", ").dimmed()
+                ));
+            } else {
+                response.push_str(&format!(
+                    "\n⚠️  No local models installed. Run 'ollama pull smollm2:1.7b' to download a lightweight model."
+                ));
+            }
+        }
+
+        Ok(Some(response))
+    }
+
     /// Print AGY Dual-Core UX banner for current session
     pub fn print_banner(&self) {
         Self::print_banner_static(&self.agent.model, &self.session_record.id);
@@ -1557,6 +1739,7 @@ impl ReplEditor {
                 ("/skill", "Attach ECC skill"),
                 ("/forge", "Forge skill from binary/code/mcp"),
                 ("/model", "Switch active model"),
+                ("/provider", "Switch active LLM provider"),
                 ("/tools", "List registered tools"),
                 ("/memory", "Display memory stats"),
                 ("/sandbox", "Inspect git worktree sandbox"),
@@ -1688,6 +1871,52 @@ impl ReplEditor {
             for sc in subcmds {
                 if sc.starts_with(arg) {
                     let completed = format!("/delegate {} ", sc);
+                    let len = completed.chars().count();
+                    results.push((completed, len));
+                }
+            }
+            return results;
+        }
+
+        // 10. /model <name>
+        if let Some(rest) = trimmed_prefix.strip_prefix("/model ") {
+            let arg = rest.trim_start();
+            let mut candidates = vec![
+                "ollama".to_string(),
+                "gemini".to_string(),
+                "gemini-2.0-flash".to_string(),
+                "gemini-2.5-flash".to_string(),
+                "deepseek".to_string(),
+                "deepseek-chat".to_string(),
+                "anthropic".to_string(),
+                "claude-3-5-sonnet-20241022".to_string(),
+                "openai".to_string(),
+                "gpt-4o".to_string(),
+                "xai".to_string(),
+                "colibri".to_string(),
+            ];
+            for m in crate::providers::ollama::OllamaProvider::discover_installed_models() {
+                if !candidates.contains(&m) {
+                    candidates.push(m);
+                }
+            }
+            for c in candidates {
+                if c.starts_with(arg) {
+                    let completed = format!("/model {} ", c);
+                    let len = completed.chars().count();
+                    results.push((completed, len));
+                }
+            }
+            return results;
+        }
+
+        // 11. /provider <name>
+        if let Some(rest) = trimmed_prefix.strip_prefix("/provider ") {
+            let arg = rest.trim_start();
+            let providers = ["ollama", "gemini", "deepseek", "anthropic", "openai", "xai", "colibri"];
+            for p in providers {
+                if p.starts_with(arg) {
+                    let completed = format!("/provider {} ", p);
                     let len = completed.chars().count();
                     results.push((completed, len));
                 }
@@ -2136,6 +2365,7 @@ impl ReplEditor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tools::ToolRegistry;
 
     #[test]
     fn test_find_word_backward() {
@@ -2314,5 +2544,33 @@ mod tests {
                 line
             );
         }
+    }
+
+    #[tokio::test]
+    async fn test_switch_model_to_ollama() {
+        let ctx = EngineContext::new(5.0);
+        let mock_prov = std::sync::Arc::new(crate::providers::ollama::OllamaProvider::default_local());
+        let agent = AutonomousAgent::new(mock_prov, "gemini-2.0-flash", ToolRegistry::with_builtins());
+        let mut repl = InteractiveRepl::new(agent, "test-session", "gemini-2.0-flash", ctx);
+
+        // Test /model ollama
+        let res = repl.execute_command(ReplCommand::Model("ollama".to_string())).await.unwrap().unwrap();
+        assert!(res.contains("Switched active model to"));
+        assert!(res.contains("ollama"));
+        assert_eq!(repl.agent.provider.provider_id(), "ollama");
+
+        // Test /provider ollama
+        let res2 = repl.execute_command(ReplCommand::Provider("ollama".to_string())).await.unwrap().unwrap();
+        assert!(res2.contains("Switched active model to"));
+        assert_eq!(repl.agent.provider.provider_id(), "ollama");
+
+        // Test /model with empty input (status overview)
+        let res3 = repl.execute_command(ReplCommand::Model("".to_string())).await.unwrap().unwrap();
+        assert!(res3.contains("Active Model"));
+        assert!(res3.contains("Available Providers & Models"));
+
+        // Test parse_command for /provider
+        assert_eq!(InteractiveRepl::parse_command("/provider ollama"), ReplCommand::Provider("ollama".to_string()));
+        assert_eq!(InteractiveRepl::parse_command("/prov gemini"), ReplCommand::Provider("gemini".to_string()));
     }
 }
