@@ -32,6 +32,11 @@ pub mod frontier;
 pub mod ux;
 pub mod agentic;
 pub mod vibe_review;
+pub mod hermes;
+pub mod reach;
+pub mod governor;
+pub mod gh_plan;
+pub mod gh_delegate;
 
 pub use harness::*;
 pub use otp::*;
@@ -42,6 +47,11 @@ pub use frontier::*;
 pub use ux::*;
 pub use agentic::*;
 pub use vibe_review::*;
+pub use hermes::*;
+pub use reach::*;
+pub use governor::*;
+pub use gh_plan::*;
+pub use gh_delegate::*;
 pub use plugins::{
     handle_plugin_command, CuratedCatalogItem, InstallScope, LoadedPlugin, PluginAction,
     PluginCapabilities, PluginDebateJudge, PluginEngine, PluginExecutionContext,

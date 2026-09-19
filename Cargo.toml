@@ -9,7 +9,7 @@ default-run = "tgs"
 [lib]
 name = "tagisan"
 path = "src/lib.rs"
-crate-type = ["rlib", "cdylib"]
+crate-type = ["rlib"]
 
 [[bin]]
 name = "tgs"
@@ -84,3 +84,20 @@ pgvector = ["dep:sqlx"]
 qdrant = []
 otel = ["dep:opentelemetry", "dep:opentelemetry-otlp", "dep:opentelemetry_sdk"]
 wasm-sandbox = ["dep:wasmtime"]
+
+[profile.dev]
+opt-level = 0
+debug = false
+codegen-units = 1
+
+[profile.test]
+opt-level = 0
+debug = false
+codegen-units = 1
+
+[profile.release]
+opt-level = "s"
+codegen-units = 1
+debug = false
+lto = false
+
