@@ -595,15 +595,19 @@ pub async fn handle_watch_command(
                         "✗ BUILD FAILED:".red().bold()
                     );
 
-                    // Emit desktop notification
-                    let _ = Command::new("notify-send")
-                        .args([
-                            "-a", "TGS Sentinel",
-                            "-i", "dialog-error",
-                            "TGS Sentinel: Build Failed",
-                            "Computing AI diagnosis and autofix...",
-                        ])
-                        .status();
+                    // Emit desktop notification if not suppressed by user
+                    if !crate::notify::is_desktop_suppressed() {
+                        let _ = Command::new("notify-send")
+                            .args([
+                                "-a", "TGS Sentinel",
+                                "-t", "2500",
+                                "-h", "int:transient:1",
+                                "-i", "dialog-error",
+                                "TGS Sentinel: Build Failed",
+                                "Computing AI diagnosis and autofix...",
+                            ])
+                            .status();
+                    }
 
                     // Query TGS for instant diagnosis
                     println!("{}", "🧠 Diagnosing error with TGS AI...".yellow());

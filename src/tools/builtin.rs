@@ -11592,6 +11592,141 @@ impl ToolHandler for ComputerControlTool {
     }
 }
 
+// =========================================================================
+// VibeCodeReviewTool (The 100-Book Code Review Canon Engine)
+// =========================================================================
+
+#[derive(Default, Clone)]
+pub struct VibeCodeReviewTool {
+    working_dir: Option<PathBuf>,
+}
+
+impl VibeCodeReviewTool {
+    pub fn new() -> Self {
+        Self { working_dir: None }
+    }
+
+    pub fn with_working_dir(mut self, dir: PathBuf) -> Self {
+        self.working_dir = Some(dir);
+        self
+    }
+}
+
+#[async_trait]
+impl ToolHandler for VibeCodeReviewTool {
+    fn name(&self) -> &str {
+        "vibe_code_review"
+    }
+
+    fn description(&self) -> &str {
+        "Sovereign 100-book code and program review engine for Vibe Coders. Searches the literature canon, checks review invariants (Ousterhout, Fowler, Dowd, Kleppmann, Goetz, etc.), and runs automated 5-layer static code auditing on files or code snippets."
+    }
+
+    fn parameters_schema(&self) -> Value {
+        json!({
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "description": "Review action to perform: 'search', 'audit', 'get_book', 'playbook', or 'list_clusters'",
+                    "enum": ["search", "audit", "get_book", "playbook", "list_clusters"]
+                },
+                "query": {
+                    "type": "string",
+                    "description": "Search query or concept (e.g. 'deep modules', 'race conditions', 'sql injection') for search action"
+                },
+                "code": {
+                    "type": "string",
+                    "description": "Source code snippet to audit for audit action"
+                },
+                "path": {
+                    "type": "string",
+                    "description": "File path to audit for audit action"
+                },
+                "book_id": {
+                    "type": "string",
+                    "description": "Book ID (e.g. 'VBR-02-001', 'VBR-04-001') for get_book action"
+                },
+                "stage": {
+                    "type": "integer",
+                    "description": "Playbook stage number (1 to 5) for playbook action"
+                }
+            },
+            "required": ["action"]
+        })
+    }
+
+    async fn execute(&self, arguments: Value) -> Result<String> {
+        let action = arguments
+            .get("action")
+            .and_then(|v| v.as_str())
+            .unwrap_or("search");
+
+        let catalog = crate::vibe_review::ReviewCatalog::new();
+
+        match action {
+            "search" => {
+                let q = arguments.get("query").and_then(|v| v.as_str()).unwrap_or("");
+                let hits = catalog.search(q, None, 5);
+                let json_res = serde_json::to_string_pretty(&hits).map_err(TagisanError::from)?;
+                Ok(json_res)
+            }
+            "audit" => {
+                let code_content = if let Some(code_str) = arguments.get("code").and_then(|v| v.as_str()) {
+                    code_str.to_string()
+                } else if let Some(p) = arguments.get("path").and_then(|v| v.as_str()) {
+                    let full_path = if let Some(ref wd) = self.working_dir {
+                        wd.join(p)
+                    } else {
+                        PathBuf::from(p)
+                    };
+                    std::fs::read_to_string(&full_path).map_err(|e| {
+                        TagisanError::Execution(format!("Failed to read file '{}': {}", full_path.display(), e))
+                    })?
+                } else {
+                    return Err(TagisanError::Execution(
+                        "Must provide either 'code' snippet or 'path' for audit action".into(),
+                    ));
+                };
+
+                let report = crate::vibe_review::audit_code(&code_content, arguments.get("path").and_then(|v| v.as_str()));
+                let json_res = serde_json::to_string_pretty(&report).map_err(TagisanError::from)?;
+                Ok(json_res)
+            }
+            "get_book" => {
+                let id = arguments.get("book_id").and_then(|v| v.as_str()).unwrap_or("VBR-02-001");
+                let book = catalog.get(id).ok_or_else(|| {
+                    TagisanError::Execution(format!("Review book ID '{}' not found", id))
+                })?;
+                let json_res = serde_json::to_string_pretty(book).map_err(TagisanError::from)?;
+                Ok(json_res)
+            }
+            "playbook" => {
+                let stage = arguments.get("stage").and_then(|v| v.as_u64()).map(|u| u as usize);
+                Ok(catalog.playbook(stage))
+            }
+            "list_clusters" => {
+                let clusters: Vec<_> = crate::vibe_review::ReviewCluster::all()
+                    .iter()
+                    .map(|c| {
+                        json!({
+                            "code": c.code(),
+                            "title": c.title(),
+                            "canonical_authors": c.canonical_authors(),
+                            "book_count": 10
+                        })
+                    })
+                    .collect();
+                Ok(serde_json::to_string_pretty(&clusters).unwrap_or_default())
+            }
+            other => Err(TagisanError::Execution(format!(
+                "Unknown vibe_code_review action '{}'. Use: search, audit, get_book, playbook, list_clusters",
+                other
+            ))),
+        }
+    }
+}
+
 #[cfg(test)]
 mod test_computer_control {
     use super::*;

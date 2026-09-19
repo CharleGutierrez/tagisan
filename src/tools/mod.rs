@@ -37,6 +37,7 @@ pub use builtin::{
     Z3SmtSolverTool, RrTimeTravelDebuggerTool, QemuBaremetalEmulatorTool, TlaConsensusCheckerTool,
     AskQuestionTool, AskUserTool, CreateArtifactTool, GenerateArtifactTool, ValidateMermaidTool, RenderDiffTool,
     RenderMermaidTool, RenderCarouselTool, GenerateImageTool, RenderTerminalMediaTool, ExportArtifactHtmlTool,
+    VibeCodeReviewTool,
 };
 pub use visual::{
     ExportArtifactHtmlTool as VisualExportArtifactHtmlTool,
@@ -201,6 +202,7 @@ impl ToolRegistry {
         registry.register_tool(builtin::GenerateArtifactTool::new());
         registry.register_tool(builtin::ValidateMermaidTool::new());
         registry.register_tool(builtin::RenderDiffTool::new());
+        registry.register_tool(builtin::VibeCodeReviewTool::new());
         // Visual Rendering & Rich Media Engineering Tools
         registry.register_tool(visual::RenderMermaidTool::new());
         registry.register_tool(visual::RenderCarouselTool::new());
@@ -305,6 +307,7 @@ impl ToolRegistry {
         registry.register_tool(builtin::ViewImageTool::new());
         registry.register_tool(builtin::GroundedInferenceTool::new().with_working_dir(dir.clone()));
         registry.register_tool(builtin::SearchSkillsTool::with_default());
+        registry.register_tool(builtin::VibeCodeReviewTool::new().with_working_dir(dir.clone()));
         registry.register_tool(bun::BunEvalTool::new().with_working_dir(dir.clone()));
         registry.register_tool(bun::BunRunTool::new().with_working_dir(dir.clone()));
         registry.register_tool(bun::BunTestTool::new().with_working_dir(dir.clone()));

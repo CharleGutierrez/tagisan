@@ -828,6 +828,18 @@ enum Commands {
         #[command(subcommand)]
         action: crate::agentic::AgenticAction,
     },
+    /// Sovereign 100-Book Code Review Canon, Static 5-Layer Auditor & Playbook for Vibe Coders
+    #[command(alias = "vibe-review", alias = "code-review", alias = "vr")]
+    VibeReview {
+        #[command(subcommand)]
+        action: crate::vibe_review::ReviewAction,
+    },
+    /// Manage notification preferences (silence desktop screen popups, show status, test delivery)
+    #[command(alias = "notifications", alias = "alerts")]
+    Notify {
+        #[command(subcommand)]
+        action: crate::notify::NotifyAction,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -5848,6 +5860,12 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Agentic { action } => {
             crate::agentic::handle_agentic_command(action).await?;
+        }
+        Commands::VibeReview { action } => {
+            crate::vibe_review::handle_vibe_review_command(action).await?;
+        }
+        Commands::Notify { action } => {
+            crate::notify::handle_notify_command(action)?;
         }
     }
 

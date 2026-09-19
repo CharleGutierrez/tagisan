@@ -232,12 +232,53 @@ pub struct NotificationHub {
 static GLOBAL_HUB: OnceLock<NotificationHub> = OnceLock::new();
 
 impl NotificationHub {
+    /// Detect whether desktop notifications should default to enabled or suppressed
+    pub fn detect_desktop_enabled_default() -> bool {
+        if std::env::var("TAGISAN_TEST_MODE").is_ok()
+            || std::env::var("TAGISAN_NO_DESKTOP_NOTIFY").is_ok()
+            || std::env::var("TGS_NO_DESKTOP_NOTIFY").is_ok()
+            || std::env::var("TAGISAN_NO_NOTIFY").is_ok()
+            || std::env::var("TGS_NO_NOTIFY").is_ok()
+            || std::env::var("TAGISAN_MUTE").is_ok()
+            || std::env::var("TGS_MUTE").is_ok()
+        {
+            return false;
+        }
+
+        if let Ok(val) = std::env::var("TAGISAN_NOTIFY") {
+            if val == "0" || val.eq_ignore_ascii_case("false") || val.eq_ignore_ascii_case("off") {
+                return false;
+            }
+        }
+        if let Ok(val) = std::env::var("TGS_NOTIFY") {
+            if val == "0" || val.eq_ignore_ascii_case("false") || val.eq_ignore_ascii_case("off") {
+                return false;
+            }
+        }
+
+        if let Ok(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")) {
+            let config_path = std::path::Path::new(&home).join(".config").join("tagisan").join("config.json");
+            if config_path.exists() {
+                if let Ok(content) = std::fs::read_to_string(&config_path) {
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+                        if let Some(enabled) = val.get("desktop_notifications").and_then(|v| v.as_bool()) {
+                            return enabled;
+                        }
+                    }
+                }
+            }
+        }
+
+        true
+    }
+
     pub fn new() -> Self {
         let (sender, _) = broadcast::channel(256);
+        let desktop_enabled = Self::detect_desktop_enabled_default();
         Self {
             history: RwLock::new(Vec::new()),
             sender,
-            desktop_enabled: AtomicBool::new(true),
+            desktop_enabled: AtomicBool::new(desktop_enabled),
             banner_enabled: AtomicBool::new(true),
             desktop_delivery_count: AtomicUsize::new(0),
             terminal_banner_count: AtomicUsize::new(0),
@@ -436,10 +477,8 @@ impl NotificationHub {
 
     /// Dispatches a platform-native desktop notification (Windows Toast or Unix notify-send)
     fn send_desktop_notification(event: &NotificationEvent) {
-        // Respect test / headless suppression env variables
-        let is_test = std::env::var("TAGISAN_TEST_MODE").is_ok()
-            || std::env::var("TAGISAN_NO_DESKTOP_NOTIFY").is_ok();
-        if is_test {
+        // Respect test / headless / user suppression settings
+        if !Self::detect_desktop_enabled_default() {
             return;
         }
 
@@ -449,13 +488,17 @@ impl NotificationHub {
         #[cfg(target_family = "unix")]
         {
             let urgency = match event.severity {
-                NotificationSeverity::Critical | NotificationSeverity::Emergency => "critical",
+                NotificationSeverity::Critical | NotificationSeverity::Emergency => "normal", // Cap at normal to prevent sticky screen popups
                 NotificationSeverity::Warning | NotificationSeverity::SecurityAlert => "normal",
                 NotificationSeverity::Info => "low",
             };
             let _ = std::process::Command::new("notify-send")
                 .arg("-u")
                 .arg(urgency)
+                .arg("-t")
+                .arg("2500") // Auto-dismiss after 2.5 seconds so it never occupies the screen
+                .arg("-h")
+                .arg("int:transient:1") // Transient hint for KDE Plasma & GNOME
                 .arg("-a")
                 .arg("Tagisan")
                 .arg(&summary)
@@ -821,6 +864,24 @@ pub fn notify_cyber_defense_alert(
     hub().emit(event);
 }
 
+/// Emit a generic system alert notification
+pub fn notify_system_alert(title: &str, message: &str) {
+    let mut map = std::collections::HashMap::new();
+    map.insert("alert".to_string(), title.to_string());
+    map.insert("details".to_string(), message.to_string());
+
+    let event = NotificationEvent::new(
+        NotificationCategory::SystemAlert,
+        NotificationSeverity::Info,
+        title,
+        message,
+        "Displaying user system notification",
+        NotificationPayload::Generic(map),
+    );
+
+    hub().emit(event);
+}
+
 /// Get a snapshot copy of the full notification history
 pub fn history() -> Vec<NotificationEvent> {
     hub().history()
@@ -864,4 +925,123 @@ pub fn desktop_delivery_count() -> usize {
 /// Return total count of terminal banners rendered
 pub fn terminal_banner_count() -> usize {
     hub().terminal_banner_count()
+}
+
+/// Check whether desktop notifications are enabled in-memory
+pub fn is_desktop_enabled() -> bool {
+    hub().desktop_enabled.load(Ordering::Relaxed)
+}
+
+/// Helper to determine if desktop notifications are suppressed via env or config
+pub fn is_desktop_suppressed() -> bool {
+    !NotificationHub::detect_desktop_enabled_default() || !hub().desktop_enabled.load(Ordering::Relaxed)
+}
+
+/// CLI action for `tgs notify`
+#[derive(clap::Subcommand, Debug, Clone)]
+pub enum NotifyAction {
+    /// Show notification configuration, delivery statistics, and history
+    Status,
+    /// Disable and mute desktop screen popups (persists to ~/.config/tagisan/config.json)
+    Off,
+    /// Re-enable desktop screen popups
+    On,
+    /// Mute desktop screen popups (alias for off)
+    Mute,
+    /// Send a non-intrusive 2.5-second test alert
+    Test,
+    /// Clear in-memory notification history
+    Clear,
+}
+
+/// Main execution handler for `tgs notify` CLI command
+pub fn handle_notify_command(action: NotifyAction) -> crate::error::Result<()> {
+    match action {
+        NotifyAction::Status => {
+            let active = is_desktop_enabled() && !is_desktop_suppressed();
+            println!("{}", "═════════════════════════════════════════════════════════════".cyan());
+            println!("{}", "  🔔 TAGISAN NOTIFICATION SUBSYSTEM STATUS".bold().yellow());
+            println!("{}", "═════════════════════════════════════════════════════════════".cyan());
+            println!(
+                "  Desktop Screen Popups : {}",
+                if active {
+                    "ENABLED (Auto-dismiss 2.5s)".green().bold()
+                } else {
+                    "MUTED / DISABLED (Screen clean)".red().bold()
+                }
+            );
+            println!(
+                "  ANSI Terminal Banners : {}",
+                if hub().banner_enabled.load(Ordering::Relaxed) {
+                    "ENABLED".green()
+                } else {
+                    "DISABLED".dimmed()
+                }
+            );
+            println!("  Desktop Delivery Count: {}", hub().desktop_delivery_count());
+            println!("  Terminal Banner Count : {}", hub().terminal_banner_count());
+            println!("  History Events Stored : {}", hub().history_len());
+            println!();
+            println!("  Config File           : ~/.config/tagisan/config.json");
+            println!(
+                "  TAGISAN_NO_DESKTOP_NOTIFY: {:?}",
+                std::env::var("TAGISAN_NO_DESKTOP_NOTIFY").ok()
+            );
+        }
+        NotifyAction::Off | NotifyAction::Mute => {
+            set_desktop_enabled(false);
+            if let Ok(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")) {
+                let dir = std::path::Path::new(&home).join(".config").join("tagisan");
+                let _ = std::fs::create_dir_all(&dir);
+                let path = dir.join("config.json");
+                let mut map = serde_json::Map::new();
+                if path.exists() {
+                    if let Ok(content) = std::fs::read_to_string(&path) {
+                        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+                            if let Some(obj) = val.as_object() {
+                                map = obj.clone();
+                            }
+                        }
+                    }
+                }
+                map.insert("desktop_notifications".to_string(), serde_json::Value::Bool(false));
+                let _ = std::fs::write(&path, serde_json::to_string_pretty(&serde_json::Value::Object(map)).unwrap_or_default());
+            }
+            println!("{} Desktop notifications muted. Tagisan will not display popups on your screen.", "✔".green().bold());
+        }
+        NotifyAction::On => {
+            set_desktop_enabled(true);
+            if let Ok(home) = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")) {
+                let dir = std::path::Path::new(&home).join(".config").join("tagisan");
+                let _ = std::fs::create_dir_all(&dir);
+                let path = dir.join("config.json");
+                let mut map = serde_json::Map::new();
+                if path.exists() {
+                    if let Ok(content) = std::fs::read_to_string(&path) {
+                        if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+                            if let Some(obj) = val.as_object() {
+                                map = obj.clone();
+                            }
+                        }
+                    }
+                }
+                map.insert("desktop_notifications".to_string(), serde_json::Value::Bool(true));
+                let _ = std::fs::write(&path, serde_json::to_string_pretty(&serde_json::Value::Object(map)).unwrap_or_default());
+            }
+            println!("{} Desktop notifications enabled (with 2.5-second auto-expiration).", "✔".green().bold());
+        }
+        NotifyAction::Test => {
+            if is_desktop_suppressed() {
+                println!("{} Desktop notifications are currently muted. Run 'tgs notify on' to enable first.", "ℹ".yellow());
+            } else {
+                println!("Emitting test notification...");
+                crate::notify::notify_system_alert("Test Notification", "This is a non-intrusive 2.5-second test alert from Tagisan.");
+            }
+        }
+        NotifyAction::Clear => {
+            hub().clear_history();
+            println!("{} Notification history cleared.", "✔".green().bold());
+        }
+    }
+    Ok(())
 }

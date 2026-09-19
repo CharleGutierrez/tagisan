@@ -2,9 +2,11 @@ use crate::agent::{AutonomousAgent, WorktreeSandbox};
 use crate::engine::EngineContext;
 use crate::error::Result;
 use crate::swarm::session::{SessionRecord, SessionStore};
+use crate::tui::Spinner;
 use crate::types::{Message, Role};
 use colored::Colorize;
 use std::io::{self, Write};
+use std::time::Instant;
 
 /// Slash commands supported inside the Interactive Agent REPL
 #[derive(Debug, Clone, PartialEq)]
@@ -24,6 +26,8 @@ pub enum ReplCommand {
     History,
     Bun(String),
     Vella(String),
+    Plan(String),
+    Goal(String),
     Exit,
     UserPrompt(String),
 }
@@ -100,12 +104,14 @@ impl InteractiveRepl {
             "/clear" | "/c" => ReplCommand::Clear,
             "/budget" | "/b" => ReplCommand::Budget,
             "/history" | "/hist" => ReplCommand::History,
+            "/plan" | "/p" => ReplCommand::Plan(arg),
+            "/goal" | "/g" => ReplCommand::Goal(arg),
             "/exit" | "/quit" | "/q" => ReplCommand::Exit,
             _ => ReplCommand::UserPrompt(trimmed.to_string()),
         }
     }
 
-    /// Execute a single turn on the agent session
+    /// Execute a single turn on the agent session with live animation and appealing formatting
     pub async fn run_turn(&mut self, prompt: &str) -> Result<String> {
         if prompt.trim().is_empty() {
             return Ok(String::new());
@@ -122,13 +128,31 @@ impl InteractiveRepl {
             chat_session.add_message(msg.clone());
         }
 
+        let start_time = Instant::now();
+
+        // 🌟 Start animated spinner with vibrant cycling colors and live timer
+        let spinner_msg = format!("🧠 Thinking & synthesizing with {}...", self.agent.model.bold().cyan());
+        let spinner = Spinner::start(spinner_msg);
+
         // Execute agent turn
-        let result = self.agent.execute_session(&mut chat_session, &self.context).await?;
+        let exec_result = self.agent.execute_session(&mut chat_session, &self.context).await;
+
+        match &exec_result {
+            Ok(_) => spinner.stop(),
+            Err(e) => {
+                spinner.failure(format!("Generation failed: {e}"));
+            }
+        }
+        let result = exec_result?;
+
+        let elapsed = start_time.elapsed().as_secs_f64();
+        let prompt_tokens = result.total_usage.prompt_tokens;
+        let comp_tokens = result.total_usage.completion_tokens;
 
         // Update session record with results
         self.session_record.messages = chat_session.history;
-        self.session_record.total_usage.prompt_tokens += result.total_usage.prompt_tokens;
-        self.session_record.total_usage.completion_tokens += result.total_usage.completion_tokens;
+        self.session_record.total_usage.prompt_tokens += prompt_tokens;
+        self.session_record.total_usage.completion_tokens += comp_tokens;
         if let Some(rt) = result.total_usage.reasoning_tokens {
             self.session_record.total_usage.reasoning_tokens =
                 Some(self.session_record.total_usage.reasoning_tokens.unwrap_or(0) + rt);
@@ -138,7 +162,18 @@ impl InteractiveRepl {
         // Auto-save checkpoint
         let _ = self.session_store.save(&self.session_record);
 
-        Ok(result.final_answer)
+        // Format result with appealing colors, card frame, and emojis
+        let formatted = format_appealing_repl_response(
+            &result.final_answer,
+            &self.agent.model,
+            elapsed,
+            prompt_tokens,
+            comp_tokens,
+            self.session_record.total_cost_usd,
+            &self.session_record.id,
+        );
+
+        Ok(formatted)
     }
 
     /// Process a parsed command
@@ -484,6 +519,23 @@ impl InteractiveRepl {
                 }
                 Ok(Some(out))
             }
+            ReplCommand::Plan(goal) => {
+                let prompt = if goal.is_empty() {
+                    "Please inspect current workspace and propose a rigorous step-by-step implementation plan with milestones and verification tests.".to_string()
+                } else {
+                    format!("Create a comprehensive, step-by-step implementation plan for the following objective:\n{}\nDetail architectural design, files to modify, edge cases, and test strategy.", goal)
+                };
+                let response = self.run_turn(&prompt).await?;
+                Ok(Some(response))
+            }
+            ReplCommand::Goal(objective) => {
+                if objective.is_empty() {
+                    return Ok(Some("💡 Usage: /goal <objective> (e.g. /goal implement auth middleware)".yellow().to_string()));
+                }
+                let prompt = format!("Autonomously execute and verify the following goal step-by-step until completely satisfied:\n{}", objective);
+                let response = self.run_turn(&prompt).await?;
+                Ok(Some(response))
+            }
             ReplCommand::Exit => {
                 self.running = false;
                 Ok(Some("Exiting interactive session. Goodbye!".to_string()))
@@ -498,26 +550,45 @@ impl InteractiveRepl {
     /// Launch the live interactive terminal loop
     pub async fn start(&mut self) -> Result<()> {
         self.running = true;
-        println!("{}", "═".repeat(70).cyan());
+        let cwd_display = std::env::current_dir()
+            .unwrap_or_default()
+            .display()
+            .to_string();
+        let short_cwd = if cwd_display.len() > 50 {
+            format!("...{}", &cwd_display[cwd_display.len() - 47..])
+        } else {
+            cwd_display
+        };
+
+        println!("{}", "╭──────────────────────────────────────────────────────────────────────────╮".cyan().bold());
+        println!("{}", "│  ▲  TAGISAN INTERACTIVE CLI — Antigravity (AGY) Dual-Core UX            │".yellow().bold());
+        println!("{}", "├──────────────────────────────────────────────────────────────────────────┤".cyan());
         println!(
-            "{}",
-            "🇵🇭 Tagisan Interactive Agent REPL — Milestone 8 Swarm & Session Core"
-                .bold()
-                .yellow()
+            "│  🤖 Model:     {:<54} │",
+            self.agent.model.green().bold()
         );
         println!(
-            "Model: {} | Session: {} | Type {} for command manual",
-            self.agent.model.bold().green(),
-            self.session_record.id.bold().cyan(),
-            "/help".bold().magenta()
+            "│  ⚡ Session:   {:<54} │",
+            self.session_record.id.cyan().bold()
         );
-        println!("{}", "═".repeat(70).cyan());
+        println!(
+            "│  📁 Workspace: {:<54} │",
+            short_cwd.dimmed()
+        );
+        println!(
+            "│  💡 Shortcuts: {} help  •  {} plan  •  {} goal  •  {} exit │",
+            "/help".magenta().bold(),
+            "/plan".cyan().bold(),
+            "/goal".yellow().bold(),
+            "/exit".dimmed()
+        );
+        println!("{}", "╰──────────────────────────────────────────────────────────────────────────╯".cyan().bold());
 
         let stdin = io::stdin();
         let mut stdout = io::stdout();
 
         while self.running {
-            print!("\n{} ", "tgs>".bold().green());
+            print!("\n{} {} ", "▲".bold().magenta(), "tgs ❯".bold().cyan());
             let _ = stdout.flush();
 
             let mut line = String::new();
@@ -533,11 +604,11 @@ impl InteractiveRepl {
             let cmd = Self::parse_command(input);
             match self.execute_command(cmd).await {
                 Ok(Some(output)) => {
-                    println!("\n{output}");
+                    println!("{output}");
                 }
                 Ok(None) => {}
                 Err(err) => {
-                    eprintln!("\n{} {err}", "Error:".bold().red());
+                    eprintln!("\n{} {err}", "❌ Error:".bold().red());
                 }
             }
         }
@@ -547,6 +618,172 @@ impl InteractiveRepl {
             let _ = sb.cleanup();
         }
 
+        println!("\n{}", "👋 Session concluded. Thank you for building with Tagisan!".green().bold());
         Ok(())
     }
+}
+
+/// Format the agent's turn result with appealing borders, emojis, and vibrant syntax cues
+pub fn format_appealing_repl_response(
+    content: &str,
+    model: &str,
+    elapsed_secs: f64,
+    prompt_tokens: u32,
+    completion_tokens: u32,
+    cost_usd: f64,
+    session_id: &str,
+) -> String {
+    let mut out = String::new();
+
+    // Appealing Header with AGY Insignia
+    let model_tag = format!("[{model}]").bold().yellow();
+    out.push_str(&format!(
+        "\n{}\n",
+        format!("╭── ▲ ✦ Tagisan AI  {} ──────────────────────────────────────────", model_tag).bold().cyan()
+    ));
+
+    let mut in_code_block = false;
+
+    for line in content.lines() {
+        let trimmed = line.trim();
+
+        // Code block entry / exit
+        if trimmed.starts_with("```") {
+            if !in_code_block {
+                in_code_block = true;
+                let lang = trimmed.trim_start_matches("```").trim();
+                let lang_display = if lang.is_empty() { "code" } else { lang };
+                out.push_str(&format!(
+                    "│  {}\n",
+                    format!("📦 [{}] ──────────────────────────────────", lang_display).bold().yellow()
+                ));
+            } else {
+                in_code_block = false;
+                out.push_str(&format!(
+                    "│  {}\n",
+                    "────────────────────────────────────────────────".dimmed()
+                ));
+            }
+            continue;
+        }
+
+        if in_code_block {
+            // Code block content: indented with soft cyan
+            out.push_str(&format!("│    {}\n", line.cyan()));
+            continue;
+        }
+
+        // Markdown Headers with distinct vibrant emojis
+        if let Some(h1) = trimmed.strip_prefix("# ") {
+            out.push_str(&format!("│\n│  {} {}\n│\n", "📌".bold(), h1.bold().bright_yellow()));
+            continue;
+        }
+        if let Some(h2) = trimmed.strip_prefix("## ") {
+            out.push_str(&format!("│\n│  {} {}\n│\n", "⚡".bold(), h2.bold().bright_cyan()));
+            continue;
+        }
+        if let Some(h3) = trimmed.strip_prefix("### ") {
+            out.push_str(&format!("│  {} {}\n", "✨".bold(), h3.bold().bright_magenta()));
+            continue;
+        }
+
+        // Bullet lists
+        if trimmed.starts_with("- ") || trimmed.starts_with("* ") {
+            let bullet_text = &trimmed[2..];
+            let colored_bullet = format_inline_markdown(bullet_text);
+            out.push_str(&format!("│    {} {}\n", "▸".bold().bright_green(), colored_bullet));
+            continue;
+        }
+
+        // Numbered lists
+        if let Some(dot_idx) = trimmed.find(". ") {
+            let prefix = &trimmed[..dot_idx];
+            if prefix.chars().all(|c| c.is_ascii_digit()) && !prefix.is_empty() {
+                let rest = &trimmed[dot_idx + 2..];
+                let colored_rest = format_inline_markdown(rest);
+                out.push_str(&format!("│    {} {}\n", format!("{}.", prefix).bold().bright_cyan(), colored_rest));
+                continue;
+            }
+        }
+
+        // Blank lines
+        if trimmed.is_empty() {
+            out.push_str("│\n");
+            continue;
+        }
+
+        // Standard prose with inline formatting & emoji callouts
+        let colored_line = format_inline_markdown(line);
+        out.push_str(&format!("│  {}\n", colored_line));
+    }
+
+    // Appealing Footer with real-time stats, emojis, and cost
+    let elapsed_str = if elapsed_secs >= 60.0 {
+        format!("{:.1}m", elapsed_secs / 60.0)
+    } else {
+        format!("{:.2}s", elapsed_secs)
+    };
+    let total_tokens = prompt_tokens + completion_tokens;
+    let footer_stats = format!(
+        "⏱️ {} │ 🪙 {} tokens (${:.4}) │ 💬 {}",
+        elapsed_str.bold().bright_white(),
+        total_tokens.to_string().bold().bright_green(),
+        cost_usd,
+        session_id.dimmed()
+    );
+
+    out.push_str(&format!(
+        "│\n{}\n",
+        format!("╰── ▲ {} ─────────────────────────", footer_stats).bold().cyan()
+    ));
+
+    out
+}
+
+/// Helper to colorize inline markdown elements and add emoji callouts
+fn format_inline_markdown(text: &str) -> String {
+    let mut res = text.to_string();
+
+    // Callout emoji enhancers
+    if res.starts_with("Note:") || res.starts_with("NOTE:") {
+        res = res.replacen("Note:", &format!("{} {}", "📝", "Note:".bold().bright_blue()), 1);
+    } else if res.starts_with("Tip:") || res.starts_with("TIP:") {
+        res = res.replacen("Tip:", &format!("{} {}", "💡", "Tip:".bold().bright_green()), 1);
+    } else if res.starts_with("Important:") || res.starts_with("IMPORTANT:") {
+        res = res.replacen("Important:", &format!("{} {}", "🔥", "Important:".bold().bright_red()), 1);
+    } else if res.starts_with("Warning:") || res.starts_with("WARNING:") {
+        res = res.replacen("Warning:", &format!("{} {}", "⚠️ ", "Warning:".bold().bright_yellow()), 1);
+    } else if res.starts_with("Result:") || res.starts_with("RESULT:") {
+        res = res.replacen("Result:", &format!("{} {}", "🎯", "Result:".bold().bright_cyan()), 1);
+    } else if res.starts_with("Summary:") || res.starts_with("SUMMARY:") {
+        res = res.replacen("Summary:", &format!("{} {}", "📊", "Summary:".bold().bright_cyan()), 1);
+    } else if res.starts_with("Solution:") || res.starts_with("SOLUTIONS:") {
+        res = res.replacen("Solution:", &format!("{} {}", "🛠️ ", "Solution:".bold().bright_green()), 1);
+    }
+
+    // Bold formatting: **text** -> text.bold().bright_white()
+    while let Some(start) = res.find("**") {
+        if let Some(end) = res[start + 2..].find("**") {
+            let actual_end = start + 2 + end;
+            let inner = &res[start + 2..actual_end];
+            let replacement = format!("{}", inner.bold().bright_white());
+            res.replace_range(start..actual_end + 2, &replacement);
+        } else {
+            break;
+        }
+    }
+
+    // Inline code: `code` -> code.bold().yellow()
+    while let Some(start) = res.find('`') {
+        if let Some(end) = res[start + 1..].find('`') {
+            let actual_end = start + 1 + end;
+            let inner = &res[start + 1..actual_end];
+            let replacement = format!("{}", inner.bold().yellow());
+            res.replace_range(start..actual_end + 1, &replacement);
+        } else {
+            break;
+        }
+    }
+
+    res
 }

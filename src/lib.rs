@@ -31,6 +31,7 @@ pub mod copilot;
 pub mod frontier;
 pub mod ux;
 pub mod agentic;
+pub mod vibe_review;
 
 pub use harness::*;
 pub use otp::*;
@@ -40,6 +41,7 @@ pub use copilot::*;
 pub use frontier::*;
 pub use ux::*;
 pub use agentic::*;
+pub use vibe_review::*;
 pub use plugins::{
     handle_plugin_command, CuratedCatalogItem, InstallScope, LoadedPlugin, PluginAction,
     PluginCapabilities, PluginDebateJudge, PluginEngine, PluginExecutionContext,
@@ -199,6 +201,8 @@ pub use notify::{
     notify_failover, notify_model_auto_healed, notify_offline_lock,
     notify_semantic_guard, notify_skill_transition, set_banner_enabled,
     set_desktop_enabled, subscribe as subscribe_notifications, terminal_banner_count,
+    handle_notify_command, is_desktop_enabled, is_desktop_suppressed, NotifyAction,
+    notify_system_alert,
     AutoHealDetails, ContextDownscaleDetails, DomainQuotaDetails,
     FailoverNotificationDetails, NotificationCategory, NotificationEvent,
     NotificationHub, NotificationPayload, NotificationSeverity, OfflineLockDetails,
