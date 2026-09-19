@@ -228,5 +228,6 @@ pub use notify::{
 
 pub use swarm::bridge::*;
 pub use engine::oracle::*;
+pub use engine::memory_tuner::*;
 
 

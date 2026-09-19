@@ -5,10 +5,12 @@ pub mod gguf;
 pub mod graph;
 pub mod grounding;
 pub mod layer_streaming;
+pub mod memory_tuner;
 pub mod oracle;
 pub mod server;
 
 pub use layer_streaming::*;
+pub use memory_tuner::*;
 pub use oracle::*;
 
 pub use grounding::{

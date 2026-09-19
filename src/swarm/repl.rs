@@ -38,6 +38,7 @@ pub enum ReplCommand {
     Delegate(String),
     Goal(String),
     Ollama(String),
+    Tuner(String),
     Bridge(String),
     Oracle(String),
     Exit,
@@ -130,6 +131,7 @@ impl InteractiveRepl {
             "/delegate" => ReplCommand::Delegate(arg),
             "/goal" | "/g" => ReplCommand::Goal(arg),
             "/ollama" | "/accel" => ReplCommand::Ollama(arg),
+            "/tuner" | "/memtune" => ReplCommand::Tuner(arg),
             "/bridge" => ReplCommand::Bridge(arg),
             "/oracle" | "/ora" => ReplCommand::Oracle(arg),
             "/exit" | "/quit" | "/q" => ReplCommand::Exit,
@@ -301,6 +303,7 @@ impl InteractiveRepl {
                     {}  GitHub Delegate-Skills (list, run, ci)\n\
                     {}       Autonomously execute toward objective\n\
                     {}  Hyper-Ollama Acceleration Suite (warm, prewarm)\n\
+                    {}  Ollama Memory Tuner & Auto-Unload Watchdog (status, unload, start)\n\
                     {}  Federated Agent Bridge (status, agents, broadcast, route)\n\
                     {}       Exit interactive session\n\n\
                     {}\n\
@@ -338,6 +341,7 @@ impl InteractiveRepl {
                     "/delegate [cmd]".bold().green(),
                     "/goal <goal>".bold().green(),
                     "/ollama [cmd]".bold().green(),
+                    "/tuner [cmd]".bold().green(),
                     "/bridge <cmd>".bold().green(),
                     "/exit".bold().green(),
                     "Google Antigravity (AGY) Keyboard Controls:".bold().yellow(),
@@ -607,6 +611,98 @@ impl InteractiveRepl {
                         if is_8gb { "8GB Workstation (Clamped)".yellow() } else { "High-RAM Workstation (Unrestricted)".green() }
                     ));
                     Ok(Some(out))
+                }
+            }
+            ReplCommand::Tuner(arg) => {
+                let parts: Vec<&str> = arg.split_whitespace().collect();
+                let subcmd = parts.first().copied().unwrap_or("status");
+                let tuner = crate::engine::OllamaMemoryTuner::global();
+
+                match subcmd {
+                    "status" => {
+                        let status = tuner.status().await?;
+                        let mut out = String::new();
+                        out.push_str(&format!(
+                            "┌─────────────────────────────────────────────────────────────┐\n\
+                             │  🧠  TAGISAN OLLAMA MEMORY TUNER & WATCHDOG                 │\n\
+                             ├─────────────────────────────────────────────────────────────┤\n\
+                             │  Ollama Upstream      : {:<42}│\n\
+                             │  Proxy Endpoint       : {:<42}│\n\
+                             │  Ollama Reachable     : {:<42}│\n\
+                             │  Daemon Running       : {:<42}│\n\
+                             │  Inactivity Timeout   : {:<42}│\n\
+                             │  Idle Duration        : {:<42}│\n\
+                             │  Total Auto-Unloads   : {:<42}│\n\
+                             │  Total Proxied Reqs   : {:<42}│\n\
+                             │  Resident Models      : {:<42}│\n\
+                             ├─────────────────────────────────────────────────────────────┤\n\
+                             │  Commands:                                                  │\n\
+                             │    /tuner status      - View memory tuner & loaded models   │\n\
+                             │    /tuner unload      - Purge all models from VRAM/RAM      │\n\
+                             │    /tuner start       - Start background daemon & proxy     │\n\
+                             └─────────────────────────────────────────────────────────────┘\n",
+                            status.ollama_url,
+                            status.proxy_addr,
+                            if status.ollama_reachable { "YES (Online)".green().bold() } else { "NO (Unreachable)".red().bold() },
+                            if status.is_running { "ACTIVE (Running)".green().bold() } else { "STANDBY (CLI / In-Process)".yellow() },
+                            format!("{}s (5 minutes)", status.inactivity_threshold_secs),
+                            format!("{}s", status.idle_duration_secs),
+                            format!("{}", status.total_unloads).bold(),
+                            format!("{}", status.total_proxied_requests).bold(),
+                            format!("{}", status.active_models_in_vram.len()).bold(),
+                        ));
+                        if !status.active_models_in_vram.is_empty() {
+                            out.push_str(&format!("\n{}\n", "Currently Resident Models in VRAM/RAM:".bold().yellow()));
+                            for m in &status.active_models_in_vram {
+                                let total_mb = (m.size_bytes as f64) / (1024.0 * 1024.0);
+                                let vram_mb = (m.size_vram_bytes as f64) / (1024.0 * 1024.0);
+                                let exp = m.expires_at.as_deref().unwrap_or("never");
+                                out.push_str(&format!(
+                                    "  • {} - Total: {:.1} MB | VRAM: {:.1} MB | Expires: {}\n",
+                                    m.name.cyan().bold(),
+                                    total_mb,
+                                    vram_mb,
+                                    exp
+                                ));
+                            }
+                        } else {
+                            out.push_str(&format!("\n{}\n", "✨ No models currently resident in VRAM/RAM (100% memory freed).".green()));
+                        }
+                        Ok(Some(out))
+                    }
+                    "unload" => {
+                        let res = tuner.unload_all_models().await;
+                        match res {
+                            Ok(models) if models.is_empty() => {
+                                Ok(Some("ℹ️  No active Ollama models were resident in VRAM/RAM.".to_string()))
+                            }
+                            Ok(models) => {
+                                Ok(Some(format!(
+                                    "🧹 {} Successfully unloaded {} model(s) from VRAM/RAM: {}",
+                                    "[Memory Tuner]".cyan().bold(),
+                                    models.len(),
+                                    models.join(", ").bold().green()
+                                )))
+                            }
+                            Err(e) => Ok(Some(format!("⚠️ Failed to unload models: {e}"))),
+                        }
+                    }
+                    "start" => {
+                        match tuner.clone().start().await {
+                            Ok(addr) => {
+                                Ok(Some(format!(
+                                    "🚀 {} Background daemon & reverse proxy active on http://{}!\n   Upstream: {} | Inactivity Timeout: 300s (5m)",
+                                    "[Memory Tuner]".cyan().bold(),
+                                    addr,
+                                    tuner.config.ollama_url
+                                )))
+                            }
+                            Err(e) => Ok(Some(format!("⚠️ Failed to start tuner daemon: {e}"))),
+                        }
+                    }
+                    _ => {
+                        Ok(Some("Usage: /tuner [status|unload|start]".to_string()))
+                    }
                 }
             }
             ReplCommand::Bridge(arg) => {
@@ -2054,6 +2150,7 @@ pub struct RawModeGuard {
 impl RawModeGuard {
     pub fn enter() -> io::Result<Self> {
         enable_raw_mode()?;
+        let _ = crossterm::execute!(io::stdout(), crossterm::event::EnableBracketedPaste);
         Ok(Self { active: true })
     }
 }
@@ -2061,6 +2158,7 @@ impl RawModeGuard {
 impl Drop for RawModeGuard {
     fn drop(&mut self) {
         if self.active {
+            let _ = crossterm::execute!(io::stdout(), crossterm::event::DisableBracketedPaste);
             let _ = disable_raw_mode();
             self.active = false;
         }
@@ -2403,17 +2501,189 @@ impl ReplEditor {
         results
     }
 
-    fn redraw_line(prompt: &str, buffer: &[char], cursor: usize) -> io::Result<()> {
-        let mut stdout = io::stdout();
-        let text: String = buffer.iter().collect();
-        write!(stdout, "\r\x1b[2K{}{}", prompt, text)?;
+    pub fn visible_width(s: &str) -> usize {
+        let mut width = 0;
+        let mut in_escape = false;
+        let mut in_csi = false;
 
-        let backtracks = buffer.len().saturating_sub(cursor);
-        if backtracks > 0 {
-            write!(stdout, "\x1b[{}D", backtracks)?;
+        for c in s.chars() {
+            if c == '\x1b' {
+                in_escape = true;
+                in_csi = false;
+            } else if in_escape {
+                if c == '[' {
+                    in_csi = true;
+                } else if in_csi {
+                    if (c >= '@' && c <= '~') || c.is_ascii_alphabetic() {
+                        in_escape = false;
+                        in_csi = false;
+                    }
+                } else {
+                    in_escape = false;
+                }
+            } else {
+                width += unicode_width::UnicodeWidthChar::width(c).unwrap_or(0);
+            }
         }
+        width
+    }
+
+    pub fn has_unclosed_delimiters(s: &str) -> bool {
+        let count_triple_double = s.matches("\"\"\"").count();
+        if count_triple_double % 2 != 0 {
+            return true;
+        }
+        let count_triple_single = s.matches("'''").count();
+        if count_triple_single % 2 != 0 {
+            return true;
+        }
+
+        let count_code_fences = s.matches("```").count();
+        if count_code_fences % 2 != 0 {
+            return true;
+        }
+
+        let mut round = 0i32;
+        let mut square = 0i32;
+        let mut curly = 0i32;
+        let mut in_str = false;
+        let mut escape = false;
+
+        for c in s.chars() {
+            if escape {
+                escape = false;
+                continue;
+            }
+            if c == '\\' {
+                escape = true;
+                continue;
+            }
+            if c == '"' {
+                in_str = !in_str;
+                continue;
+            }
+            if in_str {
+                continue;
+            }
+            match c {
+                '(' => round += 1,
+                ')' => round = (round - 1).max(0),
+                '[' => square += 1,
+                ']' => square = (square - 1).max(0),
+                '{' => curly += 1,
+                '}' => curly = (curly - 1).max(0),
+                _ => {}
+            }
+        }
+
+        round > 0 || square > 0 || curly > 0
+    }
+
+    fn compute_layout(
+        prompt: &str,
+        continuation_prompt: &str,
+        buffer: &[char],
+        cursor: usize,
+        term_width: usize,
+    ) -> (String, usize, usize, usize, usize) {
+        let p0_width = Self::visible_width(prompt);
+        let pc_width = Self::visible_width(continuation_prompt);
+
+        let mut output_text = String::new();
+        output_text.push_str(prompt);
+
+        let mut cur_row = 0;
+        let mut cur_col = p0_width;
+
+        let mut cursor_row = 0;
+        let mut cursor_col = p0_width;
+
+        for (i, &c) in buffer.iter().enumerate() {
+            if i == cursor {
+                cursor_row = cur_row;
+                cursor_col = cur_col;
+            }
+
+            if c == '\n' {
+                output_text.push_str("\r\n");
+                output_text.push_str(continuation_prompt);
+                cur_row += 1;
+                cur_col = pc_width;
+            } else {
+                let cw = unicode_width::UnicodeWidthChar::width(c).unwrap_or(1);
+                if cur_col + cw > term_width {
+                    cur_row += 1;
+                    cur_col = cw;
+                } else {
+                    cur_col += cw;
+                }
+                output_text.push(c);
+            }
+        }
+
+        if cursor >= buffer.len() {
+            cursor_row = cur_row;
+            cursor_col = cur_col;
+        }
+
+        (output_text, cursor_row, cursor_col, cur_row, cur_col)
+    }
+
+    fn redraw_multiline(
+        prompt: &str,
+        continuation_prompt: &str,
+        buffer: &[char],
+        cursor: usize,
+        last_cursor_row: &mut usize,
+    ) -> io::Result<()> {
+        let term_width = crossterm::terminal::size().map(|(w, _)| w as usize).unwrap_or(80).max(20);
+        let (output_text, cursor_row, cursor_col, end_row, _end_col) =
+            Self::compute_layout(prompt, continuation_prompt, buffer, cursor, term_width);
+
+        let mut stdout = io::stdout();
+
+        if *last_cursor_row > 0 {
+            write!(stdout, "\x1b[{}A", *last_cursor_row)?;
+        }
+
+        write!(stdout, "\r\x1b[J")?;
+        write!(stdout, "{}", output_text)?;
+
+        if end_row > cursor_row {
+            write!(stdout, "\x1b[{}A", end_row - cursor_row)?;
+        }
+        write!(stdout, "\r")?;
+        if cursor_col > 0 {
+            write!(stdout, "\x1b[{}C", cursor_col.min(term_width))?;
+        }
+
+        stdout.flush()?;
+        *last_cursor_row = cursor_row;
+        Ok(())
+    }
+
+    fn finalize_for_submit(
+        prompt: &str,
+        continuation_prompt: &str,
+        buffer: &[char],
+        cursor: usize,
+    ) -> io::Result<()> {
+        let term_width = crossterm::terminal::size().map(|(w, _)| w as usize).unwrap_or(80).max(20);
+        let (_, cursor_row, _, end_row, _) =
+            Self::compute_layout(prompt, continuation_prompt, buffer, cursor, term_width);
+        let mut stdout = io::stdout();
+
+        if end_row > cursor_row {
+            write!(stdout, "\x1b[{}B", end_row - cursor_row)?;
+        }
+        write!(stdout, "\r\n")?;
         stdout.flush()?;
         Ok(())
+    }
+
+    fn redraw_line(prompt: &str, buffer: &[char], cursor: usize) -> io::Result<()> {
+        let mut row = 0;
+        Self::redraw_multiline(prompt, "  │ ", buffer, cursor, &mut row)
     }
 
     fn run_reverse_search(
@@ -2528,7 +2798,8 @@ impl ReplEditor {
 
         let mut buffer: Vec<char> = Vec::new();
         let mut cursor: usize = 0;
-        let mut continuation_lines: Vec<String> = Vec::new();
+        let mut last_cursor_row: usize = 0;
+        let continuation_prompt = "  │ ";
         self.history_index = self.history.len();
         self.draft.clear();
 
@@ -2550,22 +2821,10 @@ impl ReplEditor {
             }
         }
 
-        let continuation_prompt = "  │ ";
-        let active_prompt = |is_cont: bool| -> &str {
-            if is_cont {
-                continuation_prompt
-            } else {
-                prompt
-            }
-        };
-
-        Self::redraw_line(prompt, &buffer, cursor)
+        Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
             .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
 
         loop {
-            let is_continuation = !continuation_lines.is_empty();
-            let cur_prompt = active_prompt(is_continuation);
-
             let event = match event::read() {
                 Ok(ev) => ev,
                 Err(e) => return Err(TagisanError::Execution(format!("Failed to read terminal event: {e}"))),
@@ -2573,19 +2832,17 @@ impl ReplEditor {
 
             match event {
                 Event::Paste(pasted_text) => {
-                    for ch in pasted_text.chars() {
-                        if ch == '\r' || ch == '\n' {
-                            let cur_line: String = buffer.iter().collect();
-                            continuation_lines.push(cur_line);
-                            buffer.clear();
-                            cursor = 0;
-                            let _ = write!(io::stdout(), "\r\n");
-                        } else {
-                            buffer.insert(cursor, ch);
-                            cursor += 1;
-                        }
+                    let normalized = pasted_text.replace("\r\n", "\n").replace('\r', "\n");
+                    for ch in normalized.chars() {
+                        buffer.insert(cursor, ch);
+                        cursor += 1;
                     }
-                    let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                    Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                        .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
+                }
+                Event::Resize(_, _) => {
+                    Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                        .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                 }
                 Event::Key(key_event) => {
                     if key_event.kind == KeyEventKind::Release {
@@ -2595,52 +2852,70 @@ impl ReplEditor {
                     match key_event.code {
                         // ── Screen & Interrupt Handling ──────────────────
                         KeyCode::Char('c') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
-                            if !buffer.is_empty() || !continuation_lines.is_empty() {
+                            if !buffer.is_empty() {
+                                let _ = Self::finalize_for_submit(prompt, continuation_prompt, &buffer, cursor);
                                 buffer.clear();
                                 cursor = 0;
-                                continuation_lines.clear();
+                                last_cursor_row = 0;
                                 let _ = write!(io::stdout(), "^C\r\n");
-                                let _ = Self::redraw_line(prompt, &buffer, cursor);
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             } else {
                                 let _ = write!(io::stdout(), "^C\r\n  💡 Press Ctrl+D or type /exit to quit\r\n");
-                                let _ = Self::redraw_line(prompt, &buffer, cursor);
+                                last_cursor_row = 0;
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             }
                         }
                         KeyCode::Char('d') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
-                            if buffer.is_empty() && continuation_lines.is_empty() {
+                            if buffer.is_empty() {
                                 let _ = write!(io::stdout(), "\r\n");
                                 return Ok(ReadlineResult::Eof);
                             } else if cursor < buffer.len() {
                                 buffer.remove(cursor);
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
+                            } else if buffer.contains(&'\n') {
+                                Self::finalize_for_submit(prompt, continuation_prompt, &buffer, cursor)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
+                                let final_line: String = buffer.iter().collect();
+                                self.add_history(&final_line);
+                                return Ok(ReadlineResult::Submit(final_line));
                             }
                         }
                         KeyCode::Char('l') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
                             let _ = write!(io::stdout(), "\x1b[2J\x1b[H\x1b[3J");
                             let _ = io::stdout().flush();
                             on_repaint();
-                            for prev in &continuation_lines {
-                                let _ = write!(io::stdout(), "  │ {}\r\n", prev);
-                            }
-                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            last_cursor_row = 0;
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                         }
 
                         // ── Inline Editing & Navigation ──────────────────
                         KeyCode::Char('a') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
-                            cursor = 0;
-                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            let line_start = buffer[..cursor].iter().rposition(|&c| c == '\n').map(|p| p + 1).unwrap_or(0);
+                            cursor = if cursor == line_start { 0 } else { line_start };
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                         }
                         KeyCode::Char('e') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
-                            cursor = buffer.len();
-                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            let line_end = buffer[cursor..].iter().position(|&c| c == '\n').map(|p| cursor + p).unwrap_or(buffer.len());
+                            cursor = if cursor == line_end { buffer.len() } else { line_end };
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                         }
                         KeyCode::Home => {
-                            cursor = 0;
-                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            let line_start = buffer[..cursor].iter().rposition(|&c| c == '\n').map(|p| p + 1).unwrap_or(0);
+                            cursor = if cursor == line_start { 0 } else { line_start };
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                         }
                         KeyCode::End => {
-                            cursor = buffer.len();
-                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            let line_end = buffer[cursor..].iter().position(|&c| c == '\n').map(|p| cursor + p).unwrap_or(buffer.len());
+                            cursor = if cursor == line_end { buffer.len() } else { line_end };
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                         }
                         KeyCode::Left => {
                             if key_event.modifiers.contains(KeyModifiers::CONTROL) || key_event.modifiers.contains(KeyModifiers::ALT) {
@@ -2648,7 +2923,8 @@ impl ReplEditor {
                             } else if cursor > 0 {
                                 cursor -= 1;
                             }
-                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                         }
                         KeyCode::Right => {
                             if key_event.modifiers.contains(KeyModifiers::CONTROL) || key_event.modifiers.contains(KeyModifiers::ALT) {
@@ -2656,31 +2932,40 @@ impl ReplEditor {
                             } else if cursor < buffer.len() {
                                 cursor += 1;
                             }
-                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                         }
                         KeyCode::Char('b') if key_event.modifiers.contains(KeyModifiers::ALT) => {
                             cursor = Self::find_word_backward(&buffer, cursor);
-                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                         }
                         KeyCode::Char('f') if key_event.modifiers.contains(KeyModifiers::ALT) => {
                             cursor = Self::find_word_forward(&buffer, cursor);
-                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                         }
 
                         // ── Kill Ring & Deletion ────────────────────────
                         KeyCode::Char('k') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
                             if cursor < buffer.len() {
-                                self.kill_ring = buffer[cursor..].iter().collect();
-                                buffer.truncate(cursor);
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                                let line_end = buffer[cursor..].iter().position(|&c| c == '\n').map(|p| cursor + p).unwrap_or(buffer.len());
+                                let kill_len = if line_end == cursor { 1 } else { line_end - cursor };
+                                self.kill_ring = buffer[cursor..cursor + kill_len].iter().collect();
+                                buffer.drain(cursor..cursor + kill_len);
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             }
                         }
                         KeyCode::Char('u') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
                             if cursor > 0 {
-                                self.kill_ring = buffer[..cursor].iter().collect();
-                                buffer.drain(..cursor);
-                                cursor = 0;
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                                let line_start = buffer[..cursor].iter().rposition(|&c| c == '\n').map(|p| p + 1).unwrap_or(0);
+                                let kill_start = if line_start == cursor { cursor - 1 } else { line_start };
+                                self.kill_ring = buffer[kill_start..cursor].iter().collect();
+                                buffer.drain(kill_start..cursor);
+                                cursor = kill_start;
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             }
                         }
                         KeyCode::Char('w') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
@@ -2689,7 +2974,8 @@ impl ReplEditor {
                                 self.kill_ring = buffer[kill_start..cursor].iter().collect();
                                 buffer.drain(kill_start..cursor);
                                 cursor = kill_start;
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             }
                         }
                         KeyCode::Char('d') if key_event.modifiers.contains(KeyModifiers::ALT) => {
@@ -2697,7 +2983,8 @@ impl ReplEditor {
                             if kill_end > cursor {
                                 self.kill_ring = buffer[cursor..kill_end].iter().collect();
                                 buffer.drain(cursor..kill_end);
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             }
                         }
                         KeyCode::Char('y') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
@@ -2706,51 +2993,82 @@ impl ReplEditor {
                                     buffer.insert(cursor, ch);
                                     cursor += 1;
                                 }
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             }
                         }
                         KeyCode::Backspace | KeyCode::Char('h') if key_event.code == KeyCode::Backspace || key_event.modifiers.contains(KeyModifiers::CONTROL) => {
                             if cursor > 0 {
                                 buffer.remove(cursor - 1);
                                 cursor -= 1;
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             }
                         }
                         KeyCode::Delete => {
                             if cursor < buffer.len() {
                                 buffer.remove(cursor);
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             }
                         }
 
-                        // ── History Navigation ──────────────────────────
+                        // ── Multiline & History Navigation ──────────────
                         KeyCode::Up => {
-                            if self.history_index == self.history.len() {
-                                self.draft = buffer.clone();
-                            }
-                            if self.history_index > 0 {
-                                self.history_index -= 1;
-                                buffer = self.history[self.history_index].chars().collect();
-                                cursor = buffer.len();
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            let line_start = buffer[..cursor].iter().rposition(|&c| c == '\n').map(|p| p + 1).unwrap_or(0);
+                            if line_start > 0 {
+                                let col_offset = cursor - line_start;
+                                let prev_line_end = line_start - 1;
+                                let prev_line_start = buffer[..prev_line_end].iter().rposition(|&c| c == '\n').map(|p| p + 1).unwrap_or(0);
+                                let prev_line_len = prev_line_end - prev_line_start;
+                                cursor = prev_line_start + col_offset.min(prev_line_len);
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
+                            } else {
+                                if self.history_index == self.history.len() {
+                                    self.draft = buffer.clone();
+                                }
+                                if self.history_index > 0 {
+                                    self.history_index -= 1;
+                                    buffer = self.history[self.history_index].chars().collect();
+                                    cursor = buffer.len();
+                                    Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                        .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
+                                }
                             }
                         }
                         KeyCode::Down => {
-                            if self.history_index + 1 < self.history.len() {
-                                self.history_index += 1;
-                                buffer = self.history[self.history_index].chars().collect();
-                                cursor = buffer.len();
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
-                            } else if self.history_index + 1 == self.history.len() {
-                                self.history_index = self.history.len();
-                                buffer = self.draft.clone();
-                                cursor = buffer.len();
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            let line_start = buffer[..cursor].iter().rposition(|&c| c == '\n').map(|p| p + 1).unwrap_or(0);
+                            let col_offset = cursor - line_start;
+                            let next_line_rel = buffer[cursor..].iter().position(|&c| c == '\n');
+                            if let Some(pos) = next_line_rel {
+                                let next_line_start = cursor + pos + 1;
+                                let next_line_end = buffer[next_line_start..].iter().position(|&c| c == '\n').map(|p| next_line_start + p).unwrap_or(buffer.len());
+                                let next_line_len = next_line_end - next_line_start;
+                                cursor = next_line_start + col_offset.min(next_line_len);
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
+                            } else {
+                                if self.history_index + 1 < self.history.len() {
+                                    self.history_index += 1;
+                                    buffer = self.history[self.history_index].chars().collect();
+                                    cursor = buffer.len();
+                                    Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                        .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
+                                } else if self.history_index + 1 == self.history.len() {
+                                    self.history_index = self.history.len();
+                                    buffer = self.draft.clone();
+                                    cursor = buffer.len();
+                                    Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                        .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
+                                }
                             }
                         }
                         KeyCode::Char('r') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
-                            let _ = Self::run_reverse_search(&self.history, &mut buffer, &mut cursor, cur_prompt);
-                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            let _ = Self::run_reverse_search(&self.history, &mut buffer, &mut cursor, prompt);
+                            last_cursor_row = 0;
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                         }
 
                         // ── Tab Autocompletion ──────────────────────────
@@ -2765,7 +3083,8 @@ impl ReplEditor {
                                 let (replacement, new_cursor) = completions[0].clone();
                                 buffer = replacement.chars().collect();
                                 cursor = new_cursor;
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             } else {
                                 let replacement_strings: Vec<String> = completions.iter().map(|(r, _)| r.clone()).collect();
                                 let common = Self::longest_common_prefix(&replacement_strings);
@@ -2787,36 +3106,45 @@ impl ReplEditor {
                                 for chunk in pills.chunks(3) {
                                     let _ = writeln!(stdout, "{}\r", chunk.join("    "));
                                 }
-                                let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                                last_cursor_row = 0;
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             }
                         }
 
                         // ── Submission & Multi-Line Continuation ────────
+                        KeyCode::Char('j') if key_event.modifiers.contains(KeyModifiers::CONTROL) => {
+                            buffer.insert(cursor, '\n');
+                            cursor += 1;
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
+                        }
                         KeyCode::Enter => {
-                            let is_continuation_trigger = buffer.ends_with(&['\\'])
-                                || key_event.modifiers.contains(KeyModifiers::ALT)
+                            let is_explicit_continuation = key_event.modifiers.contains(KeyModifiers::ALT)
                                 || key_event.modifiers.contains(KeyModifiers::SHIFT);
 
-                            if is_continuation_trigger {
-                                if buffer.ends_with(&['\\']) {
+                            let has_trailing_backslash = buffer.ends_with(&['\\']);
+
+                            let buf_str: String = buffer.iter().collect();
+                            let is_inside_unclosed = Self::has_unclosed_delimiters(&buf_str);
+
+                            let is_rapid_paste = event::poll(std::time::Duration::from_millis(10)).unwrap_or(false);
+
+                            if is_explicit_continuation || has_trailing_backslash || is_inside_unclosed || is_rapid_paste {
+                                if has_trailing_backslash {
                                     buffer.pop();
+                                    if cursor > buffer.len() {
+                                        cursor = buffer.len();
+                                    }
                                 }
-                                let cur_line: String = buffer.iter().collect();
-                                continuation_lines.push(cur_line);
-                                buffer.clear();
-                                cursor = 0;
-                                let _ = write!(io::stdout(), "\r\n");
-                                let _ = Self::redraw_line(continuation_prompt, &buffer, cursor);
+                                buffer.insert(cursor, '\n');
+                                cursor += 1;
+                                Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                             } else {
-                                let _ = write!(io::stdout(), "\r\n");
-                                let final_line = if continuation_lines.is_empty() {
-                                    buffer.iter().collect()
-                                } else {
-                                    let mut full = continuation_lines.join("\n");
-                                    full.push('\n');
-                                    full.push_str(&buffer.iter().collect::<String>());
-                                    full
-                                };
+                                Self::finalize_for_submit(prompt, continuation_prompt, &buffer, cursor)
+                                    .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
+                                let final_line: String = buffer.iter().collect();
                                 self.add_history(&final_line);
                                 return Ok(ReadlineResult::Submit(final_line));
                             }
@@ -2826,7 +3154,8 @@ impl ReplEditor {
                         KeyCode::Char(c) if !key_event.modifiers.contains(KeyModifiers::CONTROL) && !key_event.modifiers.contains(KeyModifiers::ALT) => {
                             buffer.insert(cursor, c);
                             cursor += 1;
-                            let _ = Self::redraw_line(cur_prompt, &buffer, cursor);
+                            Self::redraw_multiline(prompt, continuation_prompt, &buffer, cursor, &mut last_cursor_row)
+                                .map_err(|e| TagisanError::Execution(format!("Terminal draw error: {e}")))?;
                         }
 
                         _ => {}
@@ -3048,5 +3377,71 @@ mod tests {
         // Test parse_command for /provider
         assert_eq!(InteractiveRepl::parse_command("/provider ollama"), ReplCommand::Provider("ollama".to_string()));
         assert_eq!(InteractiveRepl::parse_command("/prov gemini"), ReplCommand::Provider("gemini".to_string()));
+    }
+
+    #[test]
+    fn test_repl_multiline_and_wrapping_layout() {
+        let prompt = "▲ tgs ❯ ";
+        let cont_prompt = "  │ ";
+
+        // 1. Visible width test with ANSI colors
+        let colored_prompt = format!("{} tgs {} ", "▲".magenta(), "❯".cyan());
+        assert_eq!(ReplEditor::visible_width(&colored_prompt), 8);
+        assert_eq!(ReplEditor::visible_width(prompt), 8);
+        assert_eq!(ReplEditor::visible_width(cont_prompt), 4);
+
+        // 2. Delimiter tests
+        assert!(!ReplEditor::has_unclosed_delimiters("Hello world"));
+        assert!(ReplEditor::has_unclosed_delimiters("\"\"\"let x = 1;"));
+        assert!(!ReplEditor::has_unclosed_delimiters("\"\"\"let x = 1;\"\"\""));
+        assert!(ReplEditor::has_unclosed_delimiters("```rust\nfn main() {}"));
+        assert!(!ReplEditor::has_unclosed_delimiters("```rust\nfn main() {}\n```"));
+        assert!(ReplEditor::has_unclosed_delimiters("fn test(a: i32, b: i32"));
+        assert!(!ReplEditor::has_unclosed_delimiters("fn test(a: i32, b: i32)"));
+
+        // 3. Layout calculation for long wrapped line (the prompt from the user's screenshot)
+        let long_prompt = "Make a memory tuner for OLLAMA Loaded LLM in memory, written in Rust that if the LOCAL LLM is Inactive for 5 minutes it automatically unload it";
+        let buffer: Vec<char> = long_prompt.chars().collect();
+        let term_width = 80;
+        let (output, cursor_row, cursor_col, end_row, _end_col) =
+            ReplEditor::compute_layout(prompt, cont_prompt, &buffer, buffer.len(), term_width);
+
+        // Prompt (8) + long_prompt (142) = 150 chars total.
+        // At term_width 80, this occupies 2 rows (row 0: 80 cols, row 1: 70 cols).
+        assert_eq!(end_row, 1);
+        assert_eq!(cursor_row, 1);
+        assert_eq!(cursor_col, 71);
+        assert!(output.starts_with(prompt));
+        assert!(output.contains("automatically unload it"));
+
+        // 4. Layout calculation for multiline text with newlines
+        let multiline = "first line\nsecond line\nthird line";
+        let ml_buffer: Vec<char> = multiline.chars().collect();
+        let (ml_output, ml_cursor_row, ml_cursor_col, ml_end_row, ml_end_col) =
+            ReplEditor::compute_layout(prompt, cont_prompt, &ml_buffer, ml_buffer.len(), 80);
+
+        assert_eq!(ml_end_row, 2);
+        assert_eq!(ml_cursor_row, 2);
+        // "third line" has 10 chars + cont_prompt (4) = 14 cols
+        assert_eq!(ml_cursor_col, 14);
+        assert_eq!(ml_end_col, 14);
+        assert!(ml_output.contains("\r\n  │ second line"));
+        assert!(ml_output.contains("\r\n  │ third line"));
+    }
+
+    #[tokio::test]
+    async fn test_tuner_repl_command() {
+        assert_eq!(InteractiveRepl::parse_command("/tuner"), ReplCommand::Tuner("".to_string()));
+        assert_eq!(InteractiveRepl::parse_command("/tuner status"), ReplCommand::Tuner("status".to_string()));
+        assert_eq!(InteractiveRepl::parse_command("/memtune unload"), ReplCommand::Tuner("unload".to_string()));
+
+        let ctx = EngineContext::new(5.0);
+        let mock_prov = std::sync::Arc::new(crate::providers::ollama::OllamaProvider::default_local());
+        let agent = AutonomousAgent::new(mock_prov, "ollama", ToolRegistry::with_builtins());
+        let mut repl = InteractiveRepl::new(agent, "test-tuner-session", "ollama", ctx);
+
+        let res = repl.execute_command(ReplCommand::Tuner("status".to_string())).await.unwrap().unwrap();
+        assert!(res.contains("TAGISAN OLLAMA MEMORY TUNER"));
+        assert!(res.contains("Inactivity Timeout"));
     }
 }

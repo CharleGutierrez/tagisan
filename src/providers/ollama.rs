@@ -1019,6 +1019,11 @@ impl OllamaProvider {
         self.warmth_sentinel.read().await.clone()
     }
 
+    /// Retrieve the shared Ollama Memory Tuner instance
+    pub fn memory_tuner(&self) -> Arc<crate::engine::OllamaMemoryTuner> {
+        crate::engine::OllamaMemoryTuner::global()
+    }
+
 
     /// Check if local or remote Ollama daemon is reachable and responding
     pub async fn is_alive(&self) -> bool {
@@ -1694,6 +1699,9 @@ impl LlmProvider for OllamaProvider {
         let mut current_req = req;
         let mut fallback_attempted = false;
 
+        // Reset inactivity timer in Ollama Memory Tuner
+        crate::engine::OllamaMemoryTuner::global().touch_activity();
+
         loop {
             let start = Instant::now();
             let url = format!("{}/api/chat", self.base_url.trim_end_matches('/'));
@@ -1947,6 +1955,9 @@ impl LlmProvider for OllamaProvider {
     async fn stream(&self, req: CompletionRequest) -> Result<BoxEventStream> {
         let mut current_req = req;
         let mut fallback_attempted = false;
+
+        // Reset inactivity timer in Ollama Memory Tuner
+        crate::engine::OllamaMemoryTuner::global().touch_activity();
 
         loop {
             let url = format!("{}/api/chat", self.base_url.trim_end_matches('/'));

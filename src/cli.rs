@@ -840,6 +840,12 @@ enum Commands {
         #[command(subcommand)]
         action: crate::notify::NotifyAction,
     },
+    /// Manage and run the Ollama Memory Tuner daemon (auto-unload after 5m inactivity)
+    #[command(alias = "memtune")]
+    Tuner {
+        #[command(subcommand)]
+        action: Option<TunerSubcommand>,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -2593,6 +2599,44 @@ enum EccAction {
 
         /// Architectural problem or code to audit
         prompt: String,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum TunerSubcommand {
+    /// Start the Memory Tuner daemon & reverse proxy on port 11435 with 5m inactivity auto-unload
+    Start {
+        /// Port to bind the reverse proxy to
+        #[arg(short, long, default_value_t = 11435)]
+        port: u16,
+
+        /// Host to bind the reverse proxy to
+        #[arg(long, default_value = "127.0.0.1")]
+        host: String,
+
+        /// Upstream Ollama API base URL
+        #[arg(short, long, default_value = "http://127.0.0.1:11434")]
+        ollama_url: String,
+
+        /// Inactivity timeout in minutes before auto-unloading models
+        #[arg(short, long, default_value_t = 5)]
+        idle_mins: u64,
+    },
+    /// Inspect status of Ollama models in VRAM/RAM and inactivity timer
+    Status {
+        /// Upstream Ollama API base URL
+        #[arg(short, long, default_value = "http://127.0.0.1:11434")]
+        ollama_url: String,
+    },
+    /// Immediately purge and unload all models from VRAM and RAM
+    Unload {
+        /// Optional specific model to unload (defaults to all loaded models)
+        #[arg(short, long)]
+        model: Option<String>,
+
+        /// Upstream Ollama API base URL
+        #[arg(short, long, default_value = "http://127.0.0.1:11434")]
+        ollama_url: String,
     },
 }
 
@@ -5920,6 +5964,112 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Notify { action } => {
             crate::notify::handle_notify_command(action)?;
+        }
+        Commands::Tuner { action } => {
+            handle_tuner_command(action).await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn handle_tuner_command(action: Option<TunerSubcommand>) -> Result<(), Box<dyn std::error::Error>> {
+    let action = action.unwrap_or(TunerSubcommand::Status {
+        ollama_url: "http://127.0.0.1:11434".to_string(),
+    });
+
+    match action {
+        TunerSubcommand::Start { port, host, ollama_url, idle_mins } => {
+            println!("=========================================================================");
+            println!(" 🛡️  Tagisan Ollama Memory Tuner & Inactivity Auto-Unload Daemon");
+            println!("=========================================================================");
+            println!(" Proxy Bind Address:  http://{}:{}", host, port);
+            println!(" Upstream Ollama:     {}", ollama_url);
+            println!(" Inactivity Timeout:  {} minutes ({}s)", idle_mins, idle_mins * 60);
+            println!(" Inactivity Action:   Auto-unload models from VRAM/RAM (keep_alive: 0)");
+            println!("=========================================================================");
+            println!(" 💡 Point your tools, clients, or TGS to http://{}:{} to auto-tune", host, port);
+            println!(" Press Ctrl+C to shut down daemon.\n");
+
+            let config = crate::engine::MemoryTunerConfig {
+                bind_host: host,
+                bind_port: port,
+                ollama_url,
+                inactivity_timeout_secs: idle_mins * 60,
+                watchdog_interval_secs: 5,
+                auto_start_proxy: true,
+            };
+
+            let tuner = std::sync::Arc::new(crate::engine::OllamaMemoryTuner::new(config));
+            let _addr = tuner.clone().start().await?;
+
+            tokio::signal::ctrl_c().await?;
+            println!("\n🛑 [Memory Tuner] Shutdown signal received. Stopping daemon...");
+            tuner.stop();
+        }
+        TunerSubcommand::Status { ollama_url } => {
+            let config = crate::engine::MemoryTunerConfig {
+                ollama_url,
+                ..Default::default()
+            };
+            let tuner = crate::engine::OllamaMemoryTuner::new(config);
+            let status = tuner.status().await?;
+
+            println!("=========================================================================");
+            println!(" 🛡️  Tagisan Ollama Memory Tuner - Status Overview");
+            println!("=========================================================================");
+            println!(" Upstream Ollama URL : {}", status.ollama_url);
+            println!(" Idle Time (Proxy)   : {}s / {}s threshold", status.idle_duration_secs, status.inactivity_threshold_secs);
+            println!(" Total Auto-Unloads  : {}", status.total_unloads);
+            println!(" Total Proxied Reqs  : {}", status.total_proxied_requests);
+            println!("-------------------------------------------------------------------------");
+            println!(" Resident Models in VRAM/RAM (Ollama /api/ps):");
+
+            if status.active_models_in_vram.is_empty() {
+                println!("  (No models currently loaded in RAM/VRAM - 100% memory freed)");
+            } else {
+                println!("  {:<30} {:<15} {:<15} {:<20}", "MODEL", "TOTAL SIZE", "VRAM SIZE", "EXPIRES AT");
+                for m in &status.active_models_in_vram {
+                    let total_mb = (m.size_bytes as f64) / (1024.0 * 1024.0);
+                    let vram_mb = (m.size_vram_bytes as f64) / (1024.0 * 1024.0);
+                    let exp = m.expires_at.as_deref().unwrap_or("never");
+                    println!(
+                        "  {:<30} {:<15} {:<15} {:<20}",
+                        m.name,
+                        format!("{:.1} MB", total_mb),
+                        format!("{:.1} MB", vram_mb),
+                        exp
+                    );
+                }
+            }
+            println!("=========================================================================");
+        }
+        TunerSubcommand::Unload { model, ollama_url } => {
+            let config = crate::engine::MemoryTunerConfig {
+                ollama_url,
+                ..Default::default()
+            };
+            let tuner = crate::engine::OllamaMemoryTuner::new(config);
+
+            if let Some(m) = model {
+                println!("Sending keep_alive: 0 to unload model '{}'...", m);
+                match tuner.unload_model(&m).await {
+                    Ok(_) => println!("✅ Successfully unloaded model '{}' from VRAM/RAM!", m),
+                    Err(e) => eprintln!("❌ Failed to unload model '{}': {}", m, e),
+                }
+            } else {
+                println!("Querying resident models and unloading all from VRAM/RAM...");
+                match tuner.unload_all_models().await {
+                    Ok(unloaded) => {
+                        if unloaded.is_empty() {
+                            println!("ℹ️  No models were resident in VRAM/RAM.");
+                        } else {
+                            println!("✅ Successfully unloaded {} model(s) from VRAM/RAM: [{}]", unloaded.len(), unloaded.join(", "));
+                        }
+                    }
+                    Err(e) => eprintln!("❌ Failed to unload models: {}", e),
+                }
+            }
         }
     }
 
