@@ -41,6 +41,9 @@ pub enum ReplCommand {
     Tuner(String),
     Bridge(String),
     Oracle(String),
+    Astra(String),
+    Arc(String),
+    Dashboard(String),
     Exit,
     UserPrompt(String),
 }
@@ -134,6 +137,9 @@ impl InteractiveRepl {
             "/tuner" | "/memtune" => ReplCommand::Tuner(arg),
             "/bridge" => ReplCommand::Bridge(arg),
             "/oracle" | "/ora" => ReplCommand::Oracle(arg),
+            "/astra" | "/cu" => ReplCommand::Astra(arg),
+            "/arc" | "/arc3" => ReplCommand::Arc(arg),
+            "/dashboard" | "/ui" => ReplCommand::Dashboard(arg),
             "/exit" | "/quit" | "/q" => ReplCommand::Exit,
             _ => ReplCommand::UserPrompt(trimmed.to_string()),
         }
@@ -158,6 +164,32 @@ impl InteractiveRepl {
 
         let start_time = Instant::now();
         let is_interactive = self.running;
+
+        // ⚡ Autoselect skills for interactive REPL turn
+        let user_query = prompt.trim();
+        let dispatcher = crate::ecc::global_dispatcher();
+        let matched = dispatcher.dispatch(user_query, 2, None);
+        if !matched.is_empty() {
+            let mut attached_names = Vec::new();
+            let mut skills_ctx = String::from("\n[AUTOMATICALLY SELECTED ENGINEERING SKILLS]\n");
+            for item in &matched {
+                attached_names.push(item.skill.name.clone());
+                skills_ctx.push_str(&format!(
+                    "\n--- ⚡ Skill: {} (Relevance: {:.2}) ---\n{}\n",
+                    item.skill.name, item.score, item.skill.instructions.trim()
+                ));
+            }
+            skills_ctx.push_str("\n[END AUTODISPATCHED SKILLS]\n\n");
+            let current_sys = chat_session.system_prompt.unwrap_or_default();
+            chat_session.system_prompt = Some(format!("{}{}", skills_ctx, current_sys));
+
+            if is_interactive {
+                println!(
+                    "{}",
+                    format!("⚡ [Auto-Skills] Attached: {}", attached_names.join(", ")).bold().cyan()
+                );
+            }
+        }
 
         // 🌟 Start animated spinner with vibrant cycling colors and live timer
         let spinner_msg = format!("🧠 Thinking & synthesizing with {}...", self.agent.model.bold().cyan());
@@ -305,6 +337,9 @@ impl InteractiveRepl {
                     {}  Hyper-Ollama Acceleration Suite (warm, prewarm)\n\
                     {}  Ollama Memory Tuner & Auto-Unload Watchdog (status, unload, start)\n\
                     {}  Federated Agent Bridge (status, agents, broadcast, route)\n\
+                    {}   GPT Astra Computer-Use (status, screen, click, type, run)\n\
+                    {}   ARC-AGI-3 Reasoning Engine (solve ARC task JSON)\n\
+                    {}   Swarm Visual & Computer-Use Web Dashboard\n\
                     {}       Exit interactive session\n\n\
                     {}\n\
                     {}          Recall previous / next commands from history\n\
@@ -343,6 +378,9 @@ impl InteractiveRepl {
                     "/ollama [cmd]".bold().green(),
                     "/tuner [cmd]".bold().green(),
                     "/bridge <cmd>".bold().green(),
+                    "/astra [cmd]".bold().green(),
+                    "/arc <path>".bold().green(),
+                    "/dashboard [port]".bold().green(),
                     "/exit".bold().green(),
                     "Google Antigravity (AGY) Keyboard Controls:".bold().yellow(),
                     "↑ / ↓".bold().bright_cyan(),
@@ -1038,6 +1076,246 @@ impl InteractiveRepl {
                         )))
                     }
                 }
+            }
+            ReplCommand::Astra(arg) => {
+                let parts: Vec<&str> = arg.split_whitespace().collect();
+                let subcmd = parts.first().copied().unwrap_or("status");
+
+                match subcmd {
+                    "status" => {
+                        let screen_eng = crate::engine::astra::ScreenCaptureEngine::new();
+                        let input_eng = crate::engine::astra::InputEngine::new(1920, 1080);
+                        let disp_info = screen_eng.display_info();
+
+                        Ok(Some(format!(
+                            "┌─────────────────────────────────────────────────────────────┐\n\
+                             │  🌌  GPT ASTRA MULTIMODAL COMPUTER-USE ENGINE STATUS        │\n\
+                             ├─────────────────────────────────────────────────────────────┤\n\
+                             │  Display Server   : {:<42}│\n\
+                             │  Resolution       : {:<42}│\n\
+                             │  Virtual Mode     : {:<42}│\n\
+                             │  Capture Backend  : {:<42}│\n\
+                             │  Input Backend    : {:<42}│\n\
+                             │  Cursor Position  : {:<42}│\n\
+                             │  AgentShield      : {:<42}│\n\
+                             └─────────────────────────────────────────────────────────────┘",
+                            disp_info.display_type.to_string(),
+                            format!("{}x{}", disp_info.width, disp_info.height),
+                            if disp_info.is_virtual { "Active (Headless Virtual FB)" } else { "Inactive (Native Display)" },
+                            disp_info.available_tools.join(", "),
+                            input_eng.backend.to_string(),
+                            format!("{:?}", input_eng.cursor_position()),
+                            "Active (Destructive Command Blocklist)",
+                        )))
+                    }
+                    "screen" => {
+                        let mut engine = crate::engine::astra::ScreenCaptureEngine::new();
+                        match engine.capture() {
+                            Ok(frame) => {
+                                if let Some(path) = parts.get(1) {
+                                    let bytes = frame.to_png_bytes();
+                                    if let Err(e) = std::fs::write(path, &bytes) {
+                                        Ok(Some(format!("Failed to write screenshot to {path}: {e}")))
+                                    } else {
+                                        Ok(Some(format!(
+                                            "✔ Screenshot saved to {}\nFrame #{} [{}x{}, {:?}, {} bytes, server: {}, virtual: {}]",
+                                            path.bold().green(), frame.id, frame.width, frame.height, frame.format, frame.data.len(), frame.display_type, frame.is_virtual
+                                        )))
+                                    }
+                                } else {
+                                    let b64 = frame.to_base64_png();
+                                    Ok(Some(format!(
+                                        "✔ ScreenFrame captured: #{} [{}x{}, {:?}, {} bytes, server: {}, virtual: {}]\nBase64 Preview: {}...",
+                                        frame.id, frame.width, frame.height, frame.format, frame.data.len(), frame.display_type, frame.is_virtual,
+                                        &b64[..40.min(b64.len())]
+                                    )))
+                                }
+                            }
+                            Err(e) => Ok(Some(format!("Screen capture error: {e}"))),
+                        }
+                    }
+                    "click" => {
+                        if parts.len() < 3 {
+                            return Ok(Some("Usage: /astra click <x> <y> [left|right|middle]".to_string()));
+                        }
+                        let x = match parts[1].parse::<u32>() {
+                            Ok(v) => v,
+                            Err(_) => return Ok(Some(format!("Invalid X coordinate: {}", parts[1]))),
+                        };
+                        let y = match parts[2].parse::<u32>() {
+                            Ok(v) => v,
+                            Err(_) => return Ok(Some(format!("Invalid Y coordinate: {}", parts[2]))),
+                        };
+                        let button = match parts.get(3).copied().unwrap_or("left").to_lowercase().as_str() {
+                            "right" => crate::engine::astra::MouseButton::Right,
+                            "middle" => crate::engine::astra::MouseButton::Middle,
+                            _ => crate::engine::astra::MouseButton::Left,
+                        };
+
+                        let mut engine = crate::engine::astra::InputEngine::new(1920, 1080);
+                        match engine.click(x, y, button) {
+                            Ok(res) => Ok(Some(format!(
+                                "✔ Click synthesized: {}\nBackend: {}, Verified: {}, Duration: {}ms",
+                                res.details.green(), res.backend_used, res.verified, res.execution_time_ms
+                            ))),
+                            Err(e) => Ok(Some(format!("Click execution error: {e}"))),
+                        }
+                    }
+                    "type" => {
+                        let text = if let Some(idx) = arg.find("type") {
+                            arg[idx + 4..].trim()
+                        } else {
+                            ""
+                        };
+                        if text.is_empty() {
+                            return Ok(Some("Usage: /astra type <text to type>".to_string()));
+                        }
+
+                        let mut engine = crate::engine::astra::InputEngine::new(1920, 1080);
+                        match engine.type_text(text, 10) {
+                            Ok(res) => Ok(Some(format!(
+                                "✔ Keyboard input synthesized: {}\nBackend: {}, Verified: {}, Duration: {}ms",
+                                res.details.green(), res.backend_used, res.verified, res.execution_time_ms
+                            ))),
+                            Err(e) => Ok(Some(format!("Type execution error: {e}"))),
+                        }
+                    }
+                    "run" => {
+                        let goal = if let Some(idx) = arg.find("run") {
+                            arg[idx + 3..].trim()
+                        } else {
+                            ""
+                        };
+                        if goal.is_empty() {
+                            return Ok(Some("Usage: /astra run <goal or task for autonomous visual agent>".to_string()));
+                        }
+
+                        let config = crate::engine::astra::AstraVisualAgentConfig {
+                            goal: goal.to_string(),
+                            max_steps: 5,
+                            headless: true,
+                            step_delay_ms: 10,
+                            ..Default::default()
+                        };
+
+                        let mut agent = crate::engine::astra::AstraVisualAgent::new(config);
+                        match agent.run().await {
+                            Ok(result) => {
+                                let mut out = format!(
+                                    "🚀 Astra Visual Agent finished: {:?} (Success: {})\nSteps: {}, Duration: {}ms\n",
+                                    result.status, result.success, result.steps_executed, result.total_duration_ms
+                                );
+                                for step in &result.step_trace {
+                                    out.push_str(&format!("  - Step {}: {} -> {}\n", step.step_number, step.proposed_action, step.thought));
+                                }
+                                Ok(Some(out))
+                            }
+                            Err(e) => Ok(Some(format!("Astra agent execution error: {e}"))),
+                        }
+                    }
+                    _ => Ok(Some(format!(
+                        "Usage:\n  {} - Display display server, resolution, and backends\n  {} - Capture screenshot (optionally to file)\n  {} - Synthesize mouse click\n  {} - Synthesize keyboard typing\n  {} - Run autonomous visual agent towards a goal",
+                        "/astra status".bold().green(),
+                        "/astra screen [path]".bold().green(),
+                        "/astra click <x> <y> [button]".bold().green(),
+                        "/astra type <text>".bold().green(),
+                        "/astra run <goal>".bold().green(),
+                    )))
+                }
+            }
+            ReplCommand::Arc(arg) => {
+                let parts: Vec<&str> = arg.split_whitespace().collect();
+                if parts.is_empty() {
+                    return Ok(Some(format!(
+                        "🧩 {}\n\
+                         Usage: {} <path_to_task.json> [timeout_secs] [strategy]\n\
+                         Example: {}\n\
+                         Strategies: auto, mcts, dsl, cellular, neurosymbolic",
+                        "ARC-AGI-3 Neurosymbolic Reasoning Engine".bold().yellow(),
+                        "/arc".bold().green(),
+                        "/arc data/task1.json 30 auto".cyan(),
+                    )));
+                }
+
+                let path = parts[0];
+                let max_time_secs = parts.get(1).and_then(|s| s.parse::<u64>().ok()).unwrap_or(30);
+                let strategy = parts.get(2).copied().unwrap_or("auto");
+
+                let content = match std::fs::read_to_string(path) {
+                    Ok(c) => c,
+                    Err(e) => return Ok(Some(format!("❌ Failed to read ARC task file at {path}: {e}"))),
+                };
+
+                let task: crate::engine::arc_agi::ArcTask = match serde_json::from_str(&content) {
+                    Ok(t) => t,
+                    Err(e) => return Ok(Some(format!("❌ Failed to parse ARC task JSON: {e}"))),
+                };
+
+                let solver = crate::engine::arc_agi::ArcAgi3Solver::new()
+                    .with_max_time(std::time::Duration::from_secs(max_time_secs))
+                    .with_strategy(strategy);
+
+                match solver.solve(&task) {
+                    Ok(result) => {
+                        let mut out = String::new();
+                        out.push_str(&format!(
+                            "🧩 {}\n\
+                             Task Path:     {}\n\
+                             Solved Train:  {}\n\
+                             Strategy:      {}\n\
+                             Compute Time:  {}ms\n",
+                            "ARC-AGI-3 Solve Results".bold().yellow(),
+                            path.bold().white(),
+                            if result.solved_training { "✅ YES".bold().green() } else { "⚠️ PARTIAL".bold().yellow() },
+                            result.strategy_used.bold().cyan(),
+                            result.duration_ms
+                        ));
+                        if let Some(ref prog) = result.synthesized_program {
+                            out.push_str(&format!("Synthesized DSL: {}\n", prog.bold().magenta()));
+                        }
+                        out.push_str(&format!(
+                            "Invariants: Size={:?}, Color={:?}, Topology={:?}\n\n",
+                            result.invariants.size, result.invariants.color, result.invariants.topology
+                        ));
+
+                        for (idx, pred) in result.predictions.iter().enumerate() {
+                            out.push_str(&format!(
+                                "[Test Example {}] Confidence: {}%\nPrediction 1 ({}x{}):\n{}\n",
+                                idx + 1,
+                                pred.confidence,
+                                pred.candidate_1.height(),
+                                pred.candidate_1.width(),
+                                pred.candidate_1.to_ascii()
+                            ));
+                            if pred.candidate_1 != pred.candidate_2 {
+                                out.push_str(&format!(
+                                    "Prediction 2 ({}x{}):\n{}\n",
+                                    pred.candidate_2.height(),
+                                    pred.candidate_2.width(),
+                                    pred.candidate_2.to_ascii()
+                                ));
+                            }
+                        }
+
+                        Ok(Some(out))
+                    }
+                    Err(e) => Ok(Some(format!("❌ ARC solver error: {e}"))),
+                }
+            }
+            ReplCommand::Dashboard(arg) => {
+                let port = arg.trim().parse::<u16>().unwrap_or(7420);
+                Ok(Some(format!(
+                    "🌐 {}\n\
+                     Local URL:    http://127.0.0.1:{port}\n\
+                     WebSocket:    ws://127.0.0.1:{port}/ws\n\
+                     API State:    http://127.0.0.1:{port}/api/state\n\
+                     Telemetry:    http://127.0.0.1:{port}/api/telemetry\n\
+                     Reflexions:   http://127.0.0.1:{port}/api/reflexions\n\n\
+                     To start the background server, run:\n\
+                       tgs dashboard --port {port}\n\
+                     Or launch it directly from the terminal.",
+                    "Tagisan Visual Swarm & Computer-Use Dashboard".bold().yellow(),
+                )))
             }
             ReplCommand::Sandbox => {
                 if let Some(ref sb) = self.sandbox {

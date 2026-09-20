@@ -234,6 +234,79 @@ impl HostMemoryGovernor {
         }
     }
 
+    /// Check if host is a dual-core or single-core machine
+    pub fn is_low_core_cpu(&self) -> bool {
+        num_cpus() <= 2
+    }
+
+    /// Compute safe Ollama num_thread setting.
+    /// On a 2-core system (or when is_8gb_workstation is true or under memory/CPU pressure),
+    /// clamp num_thread to 1 (or (num_cpus - 1).max(1)).
+    /// NEVER use all cores on a 2-core machine, leaving at least 1 core for the OS/UI to prevent laptop lockup.
+    pub fn recommended_ollama_threads(&self, metrics: &LinuxMemInfo) -> u32 {
+        let cpus = num_cpus();
+        let is_8gb = self.is_8gb_workstation(metrics);
+        let tier = self.evaluate_pressure(metrics);
+
+        if cpus <= 2 || is_8gb || tier != MemoryPressureTier::GreenNormal {
+            1
+        } else {
+            ((cpus.saturating_sub(1)).max(1).min(4)) as u32
+        }
+    }
+
+    /// Compute safe Ollama num_ctx setting dynamically clamped based on available RAM:
+    /// - RedCritical: 512 - 1024
+    /// - YellowWarning / 8GB workstation: 1024 - 2048
+    /// - GreenNormal: up to 4096 (or 8192 if explicit)
+    pub fn recommended_ollama_ctx(&self, metrics: &LinuxMemInfo, requested_ctx: Option<u32>) -> u32 {
+        let tier = self.evaluate_pressure(metrics);
+        let is_8gb = self.is_8gb_workstation(metrics);
+        let req = requested_ctx.unwrap_or(2048);
+
+        match tier {
+            MemoryPressureTier::RedCritical => req.clamp(512, 1024),
+            MemoryPressureTier::YellowWarning => req.clamp(1024, 2048),
+            MemoryPressureTier::GreenNormal => {
+                if is_8gb {
+                    req.clamp(1024, 2048)
+                } else if req > 4096 {
+                    req.min(8192)
+                } else {
+                    req.clamp(1024, 4096)
+                }
+            }
+        }
+    }
+
+    /// Compute safe Ollama keep_alive setting:
+    /// - RedCritical: "0s" (unload immediately after response)
+    /// - YellowWarning / 8GB: "2m" (2 minutes)
+    /// - GreenNormal: "5m" (or configurable via TAGISAN_OLLAMA_KEEP_ALIVE)
+    pub fn recommended_ollama_keep_alive(&self, metrics: &LinuxMemInfo) -> String {
+        if let Ok(val) = std::env::var("TAGISAN_OLLAMA_KEEP_ALIVE") {
+            let trimmed = val.trim();
+            if !trimmed.is_empty() {
+                return trimmed.to_string();
+            }
+        }
+
+        let tier = self.evaluate_pressure(metrics);
+        let is_8gb = self.is_8gb_workstation(metrics);
+
+        match tier {
+            MemoryPressureTier::RedCritical => "0s".to_string(),
+            MemoryPressureTier::YellowWarning => "2m".to_string(),
+            MemoryPressureTier::GreenNormal => {
+                if is_8gb {
+                    "2m".to_string()
+                } else {
+                    "5m".to_string()
+                }
+            }
+        }
+    }
+
     /// Safe check before spawning a resource-intensive subagent or local LLM session
     pub fn can_spawn_subagent(&self, metrics: &LinuxMemInfo) -> bool {
         let tier = self.evaluate_pressure(metrics);
@@ -359,6 +432,11 @@ impl HostMemoryGovernor {
     }
 }
 
+pub fn host_num_cpus() -> usize {
+    num_cpus()
+}
+
 fn num_cpus() -> usize {
     std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4)
 }
+

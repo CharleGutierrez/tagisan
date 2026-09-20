@@ -12,6 +12,7 @@
 //! 3. Manual Eviction: Immediate purge of loaded models via CLI or REPL (`/tuner unload`).
 
 use crate::error::{Result, TagisanError};
+use crate::governor::{HostMemoryGovernor, LinuxMemInfo, MemoryPressureTier};
 use colored::Colorize;
 use futures::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -28,6 +29,9 @@ pub const DEFAULT_TUNER_PORT: u16 = 11435;
 pub const DEFAULT_OLLAMA_URL: &str = "http://127.0.0.1:11434";
 pub const DEFAULT_INACTIVITY_TIMEOUT_SECS: u64 = 300; // 5 minutes
 pub const DEFAULT_WATCHDOG_INTERVAL_SECS: u64 = 5;
+
+/// Safety buffer reserved for OS/UI threads to prevent desktop freeze (512 MB)
+pub const ANTI_FREEZE_SAFETY_BUFFER_BYTES: u64 = 512 * 1024 * 1024;
 
 /// Configuration for the Ollama Memory Tuner
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -98,7 +102,7 @@ struct OllamaUnloadPayload<'a> {
 }
 
 /// Main Ollama Memory Tuner Engine
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct OllamaMemoryTuner {
     pub config: MemoryTunerConfig,
     last_activity_ms: Arc<AtomicU64>,
@@ -516,6 +520,417 @@ impl OllamaMemoryTuner {
             total_unloads: self.total_unloads.load(Ordering::Relaxed),
             total_proxied_requests: self.total_proxied.load(Ordering::Relaxed),
         })
+    }
+
+    /// Query all installed models from `/api/tags`
+    pub async fn fetch_installed_model_tags(&self) -> Result<Vec<OllamaModelTagItem>> {
+        let url = format!("{}/api/tags", self.config.ollama_url.trim_end_matches('/'));
+        let resp = self.client.get(&url).send().await?;
+        if !resp.status().is_success() {
+            let err = resp.text().await.unwrap_or_default();
+            return Err(TagisanError::BadResponse("ollama".into(), err));
+        }
+        let tags: OllamaTagsResponse = resp.json().await.map_err(|e| {
+            TagisanError::Execution(format!("Failed to parse /api/tags response: {e}"))
+        })?;
+        Ok(tags.models.unwrap_or_default())
+    }
+
+    /// Query the exact byte size of a model from `/api/tags` or heuristic estimation
+    pub async fn query_model_size_bytes(&self, model_name: &str) -> u64 {
+        // 1. Try querying /api/tags
+        if let Ok(models) = self.fetch_installed_model_tags().await {
+            let clean = model_name.trim();
+            for m in &models {
+                if m.name.eq_ignore_ascii_case(clean)
+                    || m.model.as_deref().unwrap_or("").eq_ignore_ascii_case(clean)
+                    || m.name.split(':').next().unwrap_or("").eq_ignore_ascii_case(clean)
+                {
+                    if let Some(sz) = m.size {
+                        if sz > 0 {
+                            return sz;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Try disk manifests if local
+        if let Ok(resolver) = std::panic::catch_unwind(|| crate::engine::OllamaBlobResolver::new(None)) {
+            if let Ok(summary) = resolver.resolve(model_name) {
+                if summary.size > 0 {
+                    return summary.size;
+                }
+            }
+        }
+
+        // 3. Heuristic fallback based on parameter size in name
+        Self::estimate_model_size_from_name(model_name)
+    }
+
+    /// Heuristic estimation of model size in bytes from name when live APIs are unreachable
+    pub fn estimate_model_size_from_name(name: &str) -> u64 {
+        let lower = name.to_ascii_lowercase();
+        if lower.contains("70b") {
+            40 * 1024 * 1024 * 1024 // ~40 GB
+        } else if lower.contains("32b") || lower.contains("34b") {
+            20 * 1024 * 1024 * 1024 // ~20 GB
+        } else if lower.contains("14b") || lower.contains("13b") {
+            9 * 1024 * 1024 * 1024 // ~9 GB
+        } else if lower.contains("7b") || lower.contains("8b") {
+            4800 * 1024 * 1024 // ~4.7 GB
+        } else if lower.contains("3b") || lower.contains("4b") {
+            2200 * 1024 * 1024 // ~2.2 GB
+        } else if lower.contains("1.7b") || lower.contains("1.5b") || lower.contains("2b") {
+            1500 * 1024 * 1024 // ~1.5 GB
+        } else if lower.contains("1b") || lower.contains("0.5b") {
+            1100 * 1024 * 1024 // ~1.1 GB
+        } else {
+            3800 * 1024 * 1024 // ~3.8 GB conservative default
+        }
+    }
+
+    /// Proactively evict all currently loaded models from RAM/VRAM
+    pub async fn evict_idle_models(&self) -> Result<Vec<String>> {
+        self.unload_all_models().await
+    }
+
+    /// Pre-flight admission control check
+    pub async fn check_admission(&self, model_name: &str, num_ctx: u32) -> Result<AdmissionVerdict> {
+        let metrics = LinuxMemInfo::read_host();
+        self.check_admission_with_metrics(model_name, num_ctx, &metrics).await
+    }
+
+    /// Admission check with explicit metrics (enables deterministic testing)
+    pub async fn check_admission_with_metrics(
+        &self,
+        model_name: &str,
+        num_ctx: u32,
+        initial_metrics: &LinuxMemInfo,
+    ) -> Result<AdmissionVerdict> {
+        let model_bytes = self.query_model_size_bytes(model_name).await;
+        let kv_cache_bytes = (num_ctx as u64) * 128 * 1024;
+        let safety_buffer_bytes = ANTI_FREEZE_SAFETY_BUFFER_BYTES;
+        let total_required = model_bytes + kv_cache_bytes + safety_buffer_bytes;
+
+        let mut available_bytes = initial_metrics.mem_available_kb * 1024;
+        let mut evicted = Vec::new();
+
+        // 1. If required exceeds available, proactively evict idle models
+        if total_required > available_bytes {
+            debug!(
+                "[AntiFreezeGuardian] Required RAM ({:.2} GB) > Available RAM ({:.2} GB). Proactively evicting resident models...",
+                total_required as f64 / 1e9,
+                available_bytes as f64 / 1e9
+            );
+            if let Ok(unloaded) = self.unload_all_models().await {
+                if !unloaded.is_empty() {
+                    info!(
+                        "{}",
+                        format!(
+                            "🧹 [AntiFreezeGuardian] Proactively evicted {} resident model(s) [{}] to reclaim RAM.",
+                            unloaded.len(),
+                            unloaded.join(", ")
+                        ).yellow().bold()
+                    );
+                    evicted = unloaded;
+                    HostMemoryGovernor::new().trim_heap();
+                    let updated = LinuxMemInfo::read_host();
+                    if updated.mem_available_kb * 1024 > available_bytes {
+                        available_bytes = updated.mem_available_kb * 1024;
+                    }
+                }
+            }
+        }
+
+        // 2. Fits safely without swap thrashing?
+        if total_required <= available_bytes {
+            return Ok(AdmissionVerdict::Admitted {
+                model_name: model_name.to_string(),
+                required_bytes: total_required,
+                available_bytes,
+                evicted_models: evicted,
+            });
+        }
+
+        // 3. Bypass via TAGISAN_FORCE_OLLAMA_LOAD=1
+        if OllamaAdmissionController::is_force_load_enabled() {
+            warn!(
+                "{}",
+                format!(
+                    "⚠️  [AntiFreezeGuardian] TAGISAN_FORCE_OLLAMA_LOAD=1 bypass active! Model '{}' requires {:.2}GB RAM but only {:.2}GB available. Laptop may freeze due to swap thrashing!",
+                    model_name,
+                    total_required as f64 / 1e9,
+                    available_bytes as f64 / 1e9
+                ).red().bold()
+            );
+            return Ok(AdmissionVerdict::Bypassed {
+                model_name: model_name.to_string(),
+                required_bytes: total_required,
+                available_bytes,
+                reason: "TAGISAN_FORCE_OLLAMA_LOAD=1 environment variable set".to_string(),
+            });
+        }
+
+        // 4. Auto-recover to installed lighter model that fits
+        if let Ok(installed_tags) = self.fetch_installed_model_tags().await {
+            let mut candidates: Vec<(String, u64)> = Vec::new();
+            for item in installed_tags {
+                let name = item.name.clone();
+                if name.eq_ignore_ascii_case(model_name) {
+                    continue;
+                }
+                let sz = item.size.unwrap_or_else(|| Self::estimate_model_size_from_name(&name));
+                let cand_req = sz + kv_cache_bytes + safety_buffer_bytes;
+                if cand_req <= available_bytes {
+                    candidates.push((name, cand_req));
+                }
+            }
+
+            candidates.sort_by_key(|c| c.1);
+
+            if let Some((fallback, fb_req)) = candidates.first() {
+                if OllamaAdmissionController::is_auto_recover_lighter_enabled() {
+                    info!(
+                        "{}",
+                        format!(
+                            "🛡️  [AntiFreezeGuardian Auto-Recovery] Model '{}' ({:.2} GB required) exceeds available RAM ({:.2} GB). Safely switching to installed lighter model '{}' ({:.2} GB required) to eliminate laptop freeze.",
+                            model_name,
+                            total_required as f64 / 1e9,
+                            available_bytes as f64 / 1e9,
+                            fallback,
+                            *fb_req as f64 / 1e9
+                        ).green().bold()
+                    );
+                    return Ok(AdmissionVerdict::RecoveredToLighterModel {
+                        original_model: model_name.to_string(),
+                        fallback_model: fallback.clone(),
+                        required_bytes: *fb_req,
+                        available_bytes,
+                        evicted_models: evicted,
+                    });
+                }
+            }
+        }
+
+        // 5. Reject with full diagnostic details and pull suggestions
+        let suggested = vec![
+            "smollm2:1.7b".to_string(),
+            "llama3.2:1b".to_string(),
+            "llama3.2:3b".to_string(),
+        ];
+
+        let diagnostics = format!(
+            "ANTI-FREEZE GUARDIAN BLOCKED MODEL LOAD: Model '{}' requires ~{:.2} GB RAM (model: {:.2} GB, KV cache: {:.2} GB, safety buffer: 512 MB), but host only has {:.2} GB available RAM ({:.1}% free).\n\
+            Loading this model on your hardware will trigger aggressive Linux kernel swap thrashing (kswapd0 at 100% I/O) and completely freeze your laptop UI, desktop, and terminal.\n\n\
+            Recommended Solutions:\n\
+              1. Pull and run a lightweight model tailored for your hardware:\n\
+                 ▶ ollama pull smollm2:1.7b   (~1.0 GB RAM required - ultra fast)\n\
+                 ▶ ollama pull llama3.2:1b    (~1.3 GB RAM required - compact reasoning)\n\
+                 ▶ ollama pull llama3.2:3b    (~2.2 GB RAM required - high quality 3B)\n\
+              2. Free system RAM by closing browser tabs or background processes.\n\
+              3. If you really want to force loading despite freeze risk:\n\
+                 ▶ export TAGISAN_FORCE_OLLAMA_LOAD=1",
+            model_name,
+            total_required as f64 / 1e9,
+            model_bytes as f64 / 1e9,
+            kv_cache_bytes as f64 / 1e9,
+            available_bytes as f64 / 1e9,
+            initial_metrics.available_pct()
+        );
+
+        Ok(AdmissionVerdict::Rejected {
+            model_name: model_name.to_string(),
+            model_bytes,
+            kv_cache_bytes,
+            safety_buffer_bytes,
+            total_required_bytes: total_required,
+            available_bytes,
+            available_pct: initial_metrics.available_pct(),
+            suggested_models: suggested,
+            diagnostics,
+        })
+    }
+
+    /// Post-inference memory hygiene:
+    /// 1. Immediately call libc::malloc_trim(0) to return heap memory to Linux kernel.
+    /// 2. Check if memory is RedCritical. If so, immediately unload the model with keep_alive: 0.
+    pub async fn perform_post_inference_hygiene_with_metrics(
+        &self,
+        model_name: &str,
+        metrics: &LinuxMemInfo,
+    ) -> bool {
+        let gov = HostMemoryGovernor::new();
+        gov.trim_heap();
+
+        let pressure = gov.evaluate_pressure(metrics);
+        if pressure == MemoryPressureTier::RedCritical {
+            warn!(
+                "🚨 [AntiFreezeGuardian] Post-inference memory is RedCritical ({:.1}% available). Proactively evicting '{}' via keep_alive: 0...",
+                metrics.available_pct(),
+                model_name
+            );
+            let _ = self.unload_model(model_name).await;
+            gov.trim_heap();
+            true
+        } else {
+            false
+        }
+    }
+
+    pub async fn perform_post_inference_hygiene(&self, model_name: &str) -> bool {
+        let metrics = LinuxMemInfo::read_host();
+        self.perform_post_inference_hygiene_with_metrics(model_name, &metrics).await
+    }
+}
+
+/// Discovered model metadata from Ollama /api/tags
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OllamaModelTagItem {
+    pub name: String,
+    #[serde(default)]
+    pub model: Option<String>,
+    #[serde(default)]
+    pub size: Option<u64>,
+    #[serde(default)]
+    pub digest: Option<String>,
+    #[serde(default)]
+    pub details: Option<OllamaTagModelDetails>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct OllamaTagModelDetails {
+    #[serde(default)]
+    pub parent_model: Option<String>,
+    #[serde(default)]
+    pub format: Option<String>,
+    #[serde(default)]
+    pub family: Option<String>,
+    #[serde(default)]
+    pub families: Option<Vec<String>>,
+    #[serde(default)]
+    pub parameter_size: Option<String>,
+    #[serde(default)]
+    pub quantization_level: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+struct OllamaTagsResponse {
+    pub models: Option<Vec<OllamaModelTagItem>>,
+}
+
+/// Result of Pre-Flight Memory Admission Check
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum AdmissionVerdict {
+    /// Safe to load and execute model
+    Admitted {
+        model_name: String,
+        required_bytes: u64,
+        available_bytes: u64,
+        evicted_models: Vec<String>,
+    },
+    /// Oversized model was safely redirected to an installed lightweight model that fits
+    RecoveredToLighterModel {
+        original_model: String,
+        fallback_model: String,
+        required_bytes: u64,
+        available_bytes: u64,
+        evicted_models: Vec<String>,
+    },
+    /// User explicitly forced loading via TAGISAN_FORCE_OLLAMA_LOAD=1
+    Bypassed {
+        model_name: String,
+        required_bytes: u64,
+        available_bytes: u64,
+        reason: String,
+    },
+    /// Model load rejected to prevent Linux swap thrashing and laptop lockup
+    Rejected {
+        model_name: String,
+        model_bytes: u64,
+        kv_cache_bytes: u64,
+        safety_buffer_bytes: u64,
+        total_required_bytes: u64,
+        available_bytes: u64,
+        available_pct: f64,
+        suggested_models: Vec<String>,
+        diagnostics: String,
+    },
+}
+
+impl AdmissionVerdict {
+    pub fn is_admitted(&self) -> bool {
+        matches!(
+            self,
+            Self::Admitted { .. } | Self::RecoveredToLighterModel { .. } | Self::Bypassed { .. }
+        )
+    }
+
+    pub fn is_rejected(&self) -> bool {
+        matches!(self, Self::Rejected { .. })
+    }
+
+    pub fn effective_model(&self) -> &str {
+        match self {
+            Self::Admitted { model_name, .. } => model_name,
+            Self::RecoveredToLighterModel { fallback_model, .. } => fallback_model,
+            Self::Bypassed { model_name, .. } => model_name,
+            Self::Rejected { model_name, .. } => model_name,
+        }
+    }
+
+    pub fn ensure_admitted(self) -> Result<String> {
+        match self {
+            Self::Admitted { model_name, .. } => Ok(model_name),
+            Self::RecoveredToLighterModel { fallback_model, .. } => Ok(fallback_model),
+            Self::Bypassed { model_name, .. } => Ok(model_name),
+            Self::Rejected { diagnostics, .. } => {
+                Err(TagisanError::ResourceExhausted(diagnostics))
+            }
+        }
+    }
+}
+
+/// Standalone Pre-Flight Admission Controller / Anti-Freeze Guardian
+#[derive(Clone, Debug)]
+pub struct OllamaAdmissionController {
+    tuner: Arc<OllamaMemoryTuner>,
+}
+
+pub type AntiFreezeGuardian = OllamaAdmissionController;
+
+impl OllamaAdmissionController {
+    pub fn new(tuner: Arc<OllamaMemoryTuner>) -> Self {
+        Self { tuner }
+    }
+
+    pub fn default_local() -> Self {
+        Self::new(OllamaMemoryTuner::global())
+    }
+
+    pub async fn check_admission(&self, model_name: &str, num_ctx: u32) -> Result<AdmissionVerdict> {
+        self.tuner.check_admission(model_name, num_ctx).await
+    }
+
+    pub async fn check_admission_with_metrics(
+        &self,
+        model_name: &str,
+        num_ctx: u32,
+        metrics: &LinuxMemInfo,
+    ) -> Result<AdmissionVerdict> {
+        self.tuner.check_admission_with_metrics(model_name, num_ctx, metrics).await
+    }
+
+    pub fn is_force_load_enabled() -> bool {
+        std::env::var("TAGISAN_FORCE_OLLAMA_LOAD")
+            .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+            .unwrap_or(false)
+    }
+
+    pub fn is_auto_recover_lighter_enabled() -> bool {
+        std::env::var("TAGISAN_AUTO_RECOVER_LIGHTER_MODEL")
+            .map(|v| v != "0" && !v.eq_ignore_ascii_case("false"))
+            .unwrap_or(true)
     }
 }
 

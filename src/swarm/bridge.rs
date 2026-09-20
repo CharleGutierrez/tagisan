@@ -1441,7 +1441,7 @@ impl AgentBridge {
                 self.circuit_breakers.record_success(&agent.id);
                 (true, Some(resp))
             } else {
-                let err = format!("Target agent '{}' is not registered in AgentBridge", sanitized_msg.target_agent);
+                let err = format!("Target agent '{}' was not found in AgentBridge registry", sanitized_msg.target_agent);
                 self.circuit_breakers.record_failure(&sanitized_msg.target_agent, &err);
                 return Err(TagisanError::Execution(err));
             }

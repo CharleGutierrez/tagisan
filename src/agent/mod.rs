@@ -12,7 +12,9 @@ use std::time::Instant;
 use tracing::{debug, info, warn};
 
 pub mod sandbox;
+pub mod cross_sandbox;
 pub use sandbox::WorktreeSandbox;
+pub use cross_sandbox::*;
 
 /// Record of an intermediate step in the autonomous execution loop
 #[derive(Debug, Clone)]
@@ -44,13 +46,14 @@ pub struct AutonomousAgent {
     pub max_iterations: usize,
     pub temperature: Option<f32>,
     pub agentshield_enabled: bool,
+    pub auto_skills_enabled: bool,
     pub memory: Option<Arc<VectorStore>>,
     pub embedding_provider: Option<Arc<dyn EmbeddingProvider>>,
     pub working_dir: Option<std::path::PathBuf>,
 }
 
 impl AutonomousAgent {
-    /// Create a new AutonomousAgent instance (AgentShield security enabled by default)
+    /// Create a new AutonomousAgent instance (AgentShield security and Auto-Skills enabled by default)
     pub fn new(
         provider: Arc<dyn LlmProvider>,
         model: impl Into<String>,
@@ -64,10 +67,17 @@ impl AutonomousAgent {
             max_iterations: 10,
             temperature: Some(0.7),
             agentshield_enabled: true,
+            auto_skills_enabled: true,
             memory: None,
             embedding_provider: None,
             working_dir: None,
         }
+    }
+
+    /// Enable or disable automatic skill selection based on prompt semantics (enabled by default)
+    pub fn with_auto_skills(mut self, enabled: bool) -> Self {
+        self.auto_skills_enabled = enabled;
+        self
     }
 
     /// Enable or disable AgentShield security scanner for tool calls and secret redaction
@@ -389,6 +399,37 @@ impl AutonomousAgent {
         let disable_pruning = std::env::var("TAGISAN_DISABLE_TOOL_PRUNING")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
+
+        // Automatic skill selection & semantic injection across all processes
+        if self.auto_skills_enabled {
+            let last_user_prompt = session
+                .history
+                .iter()
+                .rev()
+                .find(|m| m.role == crate::types::Role::User)
+                .map(|m| m.extract_text())
+                .unwrap_or_default();
+
+            if !last_user_prompt.trim().is_empty() {
+                let current_sys = session.system_prompt.as_deref().unwrap_or("");
+                if !current_sys.contains("[AUTOMATICALLY SELECTED ENGINEERING SKILLS]") && !current_sys.contains("Skill Invariant:") {
+                    let dispatcher = crate::ecc::global_dispatcher();
+                    let matched = dispatcher.dispatch(&last_user_prompt, 2, None);
+                    if !matched.is_empty() {
+                        let mut skills_ctx = String::from("\n[AUTOMATICALLY SELECTED ENGINEERING SKILLS]\nThe following specialized engineering skills were automatically selected based on problem semantics:\n");
+                        for item in &matched {
+                            skills_ctx.push_str(&format!(
+                                "\n--- ⚡ Skill: {} (Relevance: {:.2}) ---\n{}\n",
+                                item.skill.name, item.score, item.skill.instructions.trim()
+                            ));
+                        }
+                        skills_ctx.push_str("\n[END AUTODISPATCHED SKILLS]\n\n");
+                        let new_sys = format!("{}{}", skills_ctx, current_sys);
+                        session.system_prompt = Some(new_sys);
+                    }
+                }
+            }
+        }
 
         while iteration < self.max_iterations {
             iteration += 1;

@@ -2271,15 +2271,24 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
 }
 
 static BUILT_IN_SKILLS_CACHE: OnceLock<HashMap<String, EccSkill>> = OnceLock::new();
+static BUILT_IN_SKILLS_VEC: OnceLock<Vec<EccSkill>> = OnceLock::new();
+
+/// Return a static reference to the pre-instantiated built-in skills vector
+pub fn get_built_in_skills_vec() -> &'static Vec<EccSkill> {
+    BUILT_IN_SKILLS_VEC.get_or_init(all_built_in_skills)
+}
 
 /// Retrieve a built-in skill by name
 pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     let lower = name.to_lowercase().replace('_', "-");
 
     let map = BUILT_IN_SKILLS_CACHE.get_or_init(|| {
-        let mut m = HashMap::new();
-        for s in all_built_in_skills() {
-            m.insert(s.name.clone(), s);
+        let skills = get_built_in_skills_vec();
+        let mut m = HashMap::with_capacity(skills.len() * 2);
+        for s in skills {
+            let key = s.name.to_lowercase().replace('_', "-");
+            m.insert(key, s.clone());
+            m.insert(s.name.clone(), s.clone());
         }
         m
     });
@@ -16904,7 +16913,8 @@ impl SkillDispatcher {
 
     /// Load or build skill dispatcher with optional explicit cache path
     pub fn load_or_build_with_cache(custom_dir: Option<&Path>, cache_path: Option<&Path>) -> Self {
-        let builtin_count = all_built_in_skills().len();
+        let builtin_vec = get_built_in_skills_vec();
+        let builtin_count = builtin_vec.len();
         let fingerprint = compute_dir_fingerprint(custom_dir);
 
         if let Some(cp) = cache_path {
@@ -16994,7 +17004,8 @@ impl SkillDispatcher {
         let mut built_in_names = HashSet::new();
 
         // 1. Ingest built-in skills (lightweight metadata only; JIT body loading!)
-        for s in all_built_in_skills() {
+        let builtin_skills = get_built_in_skills_vec();
+        for s in builtin_skills {
             let raw_trigs = if let Some((_, _, trigs)) = parse_frontmatter_metadata(&s.instructions, Some(&s.name)) {
                 trigs
             } else {
@@ -17003,8 +17014,8 @@ impl SkillDispatcher {
             let trigs = extract_triggers_from_text(&s.name, &s.description, &raw_trigs);
             built_in_names.insert(s.name.to_lowercase());
             raw_entries.push(RawEntry {
-                name: s.name,
-                description: s.description,
+                name: s.name.clone(),
+                description: s.description.clone(),
                 triggers: trigs,
                 file_path: None,
                 is_builtin: true,
@@ -17291,6 +17302,15 @@ impl SkillDispatcher {
             return None;
         }
 
+        let meta = &self.skills[doc_id];
+        if meta.is_builtin {
+            let vec = get_built_in_skills_vec();
+            if doc_id < vec.len() && vec[doc_id].name.eq_ignore_ascii_case(&meta.name) {
+                return Some(vec[doc_id].clone());
+            }
+            return find_built_in_skill(&meta.name);
+        }
+
         // 1. Check read lock
         {
             if let Ok(cache) = self.skill_cache.read() {
@@ -17301,7 +17321,6 @@ impl SkillDispatcher {
         }
 
         // 2. Read from disk
-        let meta = &self.skills[doc_id];
         let skill = if let Some(ref path) = meta.file_path {
             EccSkill::from_file(path).unwrap_or_else(|_| {
                 EccSkill::new(&meta.name, &meta.description, &meta.description)
@@ -17324,7 +17343,34 @@ impl SkillDispatcher {
     pub fn register_skill(&mut self, skill: EccSkill) {
         let id = self.skills.len();
         let domain = infer_domain(&skill.name);
-        let trigs = extract_triggers_from_text(&skill.name, &skill.description, &[]);
+        let raw_trigs = if let Some((_, _, trigs)) = parse_frontmatter_metadata(&skill.instructions, Some(&skill.name)) {
+            trigs
+        } else {
+            Vec::new()
+        };
+        let mut trigs = extract_triggers_from_text(&skill.name, &skill.description, &raw_trigs);
+
+        // Also add key semantic tokens and bigrams from description & instructions as triggers for fast discovery
+        let desc_tokens = tokenize(&skill.description);
+        let inst_tokens = tokenize(&skill.instructions);
+        for t in desc_tokens.iter().chain(inst_tokens.iter()) {
+            if t.len() >= 3 && !is_stop_word(t) && !trigs.contains(t) {
+                trigs.push(t.clone());
+                if t.ends_with('s') && t.len() >= 4 {
+                    let singular = t[..t.len() - 1].to_string();
+                    if !trigs.contains(&singular) {
+                        trigs.push(singular);
+                    }
+                }
+            }
+        }
+        for window in desc_tokens.windows(2) {
+            let bigram = format!("{} {}", window[0], window[1]);
+            if !trigs.contains(&bigram) {
+                trigs.push(bigram);
+            }
+        }
+
         let name_tokens = tokenize(&skill.name);
 
         let lower_name = skill.name.to_lowercase();
@@ -17342,6 +17388,51 @@ impl SkillDispatcher {
             cache.insert(id, skill.clone());
         }
 
+        // Calculate TF-IDF vector and update inverted index
+        let mut counts: HashMap<String, (usize, usize)> = HashMap::new();
+        for token in tokenize(&skill.name) {
+            counts.entry(token).or_insert((0, 0)).0 += 1;
+        }
+        for token in tokenize(&skill.description) {
+            counts.entry(token).or_insert((0, 0)).1 += 1;
+        }
+        for token in tokenize(&skill.instructions) {
+            counts.entry(token).or_insert((0, 0)).1 += 1;
+        }
+
+        let mut sparse_vec: Vec<(u32, f32)> = Vec::new();
+        let mut norm_sq = 0.0f32;
+        let num_docs = (self.skills.len() + 1) as f32;
+
+        for (term, (name_count, desc_count)) in counts {
+            let tid = if let Some(&tid) = self.vocab.get(&term) {
+                tid
+            } else {
+                let new_tid = self.vocab.len() as u32;
+                self.vocab.insert(term.clone(), new_tid);
+                let term_idf = ((num_docs - 1.0 + 0.5) / (1.0 + 0.5)).ln_1p() + 1.0;
+                self.idf.push(term_idf);
+                new_tid
+            };
+
+            let weighted_count = (name_count as f32 * 3.0) + (desc_count as f32 * 1.0);
+            if weighted_count > 0.0 {
+                let tf = 1.0 + weighted_count.ln();
+                let weight = tf * self.idf.get(tid as usize).copied().unwrap_or(1.0);
+                sparse_vec.push((tid, weight));
+                norm_sq += weight * weight;
+                self.inverted_index.entry(tid).or_default().push(id);
+            }
+        }
+
+        sparse_vec.sort_by_key(|&(tid, _)| tid);
+        let norm = norm_sq.sqrt();
+        let normalized_vec: Vec<(u32, f32)> = if norm > 1e-6 {
+            sparse_vec.into_iter().map(|(tid, w)| (tid, w / norm)).collect()
+        } else {
+            sparse_vec
+        };
+
         self.skills.push(SkillMetadata {
             id,
             name: skill.name,
@@ -17350,8 +17441,8 @@ impl SkillDispatcher {
             triggers: trigs,
             file_path: None,
             is_builtin: false,
-            tfidf_vector: Vec::new(),
-            norm: 0.0,
+            tfidf_vector: normalized_vec,
+            norm,
             name_tokens,
         });
     }
@@ -17367,68 +17458,213 @@ impl SkillDispatcher {
             return Vec::new();
         }
 
+        let query_trimmed = query.trim();
+        if query_trimmed.is_empty() {
+            return Vec::new();
+        }
+
         let lower_query = query.to_lowercase();
         let query_tokens = tokenize(query);
+        if query_tokens.is_empty() {
+            return Vec::new();
+        }
 
-        // 1. Gather candidate skills via Inverted Index and Trigger Index
-        let mut candidates = HashSet::new();
+        let query_token_set: HashSet<&str> = query_tokens.iter().map(|s| s.as_str()).collect();
 
-        for token in &query_tokens {
-            if let Some(&tid) = self.vocab.get(token) {
-                if let Some(doc_ids) = self.inverted_index.get(&tid) {
-                    candidates.extend(doc_ids.iter().copied());
+        let n_skills = self.skills.len();
+        // Use stack-allocated bitsets for up to 8,192 skills (128 * 64)
+        const BITSET_WORDS: usize = 128;
+        let mut seen_bits = [0u64; BITSET_WORDS];
+        let mut exact_name_bits = [0u64; BITSET_WORDS];
+        let mut trigger_matches: Vec<(usize, u16, Vec<String>)> = Vec::with_capacity(8);
+        let mut candidates_vec: Vec<usize> = Vec::with_capacity(512);
+
+        // 1. Pre-compute query-level exact name, alias, and trigger matches in O(1)
+        if let Some(&doc_id) = self.name_index.get(&lower_query) {
+            if doc_id < n_skills && doc_id / 64 < BITSET_WORDS {
+                exact_name_bits[doc_id / 64] |= 1u64 << (doc_id % 64);
+                let word = doc_id / 64;
+                let bit = 1u64 << (doc_id % 64);
+                if (seen_bits[word] & bit) == 0 {
+                    seen_bits[word] |= bit;
+                    candidates_vec.push(doc_id);
                 }
             }
         }
 
-        // 2. Fast query n-grams lookup in trigger_index and name_index (1-gram to 5-gram)
-        let words: Vec<&str> = lower_query.split_whitespace().collect();
-        let max_n = 5.min(words.len());
-        for n in 1..=max_n {
-            for window in words.windows(n) {
-                let phrase = window.join(" ");
-                if let Some(doc_ids) = self.trigger_index.get(&phrase) {
-                    candidates.extend(doc_ids.iter().copied());
+        // Token matches
+        for token in &query_tokens {
+            let token_str = token.as_str();
+            if let Some(&tid) = self.vocab.get(token_str) {
+                if let Some(doc_ids) = self.inverted_index.get(&tid) {
+                    for &doc_id in doc_ids {
+                        if doc_id < n_skills && doc_id / 64 < BITSET_WORDS {
+                            let word = doc_id / 64;
+                            let bit = 1u64 << (doc_id % 64);
+                            if (seen_bits[word] & bit) == 0 {
+                                seen_bits[word] |= bit;
+                                candidates_vec.push(doc_id);
+                            }
+                        }
+                    }
                 }
-                if let Some(&doc_id) = self.name_index.get(&phrase) {
-                    candidates.insert(doc_id);
+            }
+            if let Some(doc_ids) = self.trigger_index.get(token_str) {
+                for &doc_id in doc_ids {
+                    if doc_id < n_skills && doc_id / 64 < BITSET_WORDS {
+                        let word = doc_id / 64;
+                        let bit = 1u64 << (doc_id % 64);
+                        if (seen_bits[word] & bit) == 0 {
+                            seen_bits[word] |= bit;
+                            candidates_vec.push(doc_id);
+                        }
+                        if let Some(entry) = trigger_matches.iter_mut().find(|(id, _, _)| *id == doc_id) {
+                            entry.1 = entry.1.saturating_add(1);
+                            if entry.2.len() < 3 {
+                                entry.2.push(token.clone());
+                            }
+                        } else {
+                            trigger_matches.push((doc_id, 1, vec![token.clone()]));
+                        }
+                    }
                 }
-                let hyphenated = window.join("-");
-                if let Some(&doc_id) = self.name_index.get(&hyphenated) {
-                    candidates.insert(doc_id);
-                }
-                if let Some(doc_ids) = self.trigger_index.get(&hyphenated) {
-                    candidates.extend(doc_ids.iter().copied());
-                }
-                if let Some(aliased) = find_built_in_skill(&hyphenated) {
-                    if let Some(&doc_id) = self.name_index.get(&aliased.name) {
-                        candidates.insert(doc_id);
+            }
+            if let Some(&doc_id) = self.name_index.get(token_str) {
+                if doc_id < n_skills && doc_id / 64 < BITSET_WORDS {
+                    exact_name_bits[doc_id / 64] |= 1u64 << (doc_id % 64);
+                    let word = doc_id / 64;
+                    let bit = 1u64 << (doc_id % 64);
+                    if (seen_bits[word] & bit) == 0 {
+                        seen_bits[word] |= bit;
+                        candidates_vec.push(doc_id);
                     }
                 }
             }
         }
 
-        // Fallback: if candidates empty, score all documents
-        let candidate_list: Vec<usize> = if candidates.is_empty() {
-            (0..self.skills.len()).collect()
-        } else {
-            candidates.into_iter().collect()
-        };
+        // Phrase / N-gram matches (1..=max_n)
+        let words: Vec<&str> = lower_query.split_whitespace().take(12).collect();
+        let max_n = 3.min(words.len());
 
-        // 2. Compute query sparse TF-IDF vector
-        let mut q_counts: HashMap<u32, usize> = HashMap::new();
-        for token in &query_tokens {
-            if let Some(&tid) = self.vocab.get(token) {
-                *q_counts.entry(tid).or_insert(0) += 1;
+        for &word in &words {
+            if let Some(&doc_id) = self.name_index.get(word) {
+                if doc_id < n_skills && doc_id / 64 < BITSET_WORDS {
+                    exact_name_bits[doc_id / 64] |= 1u64 << (doc_id % 64);
+                    let word_idx = doc_id / 64;
+                    let bit = 1u64 << (doc_id % 64);
+                    if (seen_bits[word_idx] & bit) == 0 {
+                        seen_bits[word_idx] |= bit;
+                        candidates_vec.push(doc_id);
+                    }
+                }
             }
         }
 
-        let mut query_vec: Vec<(u32, f32)> = Vec::new();
+        if max_n >= 2 {
+            let mut phrase_buf = String::with_capacity(64);
+            let mut hyphen_buf = String::with_capacity(64);
+            for n in 2..=max_n {
+                for window in words.windows(n) {
+                    phrase_buf.clear();
+                    hyphen_buf.clear();
+                    for (i, w) in window.iter().enumerate() {
+                        if i > 0 {
+                            phrase_buf.push(' ');
+                            hyphen_buf.push('-');
+                        }
+                        phrase_buf.push_str(w);
+                        hyphen_buf.push_str(w);
+                    }
+
+                    if let Some(&doc_id) = self.name_index.get(phrase_buf.as_str()) {
+                        if doc_id < n_skills && doc_id / 64 < BITSET_WORDS {
+                            exact_name_bits[doc_id / 64] |= 1u64 << (doc_id % 64);
+                            let word_idx = doc_id / 64;
+                            let bit = 1u64 << (doc_id % 64);
+                            if (seen_bits[word_idx] & bit) == 0 {
+                                seen_bits[word_idx] |= bit;
+                                candidates_vec.push(doc_id);
+                            }
+                        }
+                    }
+                    if let Some(&doc_id) = self.name_index.get(hyphen_buf.as_str()) {
+                        if doc_id < n_skills && doc_id / 64 < BITSET_WORDS {
+                            exact_name_bits[doc_id / 64] |= 1u64 << (doc_id % 64);
+                            let word_idx = doc_id / 64;
+                            let bit = 1u64 << (doc_id % 64);
+                            if (seen_bits[word_idx] & bit) == 0 {
+                                seen_bits[word_idx] |= bit;
+                                candidates_vec.push(doc_id);
+                            }
+                        }
+                    }
+                    if let Some(doc_ids) = self.trigger_index.get(phrase_buf.as_str()) {
+                        for &doc_id in doc_ids {
+                            if doc_id < n_skills && doc_id / 64 < BITSET_WORDS {
+                                let word_idx = doc_id / 64;
+                                let bit = 1u64 << (doc_id % 64);
+                                if (seen_bits[word_idx] & bit) == 0 {
+                                    seen_bits[word_idx] |= bit;
+                                    candidates_vec.push(doc_id);
+                                }
+                                if let Some(entry) = trigger_matches.iter_mut().find(|(id, _, _)| *id == doc_id) {
+                                    entry.1 = entry.1.saturating_add(1);
+                                    if entry.2.len() < 3 {
+                                        entry.2.push(phrase_buf.clone());
+                                    }
+                                } else {
+                                    trigger_matches.push((doc_id, 1, vec![phrase_buf.clone()]));
+                                }
+                            }
+                        }
+                    }
+                    if let Some(doc_ids) = self.trigger_index.get(hyphen_buf.as_str()) {
+                        for &doc_id in doc_ids {
+                            if doc_id < n_skills && doc_id / 64 < BITSET_WORDS {
+                                let word_idx = doc_id / 64;
+                                let bit = 1u64 << (doc_id % 64);
+                                if (seen_bits[word_idx] & bit) == 0 {
+                                    seen_bits[word_idx] |= bit;
+                                    candidates_vec.push(doc_id);
+                                }
+                                if let Some(entry) = trigger_matches.iter_mut().find(|(id, _, _)| *id == doc_id) {
+                                    entry.1 = entry.1.saturating_add(1);
+                                    if entry.2.len() < 3 {
+                                        entry.2.push(hyphen_buf.clone());
+                                    }
+                                } else {
+                                    trigger_matches.push((doc_id, 1, vec![hyphen_buf.clone()]));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if candidates_vec.is_empty() {
+            return Vec::new();
+        }
+
+        // 2. Compute query sparse TF-IDF vector
+        let mut q_pairs: Vec<(u32, u16)> = Vec::with_capacity(query_tokens.len());
+        for token in &query_tokens {
+            if let Some(&tid) = self.vocab.get(token.as_str()) {
+                if let Some(entry) = q_pairs.iter_mut().find(|(t, _)| *t == tid) {
+                    entry.1 += 1;
+                } else {
+                    q_pairs.push((tid, 1));
+                }
+            }
+        }
+
+        let mut query_vec: Vec<(u32, f32)> = Vec::with_capacity(q_pairs.len());
         let mut q_norm_sq = 0.0f32;
 
-        for (tid, count) in q_counts {
+        for (tid, count) in q_pairs {
             let tf = 1.0 + (count as f32).ln();
-            let weight = tf * self.idf[tid as usize];
+            let idf_val = self.idf.get(tid as usize).copied().unwrap_or(1.0);
+            let weight = tf * idf_val;
             query_vec.push((tid, weight));
             q_norm_sq += weight * weight;
         }
@@ -17442,52 +17678,30 @@ impl SkillDispatcher {
             query_vec
         };
 
-        // 3. Multi-factor scoring loop
-        let mut ranked: Vec<(usize, f32, Vec<String>)> = Vec::with_capacity(candidate_list.len());
+        // 3. Multi-factor scoring loop across candidates
+        let mut ranked: Vec<(usize, f32, Vec<String>)> = Vec::with_capacity(candidates_vec.len());
+        let q_tokens_ref: Vec<&str> = query_tokens.iter().map(|s| s.as_str()).collect();
 
-        for doc_id in candidate_list {
+        for doc_id in candidates_vec {
             let meta = &self.skills[doc_id];
             let mut score = 0.0f32;
-            let mut matched_triggers = Vec::new();
 
-            // 3a. Exact Name or Alias Match (+200.0 / +150.0)
-            let lower_name = meta.name.to_lowercase();
-            let spaced_name = lower_name.replace('-', " ");
-            if lower_query.contains(&lower_name) || lower_query.contains(&spaced_name) {
+            // 3a. Exact Name or Alias Match (+200.0)
+            if (exact_name_bits[doc_id / 64] & (1u64 << (doc_id % 64))) != 0 {
                 score += 200.0;
-            } else {
-                for n in 1..=max_n {
-                    for window in words.windows(n) {
-                        let hyphenated = window.join("-");
-                        if let Some(aliased) = find_built_in_skill(&hyphenated) {
-                            if aliased.name == meta.name {
-                                score += 150.0;
-                                matched_triggers.push(hyphenated);
-                                break;
-                            }
-                        }
-                    }
-                }
             }
 
             // 3b. Trigger Matches (+100 for first, +25 subsequent, max +150)
-            let mut trigger_score = 0.0f32;
-            for tr in &meta.triggers {
-                let matches = if tr.len() <= 3 {
-                    words.contains(&tr.as_str())
-                } else {
-                    lower_query.contains(tr.as_str()) || (tr.contains('-') && lower_query.contains(&tr.replace('-', " ")))
-                };
-                if tr.len() >= 3 && matches {
-                    if trigger_score == 0.0 {
-                        trigger_score += 100.0;
-                    } else if trigger_score < 150.0 {
-                        trigger_score = (trigger_score + 25.0).min(150.0);
-                    }
-                    matched_triggers.push(tr.clone());
-                }
+            let (trig_count, matched_trigs) = if let Some((_, cnt, trigs)) = trigger_matches.iter().find(|(id, _, _)| *id == doc_id) {
+                (*cnt, trigs.clone())
+            } else {
+                (0, Vec::new())
+            };
+
+            if trig_count > 0 {
+                let extra = ((trig_count - 1) as f32 * 25.0).min(50.0);
+                score += 100.0 + extra;
             }
-            score += trigger_score;
 
             // 3c. Domain Prefix & Stage Bias Boost
             let mut domain_score = 0.0f32;
@@ -17496,14 +17710,14 @@ impl SkillDispatcher {
                     domain_score += 35.0;
                 }
             }
-            if lower_query.contains(&meta.domain) || query_tokens.iter().any(|t| t == &meta.domain) {
+            if q_tokens_ref.iter().any(|q| q.eq_ignore_ascii_case(&meta.domain)) {
                 domain_score += 25.0;
             }
             score += domain_score.min(60.0);
 
             // 3d. Name Token Overlap (+30.0)
             if !meta.name_tokens.is_empty() {
-                let overlap = meta.name_tokens.iter().filter(|t| query_tokens.contains(t)).count();
+                let overlap = meta.name_tokens.iter().filter(|t| q_tokens_ref.iter().any(|q| *q == t.as_str())).count();
                 score += (overlap as f32 / meta.name_tokens.len() as f32) * 30.0;
             }
 
@@ -17512,9 +17726,11 @@ impl SkillDispatcher {
                 let mut dot = 0.0f32;
                 let mut p_q = 0;
                 let mut p_d = 0;
-                while p_q < normalized_q_vec.len() && p_d < meta.tfidf_vector.len() {
-                    let (q_tid, q_val) = normalized_q_vec[p_q];
-                    let (d_tid, d_val) = meta.tfidf_vector[p_d];
+                let q_slice = &normalized_q_vec[..];
+                let d_slice = &meta.tfidf_vector[..];
+                while p_q < q_slice.len() && p_d < d_slice.len() {
+                    let (q_tid, q_val) = q_slice[p_q];
+                    let (d_tid, d_val) = d_slice[p_d];
                     if q_tid == d_tid {
                         dot += q_val * d_val;
                         p_q += 1;
@@ -17529,7 +17745,7 @@ impl SkillDispatcher {
             }
 
             if score >= 10.0 {
-                ranked.push((doc_id, score, matched_triggers));
+                ranked.push((doc_id, score, matched_trigs));
             }
         }
 

@@ -109,7 +109,28 @@ pub use engine::{
     budget::TokenBudgetTracker, EmbeddedLlmProvider, EngineContext, GgufFile, GgufMetadata,
     GgufTensorInfo, GgufValue, GgufValueType, OllamaBlobResolver, OllamaModelDetails,
     OllamaModelSummary, OllamaServer, DEFAULT_ALIGNMENT, GGUF_MAGIC, GGUF_VERSION_2,
-    GGUF_VERSION_3,
+    GGUF_VERSION_3, AdmissionVerdict, AntiFreezeGuardian, MemoryTunerConfig,
+    OllamaAdmissionController, OllamaMemoryTuner, ANTI_FREEZE_SAFETY_BUFFER_BYTES,
+};
+pub use engine::astra::{AstraVisualAgent, ScreenCaptureEngine, InputEngine, AstraScreenCaptureTool, AstraComputerUseTool, ScreenFrame, DisplayInfo, InputBackendType};
+pub use engine::arc_agi::{ArcAgi3Solver, ArcGrid, ArcColor, ArcTask, ArcAgiSolveTool, ArcPrediction, SolveResult};
+pub use engine::voice::{
+    AudioBuffer, AudioFormat, AudioFrame, AudioResampler, BidiClientMessage, BidiPart,
+    BidiServerMessage, GeminiLiveConfig, OpusFrame, SpeechSegment, SpeechSegmenter,
+    VadConfig, VadState, VoiceActivityDetector, VoiceEvent, VoiceListenTool,
+    VoiceSession, VoiceSessionConfig, VoiceSessionState, VoiceSpeakTool, WavEncoder,
+};
+pub use engine::dashboard::{
+    DashboardState, HostTelemetrySnapshot, SharedDashboardState, SwarmDashboardServer,
+    SwarmNodeStatus, WebSocketBroadcaster,
+};
+pub use engine::distill::{
+    AlpacaRecord, DatasetExporter, DistillationFormat, DpoRecord, ReflexionDistiller,
+    ShareGptMessage, ShareGptRecord,
+};
+pub use agent::cross_sandbox::{
+    create_host_sandbox, CrossPlatformSandbox, LinuxCrossSandbox, MacOsSeatbeltSandbox,
+    PathAccess, SandboxPolicy, WindowsAppContainerSandbox,
 };
 pub use error::{Result, TagisanError};
 pub use memory::{

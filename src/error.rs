@@ -38,6 +38,9 @@ pub enum TagisanError {
     #[error("Security error: {0}")]
     Security(String),
 
+    #[error("Resource exhausted: {0}")]
+    ResourceExhausted(String),
+
     #[error("No local LLM models are installed in Ollama. Run 'ollama pull <model>' to install one (e.g., 'ollama pull smollm2:1.7b').")]
     NoModelsInstalled,
 
@@ -61,6 +64,7 @@ impl TagisanError {
             Self::Serialization(..) => false,
             Self::Execution(..) => false,
             Self::Security(..) => false,
+            Self::ResourceExhausted(..) => false,
             Self::Io(..) => false,
         }
     }

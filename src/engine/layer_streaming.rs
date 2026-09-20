@@ -556,7 +556,13 @@ pub struct LayerStreamingConfig {
     pub max_seq_len: usize,
     pub vocab_size: usize,
     pub layer_files: Vec<PathBuf>,
+    pub max_pinned_layers: usize,
+    pub prefetch_depth: usize,
+    pub memory_budget_bytes: usize,
+    pub gguf_path: Option<PathBuf>,
 }
+
+pub type LayerStreamConfig = LayerStreamingConfig;
 
 impl Default for LayerStreamingConfig {
     fn default() -> Self {
@@ -571,6 +577,10 @@ impl Default for LayerStreamingConfig {
             max_seq_len: 4096,
             vocab_size: 128256,
             layer_files: Vec::new(),
+            max_pinned_layers: 2,
+            prefetch_depth: 1,
+            memory_budget_bytes: 8 * 1024 * 1024 * 1024,
+            gguf_path: None,
         }
     }
 }
@@ -784,6 +794,203 @@ impl LayerStreamingEngine {
 
     pub fn metrics(&self) -> InferenceMetrics {
         self.metrics.lock().unwrap().clone()
+    }
+}
+
+/// A resident pinned memory buffer holding weights for a single layer.
+/// Controls memory locking and zero-swap page cache eviction (madvise MADV_DONTNEED).
+pub struct PinnedLayerBuffer {
+    pub layer_idx: usize,
+    pub weights: LayerWeights,
+    pub is_pinned: bool,
+    pub allocated_bytes: usize,
+}
+
+impl PinnedLayerBuffer {
+    pub fn new(layer_idx: usize, weights: LayerWeights) -> Self {
+        let allocated_bytes = weights.total_bytes;
+        Self {
+            layer_idx,
+            weights,
+            is_pinned: false,
+            allocated_bytes,
+        }
+    }
+
+    /// Pin the layer's memory into RAM, preventing it from being paged out to swap.
+    pub fn pin(&mut self) -> Result<()> {
+        if self.is_pinned {
+            return Ok(());
+        }
+        #[cfg(target_os = "linux")]
+        {
+            let ptr = self.weights.mmap.as_ptr() as *const libc::c_void;
+            let len = self.weights.mmap.len();
+            unsafe {
+                libc::madvise(ptr as *mut libc::c_void, len, libc::MADV_WILLNEED);
+                let _ = libc::mlock(ptr, len);
+            }
+        }
+        self.is_pinned = true;
+        Ok(())
+    }
+
+    /// Evict the layer's memory from RAM immediately using MADV_DONTNEED.
+    pub fn evict(&mut self) -> Result<()> {
+        if !self.is_pinned {
+            return Ok(());
+        }
+        #[cfg(target_os = "linux")]
+        {
+            let ptr = self.weights.mmap.as_ptr() as *const libc::c_void;
+            let len = self.weights.mmap.len();
+            unsafe {
+                let _ = libc::munlock(ptr, len);
+                libc::madvise(ptr as *mut libc::c_void, len, libc::MADV_DONTNEED);
+            }
+        }
+        self.weights.evict_from_page_cache();
+        self.is_pinned = false;
+        Ok(())
+    }
+
+    pub fn is_pinned(&self) -> bool {
+        self.is_pinned
+    }
+
+    pub fn memory_bytes(&self) -> usize {
+        self.allocated_bytes
+    }
+
+    pub fn weights(&self) -> &LayerWeights {
+        &self.weights
+    }
+
+    pub fn weights_mut(&mut self) -> &mut LayerWeights {
+        &mut self.weights
+    }
+}
+
+impl Drop for PinnedLayerBuffer {
+    fn drop(&mut self) {
+        let _ = self.evict();
+    }
+}
+
+/// Sequential layer streamer maintaining double-buffering between disk and RAM.
+/// Strictly restricts resident layers to 1-2 layers in RAM, avoiding swap thrashing.
+pub struct TransformerLayerStreamer {
+    config: LayerStreamConfig,
+    prefetcher: Option<LayerPrefetcher>,
+    pinned_buffers: Vec<Arc<PinnedLayerBuffer>>,
+    current_layer_idx: usize,
+    total_evictions: Arc<AtomicUsize>,
+    active_pinned_count: Arc<AtomicUsize>,
+}
+
+impl TransformerLayerStreamer {
+    pub fn new(config: LayerStreamConfig) -> Self {
+        Self {
+            config,
+            prefetcher: None,
+            pinned_buffers: Vec::with_capacity(2),
+            current_layer_idx: 0,
+            total_evictions: Arc::new(AtomicUsize::new(0)),
+            active_pinned_count: Arc::new(AtomicUsize::new(0)),
+        }
+    }
+
+    /// Initialize streamer directly from a GGUF file
+    pub fn from_gguf(path: impl AsRef<Path>, config: Option<LayerStreamConfig>) -> Result<Self> {
+        let path_buf = path.as_ref().to_path_buf();
+        let gguf = crate::engine::gguf::GgufFile::open(&path_buf)?;
+
+        let mut max_layer_idx = 0;
+        for tensor in &gguf.tensors {
+            if let Some(rest) = tensor.name.strip_prefix("blk.") {
+                if let Some(dot_idx) = rest.find('.') {
+                    if let Ok(idx) = rest[..dot_idx].parse::<usize>() {
+                        if idx > max_layer_idx {
+                            max_layer_idx = idx;
+                        }
+                    }
+                }
+            }
+        }
+        let num_layers = if max_layer_idx > 0 { max_layer_idx + 1 } else { 4 };
+
+        let mut conf = config.unwrap_or_default();
+        conf.num_layers = num_layers;
+        conf.gguf_path = Some(path_buf.clone());
+        if conf.layer_files.is_empty() {
+            conf.layer_files = vec![path_buf; num_layers];
+        }
+
+        Ok(Self::new(conf))
+    }
+
+    /// Prime the streaming pipeline: starts prefetching Layer 0
+    pub fn init_pipeline(&mut self) -> Result<()> {
+        let prefetcher = LayerPrefetcher::new(self.config.layer_files.clone());
+        prefetcher.request_layer(0)?;
+        self.prefetcher = Some(prefetcher);
+        self.current_layer_idx = 0;
+        self.pinned_buffers.clear();
+        Ok(())
+    }
+
+    /// Advance to next layer, evicting the previous layer if capacity is exceeded.
+    pub fn advance_layer(&mut self) -> Result<Arc<PinnedLayerBuffer>> {
+        let prefetcher = self.prefetcher.as_ref().ok_or_else(|| {
+            TagisanError::Execution("TransformerLayerStreamer pipeline not initialized".into())
+        })?;
+
+        // 1. Enforce strict memory limit: if pinned_buffers reaches max_pinned_layers, evict oldest
+        while self.pinned_buffers.len() >= self.config.max_pinned_layers {
+            if self.pinned_buffers.first().is_some() {
+                self.total_evictions.fetch_add(1, Ordering::SeqCst);
+                self.active_pinned_count.fetch_sub(1, Ordering::SeqCst);
+            }
+            self.pinned_buffers.remove(0);
+        }
+
+        // 2. Queue next layer prefetch if within range
+        let next_prefetch_idx = self.current_layer_idx + 1;
+        if next_prefetch_idx < self.config.num_layers {
+            let _ = prefetcher.request_layer(next_prefetch_idx);
+        }
+
+        // 3. Receive current layer from prefetcher
+        let weights = prefetcher.wait_for_layer()?;
+        let mut pinned = PinnedLayerBuffer::new(self.current_layer_idx, weights);
+        pinned.pin()?;
+        let arc_pinned = Arc::new(pinned);
+
+        self.pinned_buffers.push(Arc::clone(&arc_pinned));
+        self.active_pinned_count.fetch_add(1, Ordering::SeqCst);
+        self.current_layer_idx += 1;
+
+        Ok(arc_pinned)
+    }
+
+    /// Returns count of actively pinned layers resident in memory.
+    pub fn active_layer_count(&self) -> usize {
+        self.pinned_buffers.len()
+    }
+
+    /// Reset pipeline after completing a forward pass across all layers
+    pub fn finish_pass(&mut self) {
+        self.pinned_buffers.clear();
+        self.active_pinned_count.store(0, Ordering::SeqCst);
+        self.current_layer_idx = 0;
+    }
+
+    pub fn config(&self) -> &LayerStreamConfig {
+        &self.config
+    }
+
+    pub fn total_evictions(&self) -> usize {
+        self.total_evictions.load(Ordering::SeqCst)
     }
 }
 

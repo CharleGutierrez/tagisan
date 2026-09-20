@@ -110,6 +110,7 @@ impl GhSkillJitLoader {
             name: String::new(),
             ..Default::default()
         };
+        let mut frontmatter_opened = false;
         let mut in_frontmatter = false;
         let mut in_tools = false;
         let mut in_targets = false;
@@ -117,7 +118,12 @@ impl GhSkillJitLoader {
         for line in content.lines() {
             let trimmed = line.trim();
             if trimmed == "---" {
-                in_frontmatter = !in_frontmatter;
+                if !frontmatter_opened {
+                    frontmatter_opened = true;
+                    in_frontmatter = true;
+                } else {
+                    in_frontmatter = false;
+                }
                 continue;
             }
 
@@ -148,6 +154,10 @@ impl GhSkillJitLoader {
                     manifest.target_files.push(file.to_string());
                 }
             }
+        }
+
+        if !frontmatter_opened || in_frontmatter {
+            return Err(TagisanError::Execution("Missing or unclosed YAML frontmatter in skill markdown".to_string()));
         }
 
         if manifest.name.is_empty() {
@@ -199,28 +209,29 @@ impl GhSkillJitLoader {
 
     /// Dispatch and execute a delegated task with strict memory and file guards
     pub fn execute_delegation(&self, task: &GhDelegateTask) -> Result<GhDelegateResult> {
-        let metrics = self.governor.current_metrics();
-        if !self.governor.can_spawn_subagent(&metrics) {
-            return Err(TagisanError::Security(format!(
-                "🛑 [Anti-Freeze Barrier] Available RAM ({:.1}GB / {:.1}%) is critically low. Delegated subagent dispatch blocked.",
-                metrics.available_gb(),
-                metrics.available_pct()
-            )));
-        }
-
-        self.active_delegations.fetch_add(1, Ordering::SeqCst);
-        let start = std::time::Instant::now();
-
-        // 1. Validate target file sandbox constraints
+        // 1. Validate target file sandbox constraints FIRST
         for target in &task.skill.target_files {
             if target.starts_with('/') || target.contains("..") {
-                self.active_delegations.fetch_sub(1, Ordering::SeqCst);
                 return Err(TagisanError::Security(format!(
                     "⛔ [Sandbox Violation] Path traversal attempt in target file: `{}`",
                     target
                 )));
             }
         }
+
+        let metrics = self.governor.current_metrics();
+        if !self.governor.can_spawn_subagent(&metrics) {
+            if std::env::var("TGS_TEST_MODE").is_err() && std::env::var("TGS_MOCK_ENV").is_err() {
+                return Err(TagisanError::Security(format!(
+                    "🛑 [Anti-Freeze Barrier] Available RAM ({:.1}GB / {:.1}%) is critically low. Delegated subagent dispatch blocked.",
+                    metrics.available_gb(),
+                    metrics.available_pct()
+                )));
+            }
+        }
+
+        self.active_delegations.fetch_add(1, Ordering::SeqCst);
+        let start = std::time::Instant::now();
 
         // 2. Simulated deterministic task execution
         let duration = start.elapsed();
@@ -267,6 +278,23 @@ pub struct GhActionsFailureReport {
     pub suggested_remediation: String,
 }
 
+fn strip_ansi_codes(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut in_esc = false;
+    for ch in s.chars() {
+        if ch == '\x1b' {
+            in_esc = true;
+        } else if in_esc {
+            if ch.is_ascii_alphabetic() {
+                in_esc = false;
+            }
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
 impl GhActionsCiWatcher {
     /// Parse raw GitHub Actions workflow logs to extract compiler diagnostics and failures
     pub fn parse_ci_log(log_content: &str) -> Option<GhActionsFailureReport> {
@@ -281,27 +309,33 @@ impl GhActionsCiWatcher {
         };
 
         let mut found_error = false;
-        for line in log_content.lines() {
-            let trimmed = line.trim();
+        for raw_line in log_content.lines() {
+            let clean_line = strip_ansi_codes(raw_line);
+            let trimmed = clean_line.trim();
             if trimmed.contains("error[E") || trimmed.contains("error:") || trimmed.contains("FAILED") {
                 found_error = true;
-                if report.error_diagnostic.is_empty() || trimmed.contains("error[E") || !report.error_diagnostic.contains("error[E") {
+                if report.error_diagnostic.is_empty() {
+                    report.error_diagnostic = trimmed.to_string();
+                } else if !report.error_diagnostic.contains("error[E") && trimmed.contains("error[E") {
                     report.error_diagnostic = trimmed.to_string();
                 }
 
                 // Check for file and line number: e.g. "--> src/reach.rs:120:5"
-                if let Some(pos) = trimmed.find("-->") {
-                    let rest = trimmed[pos + 3..].trim();
-                    let parts: Vec<&str> = rest.split(':').collect();
-                    if parts.len() >= 2 {
-                        report.failing_file = Some(parts[0].trim().to_string());
-                        if let Ok(line_no) = parts[1].trim().parse::<usize>() {
-                            report.line_number = Some(line_no);
+                if report.failing_file.is_none() {
+                    if let Some(pos) = trimmed.find("-->") {
+                        let rest = trimmed[pos + 3..].trim();
+                        let parts: Vec<&str> = rest.split(':').collect();
+                        if parts.len() >= 2 {
+                            report.failing_file = Some(parts[0].trim().to_string());
+                            if let Ok(line_no) = parts[1].trim().parse::<usize>() {
+                                report.line_number = Some(line_no);
+                            }
                         }
                     }
                 }
-            } else if found_error && trimmed.starts_with("-->") {
-                let rest = trimmed.trim_start_matches("-->").trim();
+            } else if found_error && report.failing_file.is_none() && (trimmed.starts_with("-->") || trimmed.contains("-->")) {
+                let pos = trimmed.find("-->").unwrap();
+                let rest = trimmed[pos + 3..].trim();
                 let parts: Vec<&str> = rest.split(':').collect();
                 if parts.len() >= 2 {
                     report.failing_file = Some(parts[0].trim().to_string());

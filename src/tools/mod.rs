@@ -25,6 +25,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 pub use builtin::{
+    AstraComputerUseTool, AstraScreenCaptureTool,
     CalculatorTool, CalculateBlastRadiusTool, ComputerControlTool, DeleteFileTool, EditFileTool, FetchSkillTool,
     FindByNameTool, GitWorktreeTool, GrepSearchTool, GroundedInferenceTool, ListDirTool,
     QueryCodeGraphTool, ReadFileTool, ReflexionVaultTool, ReplaceFileContentTool, RunCommandTool,
@@ -37,7 +38,7 @@ pub use builtin::{
     Z3SmtSolverTool, RrTimeTravelDebuggerTool, QemuBaremetalEmulatorTool, TlaConsensusCheckerTool,
     AskQuestionTool, AskUserTool, CreateArtifactTool, GenerateArtifactTool, ValidateMermaidTool, RenderDiffTool,
     RenderMermaidTool, RenderCarouselTool, GenerateImageTool, RenderTerminalMediaTool, ExportArtifactHtmlTool,
-    VibeCodeReviewTool,
+    VibeCodeReviewTool, ArcAgiSolveTool,
 };
 pub use visual::{
     ExportArtifactHtmlTool as VisualExportArtifactHtmlTool,
@@ -137,6 +138,8 @@ impl ToolRegistry {
         registry.register_tool(builtin::CalculateBlastRadiusTool::new());
         registry.register_tool(builtin::RunCommandTool::default());
         registry.register_tool(builtin::ComputerControlTool::default());
+        registry.register_tool(builtin::AstraScreenCaptureTool::default());
+        registry.register_tool(builtin::AstraComputerUseTool::default());
         registry.register_tool(builtin::CalculatorTool::new());
         registry.register_tool(builtin::ViewImageTool::new());
         registry.register_tool(builtin::GroundedInferenceTool::new());
@@ -306,7 +309,11 @@ impl ToolRegistry {
         registry.register_tool(crate::engine::oracle::OracleInMemoryTool::new());
         registry.register_tool(crate::engine::oracle::OracleSqlFirewallTool::new());
         registry.register_tool(crate::engine::oracle::OracleRasTool::new());
-        registry.register_tool(crate::engine::oracle::OracleTrueCacheTool::new());
+        registry.register_tool(crate::engine::arc_agi::ArcAgiSolveTool::new());
+        registry.register_tool(crate::engine::astra::AstraScreenCaptureTool::default());
+        registry.register_tool(crate::engine::astra::AstraComputerUseTool::default());
+        registry.register_tool(crate::engine::voice::VoiceSpeakTool::default());
+        registry.register_tool(crate::engine::voice::VoiceListenTool::default());
         registry
     }
 
@@ -497,6 +504,7 @@ impl ToolRegistry {
         registry.register_tool(crate::engine::oracle::OracleSqlFirewallTool::new());
         registry.register_tool(crate::engine::oracle::OracleRasTool::new());
         registry.register_tool(crate::engine::oracle::OracleTrueCacheTool::new());
+        registry.register_tool(crate::engine::arc_agi::ArcAgiSolveTool::new().with_working_dir(dir.clone()));
         registry
     }
 

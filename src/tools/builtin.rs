@@ -11903,3 +11903,7 @@ mod test_computer_control {
     }
 }
 
+pub use crate::engine::astra::tools::{AstraComputerUseTool, AstraScreenCaptureTool};
+pub use crate::engine::arc_agi::ArcAgiSolveTool;
+
+

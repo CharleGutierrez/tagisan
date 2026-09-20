@@ -846,6 +846,125 @@ enum Commands {
         #[command(subcommand)]
         action: Option<TunerSubcommand>,
     },
+    /// GPT Astra Multimodal Computer-Use Engine: Screen perception, OS input synthesis, visual memory & autonomous agents
+    #[command(alias = "cu", alias = "computer-use")]
+    Astra {
+        #[command(subcommand)]
+        action: AstraAction,
+    },
+    /// ARC-AGI-3 Neurosymbolic Reasoning Engine (MCTS, DSL Synthesis, Verification)
+    #[command(alias = "arc-agi", alias = "arc3")]
+    Arc {
+        #[command(subcommand)]
+        action: ArcSubcommand,
+    },
+    /// Interactive Swarm & Computer-Use Web Dashboard
+    #[command(alias = "ui", alias = "web")]
+    Dashboard {
+        /// Host to bind (default: 127.0.0.1)
+        #[arg(long, default_value = "127.0.0.1")]
+        host: String,
+        /// Port to bind (default: 7420)
+        #[arg(short, long, default_value = "7420")]
+        port: u16,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum ArcSubcommand {
+    /// Solve an ARC-AGI task from a JSON file
+    Solve {
+        /// Path to ARC task JSON file
+        #[arg(short, long)]
+        path: String,
+
+        /// Maximum solver search time in seconds (default: 30)
+        #[arg(short, long, default_value = "30")]
+        max_time_secs: u64,
+
+        /// Solver strategy: auto, dsl, mcts, neurosymbolic, cellular (default: auto)
+        #[arg(short, long, default_value = "auto")]
+        strategy: String,
+    },
+}
+
+#[derive(Subcommand, Debug, Clone)]
+pub enum AstraAction {
+    /// Inspect display server, active displays, screen resolution, and available input tools
+    Status,
+    /// Capture screenshot of active display or region and save to file or print base64
+    Screen {
+        /// Optional path to save the captured PNG screenshot
+        #[arg(short, long)]
+        output: Option<String>,
+        /// Optional rectangular region in 'x,y,w,h' format
+        #[arg(short, long)]
+        region: Option<String>,
+        /// Force capture using HeadlessVirtualFramebuffer
+        #[arg(long)]
+        virtual_mode: bool,
+    },
+    /// Synthesize mouse click at (x, y) coordinates
+    Click {
+        /// X coordinate (pixels)
+        x: u32,
+        /// Y coordinate (pixels)
+        y: u32,
+        /// Double click
+        #[arg(short, long)]
+        double: bool,
+        /// Mouse button: left, right, middle (default: left)
+        #[arg(short, long, default_value = "left")]
+        button: String,
+        /// Force virtual simulator mode
+        #[arg(long)]
+        virtual_mode: bool,
+    },
+    /// Synthesize keyboard text typing
+    Type {
+        /// Text string to type
+        text: String,
+        /// Delay in milliseconds between keystrokes (default: 10)
+        #[arg(short, long, default_value = "10")]
+        delay: u64,
+        /// Force virtual simulator mode
+        #[arg(long)]
+        virtual_mode: bool,
+    },
+    /// Synthesize mouse drag from (from_x, from_y) to (to_x, to_y)
+    Drag {
+        /// Starting X coordinate
+        from_x: u32,
+        /// Starting Y coordinate
+        from_y: u32,
+        /// Destination X coordinate
+        to_x: u32,
+        /// Destination Y coordinate
+        to_y: u32,
+        /// Mouse button (default: left)
+        #[arg(short, long, default_value = "left")]
+        button: String,
+        /// Force virtual simulator mode
+        #[arg(long)]
+        virtual_mode: bool,
+    },
+    /// Run autonomous visual agent towards a goal
+    Run {
+        /// Goal or objective for the visual agent to achieve
+        goal: String,
+        /// Maximum visual reasoning steps (default: 10)
+        #[arg(short, long, default_value = "10")]
+        max_steps: usize,
+        /// Vision model name (default: auto)
+        #[arg(short, long, default_value = "auto")]
+        model: String,
+        /// Provider ID: auto, anthropic, openai, gemini, ollama
+        #[arg(short, long, default_value = "auto")]
+        provider: String,
+        /// Force headless execution in virtual desktop
+        #[arg(long)]
+        headless: bool,
+    },
 }
 
 #[derive(Subcommand, Debug, Clone)]
@@ -3364,7 +3483,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         } => {
             let ctx = build_engine_context(cli.max_budget);
 
-            let should_inject_skills = !no_skills && (skill.is_some() || auto_skills);
+            let should_inject_skills = !no_skills;
             let mut debate_system_instruction: Option<String> = None;
 
             if should_inject_skills {
@@ -3615,7 +3734,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 .with_agentshield(shield_active)
                 .with_max_iterations(max_iterations);
 
-            let should_inject_skills = !no_skills && (skill.is_some() || auto_skills);
+            let should_inject_skills = !no_skills;
             if should_inject_skills {
                 let dispatcher = crate::ecc::skills::global_dispatcher();
                 let base_prompt = agent.system_prompt.unwrap_or_else(|| {
@@ -4404,7 +4523,7 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                 } => {
                     let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
 
-                    let should_inject_skills = !no_skills && (skill.is_some() || auto_skills);
+                    let should_inject_skills = !no_skills;
 
                     println!("{}", "═══════════════════════════════════════════════════════════".bold().blue());
                     println!("{}", "  🏛️  ECC 5-STAGE MULTI-AGENT ENGINEERING PIPELINE".bold().yellow());
@@ -5968,8 +6087,234 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         Commands::Tuner { action } => {
             handle_tuner_command(action).await?;
         }
+        Commands::Astra { action } => {
+            handle_astra_command(action, cli.max_budget).await?;
+        }
+        Commands::Arc { action } => {
+            handle_arc_command(action).await?;
+        }
+        Commands::Dashboard { host, port } => {
+            handle_dashboard_command(&host, port).await?;
+        }
     }
 
+    Ok(())
+}
+
+/// Handle execution of Swarm & Computer-Use Web Dashboard
+pub async fn handle_dashboard_command(host: &str, port: u16) -> Result<(), Box<dyn std::error::Error>> {
+    use colored::*;
+    println!("{}", format!("🚀 Starting Tagisan Swarm & Computer-Use Dashboard on http://{}:{}", host, port).green().bold());
+    let state = crate::engine::dashboard::SharedDashboardState::new();
+    let server = crate::engine::dashboard::SwarmDashboardServer::start(host, port, state).await?;
+    println!("{}", format!("✨ Dashboard is live at http://{}:{}", host, server.port).cyan().bold());
+    println!("{}", "Press Ctrl+C to stop.".yellow());
+    tokio::signal::ctrl_c().await?;
+    server.shutdown();
+    println!("{}", "Dashboard shut down cleanly.".green());
+    Ok(())
+}
+
+/// Handle execution of ARC-AGI-3 reasoning engine commands
+pub async fn handle_arc_command(action: ArcSubcommand) -> Result<(), Box<dyn std::error::Error>> {
+    match action {
+        ArcSubcommand::Solve {
+            path,
+            max_time_secs,
+            strategy,
+        } => {
+            use colored::*;
+            use std::time::Duration;
+            use crate::engine::arc_agi::{ArcAgi3Solver, ArcTask};
+
+            println!("{}", "=========================================================================".cyan());
+            println!("{}", " 🧩 ARC-AGI-3 NEUROSYMBOLIC REASONING ENGINE".bold().yellow());
+            println!("{}", "=========================================================================".cyan());
+            println!(" Task Path:     {}", path.bold().white());
+            println!(" Time Budget:   {}s", max_time_secs);
+            println!(" Strategy:      {}", strategy.bold().cyan());
+            println!("{}", "-------------------------------------------------------------------------".dimmed());
+
+            let content = tokio::fs::read_to_string(&path)
+                .await
+                .map_err(|e| format!("Failed to read ARC task file at {}: {}", path, e))?;
+            let task: ArcTask = serde_json::from_str(&content)
+                .map_err(|e| format!("Failed to parse ARC task JSON: {}", e))?;
+
+            println!(" Training Demonstrations: {}", task.train.len());
+            println!(" Test Examples:           {}", task.test.len());
+
+            let solver = ArcAgi3Solver::new()
+                .with_max_time(Duration::from_secs(max_time_secs))
+                .with_strategy(strategy);
+
+            let result = solver
+                .solve(&task)
+                .map_err(|e| format!("Solver error: {}", e))?;
+
+            println!("\n{}", "--- SOLVER SUMMARY ---".bold().green());
+            println!(
+                " Solved Training:   {}",
+                if result.solved_training {
+                    "✅ YES".bold().green()
+                } else {
+                    "⚠️ PARTIAL".bold().yellow()
+                }
+            );
+            println!(" Strategy Used:     {}", result.strategy_used.bold().cyan());
+            if let Some(ref prog) = result.synthesized_program {
+                println!(" Synthesized DSL:   {}", prog.bold().magenta());
+            }
+            println!(" Compute Time:      {}ms", result.duration_ms);
+
+            println!("\n{}", "--- DEDUCED INVARIANTS ---".bold().cyan());
+            println!(" Size:     {:?}", result.invariants.size);
+            println!(" Color:    {:?}", result.invariants.color);
+            println!(" Topology: {:?}", result.invariants.topology);
+            println!(
+                " Symmetries: H={}, V={}, Rot180={}",
+                result.invariants.preserves_horizontal_symmetry,
+                result.invariants.preserves_vertical_symmetry,
+                result.invariants.preserves_rotational_180
+            );
+
+            println!("\n{}", "--- PREDICTIONS ---".bold().yellow());
+            for (idx, pred) in result.predictions.iter().enumerate() {
+                println!("\n[Test Example {}] (Confidence: {}%)", idx + 1, pred.confidence);
+                println!("Candidate 1 ({}x{}):", pred.candidate_1.height(), pred.candidate_1.width());
+                print!("{}", pred.candidate_1.to_colored_ascii());
+                if pred.candidate_1 != pred.candidate_2 {
+                    println!("\nCandidate 2 ({}x{}):", pred.candidate_2.height(), pred.candidate_2.width());
+                    print!("{}", pred.candidate_2.to_colored_ascii());
+                }
+            }
+            println!("{}", "=========================================================================".cyan());
+        }
+    }
+    Ok(())
+}
+
+/// Handle execution of Astra multimodal computer-use commands
+pub async fn handle_astra_command(action: AstraAction, max_budget: f64) -> Result<(), Box<dyn std::error::Error>> {
+    match action {
+        AstraAction::Status => {
+            let screen_eng = crate::engine::astra::ScreenCaptureEngine::new();
+            let input_eng = crate::engine::astra::InputEngine::new(1920, 1080);
+            let disp_info = screen_eng.display_info();
+
+            println!("{}", "=========================================================================".cyan());
+            println!("{}", " 🌌 GPT Astra Multimodal Computer-Use Engine for Tagisan".bold().cyan());
+            println!("{}", "=========================================================================".cyan());
+            println!("  • Display Server:      {}", disp_info.display_type.to_string().bold().green());
+            println!("  • Resolution:          {}x{}", disp_info.width, disp_info.height);
+            println!("  • Virtual Mode:        {}", if disp_info.is_virtual { "Active (Headless)".yellow() } else { "Inactive (Native)".green() });
+            println!("  • Capture Backend:     {}", disp_info.available_tools.join(", ").cyan());
+            println!("  • Input Backend:       {}", input_eng.backend.to_string().bold().green());
+            println!("  • Cursor Position:     {:?}", input_eng.cursor_position());
+            println!("  • AgentShield Guard:   Active (Blocking destructive commands)");
+            println!("{}", "=========================================================================".cyan());
+        }
+        AstraAction::Screen { output, region, virtual_mode } => {
+            let mut engine = crate::engine::astra::ScreenCaptureEngine::new().with_virtual_forced(virtual_mode);
+            let frame = if let Some(reg_str) = region {
+                let parts: Vec<u32> = reg_str.split(',').filter_map(|s| s.trim().parse().ok()).collect();
+                if parts.len() == 4 {
+                    engine.capture_region(parts[0], parts[1], parts[2], parts[3])?
+                } else {
+                    engine.capture()?
+                }
+            } else {
+                engine.capture()?
+            };
+
+            println!("✔ Captured ScreenFrame #{} [{}x{}, {:?}, {} bytes, server: {}, virtual: {}]",
+                frame.id, frame.width, frame.height, frame.format, frame.data.len(), frame.display_type, frame.is_virtual
+            );
+
+            if let Some(out_path) = output {
+                let bytes = frame.to_png_bytes();
+                std::fs::write(&out_path, &bytes)?;
+                println!("  Saved screenshot to: {}", out_path.bold().green());
+            } else {
+                let b64 = frame.to_base64_png();
+                println!("  Base64 Preview: {}... ({} bytes total)", &b64[..40.min(b64.len())], frame.data.len());
+            }
+        }
+        AstraAction::Click { x, y, double, button, virtual_mode } => {
+            let mut engine = crate::engine::astra::InputEngine::new(1920, 1080).with_virtual_forced(virtual_mode);
+            let btn = match button.to_lowercase().as_str() {
+                "right" => crate::engine::astra::MouseButton::Right,
+                "middle" => crate::engine::astra::MouseButton::Middle,
+                _ => crate::engine::astra::MouseButton::Left,
+            };
+
+            let res = if double {
+                engine.double_click(x, y)?
+            } else {
+                engine.click(x, y, btn)?
+            };
+
+            println!("✔ Click synthesized successfully: {}", res.details.green());
+            println!("  Backend: {}, Verified: {}, Duration: {}ms", res.backend_used, res.verified, res.execution_time_ms);
+        }
+        AstraAction::Type { text, delay, virtual_mode } => {
+            let mut engine = crate::engine::astra::InputEngine::new(1920, 1080).with_virtual_forced(virtual_mode);
+            let res = engine.type_text(&text, delay)?;
+            println!("✔ Keyboard typing synthesized: {}", res.details.green());
+            println!("  Backend: {}, Verified: {}, Duration: {}ms", res.backend_used, res.verified, res.execution_time_ms);
+        }
+        AstraAction::Drag { from_x, from_y, to_x, to_y, button: _, virtual_mode } => {
+            let mut engine = crate::engine::astra::InputEngine::new(1920, 1080).with_virtual_forced(virtual_mode);
+            let res = engine.drag(from_x, from_y, to_x, to_y)?;
+            println!("✔ Mouse drag synthesized: {}", res.details.green());
+            println!("  Backend: {}, Verified: {}, Duration: {}ms", res.backend_used, res.verified, res.execution_time_ms);
+        }
+        AstraAction::Run { goal, max_steps, model, provider, headless } => {
+            println!("{}", "=========================================================================".cyan());
+            println!(" 🚀 Starting Astra Autonomous Visual Agent");
+            println!("    Goal:      {}", goal.bold().yellow());
+            println!("    Max Steps: {}", max_steps);
+            println!("    Headless:  {}", headless);
+            println!("{}", "=========================================================================".cyan());
+
+            let mut config = crate::engine::astra::AstraVisualAgentConfig {
+                goal: goal.clone(),
+                max_steps,
+                headless,
+                ..Default::default()
+            };
+
+            if model != "auto" {
+                config.model = model.clone();
+            }
+
+            // Attempt to resolve provider if requested
+            if provider != "auto" {
+                let ctx = build_engine_context(max_budget);
+                if let Ok((_, m_name, p)) = resolve_provider_and_model(&ctx, &provider, if model != "auto" { Some(model) } else { None }) {
+                    config.provider = Some(p);
+                    config.model = m_name;
+                }
+            }
+
+            let mut agent = crate::engine::astra::AstraVisualAgent::new(config);
+            let result = agent.run().await?;
+
+            println!("\n{}", "=== Execution Trace ===".bold().cyan());
+            for step in &result.step_trace {
+                println!("  [Step {}] Action: {} | Duration: {}ms", step.step_number, step.proposed_action.bold().green(), step.duration_ms);
+                println!("    Thought: {}", step.thought.dimmed());
+                println!("    Diff:    {}", step.diff_summary);
+            }
+
+            println!("\n{}", "-------------------------------------------------------------------------".cyan());
+            println!(" Status:          {:?}", result.status);
+            println!(" Steps Executed:  {}", result.steps_executed);
+            println!(" Total Duration:  {}ms", result.total_duration_ms);
+            println!(" Success:         {}", if result.success { "YES".bold().green() } else { "NO".bold().red() });
+            println!("{}", "-------------------------------------------------------------------------".cyan());
+        }
+    }
     Ok(())
 }
 
@@ -8176,7 +8521,7 @@ async fn handle_stream_command(
     );
     println!("Prompt: \"{}\"", prompt.italic());
 
-    let should_inject_skills = !no_skills && (skill.is_some() || auto_skills);
+    let should_inject_skills = !no_skills;
     let mut final_system_prompt: Option<String> = None;
     let mut effective_prompt = prompt.clone();
 
@@ -8332,7 +8677,7 @@ async fn handle_ask_command(
         model_name.yellow()
     );
 
-    let should_inject_skills = !no_skills && (skill.is_some() || auto_skills);
+    let should_inject_skills = !no_skills;
     let mut final_system_prompt: Option<String> = None;
     let mut effective_prompt = prompt.clone();
 

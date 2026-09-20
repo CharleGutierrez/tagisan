@@ -1,3 +1,5 @@
+pub mod astra;
+pub mod arc_agi;
 pub mod autofix;
 pub mod budget;
 pub mod embedded;
@@ -8,10 +10,26 @@ pub mod layer_streaming;
 pub mod memory_tuner;
 pub mod oracle;
 pub mod server;
+pub mod voice;
+pub mod dashboard;
+pub mod distill;
 
+pub use astra::{
+    AstraAgentResult, AstraAgentStep, AstraComputerUseTool, AstraEvent, AstraEventBus,
+    AstraFrameQueue, AstraScreenCaptureTool, AstraSecurityGuard, AstraSession, AstraVisualAgent,
+    AstraVisualAgentConfig, DisplayInfo, DisplayServerType, FrameFormat,
+    HeadlessVirtualFramebuffer, InputAction, InputActionResult, InputBackendType, InputEngine,
+    KeyModifier, MouseButton, PerceptualGridHash, ScreenCaptureEngine, ScreenFrame,
+    SecurityAuditVerdict, SessionState, UiState, UiTransition, VirtualInputSimulator,
+    VirtualWindow, VisualDiffResult, VisualMemory, VisualMemoryStats,
+};
+pub use arc_agi::{ArcAgi3Solver, ArcGrid, ArcColor, ArcTask, ArcAgiSolveTool, ArcPrediction, SolveResult};
 pub use layer_streaming::*;
 pub use memory_tuner::*;
 pub use oracle::*;
+pub use voice::*;
+pub use dashboard::*;
+pub use distill::*;
 
 pub use grounding::{
     CritiqueCategory, CritiqueFinding, CritiqueSeverity, GroundingEngine, GroundingOptions,

@@ -1463,7 +1463,6 @@ impl OllamaProvider {
     fn build_options(&self, req: &CompletionRequest) -> OllamaOptions {
         let metrics = LinuxMemInfo::read_host();
         let gov = HostMemoryGovernor::new();
-        let is_8gb = gov.is_8gb_workstation(&metrics);
 
         let num_gpu = std::env::var("TAGISAN_OLLAMA_NUM_GPU")
             .ok()
@@ -1490,17 +1489,17 @@ impl OllamaProvider {
                     let fit = self.context_fitter.fit_context_window(req);
                     Some(fit.allocated_num_ctx)
                 } else {
-                    req.max_tokens.map(|m| m.max(if is_8gb { 2048 } else { 4096 }))
-                        .or(Some(if is_8gb { 2048 } else { 8192 }))
+                    let base = req.max_tokens.unwrap_or(2048);
+                    Some(gov.recommended_ollama_ctx(&metrics, Some(base)))
                 }
             });
 
+        // Clamp num_thread to 1 on dual-core / 8GB / memory pressure (leaves 1 core for OS/UI)
         let num_thread = std::env::var("TAGISAN_OLLAMA_NUM_THREAD")
             .ok()
             .and_then(|s| s.parse().ok())
             .or_else(|| {
-                let rec = gov.recommended_concurrency(&metrics);
-                Some(rec.clamp(2, 6) as u32)
+                Some(gov.recommended_ollama_threads(&metrics))
             });
 
         let use_mmap = Some(self.hyper_config.use_mmap);
@@ -1524,7 +1523,17 @@ impl OllamaProvider {
     }
 
     fn get_keep_alive(&self) -> String {
-        std::env::var("TAGISAN_OLLAMA_KEEP_ALIVE").unwrap_or_else(|_| "24h".to_string())
+        let metrics = LinuxMemInfo::read_host();
+        let gov = HostMemoryGovernor::new();
+        gov.recommended_ollama_keep_alive(&metrics)
+    }
+
+    pub async fn send_chat_request(&self, req: CompletionRequest) -> Result<CompletionResponse> {
+        self.complete(req).await
+    }
+
+    pub async fn send_chat_stream_request(&self, req: CompletionRequest) -> Result<BoxEventStream> {
+        self.stream(req).await
     }
 }
 
@@ -1706,7 +1715,10 @@ impl LlmProvider for OllamaProvider {
             let start = Instant::now();
             let url = format!("{}/api/chat", self.base_url.trim_end_matches('/'));
 
-            let installed = Self::discover_installed_models();
+            let mut installed = self.list_models().await.unwrap_or_else(|_| Self::discover_installed_models());
+            if installed.is_empty() {
+                installed = Self::discover_installed_models();
+            }
             if installed.is_empty() {
                 Self::notify_no_models_installed();
                 return Err(TagisanError::NoModelsInstalled);
@@ -1727,6 +1739,24 @@ impl LlmProvider for OllamaProvider {
                 Self::auto_heal_env_file(&fb);
                 current_req.model = fb.clone();
                 fb
+            };
+
+            let options = self.build_options(&current_req);
+            let requested_ctx = options.num_ctx.unwrap_or(2048);
+
+            // Pre-Flight Memory Admission Control (Anti-Freeze Guardian)
+            let guardian = crate::engine::OllamaAdmissionController::new(self.memory_tuner());
+            let verdict = guardian.check_admission(&target_model, requested_ctx).await?;
+            let target_model = match verdict {
+                crate::engine::AdmissionVerdict::Admitted { model_name, .. } => model_name,
+                crate::engine::AdmissionVerdict::RecoveredToLighterModel { fallback_model, .. } => {
+                    current_req.model = fallback_model.clone();
+                    fallback_model
+                }
+                crate::engine::AdmissionVerdict::Bypassed { model_name, .. } => model_name,
+                crate::engine::AdmissionVerdict::Rejected { diagnostics, .. } => {
+                    return Err(TagisanError::ResourceExhausted(diagnostics));
+                }
             };
 
             if self.hyper_config.deterministic_kv_cache {
@@ -1759,8 +1789,6 @@ impl LlmProvider for OllamaProvider {
             };
 
             let keep_alive = self.get_keep_alive();
-            let options = self.build_options(&current_req);
-
             let payload = OllamaChatPayload {
                 model: &target_model,
                 messages,
@@ -1935,10 +1963,13 @@ impl LlmProvider for OllamaProvider {
             estimated_cost_usd: Some(0.0),
         };
 
-            return Ok(CompletionResponse {
-                id: format!("ollama_{}", start.elapsed().as_millis()),
-                provider: "ollama".to_string(),
-                model: target_model,
+            // Post-Inference Memory Hygiene (Trim Heap + Evict if RedCritical)
+        self.memory_tuner().perform_post_inference_hygiene(&target_model).await;
+
+        return Ok(CompletionResponse {
+            id: format!("ollama_{}", start.elapsed().as_millis()),
+            provider: "ollama".to_string(),
+            model: target_model,
                 message: Message {
                     role: Role::Assistant,
                     content: content_blocks,
@@ -1962,7 +1993,10 @@ impl LlmProvider for OllamaProvider {
         loop {
             let url = format!("{}/api/chat", self.base_url.trim_end_matches('/'));
 
-            let installed = Self::discover_installed_models();
+            let mut installed = self.list_models().await.unwrap_or_else(|_| Self::discover_installed_models());
+            if installed.is_empty() {
+                installed = Self::discover_installed_models();
+            }
             if installed.is_empty() {
                 Self::notify_no_models_installed();
                 return Err(TagisanError::NoModelsInstalled);
@@ -1983,6 +2017,24 @@ impl LlmProvider for OllamaProvider {
                 Self::auto_heal_env_file(&fb);
                 current_req.model = fb.clone();
                 fb
+            };
+
+            let options = self.build_options(&current_req);
+            let requested_ctx = options.num_ctx.unwrap_or(2048);
+
+            // Pre-Flight Memory Admission Control (Anti-Freeze Guardian)
+            let guardian = crate::engine::OllamaAdmissionController::new(self.memory_tuner());
+            let verdict = guardian.check_admission(&target_model, requested_ctx).await?;
+            let target_model = match verdict {
+                crate::engine::AdmissionVerdict::Admitted { model_name, .. } => model_name,
+                crate::engine::AdmissionVerdict::RecoveredToLighterModel { fallback_model, .. } => {
+                    current_req.model = fallback_model.clone();
+                    fallback_model
+                }
+                crate::engine::AdmissionVerdict::Bypassed { model_name, .. } => model_name,
+                crate::engine::AdmissionVerdict::Rejected { diagnostics, .. } => {
+                    return Err(TagisanError::ResourceExhausted(diagnostics));
+                }
             };
 
             if self.hyper_config.deterministic_kv_cache {
@@ -2024,7 +2076,6 @@ impl LlmProvider for OllamaProvider {
             };
 
             let keep_alive = self.get_keep_alive();
-            let options = self.build_options(&current_req);
 
             let payload = OllamaChatPayload {
                 model: &target_model,
@@ -2107,6 +2158,8 @@ impl LlmProvider for OllamaProvider {
             let cancellation_token = current_req.cancellation_token.clone();
         let pld_arc = self.pld.clone();
         let enable_pld = self.hyper_config.prompt_lookup_decoding;
+        let tuner = self.memory_tuner();
+        let target_model_hygiene = target_model.clone();
 
         let stream = response.bytes_stream().map(|item| {
             item.map_err(std::io::Error::other)
@@ -2121,6 +2174,7 @@ impl LlmProvider for OllamaProvider {
                     tokio::select! {
                         _ = token.cancelled() => {
                             yield Err(TagisanError::Cancelled);
+                            tuner.perform_post_inference_hygiene(&target_model_hygiene).await;
                             return;
                         }
                         line_res = lines.next_line() => line_res,
@@ -2236,6 +2290,9 @@ impl LlmProvider for OllamaProvider {
                     }
                 }
             }
+
+            // Post-Inference Memory Hygiene (Trim Heap + Evict if RedCritical)
+            tuner.perform_post_inference_hygiene(&target_model_hygiene).await;
         };
 
             return Ok(Box::pin(output_stream));
