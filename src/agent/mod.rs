@@ -53,21 +53,38 @@ pub struct AutonomousAgent {
 }
 
 impl AutonomousAgent {
-    /// Create a new AutonomousAgent instance (AgentShield security and Auto-Skills enabled by default)
     pub fn new(
         provider: Arc<dyn LlmProvider>,
         model: impl Into<String>,
         tools: ToolRegistry,
     ) -> Self {
+        let model_str = model.into();
+        let is_local = provider.provider_id() == "ollama"
+            || provider.provider_id() == "colibri"
+            || model_str.to_ascii_lowercase().contains("llama")
+            || model_str.to_ascii_lowercase().contains("qwen")
+            || model_str.to_ascii_lowercase().contains("mistral")
+            || model_str.to_ascii_lowercase().contains("phi");
+
+        // By default, enable auto_skills for cloud providers, but disable for local models
+        // unless TAGISAN_AUTO_SKILLS=1 is explicitly set, preventing thousands of prompt tokens on local CPU.
+        let auto_skills_enabled = if is_local {
+            std::env::var("TAGISAN_AUTO_SKILLS")
+                .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+                .unwrap_or(false)
+        } else {
+            true
+        };
+
         Self {
             provider,
-            model: model.into(),
+            model: model_str,
             tools,
             system_prompt: None,
             max_iterations: 10,
             temperature: Some(0.7),
             agentshield_enabled: true,
-            auto_skills_enabled: true,
+            auto_skills_enabled,
             memory: None,
             embedding_provider: None,
             working_dir: None,
@@ -401,7 +418,9 @@ impl AutonomousAgent {
             .unwrap_or(false);
 
         // Automatic skill selection & semantic injection across all processes
-        if self.auto_skills_enabled {
+        // Skip for local models unless explicitly enabled via TAGISAN_AUTO_SKILLS to prevent huge prompt overhead
+        let allow_auto_skills = self.auto_skills_enabled && (!is_local || std::env::var("TAGISAN_AUTO_SKILLS").map(|v| v == "1" || v.eq_ignore_ascii_case("true")).unwrap_or(false));
+        if allow_auto_skills {
             let last_user_prompt = session
                 .history
                 .iter()

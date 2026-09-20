@@ -316,6 +316,14 @@ enum Commands {
         /// Resume a previously saved session by ID
         #[arg(long)]
         resume: Option<String>,
+
+        /// Enable full developer tool execution in REPL (defaults to false on local models for 1-2s turn latency)
+        #[arg(long)]
+        tools: bool,
+
+        /// Explicitly disable all tool execution in REPL (fast chat mode)
+        #[arg(long)]
+        no_tools: bool,
     },
     /// Persistent Agent Session Management (Milestone 8)
     Session {
@@ -5754,22 +5762,42 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
             println!("\nSynthesis Summary:\n{}\n", verdict.synthesis);
         }
 
-        Commands::Repl { agent, model, provider, memory, sandbox, resume } => {
+        Commands::Repl { agent, model, provider, memory, sandbox, resume, tools, no_tools } => {
             let ctx = build_engine_context(cli.max_budget);
             let store = SessionStore::new();
 
             let mut repl = if let Some(ref session_id) = resume {
                 let session_record = store.load(session_id)?;
-                let (_, model_name, prov) = resolve_provider_and_model(&ctx, &provider, Some(session_record.model.clone()))?;
-                let mut autonomous_agent = AutonomousAgent::new(prov, model_name, ToolRegistry::with_builtins());
+                let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, Some(session_record.model.clone()))?;
+                let is_local = provider_id == "ollama" || provider_id == "colibri";
+                let enable_tools = !no_tools && (tools || !is_local);
+                let tool_reg = if enable_tools {
+                    ToolRegistry::with_builtins()
+                } else {
+                    ToolRegistry::new()
+                };
+                let mut autonomous_agent = AutonomousAgent::new(prov, model_name, tool_reg);
+                if is_local {
+                    autonomous_agent = autonomous_agent.with_auto_skills(false);
+                }
                 if let Some(ref sys) = session_record.system_prompt {
                     autonomous_agent = autonomous_agent.with_system_prompt(sys.clone());
                 }
                 InteractiveRepl::new(autonomous_agent, session_id.clone(), session_record.model.clone(), ctx.clone())
             } else {
                 let session_id = format!("repl-{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs());
-                let (_, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
-                let mut autonomous_agent = AutonomousAgent::new(prov, model_name.clone(), ToolRegistry::with_builtins());
+                let (provider_id, model_name, prov) = resolve_provider_and_model(&ctx, &provider, model)?;
+                let is_local = provider_id == "ollama" || provider_id == "colibri";
+                let enable_tools = !no_tools && (tools || !is_local);
+                let tool_reg = if enable_tools {
+                    ToolRegistry::with_builtins()
+                } else {
+                    ToolRegistry::new()
+                };
+                let mut autonomous_agent = AutonomousAgent::new(prov, model_name.clone(), tool_reg);
+                if is_local {
+                    autonomous_agent = autonomous_agent.with_auto_skills(false);
+                }
 
                 if let Some(ref persona) = agent {
                     if let Some(preset) = crate::ecc::find_preset(persona) {

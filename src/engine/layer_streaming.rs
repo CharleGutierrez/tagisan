@@ -1172,6 +1172,7 @@ mod tests {
             max_seq_len: 128,
             vocab_size: 1000,
             layer_files,
+            ..Default::default()
         };
 
         let engine = LayerStreamingEngine::new(config);

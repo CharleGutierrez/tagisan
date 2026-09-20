@@ -2,6 +2,7 @@ use crate::agent::{AutonomousAgent, WorktreeSandbox};
 use crate::engine::EngineContext;
 use crate::error::{Result, TagisanError};
 use crate::swarm::session::{SessionRecord, SessionStore};
+use crate::tools::ToolRegistry;
 use crate::tui::Spinner;
 use crate::types::{Message, Role};
 use colored::Colorize;
@@ -21,7 +22,7 @@ pub enum ReplCommand {
     Forge(String),
     Model(String),
     Provider(String),
-    Tools,
+    Tools(String),
     Memory,
     HostMem(String),
     Sandbox,
@@ -108,7 +109,7 @@ impl InteractiveRepl {
             "/forge" => ReplCommand::Forge(arg),
             "/model" | "/m" => ReplCommand::Model(arg),
             "/provider" | "/prov" => ReplCommand::Provider(arg),
-            "/tools" | "/t" => ReplCommand::Tools,
+            "/tools" | "/t" => ReplCommand::Tools(arg),
             "/memory" => {
                 if arg.is_empty() {
                     ReplCommand::Memory
@@ -558,13 +559,35 @@ impl InteractiveRepl {
             }
             ReplCommand::Model(name) => self.switch_model_and_provider(&name),
             ReplCommand::Provider(name) => self.switch_model_and_provider(&name),
-            ReplCommand::Tools => {
-                let defs = self.agent.tools.definitions();
-                let mut out = format!("Registered Tools ({}):\n", defs.len());
-                for d in defs {
-                    out.push_str(&format!("  - {}: {}\n", d.name.bold().cyan(), d.description));
+            ReplCommand::Tools(arg) => {
+                let trimmed = arg.trim().to_lowercase();
+                if trimmed == "on" || trimmed == "enable" || trimmed == "all" {
+                    self.agent.tools = ToolRegistry::with_builtins();
+                    Ok(Some(format!(
+                        "🔧 [Tools Enabled] Full developer tool execution activated ({} tools registered).\n\
+                         ⚠️  Note: Local models on CPU may experience higher latency when all tools are active.",
+                        self.agent.tools.definitions().len()
+                    )))
+                } else if trimmed == "off" || trimmed == "disable" || trimmed == "clear" {
+                    self.agent.tools = ToolRegistry::new();
+                    self.agent.auto_skills_enabled = false;
+                    Ok(Some("⚡ [Fast Chat Mode] Tools and heavy skill injection disabled (0 tools). Turns will execute in sub-2 seconds.".to_string()))
+                } else {
+                    let defs = self.agent.tools.definitions();
+                    if defs.is_empty() {
+                        Ok(Some(
+                            "⚡ Fast Chat Mode: No tools currently active (0 tools attached).\n\
+                             💡 Type '/tools on' to enable full agentic tool execution (file editing, terminal commands, etc.).".to_string()
+                        ))
+                    } else {
+                        let mut out = format!("Registered Tools ({}):\n", defs.len());
+                        for d in defs {
+                            out.push_str(&format!("  - {}: {}\n", d.name.bold().cyan(), d.description));
+                        }
+                        out.push_str("\n💡 Type '/tools off' to disable tools and enable fast sub-2s chat mode.");
+                        Ok(Some(out))
+                    }
                 }
-                Ok(Some(out))
             }
             ReplCommand::Memory => {
                 if let Some(ref mem) = self.agent.memory {
@@ -2289,6 +2312,17 @@ impl InteractiveRepl {
                     "\n⚠️  No local models installed. Run 'ollama pull smollm2:1.7b' to download a lightweight model."
                 ));
             }
+        }
+
+        let is_now_local = target_provider == "ollama" || target_provider == "colibri";
+        if is_now_local && !std::env::var("TAGISAN_ALL_TOOLS").map(|v| v == "1").unwrap_or(false) && self.agent.tools.definitions().len() > 10 {
+            self.agent.tools = ToolRegistry::new();
+            self.agent.auto_skills_enabled = false;
+            response.push_str("\n⚡ [Fast Chat Mode] Automatically disabled tool schemas and heavy skill injection (1-2s turn latency).\n💡 Type '/tools on' if you need tool execution.");
+        } else if !is_now_local && self.agent.tools.definitions().is_empty() {
+            self.agent.tools = ToolRegistry::with_builtins();
+            self.agent.auto_skills_enabled = true;
+            response.push_str("\n🔧 [Tools Enabled] Restored built-in tools for cloud provider.");
         }
 
         Ok(Some(response))
