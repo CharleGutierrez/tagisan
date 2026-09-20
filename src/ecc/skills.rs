@@ -16600,7 +16600,37 @@ impl TokenBudget {
         let model_lower = model.unwrap_or("").to_lowercase();
 
         if is_local {
-            let (ctx, budget, mode) = if model_lower.contains("32k")
+            let is_small_model = model_lower.contains(":0.5b")
+                || model_lower.contains("-0.5b")
+                || model_lower.contains("0.5b")
+                || model_lower.contains(":1b")
+                || model_lower.contains("-1b")
+                || model_lower.contains(":1.5b")
+                || model_lower.contains("-1.5b")
+                || model_lower.contains("1.5b")
+                || model_lower.contains(":1.7b")
+                || model_lower.contains("-1.7b")
+                || model_lower.contains("1.7b")
+                || model_lower.contains(":2b")
+                || model_lower.contains("-2b")
+                || model_lower.contains(":3b")
+                || model_lower.contains("-3b")
+                || model_lower.contains("smollm")
+                || model_lower.contains("tinyllama")
+                || model_lower.contains("phi3:mini");
+
+            let is_2k_model = model_lower.contains("llama2")
+                || model_lower.contains("llama-2")
+                || model_lower.contains("2k");
+
+            let (ctx, budget, mode) = if is_2k_model {
+                // Legacy 2K context models (e.g. LLaMA-2): strict 400-token cap to avoid context exhaustion
+                (2_048, 400, InjectionMode::CheatSheet)
+            } else if is_small_model {
+                // Small models (<= 3B): compact CheatSheet mode with 500-token cap
+                // to eliminate CPU prefill latency, memory thrashing, and prompt dilution
+                (4_096, 500, InjectionMode::CheatSheet)
+            } else if model_lower.contains("32k")
                 || model_lower.contains("qwen2.5")
                 || model_lower.contains("mistral")
                 || model_lower.contains("deepseek-r1:14b")
