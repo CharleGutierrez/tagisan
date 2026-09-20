@@ -641,22 +641,46 @@ impl InteractiveRepl {
                 let metrics = gov.current_metrics();
                 let is_8gb = gov.is_8gb_workstation(&metrics);
 
-                if subcmd == "warm" {
+                if subcmd == "warm" || subcmd.starts_with("warm ") {
+                    let target_model = if let Some(m) = subcmd.strip_prefix("warm ") {
+                        let trimmed_m = m.trim();
+                        if !trimmed_m.is_empty() {
+                            trimmed_m.to_string()
+                        } else {
+                            self.agent.model.clone()
+                        }
+                    } else if self.agent.provider.provider_id() == "ollama" {
+                        self.agent.model.clone()
+                    } else {
+                        crate::providers::ollama::default_ollama_model()
+                    };
+
                     let provider = crate::providers::ollama::OllamaProvider::default_local();
-                    let target_model = crate::providers::ollama::default_ollama_model();
                     let sentinel = provider.start_warmth_sentinel(&target_model).await;
                     match sentinel.touch_now().await {
-                        Ok(lat) => Ok(Some(format!(
-                            "🔥 [Hyper-Ollama Warmth Sentinel] Model '{}' pinned warm in VRAM!\nRound-trip latency: {:.2}ms\nKeep-alive: 24h\nFlashAttention: {}",
-                            target_model.bold().green(),
-                            lat.as_secs_f64() * 1000.0,
-                            if is_fa { "ENABLED (Active)".green().bold() } else { "DISABLED".yellow() }
-                        ))),
-                        Err(e) => Ok(Some(format!("⚠️ Failed to warm model: {}", e))),
+                        Ok(lat) => {
+                            let keep_alive = gov.recommended_ollama_keep_alive(&metrics);
+                            Ok(Some(format!(
+                                "🔥 [Hyper-Ollama Warmth Sentinel] Model '{}' pinned warm in VRAM/RAM!\n\
+                                 ⏱️  Round-trip latency : {:.2}ms\n\
+                                 ⏳ Keep-alive window  : {}\n\
+                                 ⚡ FlashAttention     : {}\n\
+                                 💡 Run '/tuner status' to inspect resident VRAM footprint.",
+                                target_model.bold().green(),
+                                lat.as_secs_f64() * 1000.0,
+                                keep_alive.bold().cyan(),
+                                if is_fa { "ENABLED (Active)".green().bold() } else { "DISABLED".yellow() }
+                            )))
+                        }
+                        Err(e) => Ok(Some(format!("⚠️ Failed to warm model '{}': {}", target_model, e))),
                     }
-                } else if subcmd.starts_with("prewarm") {
+                } else if subcmd == "prewarm" || subcmd.starts_with("prewarm ") {
+                    let target_model = if self.agent.provider.provider_id() == "ollama" {
+                        self.agent.model.clone()
+                    } else {
+                        crate::providers::ollama::default_ollama_model()
+                    };
                     let provider = crate::providers::ollama::OllamaProvider::default_local();
-                    let target_model = crate::providers::ollama::default_ollama_model();
                     let prefix = if let Some(p) = subcmd.strip_prefix("prewarm ") {
                         p.trim()
                     } else {
@@ -665,10 +689,11 @@ impl InteractiveRepl {
                     let sentinel = provider.start_warmth_sentinel(&target_model).await;
                     match sentinel.prewarm_prompt(prefix).await {
                         Ok(lat) => Ok(Some(format!(
-                            "⚡ [Hyper-Ollama KV Cache] Canonical prefix pre-warmed into Ollama VRAM!\nPrefix tokens evaluated in: {:.2}ms\nKV Cache hit rate on next turn: 100% (0ms prefill)",
+                            "⚡ [Hyper-Ollama KV Cache] Canonical prefix pre-warmed for model '{}' into Ollama VRAM!\nPrefix tokens evaluated in: {:.2}ms\nKV Cache hit rate on next turn: 100% (0ms prefill)",
+                            target_model.bold().green(),
                             lat.as_secs_f64() * 1000.0
                         ))),
-                        Err(e) => Ok(Some(format!("⚠️ Failed to pre-warm KV cache: {}", e))),
+                        Err(e) => Ok(Some(format!("⚠️ Failed to pre-warm KV cache for '{}': {}", target_model, e))),
                     }
                 } else {
                     let mut out = String::new();

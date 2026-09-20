@@ -797,17 +797,29 @@ impl WarmthSentinel {
         *self.status.write().await = WarmthStatus::Warming;
 
         let url = format!("{}/api/generate", self.config.base_url.trim_end_matches('/'));
-        let prompt = self.config.prewarm_canonical_prefix.as_deref().unwrap_or("");
-
-        let payload = serde_json::json!({
-            "model": self.config.model,
-            "prompt": prompt,
-            "stream": false,
-            "keep_alive": self.config.keep_alive,
-            "options": {
-                "num_predict": 0
+        let payload = if let Some(prefix) = &self.config.prewarm_canonical_prefix {
+            if !prefix.is_empty() {
+                serde_json::json!({
+                    "model": self.config.model,
+                    "prompt": prefix,
+                    "stream": false,
+                    "keep_alive": self.config.keep_alive,
+                    "options": {
+                        "num_predict": 0
+                    }
+                })
+            } else {
+                serde_json::json!({
+                    "model": self.config.model,
+                    "keep_alive": self.config.keep_alive,
+                })
             }
-        });
+        } else {
+            serde_json::json!({
+                "model": self.config.model,
+                "keep_alive": self.config.keep_alive,
+            })
+        };
 
         match self.client.post(&url).json(&payload).send().await {
             Ok(resp) => {
