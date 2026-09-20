@@ -248,8 +248,16 @@ impl HostMemoryGovernor {
         let is_8gb = self.is_8gb_workstation(metrics);
         let tier = self.evaluate_pressure(metrics);
 
-        if cpus <= 2 || is_8gb || tier != MemoryPressureTier::GreenNormal {
+        if tier == MemoryPressureTier::RedCritical || cpus <= 2 {
             1
+        } else if is_8gb || tier == MemoryPressureTier::YellowWarning {
+            // On 8GB machines or under mild memory pressure, 2 threads delivers 2x-3x speedup
+            // on 4+ logical core systems while strictly leaving >= 2 cores free for the OS/UI.
+            if cpus >= 4 {
+                2
+            } else {
+                1
+            }
         } else {
             ((cpus.saturating_sub(1)).max(1).min(4)) as u32
         }

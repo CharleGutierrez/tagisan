@@ -328,7 +328,8 @@ fn test_thread_clamping_on_dual_core_and_low_memory() {
     };
     assert!(gov.is_8gb_workstation(&metrics_8gb));
     let threads_8gb = gov.recommended_ollama_threads(&metrics_8gb);
-    assert_eq!(threads_8gb, 1, "8GB system must clamp num_thread to 1");
+    let expected_8gb = if std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1) >= 4 { 2 } else { 1 };
+    assert_eq!(threads_8gb, expected_8gb, "8GB system must clamp num_thread to 2 on 4+ core CPUs and 1 on <=2 core CPUs");
 
     // Critical pressure
     let metrics_red = LinuxMemInfo {

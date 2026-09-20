@@ -8521,7 +8521,8 @@ async fn handle_stream_command(
     );
     println!("Prompt: \"{}\"", prompt.italic());
 
-    let should_inject_skills = !no_skills;
+    let is_local = provider_id == "ollama" || provider_id == "colibri";
+    let should_inject_skills = !no_skills && (!is_local || auto_skills || skill.is_some());
     let mut final_system_prompt: Option<String> = None;
     let mut effective_prompt = prompt.clone();
 
@@ -8677,7 +8678,8 @@ async fn handle_ask_command(
         model_name.yellow()
     );
 
-    let should_inject_skills = !no_skills;
+    let is_local = provider_id == "ollama" || provider_id == "colibri";
+    let should_inject_skills = !no_skills && (!is_local || auto_skills || skill.is_some());
     let mut final_system_prompt: Option<String> = None;
     let mut effective_prompt = prompt.clone();
 

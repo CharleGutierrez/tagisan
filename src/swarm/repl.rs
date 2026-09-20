@@ -190,7 +190,10 @@ impl InteractiveRepl {
             )
         };
 
-        if !is_conversational {
+        let is_local = prov_id == "ollama" || prov_id == "colibri";
+        let should_inject_repl_skills = !is_conversational && (!is_local || std::env::var("TAGISAN_AUTO_SKILLS").map(|v| v == "1" || v.eq_ignore_ascii_case("true")).unwrap_or(false));
+
+        if should_inject_repl_skills {
             let current_sys = chat_session.system_prompt.take().unwrap_or_default();
             let (equipped_sys, dispatched, _) = dispatcher.equip_prompt_maximized(
                 &current_sys,
