@@ -750,7 +750,27 @@ impl InteractiveRepl {
                         ));
                         out.push('\n');
                         out.push_str(&Self::format_box_line(
-                            &format!("  Resident Models    : {}", status.active_models_in_vram.len().to_string().bold()),
+                            &format!("  Active Default     : {}", crate::providers::ollama::default_ollama_model().cyan().bold()),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        let installed_display = if status.installed_models.is_empty() {
+                            "None detected".dimmed().to_string()
+                        } else {
+                            status.installed_models.join(", ").cyan().to_string()
+                        };
+                        out.push_str(&Self::format_box_line(
+                            &format!("  Installed on Disk  : {}", installed_display),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        let resident_display = if status.active_models_in_vram.is_empty() {
+                            "0 (Idle / Standby on disk)".green().bold().to_string()
+                        } else {
+                            format!("{} loaded in RAM/VRAM", status.active_models_in_vram.len()).yellow().bold().to_string()
+                        };
+                        out.push_str(&Self::format_box_line(
+                            &format!("  Resident in VRAM   : {}", resident_display),
                             inner_width,
                         ));
                         out.push('\n');
@@ -772,6 +792,11 @@ impl InteractiveRepl {
                             inner_width,
                         ));
                         out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("    {}     - Switch active model (e.g. /model qwen2.5-coder:1.5b)", "/model <name>".green().bold()),
+                            inner_width,
+                        ));
+                        out.push('\n');
                         out.push_str(&bot_border);
                         if !status.active_models_in_vram.is_empty() {
                             out.push_str(&format!("\n{}\n", "Currently Resident Models in VRAM/RAM:".bold().yellow()));
@@ -789,6 +814,8 @@ impl InteractiveRepl {
                             }
                         } else {
                             out.push_str(&format!("\n{}\n", "✨ No models currently resident in VRAM/RAM (100% memory freed).".green()));
+                            out.push_str(&format!("💡 Models are safely parked on disk to prevent laptop freezing.\n"));
+                            out.push_str(&format!("💡 Run '{}' or prompt the assistant to load a model on-demand.\n", "/model <name>".cyan().bold()));
                         }
                         Ok(Some(out))
                     }

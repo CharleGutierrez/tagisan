@@ -67,6 +67,7 @@ pub struct MemoryTunerStatus {
     pub ollama_reachable: bool,
     pub idle_duration_secs: u64,
     pub inactivity_threshold_secs: u64,
+    pub installed_models: Vec<String>,
     pub active_models_in_vram: Vec<LoadedModelInfo>,
     pub total_unloads: u64,
     pub total_proxied_requests: u64,
@@ -502,10 +503,14 @@ impl OllamaMemoryTuner {
     /// Retrieve full status summary of the Memory Tuner
     pub async fn status(&self) -> Result<MemoryTunerStatus> {
         let ollama_reachable = self.is_ollama_reachable().await;
-        let loaded = if ollama_reachable {
-            self.query_loaded_models().await.unwrap_or_default()
+        let (loaded, installed) = if ollama_reachable {
+            let l = self.query_loaded_models().await.unwrap_or_default();
+            let ins = self.fetch_installed_model_tags().await.map(|tags| {
+                tags.into_iter().map(|t| t.name).collect()
+            }).unwrap_or_default();
+            (l, ins)
         } else {
-            Vec::new()
+            (Vec::new(), Vec::new())
         };
         let proxy_addr = format!("{}:{}", self.config.bind_host, self.config.bind_port);
 
@@ -516,6 +521,7 @@ impl OllamaMemoryTuner {
             ollama_reachable,
             idle_duration_secs: self.idle_duration_secs(),
             inactivity_threshold_secs: self.config.inactivity_timeout_secs,
+            installed_models: installed,
             active_models_in_vram: loaded,
             total_unloads: self.total_unloads.load(Ordering::Relaxed),
             total_proxied_requests: self.total_proxied.load(Ordering::Relaxed),

@@ -18995,6 +18995,9 @@ fn is_stop_word(word: &str) -> bool {
             | "using" | "uses" | "used" | "this" | "that" | "these" | "those" | "is" | "are"
             | "was" | "were" | "be" | "been" | "being" | "have" | "has" | "had" | "having"
             | "do" | "does" | "did" | "doing"
+            | "who" | "whom" | "whose" | "what" | "which" | "why" | "how" | "where"
+            | "you" | "your" | "yours" | "me" | "my" | "myself" | "we" | "us" | "our" | "ours"
+            | "they" | "them" | "their" | "theirs" | "it" | "its" | "i"
     )
 }
 
