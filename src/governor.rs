@@ -406,28 +406,83 @@ impl HostMemoryGovernor {
         });
     }
 
-    /// Format ASCII diagnostic banner for TGS REPL
+    /// Format ASCII diagnostic banner for TGS REPL with auto-width adjustment
     pub fn format_repl_banner(&self) -> String {
+        use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
+
         let audit = self.audit();
         let m = &audit.metrics;
 
+        let visible_width = |s: &str| -> usize {
+            let stripped = regex::Regex::new(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+                .map(|re| re.replace_all(s, "").to_string())
+                .unwrap_or_else(|_| s.to_string());
+            UnicodeWidthStr::width(stripped.as_str())
+        };
+
+        let mut lines = Vec::new();
+        lines.push("🛡️  TAGISAN ANTI-FREEZE HOST MEMORY GOVERNOR".to_string());
+        lines.push(format!("Workstation Profile : {}", if audit.is_8gb_system { "8GB Constrained Laptop" } else { "High-RAM Workstation" }));
+        lines.push(format!("Pressure Status     : {}", audit.pressure_tier.label()));
+        lines.push(format!("Physical RAM        : {:.2} GB Total | {:.2} GB Available", m.total_gb(), m.available_gb()));
+        lines.push(format!("Available Headroom  : {:.1}% (Thresholds: 15% Red / 25% Ylw)", m.available_pct()));
+        lines.push(format!("Linux Swap File     : {:.2} GB Used  / {:.2} GB Total", m.swap_used_gb(), m.swap_total_gb()));
+        lines.push(format!("Swap Saturation     : {:.1}%", m.swap_used_pct()));
+        lines.push(format!("Dynamic Concurrency : Capped to {} worker thread(s)", audit.recommended_concurrency));
+        lines.push(format!("Cargo Job Quota     : Enforced jobs = {} (Anti-OOM)", audit.recommended_cargo_jobs));
+        lines.push(format!("Subagent Spawning   : {}", if audit.can_spawn_subagent { "PERMITTED (Within Budget)" } else { "BLOCKED (Preserving RAM)" }));
+        lines.push(format!("Total Trims Executed: {}", self.total_trims_performed.load(Ordering::SeqCst)));
+
+        let max_line_w = lines.iter().map(|l| visible_width(l)).max().unwrap_or(65);
+        let inner_width = (max_line_w + 4).max(68).min(100);
+
+        let format_box_line = |content: &str| -> String {
+            let vis_w = visible_width(content);
+            let pad = if vis_w < inner_width.saturating_sub(2) {
+                " ".repeat(inner_width.saturating_sub(2).saturating_sub(vis_w))
+            } else {
+                String::new()
+            };
+            format!("│ {}{} │\n", content, pad)
+        };
+
+        let top_border = format!("┌{}┐\n", "─".repeat(inner_width));
+        let div_border = format!("├{}┤\n", "─".repeat(inner_width));
+        let bot_border = format!("└{}┘\n", "─".repeat(inner_width));
+
         let mut out = String::new();
-        out.push_str(&format!(
-            "┌─────────────────────────────────────────────────────────────┐\n             │  🛡️  TAGISAN ANTI-FREEZE HOST MEMORY GOVERNOR              │\n             ├─────────────────────────────────────────────────────────────┤\n             │  Workstation Profile : {:<32}│\n             │  Pressure Status     : {:<32}│\n             │  Physical RAM        : {:<6.2} GB Total | {:<5.2} GB Available │\n             │  Available Headroom  : {:<5.1}% (Thresholds: 15% Red / 25% Ylw)│\n             │  Linux Swap File     : {:<5.2} GB Used  / {:<5.2} GB Total     │\n             │  Swap Saturation     : {:<5.1}%                                │\n             ├─────────────────────────────────────────────────────────────┤\n             │  Dynamic Concurrency : {:<32}│\n             │  Cargo Job Quota     : {:<32}│\n             │  Subagent Spawning   : {:<32}│\n             │  Total Trims Executed: {:<32}│\n             ├─────────────────────────────────────────────────────────────┤\n             │  Diagnosis:                                                │\n             │  {:<59}│\n             └─────────────────────────────────────────────────────────────┘\n",
-            if audit.is_8gb_system { "8GB Constrained Laptop" } else { "High-RAM Workstation" },
-            audit.pressure_tier.label(),
-            m.total_gb(),
-            m.available_gb(),
-            m.available_pct(),
-            m.swap_used_gb(),
-            m.swap_total_gb(),
-            m.swap_used_pct(),
-            format!("Capped to {} worker thread(s)", audit.recommended_concurrency),
-            format!("Enforced jobs = {} (Anti-OOM)", audit.recommended_cargo_jobs),
-            if audit.can_spawn_subagent { "PERMITTED (Within Budget)".to_string() } else { "BLOCKED (Preserving RAM)".to_string() },
-            self.total_trims_performed.load(Ordering::SeqCst),
-            audit.summary
-        ));
+        out.push_str(&top_border);
+        out.push_str(&format_box_line(&lines[0]));
+        out.push_str(&div_border);
+        for line in &lines[1..7] {
+            out.push_str(&format_box_line(line));
+        }
+        out.push_str(&div_border);
+        for line in &lines[7..] {
+            out.push_str(&format_box_line(line));
+        }
+        out.push_str(&div_border);
+        out.push_str(&format_box_line("Diagnosis:"));
+
+        // Wrap diagnosis words across inner_width cleanly
+        let max_diag_w = inner_width.saturating_sub(4);
+        let mut current_diag = String::new();
+        for word in audit.summary.split_whitespace() {
+            if current_diag.is_empty() {
+                current_diag.push_str(word);
+            } else if visible_width(&current_diag) + 1 + visible_width(word) <= max_diag_w {
+                current_diag.push(' ');
+                current_diag.push_str(word);
+            } else {
+                out.push_str(&format_box_line(&format!("  {}", current_diag)));
+                current_diag = word.to_string();
+            }
+        }
+        if !current_diag.is_empty() {
+            out.push_str(&format_box_line(&format!("  {}", current_diag)));
+        }
+
+        out.push_str(&bot_border);
         out
     }
 }

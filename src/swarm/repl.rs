@@ -2309,89 +2309,155 @@ impl InteractiveRepl {
         UnicodeWidthStr::width(stripped.as_ref())
     }
 
+    /// Safely truncate a string containing ANSI escape codes to `max_vis_width` visible columns.
+    /// Preserves ANSI escape sequences without breaking them, and appends `...` with reset formatting if truncated.
+    pub fn truncate_visible(s: &str, max_vis_width: usize) -> String {
+        use unicode_width::UnicodeWidthChar;
+        if max_vis_width <= 3 {
+            return ".".repeat(max_vis_width);
+        }
+        let target_width = max_vis_width.saturating_sub(3);
+        let mut current_width = 0;
+        let mut out = String::new();
+        let mut in_escape = false;
+
+        for ch in s.chars() {
+            if ch == '\x1b' {
+                in_escape = true;
+                out.push(ch);
+                continue;
+            }
+            if in_escape {
+                out.push(ch);
+                if ch.is_ascii_alphabetic() || ch == 'm' {
+                    in_escape = false;
+                }
+                continue;
+            }
+
+            let char_w = ch.width().unwrap_or(0);
+            if current_width + char_w > target_width {
+                out.push_str("...\x1b[0m");
+                return out;
+            }
+            out.push(ch);
+            current_width += char_w;
+        }
+        out
+    }
+
     /// Formats a content line inside the box with exact padding to match `inner_width`.
     /// Ensures the left and right border characters '│' align flawlessly across all rows,
     /// preventing broken lines or box tear-down regardless of label length or ANSI colors.
     pub fn format_box_line(content: &str, inner_width: usize) -> String {
         let vis_w = Self::visible_width(content);
-        let padding = if vis_w < inner_width {
-            " ".repeat(inner_width - vis_w)
+        if vis_w <= inner_width {
+            let padding = " ".repeat(inner_width - vis_w);
+            format!("{}{}{}{}", "│".cyan().bold(), content, padding, "│".cyan().bold())
         } else {
-            String::new()
-        };
-        format!("{}{}{}{}", "│".cyan().bold(), content, padding, "│".cyan().bold())
+            let fitted = Self::truncate_visible(content, inner_width);
+            let fitted_vis_w = Self::visible_width(&fitted);
+            let padding = " ".repeat(inner_width.saturating_sub(fitted_vis_w));
+            format!("{}{}{}{}", "│".cyan().bold(), fitted, padding, "│".cyan().bold())
+        }
     }
 
-    /// Static banner renderer supporting raw-mode screen repaints
+    /// Static banner renderer supporting raw-mode screen repaints and auto-width adjustment
     pub fn print_banner_static(model: &str, session_id: &str) {
+        Self::print_banner_custom(model, session_id, &[]);
+    }
+
+    /// Static banner renderer that automatically adjusts its width to neatly accommodate
+    /// any model, session_id, workspace path, or arbitrary extra labels thrown to it.
+    pub fn print_banner_custom(model: &str, session_id: &str, extra_labels: &[(&str, &str)]) {
         let cwd_display = std::env::current_dir()
             .unwrap_or_default()
             .display()
             .to_string();
 
-        let inner_width: usize = 72;
+        // 1. Detect terminal column width with fallback to 80
+        let term_cols = crossterm::terminal::size()
+            .map(|(w, _)| w as usize)
+            .unwrap_or(80);
 
-        let max_cwd_len = inner_width.saturating_sub(18); // 16 for "  📁 Workspace: " + 2
+        // Max inner width constrained by terminal screen (leaving 4 cols for border & margin)
+        let max_term_inner = term_cols.saturating_sub(4).max(40);
+        let min_inner_width = 72.min(max_term_inner);
+        let max_aesthetic_width = 120.min(max_term_inner);
+
+        // 2. Format candidate content lines to measure required width
+        let title_content = format!(
+            "  {}  {}",
+            "▲".yellow().bold(),
+            "TAGISAN INTERACTIVE CLI — Antigravity (AGY) Dual-Core UX".yellow().bold()
+        );
+        let model_content = format!("  🤖 Model:     {}", model.green().bold());
+        let session_content = format!("  ⚡ Session:   {}", session_id.cyan().bold());
+        let shortcuts_content = format!(
+            "  💡 Shortcuts: {} manual  •  {} specs  •  {} auto  •  {}",
+            "/help".magenta().bold(),
+            "/plan".cyan().bold(),
+            "/goal".yellow().bold(),
+            "/exit".dimmed()
+        );
+        let keys_content = format!(
+            "  💻 Keys:      {} hist  •  {} find  •  {} clear  •  {}",
+            "↑/↓".bright_white().bold(),
+            "Ctrl+R".bright_cyan().bold(),
+            "Ctrl+L".bright_yellow().bold(),
+            "\\+Enter".bright_green().bold()
+        );
+
+        let mut candidate_widths = vec![
+            Self::visible_width(&title_content),
+            Self::visible_width(&model_content),
+            Self::visible_width(&session_content),
+            Self::visible_width(&shortcuts_content),
+            Self::visible_width(&keys_content),
+            Self::visible_width(&format!("  📁 Workspace: {}", cwd_display)),
+        ];
+
+        let formatted_extra: Vec<String> = extra_labels
+            .iter()
+            .map(|(k, v)| {
+                let s = format!("  🏷️  {}: {}", k.cyan().bold(), v);
+                candidate_widths.push(Self::visible_width(&s));
+                s
+            })
+            .collect();
+
+        // 3. Auto-calculate optimal inner width (adding 2 spaces right-padding margin)
+        let max_needed = candidate_widths.into_iter().max().unwrap_or(70) + 2;
+        let inner_width = max_needed
+            .max(min_inner_width)
+            .min(max_aesthetic_width);
+
+        // 4. Adjust workspace path to fit the dynamically calculated inner_width
+        let max_cwd_len = inner_width.saturating_sub(18); // 16 for prefix + 2 margin
         let short_cwd = if cwd_display.len() > max_cwd_len {
-            format!("...{}", &cwd_display[cwd_display.len() - (max_cwd_len - 3)..])
+            format!("...{}", &cwd_display[cwd_display.len().saturating_sub(max_cwd_len.saturating_sub(3))..])
         } else {
             cwd_display
         };
+        let workspace_content = format!("  📁 Workspace: {}", short_cwd.dimmed());
 
+        // 5. Construct symmetric borders matching inner_width exactly
         let top_border = format!("{}{}{}", "╭".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╮".cyan().bold());
         let div_border = format!("{}{}{}", "├".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "┤".cyan().bold());
         let bot_border = format!("{}{}{}", "╰".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╯".cyan().bold());
 
-        let title_line = Self::format_box_line(
-            &format!("  {}  {}", "▲".yellow().bold(), "TAGISAN INTERACTIVE CLI — Antigravity (AGY) Dual-Core UX".yellow().bold()),
-            inner_width,
-        );
-
-        let model_line = Self::format_box_line(
-            &format!("  🤖 Model:     {}", model.green().bold()),
-            inner_width,
-        );
-
-        let session_line = Self::format_box_line(
-            &format!("  ⚡ Session:   {}", session_id.cyan().bold()),
-            inner_width,
-        );
-
-        let workspace_line = Self::format_box_line(
-            &format!("  📁 Workspace: {}", short_cwd.dimmed()),
-            inner_width,
-        );
-
-        let shortcuts_line = Self::format_box_line(
-            &format!(
-                "  💡 Shortcuts: {} manual  •  {} specs  •  {} auto  •  {}",
-                "/help".magenta().bold(),
-                "/plan".cyan().bold(),
-                "/goal".yellow().bold(),
-                "/exit".dimmed()
-            ),
-            inner_width,
-        );
-
-        let keys_line = Self::format_box_line(
-            &format!(
-                "  💻 Keys:      {} hist  •  {} find  •  {} clear  •  {}",
-                "↑/↓".bright_white().bold(),
-                "Ctrl+R".bright_cyan().bold(),
-                "Ctrl+L".bright_yellow().bold(),
-                "\\+Enter".bright_green().bold()
-            ),
-            inner_width,
-        );
-
+        // 6. Render lines
         print!("{}\r\n", top_border);
-        print!("{}\r\n", title_line);
+        print!("{}\r\n", Self::format_box_line(&title_content, inner_width));
         print!("{}\r\n", div_border);
-        print!("{}\r\n", model_line);
-        print!("{}\r\n", session_line);
-        print!("{}\r\n", workspace_line);
-        print!("{}\r\n", shortcuts_line);
-        print!("{}\r\n", keys_line);
+        print!("{}\r\n", Self::format_box_line(&model_content, inner_width));
+        print!("{}\r\n", Self::format_box_line(&session_content, inner_width));
+        print!("{}\r\n", Self::format_box_line(&workspace_content, inner_width));
+        for extra in formatted_extra {
+            print!("{}\r\n", Self::format_box_line(&extra, inner_width));
+        }
+        print!("{}\r\n", Self::format_box_line(&shortcuts_content, inner_width));
+        print!("{}\r\n", Self::format_box_line(&keys_content, inner_width));
         print!("{}\r\n", bot_border);
         let _ = io::stdout().flush();
     }
