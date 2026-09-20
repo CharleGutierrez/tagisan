@@ -377,102 +377,211 @@ impl NotificationHub {
         self.terminal_banner_count.load(Ordering::Relaxed)
     }
 
-    /// Helper to render consistent, clean ANSI boxed banners
+    /// Helper to render consistent, clean ANSI boxed banners with dynamic auto-width adjustment
     fn render_terminal_banner(event: &NotificationEvent) {
-        let width = 77;
-        let print_row = |content: &str| {
-            let char_count = content.chars().count();
-            let pad = if char_count < width { width - char_count } else { 0 };
-            eprintln!("│ {}{} │", content, " ".repeat(pad));
+        use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
+
+        let visible_width = |s: &str| -> usize {
+            let stripped = regex::Regex::new(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+                .map(|re| re.replace_all(s, "").to_string())
+                .unwrap_or_else(|_| s.to_string());
+            UnicodeWidthStr::width(stripped.as_str())
         };
 
-        match &event.payload {
-            NotificationPayload::Failover(f) => {
-                eprintln!("\n{}", "┌───────────────────────────── ⚠️  FAILOVER NOTICE ─────────────────────────────┐".yellow().bold());
-                print_row(&format!("Cloud Provider : {} ({})", f.original_provider, f.original_model));
-                print_row(&format!("Trigger Reason : {}", f.trigger_reason));
-                print_row(&format!("Action Taken   : {}", f.action_taken));
-                print_row(&format!("Cost Delta     : {}", f.cost_delta));
-                if let Some(ref stage) = f.stage_info {
-                    print_row(&format!("Current Stage  : {}", stage));
+        let truncate_vis = |s: &str, max_vis_width: usize| -> String {
+            if max_vis_width <= 3 {
+                return ".".repeat(max_vis_width);
+            }
+            let target_width = max_vis_width.saturating_sub(3);
+            let mut current_width = 0;
+            let mut out = String::new();
+            let mut in_escape = false;
+
+            for ch in s.chars() {
+                if ch == '\x1b' {
+                    in_escape = true;
+                    out.push(ch);
+                    continue;
                 }
-                print_row("Context Retained: 100% (Architecture & Types preserved on Blackboard)");
-                eprintln!("{}\n", "└───────────────────────────────────────────────────────────────────────────────┘".yellow().bold());
+                if in_escape {
+                    out.push(ch);
+                    if ch.is_ascii_alphabetic() || ch == 'm' {
+                        in_escape = false;
+                    }
+                    continue;
+                }
+
+                let char_w = ch.width().unwrap_or(0);
+                if current_width + char_w > target_width {
+                    out.push_str("...\x1b[0m");
+                    return out;
+                }
+                out.push(ch);
+                current_width += char_w;
+            }
+            out
+        };
+
+        // Extract header title, border color closure, and row contents
+        let (header_title, border_color_fn, rows): (String, fn(&str) -> colored::ColoredString, Vec<String>) = match &event.payload {
+            NotificationPayload::Failover(f) => {
+                let mut r = vec![
+                    format!("Cloud Provider : {} ({})", f.original_provider, f.original_model),
+                    format!("Trigger Reason : {}", f.trigger_reason),
+                    format!("Action Taken   : {}", f.action_taken),
+                    format!("Cost Delta     : {}", f.cost_delta),
+                ];
+                if let Some(ref stage) = f.stage_info {
+                    r.push(format!("Current Stage  : {}", stage));
+                }
+                r.push("Context Retained: 100% (Architecture & Types preserved on Blackboard)".to_string());
+                ("⚠️  FAILOVER NOTICE".to_string(), |s| s.yellow().bold(), r)
             }
             NotificationPayload::SkillTransition(s) => {
-                eprintln!("\n{}", "┌─────────────────────── 🧠 SKILL SUBSYSTEM TRANSITION ────────────────────────┐".cyan().bold());
-                print_row(&format!("Transition     : {} ➔ {}", s.from_provider, s.to_provider));
-                print_row(&format!("Injection Mode : {} ➔ {}", s.from_mode, s.to_mode));
-                print_row(&format!("Token Budget   : {} tokens (Context: {} tokens)", s.token_budget, s.context_window));
-                print_row(&format!("Trigger Reason : {}", s.reason));
-                print_row(&format!("Action Taken   : {}", s.action_taken));
-                eprintln!("{}\n", "└───────────────────────────────────────────────────────────────────────────────┘".cyan().bold());
+                let r = vec![
+                    format!("Transition     : {} ➔ {}", s.from_provider, s.to_provider),
+                    format!("Injection Mode : {} ➔ {}", s.from_mode, s.to_mode),
+                    format!("Token Budget   : {} tokens (Context: {} tokens)", s.token_budget, s.context_window),
+                    format!("Trigger Reason : {}", s.reason),
+                    format!("Action Taken   : {}", s.action_taken),
+                ];
+                ("🧠 SKILL SUBSYSTEM TRANSITION".to_string(), |s| s.cyan().bold(), r)
             }
             NotificationPayload::DomainQuota(q) => {
-                eprintln!("\n{}", "┌────────────────────── ⚖️  DOMAIN DIVERSITY QUOTA ALERT ──────────────────────┐".magenta().bold());
-                print_row(&format!("Domain Enforced: {} (Max Allowed: {} on {})", q.domain, q.max_allowed, q.provider));
-                print_row(&format!("Candidate Skill: {}", q.attempted_skill));
+                let mut r = vec![
+                    format!("Domain Enforced: {} (Max Allowed: {} on {})", q.domain, q.max_allowed, q.provider),
+                    format!("Candidate Skill: {}", q.attempted_skill),
+                ];
                 if !q.suppressed_skills.is_empty() {
-                    print_row(&format!("Suppressed     : {}", q.suppressed_skills.join(", ")));
+                    r.push(format!("Suppressed     : {}", q.suppressed_skills.join(", ")));
                 }
-                print_row(&format!("Action Taken   : {}", q.action_taken));
-                eprintln!("{}\n", "└───────────────────────────────────────────────────────────────────────────────┘".magenta().bold());
+                r.push(format!("Action Taken   : {}", q.action_taken));
+                ("⚖️  DOMAIN DIVERSITY QUOTA ALERT".to_string(), |s| s.magenta().bold(), r)
             }
             NotificationPayload::ContextDownscale(c) => {
-                eprintln!("\n{}", "┌──────────────────────── 📉 CONTEXT DOWNSCALE ALERT ──────────────────────────┐".blue().bold());
-                print_row(&format!("Target Model   : {}", c.model));
-                print_row(&format!("Context Scale  : {} tokens ➔ {} tokens", c.original_context, c.downscaled_context));
-                print_row(&format!("Trigger Reason : {}", c.reason));
-                print_row(&format!("Action Taken   : {}", c.action_taken));
-                eprintln!("{}\n", "└───────────────────────────────────────────────────────────────────────────────┘".blue().bold());
+                let r = vec![
+                    format!("Target Model   : {}", c.model),
+                    format!("Context Scale  : {} tokens ➔ {} tokens", c.original_context, c.downscaled_context),
+                    format!("Trigger Reason : {}", c.reason),
+                    format!("Action Taken   : {}", c.action_taken),
+                ];
+                ("📉 CONTEXT DOWNSCALE ALERT".to_string(), |s| s.blue().bold(), r)
             }
             NotificationPayload::SemanticGuard(g) => {
-                eprintln!("\n{}", "┌───────────────────── 🛡️  SEMANTIC INVARIANT GUARD ALERT ──────────────────────┐".red().bold());
-                print_row(&format!("Violation Type : {}", g.violation_type));
-                print_row(&format!("Target Item    : {}", g.target_item));
-                print_row(&format!("Details        : {}", g.details));
-                print_row(&format!("Action Taken   : {}", g.action_taken));
-                eprintln!("{}\n", "└───────────────────────────────────────────────────────────────────────────────┘".red().bold());
+                let r = vec![
+                    format!("Violation Type : {}", g.violation_type),
+                    format!("Target Item    : {}", g.target_item),
+                    format!("Details        : {}", g.details),
+                    format!("Action Taken   : {}", g.action_taken),
+                ];
+                ("🛡️  SEMANTIC INVARIANT GUARD ALERT".to_string(), |s| s.red().bold(), r)
             }
             NotificationPayload::AutoHeal(h) => {
-                eprintln!("\n{}", "┌──────────────────────── 🩹 MODEL AUTO-HEAL RECOVERY ─────────────────────────┐".yellow().bold());
-                print_row(&format!("Provider       : {}", h.provider));
-                print_row(&format!("Requested Model: {}", h.requested_model));
-                print_row(&format!("Fallback Model : {}", h.healed_model));
-                print_row(&format!("Reason         : {}", h.reason));
-                print_row(&format!("Action Taken   : {}", h.action_taken));
-                eprintln!("{}\n", "└───────────────────────────────────────────────────────────────────────────────┘".yellow().bold());
+                let r = vec![
+                    format!("Provider       : {}", h.provider),
+                    format!("Requested Model: {}", h.requested_model),
+                    format!("Fallback Model : {}", h.healed_model),
+                    format!("Reason         : {}", h.reason),
+                    format!("Action Taken   : {}", h.action_taken),
+                ];
+                ("🩹 MODEL AUTO-HEAL RECOVERY".to_string(), |s| s.yellow().bold(), r)
             }
             NotificationPayload::OfflineLock(l) => {
-                eprintln!("\n{}", "┌──────────────────────── 🔒 OFFLINE / LOCAL-ONLY LOCK ────────────────────────┐".bright_red().bold());
-                print_row(&format!("Requested Target: {}", l.requested_provider));
-                print_row(&format!("Enforced Target : {}", l.enforced_provider));
-                print_row(&format!("Reason          : {}", l.lock_reason));
-                print_row(&format!("Action Taken    : {}", l.action_taken));
-                eprintln!("{}\n", "└───────────────────────────────────────────────────────────────────────────────┘".bright_red().bold());
+                let r = vec![
+                    format!("Requested Target: {}", l.requested_provider),
+                    format!("Enforced Target : {}", l.enforced_provider),
+                    format!("Reason          : {}", l.lock_reason),
+                    format!("Action Taken    : {}", l.action_taken),
+                ];
+                ("🔒 OFFLINE / LOCAL-ONLY LOCK".to_string(), |s| s.bright_red().bold(), r)
             }
             NotificationPayload::CyberDefenseAlert(c) => {
-                eprintln!("\n{}", "┌───────────────────── 🚨 CRITICAL CYBER DEFENSE ALERT ─────────────────────┐".bright_red().bold());
-                print_row(&format!("Threat Actor   : {}", c.threat_actor));
-                print_row(&format!("Attack Vector  : {}", c.attack_vector));
-                print_row(&format!("Target / Asset : {}", c.target));
-                print_row(&format!("Threat Level   : {}", c.threat_level));
-                print_row(&format!("Indicator      : {}", c.indicator));
-                print_row(&format!("Action Taken   : {}", c.action_taken));
-                print_row(&format!("Remediation    : {}", c.mitigation_remediation));
-                eprintln!("{}\n", "└───────────────────────────────────────────────────────────────────────────┘".bright_red().bold());
+                let r = vec![
+                    format!("Threat Actor   : {}", c.threat_actor),
+                    format!("Attack Vector  : {}", c.attack_vector),
+                    format!("Target / Asset : {}", c.target),
+                    format!("Threat Level   : {}", c.threat_level),
+                    format!("Indicator      : {}", c.indicator),
+                    format!("Action Taken   : {}", c.action_taken),
+                    format!("Remediation    : {}", c.mitigation_remediation),
+                ];
+                ("🚨 CRITICAL CYBER DEFENSE ALERT".to_string(), |s| s.bright_red().bold(), r)
             }
             NotificationPayload::Generic(map) => {
-                eprintln!("\n{}", "┌────────────────────────────── 📢 SYSTEM ALERT ──────────────────────────────┐".green().bold());
-                print_row(&format!("Title  : {}", event.title));
-                print_row(&format!("Message: {}", event.message));
-                print_row(&format!("Action : {}", event.action_taken));
+                let mut r = vec![
+                    format!("Title  : {}", event.title),
+                    format!("Message: {}", event.message),
+                    format!("Action : {}", event.action_taken),
+                ];
                 for (k, v) in map {
-                    print_row(&format!("{}: {}", k, v));
+                    r.push(format!("{}: {}", k, v));
                 }
-                eprintln!("{}\n", "└───────────────────────────────────────────────────────────────────────────────┘".green().bold());
+                ("📢 SYSTEM ALERT".to_string(), |s| s.green().bold(), r)
+            }
+        };
+
+        // 1. Detect terminal column width (default 80)
+        let term_cols = crossterm::terminal::size()
+            .map(|(w, _)| w as usize)
+            .unwrap_or(80);
+
+        let max_term_inner = term_cols.saturating_sub(4).max(40);
+        let min_inner_width = 72.min(max_term_inner);
+        let max_aesthetic_width = 120.min(max_term_inner);
+
+        // 2. Measure required width for header and all rows
+        let header_w = visible_width(&header_title);
+        let max_row_w = rows.iter().map(|r| visible_width(r)).max().unwrap_or(60);
+        let needed_w = (header_w + 6).max(max_row_w + 4);
+
+        // 3. Calculate auto-expanded inner width
+        let inner_width = needed_w
+            .max(min_inner_width)
+            .min(max_aesthetic_width);
+
+        // 4. Construct perfectly symmetric top border with centered header
+        let top_border = if header_w + 4 <= inner_width {
+            let total_dashes = inner_width - header_w - 2;
+            let left_dashes = total_dashes / 2;
+            let right_dashes = total_dashes - left_dashes;
+            format!(
+                "┌{} {} {}┐",
+                "─".repeat(left_dashes),
+                header_title,
+                "─".repeat(right_dashes)
+            )
+        } else {
+            let fitted_header = truncate_vis(&header_title, inner_width.saturating_sub(4));
+            let fitted_w = visible_width(&fitted_header);
+            let total_dashes = inner_width.saturating_sub(fitted_w + 2);
+            let left_dashes = total_dashes / 2;
+            let right_dashes = total_dashes - left_dashes;
+            format!(
+                "┌{} {} {}┐",
+                "─".repeat(left_dashes),
+                fitted_header,
+                "─".repeat(right_dashes)
+            )
+        };
+
+        let bot_border = format!("└{}┘", "─".repeat(inner_width));
+
+        // 5. Render
+        eprintln!("\n{}", border_color_fn(&top_border));
+        for row in &rows {
+            let row_vis_w = visible_width(row);
+            let max_content_w = inner_width.saturating_sub(2);
+            if row_vis_w <= max_content_w {
+                let pad = max_content_w - row_vis_w;
+                eprintln!("│ {}{} │", row, " ".repeat(pad));
+            } else {
+                let fitted = truncate_vis(row, max_content_w);
+                let fitted_vis_w = visible_width(&fitted);
+                let pad = max_content_w.saturating_sub(fitted_vis_w);
+                eprintln!("│ {}{} │", fitted, " ".repeat(pad));
             }
         }
+        eprintln!("{}\n", border_color_fn(&bot_border));
     }
 
     /// Dispatches a platform-native desktop notification (Windows Toast or Unix notify-send)
