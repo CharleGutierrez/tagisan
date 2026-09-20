@@ -756,7 +756,7 @@ pub struct WarmthSentinel {
 impl WarmthSentinel {
     pub fn new(config: WarmthConfig) -> Self {
         let client = reqwest::Client::builder()
-            .timeout(Duration::from_secs(15))
+            .timeout(Duration::from_secs(180))
             .build()
             .unwrap_or_else(|_| reqwest::Client::new());
 
