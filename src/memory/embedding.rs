@@ -203,7 +203,7 @@ impl OllamaEmbeddingProvider {
     }
 
     pub fn default_nomic() -> Self {
-        let endpoint = env::var("OLLAMA_ENDPOINT").unwrap_or_else(|_| "http://localhost:11434".to_string());
+        let endpoint = env::var("OLLAMA_ENDPOINT").unwrap_or_else(|_| "http://127.0.0.1:11434".to_string());
         Self::new(endpoint, "nomic-embed-text", 768)
     }
 }

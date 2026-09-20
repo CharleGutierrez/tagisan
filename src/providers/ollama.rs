@@ -733,7 +733,7 @@ impl Default for WarmthConfig {
     fn default() -> Self {
         Self {
             model: "dolphin-phi:latest".to_string(),
-            base_url: "http://localhost:11434".to_string(),
+            base_url: "http://127.0.0.1:11434".to_string(),
             heartbeat_interval: Duration::from_secs(60),
             keep_alive: "24h".to_string(),
             prewarm_canonical_prefix: None,
@@ -1008,7 +1008,13 @@ impl OllamaProvider {
     }
 
     pub fn default_local() -> Self {
-        Self::new("http://localhost:11434")
+        let raw = std::env::var("OLLAMA_HOST").unwrap_or_else(|_| "http://127.0.0.1:11434".to_string());
+        let url = if raw.starts_with("http://") || raw.starts_with("https://") {
+            raw.replace("localhost", "127.0.0.1")
+        } else {
+            format!("http://{}", raw.replace("localhost", "127.0.0.1"))
+        };
+        Self::new(&url)
     }
 
     /// Start the zero-cold-start Warmth Sentinel in the background
