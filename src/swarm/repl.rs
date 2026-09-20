@@ -624,30 +624,67 @@ impl InteractiveRepl {
                     }
                 } else {
                     let mut out = String::new();
-                    out.push_str(&format!(
-                        "┌─────────────────────────────────────────────────────────────┐\n\
-                         │  ⚡  TAGISAN HYPER-OLLAMA INFERENCE ACCELERATION SUITE      │\n\
-                         ├─────────────────────────────────────────────────────────────┤\n\
-                         │  FlashAttention       : {:<42}│\n\
-                         │  Dynamic Context Fit  : {:<42}│\n\
-                         │  Deterministic KV Hit : {:<42}│\n\
-                         │  Prompt Lookup (PLD)  : {:<42}│\n\
-                         │  Dynamic Batching     : {:<42}│\n\
-                         │  Default Model        : {:<42}│\n\
-                         │  Hardware Profile     : {:<42}│\n\
-                         ├─────────────────────────────────────────────────────────────┤\n\
-                         │  Commands:                                                  │\n\
-                         │    /ollama warm       - Probe and pin model warm in VRAM    │\n\
-                         │    /ollama prewarm    - Pre-warm canonical KV cache prefix  │\n\
-                         └─────────────────────────────────────────────────────────────┘\n",
-                        if is_fa { "ENABLED (OLLAMA_FLASH_ATTENTION=1)".green().bold() } else { "AUTO-ACTIVATED on first run".yellow() },
-                        "ACTIVE (Power-of-2 context: 512/1024/2048/4096)".green().bold(),
-                        "ACTIVE (100% Multi-Turn Cache Reuse)".green().bold(),
-                        "ACTIVE (N-gram Speculative Lookahead 2-5)".green().bold(),
-                        "ACTIVE (Optimal 256-1024 batch throughput)".green().bold(),
-                        crate::providers::ollama::default_ollama_model().cyan().bold(),
-                        if is_8gb { "8GB Workstation (Clamped)".yellow() } else { "High-RAM Workstation (Unrestricted)".green() }
+                    let inner_width: usize = 72;
+                    let top_border = format!("{}{}{}\n", "╭".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╮".cyan().bold());
+                    let div_border = format!("{}{}{}\n", "├".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "┤".cyan().bold());
+                    let bot_border = format!("{}{}{}\n", "╰".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╯".cyan().bold());
+
+                    out.push_str(&top_border);
+                    out.push_str(&Self::format_box_line(
+                        &format!("  {}  {}", "⚡".yellow().bold(), "TAGISAN HYPER-OLLAMA INFERENCE ACCELERATION SUITE".yellow().bold()),
+                        inner_width,
                     ));
+                    out.push('\n');
+                    out.push_str(&div_border);
+                    out.push_str(&Self::format_box_line(
+                        &format!("  FlashAttention       : {}", if is_fa { "ENABLED (OLLAMA_FLASH_ATTENTION=1)".green().bold() } else { "AUTO-ACTIVATED on first run".yellow() }),
+                        inner_width,
+                    ));
+                    out.push('\n');
+                    out.push_str(&Self::format_box_line(
+                        &format!("  Dynamic Context Fit  : {}", "ACTIVE (Power-of-2 context: 512/1024/2048/4096)".green().bold()),
+                        inner_width,
+                    ));
+                    out.push('\n');
+                    out.push_str(&Self::format_box_line(
+                        &format!("  Deterministic KV Hit : {}", "ACTIVE (100% Multi-Turn Cache Reuse)".green().bold()),
+                        inner_width,
+                    ));
+                    out.push('\n');
+                    out.push_str(&Self::format_box_line(
+                        &format!("  Prompt Lookup (PLD)  : {}", "ACTIVE (N-gram Speculative Lookahead 2-5)".green().bold()),
+                        inner_width,
+                    ));
+                    out.push('\n');
+                    out.push_str(&Self::format_box_line(
+                        &format!("  Dynamic Batching     : {}", "ACTIVE (Optimal 256-1024 batch throughput)".green().bold()),
+                        inner_width,
+                    ));
+                    out.push('\n');
+                    out.push_str(&Self::format_box_line(
+                        &format!("  Default Model        : {}", crate::providers::ollama::default_ollama_model().cyan().bold()),
+                        inner_width,
+                    ));
+                    out.push('\n');
+                    out.push_str(&Self::format_box_line(
+                        &format!("  Hardware Profile     : {}", if is_8gb { "8GB Workstation (Clamped)".yellow() } else { "High-RAM Workstation (Unrestricted)".green() }),
+                        inner_width,
+                    ));
+                    out.push('\n');
+                    out.push_str(&div_border);
+                    out.push_str(&Self::format_box_line("  Commands:", inner_width));
+                    out.push('\n');
+                    out.push_str(&Self::format_box_line(
+                        &format!("    {}     - Probe and pin model warm in VRAM", "/ollama warm".green().bold()),
+                        inner_width,
+                    ));
+                    out.push('\n');
+                    out.push_str(&Self::format_box_line(
+                        &format!("    {}  - Pre-warm canonical KV cache prefix", "/ollama prewarm".green().bold()),
+                        inner_width,
+                    ));
+                    out.push('\n');
+                    out.push_str(&bot_border);
                     Ok(Some(out))
                 }
             }
@@ -660,35 +697,82 @@ impl InteractiveRepl {
                     "status" => {
                         let status = tuner.status().await?;
                         let mut out = String::new();
-                        out.push_str(&format!(
-                            "┌─────────────────────────────────────────────────────────────┐\n\
-                             │  🧠  TAGISAN OLLAMA MEMORY TUNER & WATCHDOG                 │\n\
-                             ├─────────────────────────────────────────────────────────────┤\n\
-                             │  Ollama Upstream      : {:<42}│\n\
-                             │  Proxy Endpoint       : {:<42}│\n\
-                             │  Ollama Reachable     : {:<42}│\n\
-                             │  Daemon Running       : {:<42}│\n\
-                             │  Inactivity Timeout   : {:<42}│\n\
-                             │  Idle Duration        : {:<42}│\n\
-                             │  Total Auto-Unloads   : {:<42}│\n\
-                             │  Total Proxied Reqs   : {:<42}│\n\
-                             │  Resident Models      : {:<42}│\n\
-                             ├─────────────────────────────────────────────────────────────┤\n\
-                             │  Commands:                                                  │\n\
-                             │    /tuner status      - View memory tuner & loaded models   │\n\
-                             │    /tuner unload      - Purge all models from VRAM/RAM      │\n\
-                             │    /tuner start       - Start background daemon & proxy     │\n\
-                             └─────────────────────────────────────────────────────────────┘\n",
-                            status.ollama_url,
-                            status.proxy_addr,
-                            if status.ollama_reachable { "YES (Online)".green().bold() } else { "NO (Unreachable)".red().bold() },
-                            if status.is_running { "ACTIVE (Running)".green().bold() } else { "STANDBY (CLI / In-Process)".yellow() },
-                            format!("{}s (5 minutes)", status.inactivity_threshold_secs),
-                            format!("{}s", status.idle_duration_secs),
-                            format!("{}", status.total_unloads).bold(),
-                            format!("{}", status.total_proxied_requests).bold(),
-                            format!("{}", status.active_models_in_vram.len()).bold(),
+                        let inner_width: usize = 72;
+                        let top_border = format!("{}{}{}\n", "╭".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╮".cyan().bold());
+                        let div_border = format!("{}{}{}\n", "├".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "┤".cyan().bold());
+                        let bot_border = format!("{}{}{}\n", "╰".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╯".cyan().bold());
+
+                        out.push_str(&top_border);
+                        out.push_str(&Self::format_box_line(
+                            &format!("  {}  {}", "🧠".magenta(), "TAGISAN OLLAMA MEMORY TUNER & WATCHDOG".yellow().bold()),
+                            inner_width,
                         ));
+                        out.push('\n');
+                        out.push_str(&div_border);
+                        out.push_str(&Self::format_box_line(
+                            &format!("  Ollama Upstream    : {}", status.ollama_url),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("  Proxy Endpoint     : {}", status.proxy_addr),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("  Ollama Reachable   : {}", if status.ollama_reachable { "YES (Online)".green().bold() } else { "NO (Unreachable)".red().bold() }),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("  Daemon Running     : {}", if status.is_running { "ACTIVE (Running)".green().bold() } else { "STANDBY (CLI / In-Process)".yellow() }),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("  Inactivity Timeout : {}s (5 minutes)", status.inactivity_threshold_secs),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("  Idle Duration      : {}s", status.idle_duration_secs),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("  Total Auto-Unloads : {}", status.total_unloads.to_string().bold()),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("  Total Proxied Reqs : {}", status.total_proxied_requests.to_string().bold()),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("  Resident Models    : {}", status.active_models_in_vram.len().to_string().bold()),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&div_border);
+                        out.push_str(&Self::format_box_line("  Commands:", inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("    {}     - View memory tuner & loaded models", "/tuner status".green().bold()),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("    {}     - Purge all models from VRAM/RAM", "/tuner unload".green().bold()),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(
+                            &format!("    {}      - Start background daemon & proxy", "/tuner start".green().bold()),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&bot_border);
                         if !status.active_models_in_vram.is_empty() {
                             out.push_str(&format!("\n{}\n", "Currently Resident Models in VRAM/RAM:".bold().yellow()));
                             for m in &status.active_models_in_vram {
@@ -752,36 +836,43 @@ impl InteractiveRepl {
                     "status" => {
                         let st = bridge.status();
                         let mut out = String::new();
-                        out.push_str(&format!(
-                            "┌─────────────────────────────────────────────────────────────┐\n\
-                             │  🌉  TAGISAN AGENT BRIDGE TELEMETRY & HEALTH STATUS        │\n\
-                             ├─────────────────────────────────────────────────────────────┤\n\
-                             │  Active Agents        : {:<42}│\n\
-                             │  Bus Published Messages: {:<41}│\n\
-                             │  Bus Delivered Messages: {:<41}│\n\
-                             │  Bus Dropped (Lag/Full): {:<41}│\n\
-                             │  Active Subscribers   : {:<42}│\n\
-                             │  Edge Ollama Routed   : {:<42}│\n\
-                             │  Cloud Frontier Routed: {:<42}│\n\
-                             │  Zero-Stall Failovers : {:<42}│\n\
-                             │  AgentShield Audits   : {:<42}│\n\
-                             │  Injections Blocked   : {:<42}│\n\
-                             │  Secrets Redacted     : {:<42}│\n\
-                             │  Shared Reflexions    : {:<42}│\n\
-                             └─────────────────────────────────────────────────────────────┘\n",
-                            st.active_agents_count.to_string().green().bold(),
-                            st.bus_published_count.to_string().cyan().bold(),
-                            st.bus_delivered_count.to_string().green().bold(),
-                            st.bus_dropped_count.to_string().yellow().bold(),
-                            st.bus_subscribers_count.to_string().cyan().bold(),
-                            st.edge_routed_count.to_string().green().bold(),
-                            st.cloud_routed_count.to_string().bright_blue().bold(),
-                            st.failover_count.to_string().yellow().bold(),
-                            st.security_audits_count.to_string().cyan().bold(),
-                            st.injections_blocked.to_string().red().bold(),
-                            st.secrets_redacted.to_string().yellow().bold(),
-                            st.reflexions_count.to_string().green().bold(),
+                        let inner_width: usize = 72;
+                        let top_border = format!("{}{}{}\n", "╭".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╮".cyan().bold());
+                        let div_border = format!("{}{}{}\n", "├".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "┤".cyan().bold());
+                        let bot_border = format!("{}{}{}\n", "╰".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╯".cyan().bold());
+
+                        out.push_str(&top_border);
+                        out.push_str(&Self::format_box_line(
+                            &format!("  {}  {}", "🌉".cyan(), "TAGISAN AGENT BRIDGE TELEMETRY & HEALTH STATUS".yellow().bold()),
+                            inner_width,
                         ));
+                        out.push('\n');
+                        out.push_str(&div_border);
+                        out.push_str(&Self::format_box_line(&format!("  Active Agents         : {}", st.active_agents_count.to_string().green().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Bus Published Msgs    : {}", st.bus_published_count.to_string().cyan().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Bus Delivered Msgs    : {}", st.bus_delivered_count.to_string().green().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Bus Dropped (Lag/Full): {}", st.bus_dropped_count.to_string().yellow().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Active Subscribers    : {}", st.bus_subscribers_count.to_string().cyan().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Edge Ollama Routed    : {}", st.edge_routed_count.to_string().green().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Cloud Frontier Routed : {}", st.cloud_routed_count.to_string().bright_blue().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Zero-Stall Failovers  : {}", st.failover_count.to_string().yellow().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  AgentShield Audits    : {}", st.security_audits_count.to_string().cyan().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Injections Blocked    : {}", st.injections_blocked.to_string().red().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Secrets Redacted      : {}", st.secrets_redacted.to_string().yellow().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Shared Reflexions     : {}", st.reflexions_count.to_string().green().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&bot_border);
                         Ok(Some(out))
                     }
                     "agents" => {
@@ -856,44 +947,51 @@ impl InteractiveRepl {
                     "status" => {
                         let st = oracle.status();
                         let mut out = String::new();
-                        out.push_str(&format!(
-                            "┌─────────────────────────────────────────────────────────────┐\n\
-                             │  🏛️  ORACLE ENTERPRISE INTEGRATION SUITE TELEMETRY          │\n\
-                             ├─────────────────────────────────────────────────────────────┤\n\
-                             │  Oracle 23ai Queries   : {:<42}│\n\
-                             │  GoldenGate CDC Ingest : {:<42}│\n\
-                             │  CDC Swarm Dispatches  : {:<42}│\n\
-                             │  ERP 3-Way Matches Run : {:<42}│\n\
-                             │  ERP Auto-Approvals    : {:<42}│\n\
-                             │  ERP Discrepancies     : {:<42}│\n\
-                             │  Vault Blocked Queries : {:<42}│\n\
-                             │  Vault Fields Masked   : {:<42}│\n\
-                             │  Blockchain Blocks     : {:<42}│\n\
-                             │  Blockchain Tampers    : {:<42}│\n\
-                             │  APEX Apps Generated   : {:<42}│\n\
-                             │  OCI Sovereign Tokens  : {:<42}│\n\
-                             │  Data Guard Failovers  : {:<42}│\n\
-                             │  HeatWave Accelerated  : {:<42}│\n\
-                             │  HeatWave In-DB Models : {:<42}│\n\
-                             │  OIC Dispatches        : {:<42}│\n\
-                             └─────────────────────────────────────────────────────────────┘\n",
-                            st["vector_engine"]["total_queries"].to_string().green().bold(),
-                            st["cdc_bridge"]["events_ingested"].to_string().cyan().bold(),
-                            st["cdc_bridge"]["events_dispatched"].to_string().green().bold(),
-                            st["erp_engine"]["matches_executed"].to_string().cyan().bold(),
-                            st["erp_engine"]["auto_approvals"].to_string().green().bold(),
-                            st["erp_engine"]["discrepancies"].to_string().yellow().bold(),
-                            st["vault"]["destructive_blocked"].to_string().red().bold(),
-                            st["vault"]["fields_masked"].to_string().yellow().bold(),
-                            st["blockchain"]["total_blocks"].to_string().green().bold(),
-                            st["blockchain"]["tamper_attempts"].to_string().red().bold(),
-                            st["apex"]["apps_generated"].to_string().cyan().bold(),
-                            st["oci_sovereign"]["tokens_routed"].to_string().green().bold(),
-                            st["data_guard"]["failovers_executed"].to_string().yellow().bold(),
-                            st["heatwave"]["queries_accelerated"].to_string().cyan().bold(),
-                            st["heatwave"]["models_trained"].to_string().green().bold(),
-                            st["oic_mesh"]["dispatched_count"].to_string().cyan().bold(),
+                        let inner_width: usize = 72;
+                        let top_border = format!("{}{}{}\n", "╭".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╮".cyan().bold());
+                        let div_border = format!("{}{}{}\n", "├".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "┤".cyan().bold());
+                        let bot_border = format!("{}{}{}\n", "╰".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╯".cyan().bold());
+
+                        out.push_str(&top_border);
+                        out.push_str(&Self::format_box_line(
+                            &format!("  {}  {}", "🏛️".yellow(), "ORACLE ENTERPRISE INTEGRATION SUITE TELEMETRY".yellow().bold()),
+                            inner_width,
                         ));
+                        out.push('\n');
+                        out.push_str(&div_border);
+                        out.push_str(&Self::format_box_line(&format!("  Oracle 23ai Queries   : {}", st["vector_engine"]["total_queries"].to_string().green().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  GoldenGate CDC Ingest : {}", st["cdc_bridge"]["events_ingested"].to_string().cyan().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  CDC Swarm Dispatches  : {}", st["cdc_bridge"]["events_dispatched"].to_string().green().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  ERP 3-Way Matches Run : {}", st["erp_engine"]["matches_executed"].to_string().cyan().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  ERP Auto-Approvals    : {}", st["erp_engine"]["auto_approvals"].to_string().green().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  ERP Discrepancies     : {}", st["erp_engine"]["discrepancies"].to_string().yellow().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Vault Blocked Queries : {}", st["vault"]["destructive_blocked"].to_string().red().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Vault Fields Masked   : {}", st["vault"]["fields_masked"].to_string().yellow().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Blockchain Blocks     : {}", st["blockchain"]["total_blocks"].to_string().green().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Blockchain Tampers    : {}", st["blockchain"]["tamper_attempts"].to_string().red().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  APEX Apps Generated   : {}", st["apex"]["apps_generated"].to_string().cyan().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  OCI Sovereign Tokens  : {}", st["oci_sovereign"]["tokens_routed"].to_string().green().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Data Guard Failovers  : {}", st["data_guard"]["failovers_executed"].to_string().yellow().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  HeatWave Accelerated  : {}", st["heatwave"]["queries_accelerated"].to_string().cyan().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  HeatWave In-DB Models : {}", st["heatwave"]["models_trained"].to_string().green().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  OIC Dispatches        : {}", st["oic_mesh"]["dispatched_count"].to_string().cyan().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&bot_border);
                         Ok(Some(out))
                     }
                     "search" => {
@@ -1087,26 +1185,35 @@ impl InteractiveRepl {
                         let input_eng = crate::engine::astra::InputEngine::new(1920, 1080);
                         let disp_info = screen_eng.display_info();
 
-                        Ok(Some(format!(
-                            "┌─────────────────────────────────────────────────────────────┐\n\
-                             │  🌌  GPT ASTRA MULTIMODAL COMPUTER-USE ENGINE STATUS        │\n\
-                             ├─────────────────────────────────────────────────────────────┤\n\
-                             │  Display Server   : {:<42}│\n\
-                             │  Resolution       : {:<42}│\n\
-                             │  Virtual Mode     : {:<42}│\n\
-                             │  Capture Backend  : {:<42}│\n\
-                             │  Input Backend    : {:<42}│\n\
-                             │  Cursor Position  : {:<42}│\n\
-                             │  AgentShield      : {:<42}│\n\
-                             └─────────────────────────────────────────────────────────────┘",
-                            disp_info.display_type.to_string(),
-                            format!("{}x{}", disp_info.width, disp_info.height),
-                            if disp_info.is_virtual { "Active (Headless Virtual FB)" } else { "Inactive (Native Display)" },
-                            disp_info.available_tools.join(", "),
-                            input_eng.backend.to_string(),
-                            format!("{:?}", input_eng.cursor_position()),
-                            "Active (Destructive Command Blocklist)",
-                        )))
+                        let mut out = String::new();
+                        let inner_width: usize = 72;
+                        let top_border = format!("{}{}{}\n", "╭".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╮".cyan().bold());
+                        let div_border = format!("{}{}{}\n", "├".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "┤".cyan().bold());
+                        let bot_border = format!("{}{}{}\n", "╰".cyan().bold(), "─".repeat(inner_width).cyan().bold(), "╯".cyan().bold());
+
+                        out.push_str(&top_border);
+                        out.push_str(&Self::format_box_line(
+                            &format!("  {}  {}", "🌌".magenta(), "GPT ASTRA MULTIMODAL COMPUTER-USE ENGINE STATUS".yellow().bold()),
+                            inner_width,
+                        ));
+                        out.push('\n');
+                        out.push_str(&div_border);
+                        out.push_str(&Self::format_box_line(&format!("  Display Server  : {}", disp_info.display_type.to_string().cyan().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Resolution      : {}x{}", disp_info.width, disp_info.height), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Virtual Mode    : {}", if disp_info.is_virtual { "Active (Headless Virtual FB)".green().bold() } else { "Inactive (Native Display)".yellow() }), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Capture Backend : {}", disp_info.available_tools.join(", ").cyan()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Input Backend   : {}", input_eng.backend.to_string().cyan().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  Cursor Position : {:?}", input_eng.cursor_position()), inner_width));
+                        out.push('\n');
+                        out.push_str(&Self::format_box_line(&format!("  AgentShield     : {}", "Active (Destructive Command Blocklist)".green().bold()), inner_width));
+                        out.push('\n');
+                        out.push_str(&bot_border);
+                        Ok(Some(out))
                     }
                     "screen" => {
                         let mut engine = crate::engine::astra::ScreenCaptureEngine::new();
