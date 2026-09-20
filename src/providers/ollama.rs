@@ -1509,6 +1509,26 @@ impl OllamaProvider {
             None
         };
 
+        let repeat_penalty = std::env::var("TAGISAN_OLLAMA_REPEAT_PENALTY")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .or(Some(1.15));
+
+        let repeat_last_n = std::env::var("TAGISAN_OLLAMA_REPEAT_LAST_N")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .or(Some(64));
+
+        let top_p = std::env::var("TAGISAN_OLLAMA_TOP_P")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .or(Some(0.9));
+
+        let top_k = std::env::var("TAGISAN_OLLAMA_TOP_K")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .or(Some(40));
+
         OllamaOptions {
             temperature: req.temperature,
             num_predict: req.max_tokens,
@@ -1519,6 +1539,10 @@ impl OllamaProvider {
             f16_kv: Some(true),
             use_mmap,
             use_mlock,
+            repeat_penalty,
+            repeat_last_n,
+            top_k,
+            top_p,
         }
     }
 
@@ -1563,6 +1587,14 @@ pub struct OllamaOptions {
     pub use_mmap: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub use_mlock: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub repeat_penalty: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub repeat_last_n: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_k: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_p: Option<f32>,
 }
 
 #[derive(Serialize)]

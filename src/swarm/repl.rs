@@ -168,26 +168,51 @@ impl InteractiveRepl {
         // ⚡ Autoselect skills for interactive REPL turn
         let user_query = prompt.trim();
         let dispatcher = crate::ecc::global_dispatcher();
-        let matched = dispatcher.dispatch(user_query, 2, None);
-        if !matched.is_empty() {
-            let mut attached_names = Vec::new();
-            let mut skills_ctx = String::from("\n[AUTOMATICALLY SELECTED ENGINEERING SKILLS]\n");
-            for item in &matched {
-                attached_names.push(item.skill.name.clone());
-                skills_ctx.push_str(&format!(
-                    "\n--- ⚡ Skill: {} (Relevance: {:.2}) ---\n{}\n",
-                    item.skill.name, item.score, item.skill.instructions.trim()
-                ));
-            }
-            skills_ctx.push_str("\n[END AUTODISPATCHED SKILLS]\n\n");
-            let current_sys = chat_session.system_prompt.unwrap_or_default();
-            chat_session.system_prompt = Some(format!("{}{}", skills_ctx, current_sys));
+        let prov_id = self.agent.provider.provider_id();
+        let model_name = self.agent.model.clone();
 
-            if is_interactive {
-                println!(
-                    "{}",
-                    format!("⚡ [Auto-Skills] Attached: {}", attached_names.join(", ")).bold().cyan()
-                );
+        // Conversational guard: do NOT inject engineering skills for basic greetings, identity queries, or meta questions
+        let is_conversational = {
+            let lower = user_query.to_lowercase();
+            let words: Vec<&str> = lower.split_whitespace().collect();
+            words.len() <= 5 && (
+                lower.contains("who are you")
+                || lower.contains("who r u")
+                || lower.starts_with("hi")
+                || lower.starts_with("hello")
+                || lower.starts_with("hey")
+                || lower == "help"
+                || lower == "test"
+                || lower.contains("what is your name")
+                || lower.contains("what can you do")
+                || lower.contains("what are you")
+                || lower.contains("are you ready")
+            )
+        };
+
+        if !is_conversational {
+            let current_sys = chat_session.system_prompt.take().unwrap_or_default();
+            let (equipped_sys, dispatched, _) = dispatcher.equip_prompt_maximized(
+                &current_sys,
+                user_query,
+                prov_id,
+                Some(&model_name),
+                None,
+                None,
+                None,
+            );
+
+            if !dispatched.is_empty() {
+                chat_session.system_prompt = Some(equipped_sys);
+                if is_interactive {
+                    let attached_names: Vec<String> = dispatched.iter().map(|d| d.skill.name.clone()).collect();
+                    println!(
+                        "{}",
+                        format!("⚡ [Auto-Skills] Attached: {}", attached_names.join(", ")).bold().cyan()
+                    );
+                }
+            } else if !current_sys.is_empty() {
+                chat_session.system_prompt = Some(current_sys);
             }
         }
 
@@ -197,11 +222,14 @@ impl InteractiveRepl {
 
         let mut header_printed = false;
         let mut is_thinking = false;
-        let model_name = self.agent.model.clone();
+        let mut repeat_detector = String::new();
+        let mut repeat_count = 0usize;
+        let mut loop_aborted = false;
+        let cancel_token = self.context.cancellation_token.clone();
 
         // Stream tokens live to terminal if in interactive mode
-        let on_delta = |delta: &crate::types::StreamChunkDelta| {
-            if is_interactive {
+        let mut on_delta = |delta: &crate::types::StreamChunkDelta| {
+            if is_interactive && !loop_aborted {
                 if !header_printed {
                     spinner.stop();
                     let model_tag = format!("[{model_name}]").bold().yellow();
@@ -226,6 +254,26 @@ impl InteractiveRepl {
                             print!("\n{}\n", "--- Response ---".italic().green());
                             is_thinking = false;
                         }
+
+                        // Anti-Degeneration Repetition Loop Breaker
+                        let trimmed = t.trim();
+                        if !trimmed.is_empty() && trimmed.len() >= 2 {
+                            if trimmed == repeat_detector {
+                                repeat_count += 1;
+                            } else {
+                                repeat_detector = trimmed.to_string();
+                                repeat_count = 1;
+                            }
+
+                            if repeat_count >= 10 {
+                                print!("\n\n{}", "⚠️  [Loop Breaker] Repetition degeneration halted by TGS Guardian.".yellow().bold());
+                                let _ = std::io::stdout().flush();
+                                loop_aborted = true;
+                                cancel_token.cancel();
+                                return;
+                            }
+                        }
+
                         print!("{}", t);
                         let _ = std::io::stdout().flush();
                     }
