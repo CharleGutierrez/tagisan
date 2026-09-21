@@ -191,7 +191,18 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         aliyun_cloud_pro_max(),
         sovereign_defense_c4istar_pro_max(),
         ai_infra_llm_runtime_pro_max(),
-        quant_trading_hft_pro_max(),
+                quant_trading_hft_pro_max(),
+        financial_engineering_500_vibe_coder_pro_max(),
+        fin_eng_stochastic_calculus_pro_max(),
+        fin_eng_derivatives_exotics_pro_max(),
+        fin_eng_portfolio_factor_investing_pro_max(),
+        fin_eng_algo_trading_statarb_pro_max(),
+        fin_eng_microstructure_lob_pro_max(),
+        fin_eng_machine_learning_alpha_pro_max(),
+        fin_eng_econometrics_timeseries_pro_max(),
+        fin_eng_risk_xva_pro_max(),
+        fin_eng_hpc_low_latency_pro_max(),
+        fin_eng_defi_cryptoeconomics_pro_max(),
         distributed_systems_consensus_pro_max(),
         embedded_firmware_silicon_pro_max(),
         defensive_security_blue_team_pro_max(),
@@ -8692,6 +8703,116 @@ pub fn ai_infra_llm_runtime_pro_max() -> EccSkill {
             "ai-infra-llm-runtime-pro-max",
             "Autonomous Master Engine for the Top 5,500 AI Infrastructure, LLM Runtime, GPU Kernel & Serving Engineering Skills. Covers PagedAttention, continuous batching, prefix caching, speculative decoding, chunked prefill, AWQ/GPTQ/FP8/GGUF quantization, custom Triton & CUDA fused kernels, FlashAttention-2/3, Tensor & Pipeline Parallelism, Mixture-of-Experts (MoE) dynamic routing, TensorRT-LLM, vLLM, SGLang, and low-latency high-concurrency token streaming servers. Triggers: ai-infra, llm-runtime, vllm, tensorrt-llm, ai-infrastructure, llm-inference, triton-kernels, cuda-llm, ai-infra-pro-max, llm-serving.",
             include_str!("../../assets/skills/ai-infra-llm-runtime-pro-max/SKILL.md"),
+        ))
+}
+
+/// Financial Engineering 500 Vibe Coder Pro Max Master Skill (500 Books Suite)
+pub fn financial_engineering_500_vibe_coder_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/financial-engineering-500-vibe-coder-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "financial-engineering-500-vibe-coder-pro-max",
+            "Sovereign Master Engine for the Complete 500 Financial Engineering, Quantitative Finance & Algorithmic Trading Canonical Books suite. Synthesizes all 10 pillars: Stochastic Calculus & Numerical Methods (Books 1–50), Derivatives & Volatility Modeling (Books 51–100), Portfolio Management & Factor Investing (Books 101–150), Algorithmic Trading & Statistical Arbitrage (Books 151–200), Market Microstructure & LOB Dynamics (Books 201–250), Machine Learning & AI Alpha (Books 251–300), Financial Econometrics & Time Series (Books 301–350), Quantitative Risk & XVA (Books 351–400), High-Performance Systems Architecture (Books 401–450), and DeFi Cryptoeconomics (Books 451–500). Triggers: financial-engineering, financial-engineering-500, vibe-coder, quantitative-finance, quant-engineering, fin-eng, stochastic-calculus, derivative-pricing, portfolio-management, algorithmic-trading, market-microstructure, machine-learning-alpha, econometrics, xva-risk, low-latency-quant, defi-cryptoeconomics.",
+            include_str!("../../assets/skills/financial-engineering-500-vibe-coder-pro-max/SKILL.md"),
+        ))
+}
+
+/// Stochastic Calculus & Numerical Methods Pro Max Skill (Books 1–50)
+pub fn fin_eng_stochastic_calculus_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/fin-eng-stochastic-calculus-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "fin-eng-stochastic-calculus-pro-max",
+            "Master Financial Engineering Engine for Stochastic Calculus, Brownian Motion, Martingales, SDEs, Jump Diffusions & Numerical Methods. Based on Shreve, Baxter-Rennie, Karatzas-Shreve, Neftci, Glasserman, Øksendal, Seydel, and Books 1–50. Triggers: stochastic-calculus, brownian-motion, ito-calculus, feynman-kac, girsanov-theorem, martingale, monte-carlo-pricing, finite-difference-pde, sde-diffusion, jump-diffusion, crank-nicolson, variance-reduction.",
+            include_str!("../../assets/skills/fin-eng-stochastic-calculus-pro-max/SKILL.md"),
+        ))
+}
+
+/// Derivative Pricing, Volatility & Exotics Pro Max Skill (Books 51–100)
+pub fn fin_eng_derivatives_exotics_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/fin-eng-derivatives-exotics-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "fin-eng-derivatives-exotics-pro-max",
+            "Master Derivative Pricing, Volatility Surface & Exotics Engine. Covers Black-Scholes-Merton, Local Volatility (Dupire), Heston Stochastic Volatility, SABR, SVI surface parameterization, Barrier/Lookback options, and Adjoint Algorithmic Differentiation (AAD). Based on Hull, Gatheral, Taleb, Kahl, Wilmott, Brigo-Mercurio, Savine, and Books 51–100. Triggers: derivatives-pricing, black-scholes, volatility-surface, heston-model, sabr-model, svi-surface, local-volatility, exotic-options, barrier-options, adjoint-algorithmic-differentiation, aad-greeks, dynamic-hedging.",
+            include_str!("../../assets/skills/fin-eng-derivatives-exotics-pro-max/SKILL.md"),
+        ))
+}
+
+/// Quantitative Portfolio Management & Factor Investing Pro Max Skill (Books 101–150)
+pub fn fin_eng_portfolio_factor_investing_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/fin-eng-portfolio-factor-investing-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "fin-eng-portfolio-factor-investing-pro-max",
+            "Master Quantitative Portfolio Management, Factor Investing & Asset Allocation Engine. Covers Markowitz Mean-Variance Optimization, Black-Litterman model, Risk Parity, Hierarchical Risk Parity (HRP), Barra multi-factor models, Fundamental Law of Active Management, and Downside Risk (Sortino). Based on Grinold-Kahn, Chincarini-Kim, Swensen, Markowitz, Qian, Ilmanen, Meucci, and Books 101–150. Triggers: portfolio-management, factor-investing, markowitz-optimization, black-litterman, risk-parity, hierarchical-risk-parity, barra-factors, mean-variance, fundamental-law-active-management, smart-beta, information-ratio.",
+            include_str!("../../assets/skills/fin-eng-portfolio-factor-investing-pro-max/SKILL.md"),
+        ))
+}
+
+/// Algorithmic Trading & Statistical Arbitrage Pro Max Skill (Books 151–200)
+pub fn fin_eng_algo_trading_statarb_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/fin-eng-algo-trading-statarb-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "fin-eng-algo-trading-statarb-pro-max",
+            "Master Algorithmic Trading, Statistical Arbitrage & Quantitative Execution Engine. Covers Cointegration (Engle-Granger & Johansen), Ornstein-Uhlenbeck mean-reversion drift fitting, Kalman Filter dynamic hedge ratio estimation, Almgren-Chriss optimal execution, VWAP/TWAP schedules, and trend/momentum filters. Based on Ernie Chan, Narang, Pole, Vidyamurthy, Davey, Carver, Cartea-Jaimungal, and Books 151–200. Triggers: algo-trading, statistical-arbitrage, statarb, pairs-trading, cointegration, engle-granger, johansen-test, ornstein-uhlenbeck, kalman-filter-hedge-ratio, mean-reversion, momentum-trading, execution-algorithms.",
+            include_str!("../../assets/skills/fin-eng-algo-trading-statarb-pro-max/SKILL.md"),
+        ))
+}
+
+/// Market Microstructure & Limit Order Books Pro Max Skill (Books 201–250)
+pub fn fin_eng_microstructure_lob_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/fin-eng-microstructure-lob-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "fin-eng-microstructure-lob-pro-max",
+            "Master Market Microstructure, Limit Order Book Dynamics & High-Frequency Modeling Engine. Covers L2/L3 order book reconstruction, Avellaneda-Stoikov market making, Volume-Synchronized Probability of Toxicity (VPIN), Kyle's Lambda price impact, Roll spread estimator, Hawkes processes, and queue position dynamics. Based on Lehalle-Laruelle, Bouchaud, Hasbrouck, de Jong-Rindi, Abergel, Cartea-Jaimungal, Easley-O'Hara, and Books 201–250. Triggers: market-microstructure, limit-order-book, lob-dynamics, avellaneda-stoikov, vpin, kyle-lambda, order-flow-toxicity, market-impact, almgren-chriss, hawkes-processes, adverse-selection.",
+            include_str!("../../assets/skills/fin-eng-microstructure-lob-pro-max/SKILL.md"),
+        ))
+}
+
+/// Financial Machine Learning & AI Alpha Pro Max Skill (Books 251–300)
+pub fn fin_eng_machine_learning_alpha_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/fin-eng-machine-learning-alpha-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "fin-eng-machine-learning-alpha-pro-max",
+            "Master Financial Machine Learning, Deep Learning & AI Alpha Engine. Covers Marcos López de Prado's AFML methodology: Triple-Barrier Method, Meta-Labeling, Fractional Differentiation (stationarity with memory retention), Purged & Embargoed K-Fold Cross-Validation, Mean Decrease Accuracy (MDA) feature importance, and Financial Transformers/Deep RL. Based on López de Prado, Jansen, Dixon-Halperin-Bilokon, Sutton-Barto, and Books 251–300. Triggers: financial-machine-learning, machine-learning-alpha, lopez-de-prado, afml, purged-cross-validation, triple-barrier-method, meta-labeling, fractional-differentiation, feature-importance-mda, financial-reinforcement-learning, transformer-alpha.",
+            include_str!("../../assets/skills/fin-eng-machine-learning-alpha-pro-max/SKILL.md"),
+        ))
+}
+
+/// Financial Econometrics & Time Series Pro Max Skill (Books 301–350)
+pub fn fin_eng_econometrics_timeseries_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/fin-eng-econometrics-timeseries-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "fin-eng-econometrics-timeseries-pro-max",
+            "Master Financial Econometrics, Time Series Analysis & Signal Processing Engine. Covers ARCH/GARCH(1,1), EGARCH, Vector Autoregression (VAR), State-Space Models, Copula modeling (Clayton, Gumbel, Student-t), Extreme Value Theory (EVT, Peak Over Threshold / Generalized Pareto), Wavelet multi-scale denoising, and Markov Regime Switching. Based on Ruey Tsay, James Hamilton, Rachev, Hyndman-Athanasopoulos, Percival-Walden, Cherubini, and Books 301–350. Triggers: financial-econometrics, time-series-analysis, garch, egarch, arch-models, var-models, state-space-models, copulas, extreme-value-theory, evt, wavelets-denoising, markov-regime-switching.",
+            include_str!("../../assets/skills/fin-eng-econometrics-timeseries-pro-max/SKILL.md"),
+        ))
+}
+
+/// Quantitative Risk Management & XVA Pro Max Skill (Books 351–400)
+pub fn fin_eng_risk_xva_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/fin-eng-risk-xva-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "fin-eng-risk-xva-pro-max",
+            "Master Quantitative Risk Management, Stress Testing & XVA Engine. Covers Value at Risk (VaR), Expected Shortfall (CVaR/ES), Basel III/IV Fundamental Review of the Trading Book (FRTB), Credit Value Adjustment (CVA), Debit Value Adjustment (DVA), Funding Value Adjustment (FVA), Extreme Value Theory, and Fat-Tailed Distribution analysis. Based on McNeil-Frey-Embrechts, Hull, Crépey-Bielecki-Brigo, Jorion, Taleb, Bluhm-Overbeck, Gregory, and Books 351–400. Triggers: quantitative-risk-management, xva, cva, dva, fva, basel-iii, frtb, expected-shortfall, value-at-risk, fat-tails, stress-testing, counterparty-credit-risk, extreme-value-risk.",
+            include_str!("../../assets/skills/fin-eng-risk-xva-pro-max/SKILL.md"),
+        ))
+}
+
+/// High-Performance Computing & Low-Latency Architecture Pro Max Skill (Books 401–450)
+pub fn fin_eng_hpc_low_latency_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/fin-eng-hpc-low-latency-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "fin-eng-hpc-low-latency-pro-max",
+            "Master High-Performance Computing, Systems Architecture & Low-Latency Systems Programming Engine for Quantitative Systems. Covers zero-allocation Rust, cache-line alignment (64-byte padding), Single-Producer Single-Consumer (SPSC) lock-free ring buffers, SIMD vectorization for financial math, memory-mapped I/O tick logging, CPU core affinity pinning, and kernel bypass (DPDK/AF_XDP). Based on Kleppmann, Gregg, Williams, Klabnik-Nichols, Blandy, Bryant-O'Hallaron, Ghosh, and Books 401–450. Triggers: hpc-low-latency, zero-allocation-rust, spsc-ring-buffer, cache-line-padding, lock-free-trading, simd-financial, kernel-bypass, memory-mapped-io, sub-microsecond-execution, mechanical-sympathy.",
+            include_str!("../../assets/skills/fin-eng-hpc-low-latency-pro-max/SKILL.md"),
+        ))
+}
+
+/// Cryptoeconomics & DeFi Financial Engineering Pro Max Skill (Books 451–500)
+pub fn fin_eng_defi_cryptoeconomics_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/fin-eng-defi-cryptoeconomics-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "fin-eng-defi-cryptoeconomics-pro-max",
+            "Master Cryptoeconomics, DeFi Financial Engineering & Web3 Quant Systems Engine. Covers Uniswap v2 Constant Product (xy=k), Uniswap v3 Concentrated Liquidity tick math (sqrtPriceX96, liquidity, amount0/amount1 delta), Curve Stableswap invariant, Maximal Extractable Value (MEV: sandwiching, backrunning, liquidation arbitrage), Flash loans, and impermanent loss formulas. Based on Antonopoulos-Wood, Harvey-Ramachandran-Santoro, Daian, Angeris-Chitra, Voshmgir, Schär, Adams-Robinson, and Books 451–500. Triggers: defi-cryptoeconomics, uniswap-v3-math, tick-math, automated-market-makers, amm-liquidity, impermanent-loss, mev-arbitrage, flash-loans, constant-product-cfmm, liquidation-engine.",
+            include_str!("../../assets/skills/fin-eng-defi-cryptoeconomics-pro-max/SKILL.md"),
         ))
 }
 
@@ -18846,6 +18967,8 @@ fn infer_domain(name: &str) -> String {
         ("agentic-", "agentic"),
         ("agentic", "agentic"),
         ("vibe", "vibe"),
+        ("financial-", "finance"),
+        ("financial", "finance"),
         ("fin-", "finance"),
         ("fin", "finance"),
         ("qual-", "behavioral"),
