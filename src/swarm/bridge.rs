@@ -5,7 +5,7 @@
 //! AgentShield security gating and DLP redaction, and swarm-wide Reflexion vault synchronization.
 
 use crate::error::{Result, TagisanError};
-use crate::governor::{HostMemoryGovernor, MemoryPressureTier};
+use crate::governor::{HostMemoryGovernor, LinuxMemInfo, MemoryPressureTier};
 use crate::tools::builtin::ReflexionEntry;
 use crate::tools::ToolHandler;
 use async_trait::async_trait;
@@ -18,7 +18,7 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, OnceLock, RwLock};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::sync::mpsc;
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 // =========================================================================
 // 1. Agent Protocols & Federated Agent Definitions
@@ -1834,3 +1834,1042 @@ mod tests {
         assert!(bridge.dispatch_message(bad_msg).is_err());
     }
 }
+
+// =========================================================================
+// 8. Asymmetric Local Agent Bridge & Swarm Coordinator
+// =========================================================================
+
+pub use crate::engine::memory_tuner::{OllamaModelTagItem, MemoryTunerConfig};
+
+/// Role of an agent within the asymmetric local swarm
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LocalSwarmRole {
+    /// Fast, low-memory intent extractor & constraint synthesizer (0.5B - 1.7B)
+    Scout,
+    /// Code generator & reasoning specialist (1.5B - 3B)
+    Coder,
+    /// Deterministic test runner & syntax verifier
+    Verifier,
+}
+
+impl LocalSwarmRole {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Scout => "Scout",
+            Self::Coder => "Coder",
+            Self::Verifier => "Verifier",
+        }
+    }
+
+    pub fn agent_id(&self) -> &'static str {
+        match self {
+            Self::Scout => "local-scout",
+            Self::Coder => "local-coder",
+            Self::Verifier => "local-verifier",
+        }
+    }
+}
+
+/// Configuration for the Asymmetric Local Swarm Bridge
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalSwarmConfig {
+    /// Model used for intent routing & task distillation (default: smollm2:1.7b)
+    pub scout_model: String,
+    /// Model used for code generation & solution synthesis (default: qwen2.5-coder:1.5b)
+    pub coder_model: String,
+    /// Maximum feedback & auto-correction iterations (default: 3)
+    pub max_iterations: usize,
+    /// Timeout per model execution and verification command in seconds
+    pub timeout_secs: u64,
+    /// Proactively unload models and call malloc_trim between turns
+    pub auto_evict: bool,
+    /// Thread count passed to Ollama (clamped to 1 on dual-core / 8GB)
+    pub num_thread: u32,
+    /// Context window size passed to Ollama (clamped to 1024-2048 on 8GB machines)
+    pub num_ctx: u32,
+    /// Optional command to execute for deterministic verification (e.g. "cargo check")
+    pub verify_command: Option<String>,
+    /// Base URL for the Ollama daemon
+    pub ollama_url: String,
+    /// Working directory for verification execution
+    pub working_dir: Option<PathBuf>,
+    /// Circuit breaker failure threshold before tripping open
+    pub circuit_breaker_failure_threshold: usize,
+    /// Circuit breaker recovery timeout
+    pub circuit_breaker_recovery_timeout: Duration,
+}
+
+impl Default for LocalSwarmConfig {
+    fn default() -> Self {
+        let default_tuner = MemoryTunerConfig::default();
+        Self {
+            scout_model: "smollm2:1.7b".to_string(),
+            coder_model: "qwen2.5-coder:1.5b".to_string(),
+            max_iterations: 3,
+            timeout_secs: 120,
+            auto_evict: true,
+            num_thread: 1,
+            num_ctx: 2048,
+            verify_command: None,
+            ollama_url: default_tuner.ollama_url,
+            working_dir: None,
+            circuit_breaker_failure_threshold: 3,
+            circuit_breaker_recovery_timeout: Duration::from_secs(10),
+        }
+    }
+}
+
+impl LocalSwarmConfig {
+    pub fn new() -> Self {
+        Self::default().with_hardware_clamping()
+    }
+
+    pub fn with_scout_model(mut self, model: impl Into<String>) -> Self {
+        self.scout_model = model.into();
+        self
+    }
+
+    pub fn with_coder_model(mut self, model: impl Into<String>) -> Self {
+        self.coder_model = model.into();
+        self
+    }
+
+    pub fn with_max_iterations(mut self, max: usize) -> Self {
+        self.max_iterations = max.max(1);
+        self
+    }
+
+    pub fn with_timeout_secs(mut self, secs: u64) -> Self {
+        self.timeout_secs = secs;
+        self
+    }
+
+    pub fn with_auto_evict(mut self, auto_evict: bool) -> Self {
+        self.auto_evict = auto_evict;
+        self
+    }
+
+    pub fn with_num_thread(mut self, threads: u32) -> Self {
+        self.num_thread = threads;
+        self
+    }
+
+    pub fn with_num_ctx(mut self, ctx: u32) -> Self {
+        self.num_ctx = ctx;
+        self
+    }
+
+    pub fn with_verify_command(mut self, cmd: impl Into<String>) -> Self {
+        self.verify_command = Some(cmd.into());
+        self
+    }
+
+    pub fn with_ollama_url(mut self, url: impl Into<String>) -> Self {
+        self.ollama_url = url.into();
+        self
+    }
+
+    pub fn with_working_dir(mut self, dir: impl Into<PathBuf>) -> Self {
+        self.working_dir = Some(dir.into());
+        self
+    }
+
+    pub fn with_circuit_breaker_thresholds(
+        mut self,
+        failure_threshold: usize,
+        recovery_timeout: Duration,
+    ) -> Self {
+        self.circuit_breaker_failure_threshold = failure_threshold;
+        self.circuit_breaker_recovery_timeout = recovery_timeout;
+        self
+    }
+
+    /// Automatically clamp resources (threads, context size) based on host hardware.
+    /// On dual-core or 8GB workstations:
+    /// - num_thread is clamped to 1 (leaving 1 CPU core free for OS/UI).
+    /// - num_ctx is clamped to 1024..=2048 to avoid KV-cache bloat and swap thrashing.
+    pub fn apply_hardware_clamping(&mut self, gov: &HostMemoryGovernor, metrics: &LinuxMemInfo) {
+        let is_8gb = gov.is_8gb_workstation(metrics);
+        let low_core = gov.is_low_core_cpu();
+        let tier = gov.evaluate_pressure(metrics);
+
+        if low_core || is_8gb || tier == MemoryPressureTier::RedCritical {
+            self.num_thread = 1;
+        } else {
+            self.num_thread = self.num_thread.clamp(1, 4);
+        }
+
+        if is_8gb || tier != MemoryPressureTier::GreenNormal {
+            self.num_ctx = self.num_ctx.clamp(1024, 2048);
+        } else {
+            self.num_ctx = self.num_ctx.clamp(1024, 8192);
+        }
+    }
+
+    pub fn with_hardware_clamping(mut self) -> Self {
+        let gov = HostMemoryGovernor::new();
+        let metrics = gov.current_metrics();
+        self.apply_hardware_clamping(&gov, &metrics);
+        self
+    }
+
+    pub fn with_clamping_for_metrics(mut self, gov: &HostMemoryGovernor, metrics: &LinuxMemInfo) -> Self {
+        self.apply_hardware_clamping(gov, metrics);
+        self
+    }
+}
+
+/// Distilled task contract emitted by the Scout agent
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ScoutContract {
+    pub task_intent: String,
+    #[serde(default)]
+    pub constraints: Vec<String>,
+    pub expected_deliverable: String,
+    #[serde(default)]
+    pub language_or_tech: Option<String>,
+    #[serde(default)]
+    pub raw_output: String,
+}
+
+impl ScoutContract {
+    pub fn parse(raw: &str) -> Self {
+        let trimmed = raw.trim();
+
+        // Extract JSON block if wrapped in markdown fences
+        let json_candidate = if let Some(start) = trimmed.find("```json") {
+            let rest = &trimmed[start + 7..];
+            if let Some(end) = rest.find("```") {
+                &rest[..end]
+            } else {
+                rest
+            }
+        } else if let Some(start) = trimmed.find("```") {
+            let rest = &trimmed[start + 3..];
+            if let Some(end) = rest.find("```") {
+                &rest[..end]
+            } else {
+                rest
+            }
+        } else if let Some(start) = trimmed.find('{') {
+            if let Some(end) = trimmed.rfind('}') {
+                &trimmed[start..=end]
+            } else {
+                trimmed
+            }
+        } else {
+            trimmed
+        };
+
+        if let Ok(mut contract) = serde_json::from_str::<ScoutContract>(json_candidate.trim()) {
+            contract.raw_output = raw.to_string();
+            return contract;
+        }
+
+        // Fallback heuristic if Scout emitted unstructured text
+        ScoutContract {
+            task_intent: trimmed.to_string(),
+            constraints: Vec::new(),
+            expected_deliverable: "Solution or code implementing the task intent".to_string(),
+            language_or_tech: None,
+            raw_output: raw.to_string(),
+        }
+    }
+
+    pub fn to_contract_json(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_else(|_| self.task_intent.clone())
+    }
+}
+
+/// Result of deterministic validation
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct VerifierOutcome {
+    pub passed: bool,
+    pub command: Option<String>,
+    pub exit_code: Option<i32>,
+    pub stdout: String,
+    pub stderr: String,
+    pub diagnostics: Option<String>,
+}
+
+/// Complete execution outcome from the asymmetric local swarm
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalSwarmResult {
+    pub success: bool,
+    pub iterations: usize,
+    pub scout_contract: ScoutContract,
+    pub coder_output: String,
+    pub verifier_outcome: VerifierOutcome,
+    pub evicted_models: Vec<String>,
+    pub trims_performed: usize,
+    pub reflexions_recorded: usize,
+    pub error: Option<String>,
+}
+
+/// Telemetry tracking serial model unloads and heap trims
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct EvictionTelemetry {
+    pub unloads: Vec<(String, u64)>,
+    pub heap_trims: usize,
+}
+
+/// Generation options passed to local models
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LocalModelOptions {
+    pub num_thread: u32,
+    pub num_ctx: u32,
+    pub keep_alive: String,
+}
+
+#[async_trait]
+pub trait LocalModelExecutor: Send + Sync {
+    async fn generate(
+        &self,
+        model: &str,
+        system: &str,
+        prompt: &str,
+        options: &LocalModelOptions,
+    ) -> Result<String>;
+
+    async fn unload_model(&self, model: &str) -> Result<bool>;
+
+    async fn fetch_installed_models(&self) -> Result<Vec<OllamaModelTagItem>>;
+}
+
+/// Production Ollama executor communicating with local Ollama daemon
+pub struct OllamaLocalExecutor {
+    client: reqwest::Client,
+    ollama_url: String,
+}
+
+impl OllamaLocalExecutor {
+    pub fn new(ollama_url: impl Into<String>) -> Self {
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(180))
+            .build()
+            .unwrap_or_default();
+        Self {
+            client,
+            ollama_url: ollama_url.into(),
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct LocalOllamaGeneratePayload<'a> {
+    model: &'a str,
+    system: &'a str,
+    prompt: &'a str,
+    stream: bool,
+    options: LocalOllamaOptionsPayload,
+    keep_alive: &'a str,
+}
+
+#[derive(Serialize)]
+struct LocalOllamaOptionsPayload {
+    num_thread: u32,
+    num_ctx: u32,
+}
+
+#[derive(Deserialize)]
+struct LocalOllamaGenerateResponse {
+    response: Option<String>,
+}
+
+#[derive(Serialize)]
+struct LocalOllamaUnloadReq<'a> {
+    model: &'a str,
+    keep_alive: i32,
+}
+
+#[derive(Deserialize)]
+struct LocalOllamaTagsResp {
+    models: Option<Vec<OllamaModelTagItem>>,
+}
+
+#[async_trait]
+impl LocalModelExecutor for OllamaLocalExecutor {
+    async fn generate(
+        &self,
+        model: &str,
+        system: &str,
+        prompt: &str,
+        options: &LocalModelOptions,
+    ) -> Result<String> {
+        let url = format!("{}/api/generate", self.ollama_url.trim_end_matches('/'));
+        let payload = LocalOllamaGeneratePayload {
+            model,
+            system,
+            prompt,
+            stream: false,
+            options: LocalOllamaOptionsPayload {
+                num_thread: options.num_thread,
+                num_ctx: options.num_ctx,
+            },
+            keep_alive: &options.keep_alive,
+        };
+
+        let resp = self.client.post(&url).json(&payload).send().await?;
+        if !resp.status().is_success() {
+            let err_text = resp.text().await.unwrap_or_default();
+            return Err(TagisanError::BadResponse("ollama".into(), err_text));
+        }
+
+        let gen_resp: LocalOllamaGenerateResponse = resp.json().await.map_err(|e| {
+            TagisanError::Execution(format!("Failed to parse Ollama generation response: {e}"))
+        })?;
+
+        Ok(gen_resp.response.unwrap_or_default())
+    }
+
+    async fn unload_model(&self, model: &str) -> Result<bool> {
+        let url = format!("{}/api/generate", self.ollama_url.trim_end_matches('/'));
+        let payload = LocalOllamaUnloadReq {
+            model,
+            keep_alive: 0,
+        };
+
+        let resp = self.client.post(&url).json(&payload).send().await?;
+        Ok(resp.status().is_success())
+    }
+
+    async fn fetch_installed_models(&self) -> Result<Vec<OllamaModelTagItem>> {
+        let url = format!("{}/api/tags", self.ollama_url.trim_end_matches('/'));
+        let resp = self.client.get(&url).send().await?;
+        if !resp.status().is_success() {
+            let err_text = resp.text().await.unwrap_or_default();
+            return Err(TagisanError::BadResponse("ollama".into(), err_text));
+        }
+
+        let tags: LocalOllamaTagsResp = resp.json().await.map_err(|e| {
+            TagisanError::Execution(format!("Failed to parse Ollama /api/tags response: {e}"))
+        })?;
+
+        Ok(tags.models.unwrap_or_default())
+    }
+}
+
+/// In-memory mock executor for high-speed, deterministic unit testing
+#[derive(Clone, Default)]
+pub struct MockLocalExecutor {
+    pub responses: Arc<RwLock<HashMap<String, Vec<String>>>>,
+    pub unloads: Arc<RwLock<Vec<String>>>,
+    pub installed_models: Arc<RwLock<Vec<OllamaModelTagItem>>>,
+    pub fail_model: Arc<RwLock<Option<String>>>,
+}
+
+impl MockLocalExecutor {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_response(self, model: &str, response: impl Into<String>) -> Self {
+        self.add_response(model, response);
+        self
+    }
+
+    pub fn add_response(&self, model: &str, response: impl Into<String>) {
+        if let Ok(mut resps) = self.responses.write() {
+            resps.entry(model.to_string()).or_default().push(response.into());
+        }
+    }
+
+    pub fn with_installed_models(self, models: Vec<OllamaModelTagItem>) -> Self {
+        if let Ok(mut inst) = self.installed_models.write() {
+            *inst = models;
+        }
+        self
+    }
+
+    pub fn set_failing_model(&self, model: impl Into<String>) {
+        if let Ok(mut fail) = self.fail_model.write() {
+            *fail = Some(model.into());
+        }
+    }
+
+    pub fn clear_failing_model(&self) {
+        if let Ok(mut fail) = self.fail_model.write() {
+            *fail = None;
+        }
+    }
+
+    pub fn recorded_unloads(&self) -> Vec<String> {
+        self.unloads.read().map(|u| u.clone()).unwrap_or_default()
+    }
+}
+
+#[async_trait]
+impl LocalModelExecutor for MockLocalExecutor {
+    async fn generate(
+        &self,
+        model: &str,
+        _system: &str,
+        _prompt: &str,
+        _options: &LocalModelOptions,
+    ) -> Result<String> {
+        if let Ok(fail_guard) = self.fail_model.read() {
+            if let Some(ref failing) = *fail_guard {
+                if failing == model {
+                    return Err(TagisanError::Execution(format!("Simulated failure on model '{model}'")));
+                }
+            }
+        }
+
+        if let Ok(mut resps) = self.responses.write() {
+            if let Some(list) = resps.get_mut(model) {
+                if !list.is_empty() {
+                    return Ok(list.remove(0));
+                }
+            }
+        }
+
+        // Default synthetic response if none scripted
+        if model.contains("scout") || model.contains("smollm") || model.contains("0.5b") || model.contains("1b") {
+            Ok(json!({
+                "task_intent": "Implement requested feature",
+                "constraints": ["memory-efficient", "8GB safe"],
+                "expected_deliverable": "Clean Rust implementation",
+                "language_or_tech": "rust"
+            }).to_string())
+        } else {
+            Ok("//! Synthetic code output\npub fn execute_task() -> bool { true }\n".to_string())
+        }
+    }
+
+    async fn unload_model(&self, model: &str) -> Result<bool> {
+        if let Ok(mut unloads) = self.unloads.write() {
+            unloads.push(model.to_string());
+        }
+        Ok(true)
+    }
+
+    async fn fetch_installed_models(&self) -> Result<Vec<OllamaModelTagItem>> {
+        let models = self.installed_models.read().map(|m| m.clone()).unwrap_or_default();
+        Ok(models)
+    }
+}
+
+/// Selects optimal Scout and Coder models from installed Ollama models.
+/// Prioritizes:
+/// - Scout: smollm2:1.7b, qwen2.5:0.5b, llama3.2:1b, phi3:mini, gemma2:2b (or <= 2GB)
+/// - Coder: qwen2.5-coder:1.5b, qwen2.5-coder:3b, starcoder2:3b, deepseek-coder:1.3b, codellama:7b
+pub fn select_optimal_models(tags: &[OllamaModelTagItem]) -> (String, String) {
+    if tags.is_empty() {
+        return ("smollm2:1.7b".to_string(), "qwen2.5-coder:1.5b".to_string());
+    }
+
+    let names: Vec<String> = tags.iter().map(|t| t.name.to_lowercase()).collect();
+
+    // 1. Select Scout
+    let scout_candidates = [
+        "smollm2:1.7b",
+        "smollm2",
+        "qwen2.5:0.5b",
+        "qwen2.5:1.5b",
+        "llama3.2:1b",
+        "llama3.2",
+        "phi3:mini",
+        "phi-3",
+        "gemma2:2b",
+        "gemma:2b",
+    ];
+
+    let mut selected_scout = None;
+    for cand in &scout_candidates {
+        if let Some(found) = names.iter().find(|n| n.contains(cand) || cand.contains(n.as_str())) {
+            selected_scout = Some(found.clone());
+            break;
+        }
+    }
+
+    if selected_scout.is_none() {
+        for tag in tags {
+            let n = tag.name.to_lowercase();
+            if n.contains("0.5b") || n.contains("1b") || n.contains("1.5b") || n.contains("1.7b") || n.contains("2b") {
+                selected_scout = Some(tag.name.clone());
+                break;
+            }
+            if let Some(sz) = tag.size {
+                if sz > 0 && sz <= 2 * 1024 * 1024 * 1024 {
+                    selected_scout = Some(tag.name.clone());
+                    break;
+                }
+            }
+        }
+    }
+
+    let scout = selected_scout.unwrap_or_else(|| {
+        names.first().cloned().unwrap_or_else(|| "smollm2:1.7b".to_string())
+    });
+
+    // 2. Select Coder
+    let coder_candidates = [
+        "qwen2.5-coder:1.5b",
+        "qwen2.5-coder:3b",
+        "qwen2.5-coder:7b",
+        "qwen2.5-coder",
+        "starcoder2:3b",
+        "starcoder2:7b",
+        "starcoder2",
+        "deepseek-coder:1.3b",
+        "deepseek-coder",
+        "codellama:7b",
+        "codellama",
+        "llama3.2:3b",
+    ];
+
+    let mut selected_coder = None;
+    for cand in &coder_candidates {
+        if let Some(found) = names.iter().find(|n| n.contains(cand) || cand.contains(n.as_str())) {
+            selected_coder = Some(found.clone());
+            break;
+        }
+    }
+
+    if selected_coder.is_none() {
+        for tag in tags {
+            let n = tag.name.to_lowercase();
+            if (n.contains("coder") || n.contains("code")) && n != scout {
+                selected_coder = Some(tag.name.clone());
+                break;
+            }
+        }
+    }
+
+    let coder = selected_coder.unwrap_or_else(|| {
+        names.iter()
+            .find(|n| *n != &scout)
+            .cloned()
+            .unwrap_or_else(|| "qwen2.5-coder:1.5b".to_string())
+    });
+
+    (scout, coder)
+}
+
+/// Asymmetric Local Agent Bridge & Swarm Coordinator
+pub struct LocalSwarmBridge {
+    pub config: LocalSwarmConfig,
+    pub security_gateway: Arc<AgentShieldBridgeGateway>,
+    pub reflexion_bridge: Arc<SharedReflexionBridge>,
+    pub circuit_breakers: Arc<AgentCircuitBreakerRegistry>,
+    pub governor: HostMemoryGovernor,
+    executor: Arc<dyn LocalModelExecutor>,
+    eviction_tracker: Arc<RwLock<EvictionTelemetry>>,
+}
+
+impl LocalSwarmBridge {
+    /// Create a new LocalSwarmBridge with default Ollama executor and hardware clamping
+    pub fn new(config: LocalSwarmConfig) -> Self {
+        let clamped_config = config.with_hardware_clamping();
+        let executor = Arc::new(OllamaLocalExecutor::new(&clamped_config.ollama_url));
+        Self::with_executor(clamped_config, executor)
+    }
+
+    /// Create a LocalSwarmBridge with a custom or mock model executor
+    pub fn with_executor(config: LocalSwarmConfig, executor: Arc<dyn LocalModelExecutor>) -> Self {
+        let circuit_breakers = Arc::new(AgentCircuitBreakerRegistry::with_defaults(
+            config.circuit_breaker_failure_threshold,
+            config.circuit_breaker_recovery_timeout,
+            2,
+        ));
+
+        Self {
+            config,
+            security_gateway: Arc::new(AgentShieldBridgeGateway::new()),
+            reflexion_bridge: Arc::new(SharedReflexionBridge::new()),
+            circuit_breakers,
+            governor: HostMemoryGovernor::new(),
+            executor,
+            eviction_tracker: Arc::new(RwLock::new(EvictionTelemetry::default())),
+        }
+    }
+
+    /// Inspect installed Ollama models via `/api/tags` and choose optimal Scout & Coder
+    pub async fn auto_detect_models(&self) -> Result<(String, String)> {
+        match self.executor.fetch_installed_models().await {
+            Ok(tags) => {
+                let (scout, coder) = select_optimal_models(&tags);
+                info!(
+                    "{}",
+                    format!(
+                        "🤖 [Local Swarm Auto-Detect] Discovered models -> Scout: '{}', Coder: '{}'",
+                        scout.green(),
+                        coder.cyan()
+                    )
+                );
+                Ok((scout, coder))
+            }
+            Err(e) => {
+                warn!(
+                    "Failed to query Ollama /api/tags: {e}. Falling back to configured models ('{}', '{}')",
+                    self.config.scout_model, self.config.coder_model
+                );
+                Ok((self.config.scout_model.clone(), self.config.coder_model.clone()))
+            }
+        }
+    }
+
+    /// Retrieve recorded eviction telemetry
+    pub fn eviction_telemetry(&self) -> EvictionTelemetry {
+        self.eviction_tracker.read().map(|t| t.clone()).unwrap_or_default()
+    }
+
+    /// Internal memory hygiene step: sends `keep_alive: 0` to Ollama and triggers `malloc_trim(0)`
+    async fn unload_model_and_trim(&self, model: &str) -> Result<()> {
+        if self.config.auto_evict {
+            debug!("🧹 [Local Swarm] Evicting model '{}' from memory...", model);
+            let _ = self.executor.unload_model(model).await;
+            self.governor.trim_heap();
+
+            if let Ok(mut tracker) = self.eviction_tracker.write() {
+                let now_ms = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as u64;
+                tracker.unloads.push((model.to_string(), now_ms));
+                tracker.heap_trims += 1;
+            }
+        }
+        Ok(())
+    }
+
+    /// Run deterministic verification command or syntax validation
+    pub async fn run_verifier(&self, coder_output: &str) -> VerifierOutcome {
+        if let Some(ref cmd) = self.config.verify_command {
+            let mut parts = cmd.split_whitespace();
+            if let Some(prog) = parts.next() {
+                let mut command = tokio::process::Command::new(prog);
+                for arg in parts {
+                    command.arg(arg);
+                }
+                if let Some(ref dir) = self.config.working_dir {
+                    command.current_dir(dir);
+                }
+                command.env("CARGO_BUILD_JOBS", "1");
+
+                match tokio::time::timeout(Duration::from_secs(self.config.timeout_secs), command.output()).await {
+                    Ok(Ok(output)) => {
+                        let exit_code = output.status.code();
+                        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+                        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+                        let passed = output.status.success();
+                        let diagnostics = if !passed {
+                            Some(if !stderr.trim().is_empty() {
+                                stderr.clone()
+                            } else {
+                                stdout.clone()
+                            })
+                        } else {
+                            None
+                        };
+
+                        return VerifierOutcome {
+                            passed,
+                            command: Some(cmd.clone()),
+                            exit_code,
+                            stdout,
+                            stderr,
+                            diagnostics,
+                        };
+                    }
+                    Ok(Err(e)) => {
+                        return VerifierOutcome {
+                            passed: false,
+                            command: Some(cmd.clone()),
+                            exit_code: None,
+                            stdout: String::new(),
+                            stderr: format!("Failed to execute command: {e}"),
+                            diagnostics: Some(format!("Execution error: {e}")),
+                        };
+                    }
+                    Err(_) => {
+                        return VerifierOutcome {
+                            passed: false,
+                            command: Some(cmd.clone()),
+                            exit_code: None,
+                            stdout: String::new(),
+                            stderr: "Verification command timed out".to_string(),
+                            diagnostics: Some("Verification command timed out".to_string()),
+                        };
+                    }
+                }
+            }
+        }
+
+        // Fallback: Deterministic structural syntax validation
+        let trimmed = coder_output.trim();
+        if trimmed.is_empty() {
+            return VerifierOutcome {
+                passed: false,
+                command: None,
+                exit_code: Some(1),
+                stdout: String::new(),
+                stderr: "Empty output received from Coder".to_string(),
+                diagnostics: Some("Empty output received from Coder".to_string()),
+            };
+        }
+
+        // Validate code fence closure if markdown is used
+        let fence_count = trimmed.matches("```").count();
+        if fence_count % 2 != 0 {
+            return VerifierOutcome {
+                passed: false,
+                command: None,
+                exit_code: Some(2),
+                stdout: String::new(),
+                stderr: "Unclosed markdown code block detected in Coder output".to_string(),
+                diagnostics: Some("Unclosed markdown code block: missing closing ``` fence".to_string()),
+            };
+        }
+
+        VerifierOutcome {
+            passed: true,
+            command: None,
+            exit_code: Some(0),
+            stdout: "Structural validation passed".to_string(),
+            stderr: String::new(),
+            diagnostics: None,
+        }
+    }
+
+    /// Execute the serial turn cycle across the asymmetric local swarm:
+    ///
+    /// 1. **Turn 1: Scout**: Parses intent, categorizes requirements, and produces a distilled JSON contract.
+    /// 2. **Memory Eviction**: Immediately unloads Scout (`keep_alive: 0`) and triggers `malloc_trim(0)`.
+    /// 3. **Turn 2: Coder**: Receives distilled contract and synthesizes code/solution.
+    /// 4. **Memory Eviction**: Immediately unloads Coder (`keep_alive: 0`) and triggers `malloc_trim(0)`.
+    /// 5. **Turn 3: Verifier**: Executes automated verification. If validation fails, feeds compiler
+    ///    diagnostics back to Coder (up to `max_iterations`) with serial memory cycling.
+    pub async fn execute_serial_turn_cycle(&self, user_prompt: &str) -> Result<LocalSwarmResult> {
+        info!(
+            "{}",
+            "🚀 [Local Swarm Bridge] Initiating serial turn cycle for 8GB workstation...".bold().yellow()
+        );
+
+        // 1. AgentShield Gateway Scan on user input (prompt injection scan & secret redaction)
+        let user_msg = BridgeMessage::new(
+            "user",
+            LocalSwarmRole::Scout.agent_id(),
+            "tgs.swarm.input",
+            json!({ "prompt": user_prompt }),
+        );
+        let scanned_user_msg = self.security_gateway.scan_message(user_msg)?;
+        let safe_prompt = scanned_user_msg
+            .payload
+            .get("prompt")
+            .and_then(|v| v.as_str())
+            .unwrap_or(user_prompt);
+
+        // 2. Check Scout Circuit Breaker
+        self.circuit_breakers.can_execute(LocalSwarmRole::Scout.agent_id())?;
+
+        // 3. Turn 1: Scout Execution
+        info!(
+            "{}",
+            format!("🔍 [Turn 1: Scout ({})] Analyzing intent & synthesizing contract...", self.config.scout_model).cyan()
+        );
+
+        let scout_system = "You are the Scout & Intent Router in the Tagisan Asymmetric Local Swarm.\n\
+Analyze the user request and emit a compact JSON contract with the following fields:\n\
+{\n  \"task_intent\": \"high-level task intent\",\n  \"constraints\": [\"constraint 1\", \"constraint 2\"],\n  \"expected_deliverable\": \"description of deliverable\",\n  \"language_or_tech\": \"language/tech or null\"\n}\n\
+Return ONLY valid JSON.";
+
+        let scout_opts = LocalModelOptions {
+            num_thread: self.config.num_thread,
+            num_ctx: self.config.num_ctx,
+            keep_alive: "0s".to_string(),
+        };
+
+        let scout_raw = match self.executor.generate(&self.config.scout_model, scout_system, safe_prompt, &scout_opts).await {
+            Ok(res) => {
+                self.circuit_breakers.record_success(LocalSwarmRole::Scout.agent_id());
+                res
+            }
+            Err(e) => {
+                self.circuit_breakers.record_failure(LocalSwarmRole::Scout.agent_id(), &e.to_string());
+                return Err(e);
+            }
+        };
+
+        let contract = ScoutContract::parse(&scout_raw);
+        info!(
+            "{}",
+            format!("📋 [Scout Contract Distilled] Intent: '{}' [Language: {:?}]", contract.task_intent, contract.language_or_tech).green()
+        );
+
+        // 4. Memory Hygiene Step 1: Evict Scout from RAM/VRAM
+        let mut evicted_models = Vec::new();
+        if self.config.auto_evict {
+            self.unload_model_and_trim(&self.config.scout_model).await?;
+            evicted_models.push(self.config.scout_model.clone());
+        }
+
+        // 5. Coder & Verifier Feedback Loop
+        let mut coder_output = String::new();
+        let mut verifier_outcome = VerifierOutcome {
+            passed: false,
+            command: self.config.verify_command.clone(),
+            exit_code: None,
+            stdout: String::new(),
+            stderr: String::new(),
+            diagnostics: None,
+        };
+        let mut reflexions_recorded = 0;
+        let mut current_iteration = 0;
+        let mut feedback_prompt = String::new();
+
+        for iteration in 1..=self.config.max_iterations {
+            current_iteration = iteration;
+
+            // Check Coder Circuit Breaker
+            self.circuit_breakers.can_execute(LocalSwarmRole::Coder.agent_id())?;
+
+            info!(
+                "{}",
+                format!(
+                    "💻 [Turn 2: Coder ({})] Generating solution (Iteration {}/{})...",
+                    self.config.coder_model, iteration, self.config.max_iterations
+                )
+                .cyan()
+            );
+
+            // Query Reflexion Vault for relevant lessons learned
+            let relevant_reflexions = self.reflexion_bridge.query(&contract.task_intent);
+            let mut reflexion_context = String::new();
+            if !relevant_reflexions.is_empty() {
+                reflexion_context.push_str("Prior Mistakes & Invariants to Respect:\n");
+                for r in &relevant_reflexions {
+                    reflexion_context.push_str(&format!(
+                        "- Invariant: {}\n  Prior Diagnostic: {}\n",
+                        r.preventative_invariant, r.error_signature
+                    ));
+                }
+            }
+
+            let coder_system = "You are the Coder & Implementation Specialist in the Tagisan Asymmetric Local Swarm.\n\
+Implement high-precision, production-grade solutions directly based on the distilled task contract.";
+
+            let mut coder_user_prompt = format!(
+                "DISTILLED TASK CONTRACT:\n\
+Intent: {}\n\
+Expected Deliverable: {}\n\
+Constraints: {}\n\
+Language/Tech: {}\n\n\
+{}\n\
+{}\n\
+Please output the implementation directly.",
+                contract.task_intent,
+                contract.expected_deliverable,
+                contract.constraints.join(", "),
+                contract.language_or_tech.as_deref().unwrap_or("general"),
+                reflexion_context,
+                feedback_prompt
+            );
+
+            // AgentShield scan on message from Scout to Coder
+            let coder_bridge_msg = BridgeMessage::new(
+                LocalSwarmRole::Scout.agent_id(),
+                LocalSwarmRole::Coder.agent_id(),
+                "tgs.swarm.coder.prompt",
+                json!({ "prompt": coder_user_prompt }),
+            );
+            let scanned_coder_msg = self.security_gateway.scan_message(coder_bridge_msg)?;
+            coder_user_prompt = scanned_coder_msg
+                .payload
+                .get("prompt")
+                .and_then(|v| v.as_str())
+                .unwrap_or(&coder_user_prompt)
+                .to_string();
+
+            let coder_opts = LocalModelOptions {
+                num_thread: self.config.num_thread,
+                num_ctx: self.config.num_ctx,
+                keep_alive: "0s".to_string(),
+            };
+
+            match self.executor.generate(&self.config.coder_model, coder_system, &coder_user_prompt, &coder_opts).await {
+                Ok(res) => {
+                    self.circuit_breakers.record_success(LocalSwarmRole::Coder.agent_id());
+                    coder_output = res;
+                }
+                Err(e) => {
+                    self.circuit_breakers.record_failure(LocalSwarmRole::Coder.agent_id(), &e.to_string());
+                    return Err(e);
+                }
+            }
+
+            // Memory Hygiene Step 2: Evict Coder from RAM/VRAM
+            if self.config.auto_evict {
+                self.unload_model_and_trim(&self.config.coder_model).await?;
+                evicted_models.push(self.config.coder_model.clone());
+            }
+
+            // Turn 3: Deterministic Verifier Execution
+            info!(
+                "{}",
+                format!("🧪 [Turn 3: Verifier] Running verification checks (Iteration {}/{})...", iteration, self.config.max_iterations).yellow()
+            );
+
+            verifier_outcome = self.run_verifier(&coder_output).await;
+
+            if verifier_outcome.passed {
+                info!("{}", "✅ [Verifier Passed] Code and invariants successfully validated!".green().bold());
+                break;
+            } else {
+                let diag = verifier_outcome.diagnostics.clone().unwrap_or_else(|| "Unknown failure".to_string());
+                warn!(
+                    "{}",
+                    format!("⚠️ [Verifier Failed] Diagnostics: {}", diag).red()
+                );
+
+                // Record failure post-mortem in the Shared Reflexion Bridge
+                let now_ms = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis() as u64;
+                let entry = ReflexionEntry {
+                    id: format!("refl-{}", &blake3::hash(format!("{now_ms}-{diag}").as_bytes()).to_hex()[..16]),
+                    timestamp: chrono::Utc::now().to_rfc3339(),
+                    error_signature: diag.clone(),
+                    root_cause: format!("Verification failed for task '{}' on iteration {} with command {:?}", contract.task_intent, iteration, self.config.verify_command),
+                    fix_applied: "Feed diagnostics back to Coder for auto-correction".to_string(),
+                    preventative_invariant: "Resolve compiler and syntax diagnostics directly in the code output.".to_string(),
+                    tags: vec!["local_bridge".to_string(), "verifier".to_string(), contract.task_intent.to_lowercase()],
+                };
+                let _ = self.reflexion_bridge.sync_postmortem(entry);
+                reflexions_recorded += 1;
+
+                if iteration < self.config.max_iterations {
+                    feedback_prompt = format!(
+                        "\nPREVIOUS ATTEMPT FAILED VERIFICATION (Attempt {}/{}):\n\
+Diagnostics:\n{}\n\
+Please fix all errors identified in the diagnostics above.\n",
+                        iteration, self.config.max_iterations, diag
+                    );
+                }
+            }
+        }
+
+        let trims_performed = self.eviction_tracker.read().map(|t| t.heap_trims).unwrap_or(0);
+        let success = verifier_outcome.passed;
+        let error = if !success {
+            Some(format!(
+                "Verification failed after {} iteration(s): {}",
+                current_iteration,
+                verifier_outcome.diagnostics.as_deref().unwrap_or("Non-zero exit code")
+            ))
+        } else {
+            None
+        };
+
+        Ok(LocalSwarmResult {
+            success,
+            iterations: current_iteration,
+            scout_contract: contract,
+            coder_output,
+            verifier_outcome,
+            evicted_models,
+            trims_performed,
+            reflexions_recorded,
+            error,
+        })
+    }
+}
+

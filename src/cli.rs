@@ -2546,6 +2546,85 @@ enum SwarmAction {
         #[arg(long)]
         reset: bool,
     },
+    /// Asymmetric Local LLM Agent Bridge for 8GB RAM laptops (Scout -> Coder -> Verifier)
+    Local {
+        /// Task prompt to execute across the asymmetric local swarm
+        prompt: String,
+
+        /// Scout model for intent extraction (default: smollm2:1.7b or auto-detected)
+        #[arg(long)]
+        scout: Option<String>,
+
+        /// Coder model for solution generation (default: qwen2.5-coder:1.5b or auto-detected)
+        #[arg(long)]
+        coder: Option<String>,
+
+        /// Maximum auto-correction iterations
+        #[arg(long, default_value = "3")]
+        max_iterations: usize,
+
+        /// Verification command to execute (e.g. 'cargo check', 'pytest')
+        #[arg(long)]
+        verify: Option<String>,
+
+        /// Automatically detect optimal Scout and Coder models from Ollama
+        #[arg(long)]
+        auto_detect: bool,
+
+        /// Disable auto-eviction of models from RAM/VRAM between turns
+        #[arg(long)]
+        no_evict: bool,
+    },
+    /// Agent Bridge status, federation, or local swarm execution
+    Bridge {
+        /// Optional task prompt to execute via the local bridge
+        prompt: Option<String>,
+
+        /// Scout model override
+        #[arg(long)]
+        scout: Option<String>,
+
+        /// Coder model override
+        #[arg(long)]
+        coder: Option<String>,
+
+        /// Maximum auto-correction iterations
+        #[arg(long, default_value = "3")]
+        max_iterations: usize,
+
+        /// Verification command to execute
+        #[arg(long)]
+        verify: Option<String>,
+
+        /// Automatically detect optimal models
+        #[arg(long)]
+        auto_detect: bool,
+
+        /// Show bridge telemetry status
+        #[arg(long)]
+        status: bool,
+    },
+    /// Cloud Frontier LLM Agent Bridge & Multi-Provider Consensus Swarm
+    Cloud {
+        /// Task prompt to execute across the multi-provider cloud swarm
+        prompt: String,
+
+        /// Triage model for intent extraction (default: gemini-2.0-flash or claude-3-5-haiku-20241022)
+        #[arg(long)]
+        triage: Option<String>,
+
+        /// Primary model for implementation synthesis (default: claude-3-5-sonnet-20241022)
+        #[arg(long)]
+        primary: Option<String>,
+
+        /// Reviewer model for cross-provider dialectic red-teaming (default: gpt-4o)
+        #[arg(long)]
+        reviewer: Option<String>,
+
+        /// Enable zero-stall cross-provider failover
+        #[arg(long, default_value = "true")]
+        failover: bool,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -5683,6 +5762,166 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
                     } else {
                         let atlas = SwarmAtlas::load_or_default(path);
                         println!("{}", atlas.render_atlas_table());
+                    }
+                }
+                SwarmAction::Local {
+                    prompt,
+                    scout,
+                    coder,
+                    max_iterations,
+                    verify,
+                    auto_detect,
+                    no_evict,
+                } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  🇵🇭  Tagisan Asymmetric Local Swarm (8GB RAM Dual-Core)".bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let mut config = crate::swarm::bridge::LocalSwarmConfig::new()
+                        .with_max_iterations(max_iterations)
+                        .with_auto_evict(!no_evict);
+
+                    if let Some(s) = scout {
+                        config = config.with_scout_model(s);
+                    }
+                    if let Some(c) = coder {
+                        config = config.with_coder_model(c);
+                    }
+                    if let Some(v) = verify {
+                        config = config.with_verify_command(v);
+                    }
+
+                    let bridge = crate::swarm::bridge::LocalSwarmBridge::new(config);
+
+                    if auto_detect {
+                        if let Ok((s, c)) = bridge.auto_detect_models().await {
+                            println!("  🤖 Auto-Detected Models -> Scout: {}, Coder: {}", s.green().bold(), c.cyan().bold());
+                        }
+                    }
+
+                    println!("  Scout Model:    {}", bridge.config.scout_model.cyan().bold());
+                    println!("  Coder Model:    {}", bridge.config.coder_model.green().bold());
+                    println!("  Max Iterations: {}", bridge.config.max_iterations);
+                    println!("  Num Thread:     {} (hardware clamped)", bridge.config.num_thread);
+                    println!("  Num Context:    {} (hardware clamped)", bridge.config.num_ctx);
+                    println!("  Auto Evict:     {}", bridge.config.auto_evict);
+                    if let Some(ref v) = bridge.config.verify_command {
+                        println!("  Verifier Cmd:   {}", v.yellow().bold());
+                    }
+                    println!("{}", "---------------------------------------------------------".cyan());
+
+                    let res = bridge.execute_serial_turn_cycle(&prompt).await?;
+                    println!("\n{}", "🏁 Execution Summary".bold().yellow());
+                    println!("  Success:             {}", if res.success { "PASSED".green().bold() } else { "FAILED".red().bold() });
+                    println!("  Iterations:          {}", res.iterations);
+                    println!("  Models Evicted:      {:?}", res.evicted_models);
+                    println!("  Heap Trims:          {}", res.trims_performed);
+                    println!("  Reflexions Recorded: {}", res.reflexions_recorded);
+                    println!("\n{}", "📋 Scout Contract:".bold().cyan());
+                    println!("{}", res.scout_contract.to_contract_json());
+                    println!("\n{}", "💻 Coder Deliverable:".bold().green());
+                    println!("{}", res.coder_output);
+                }
+                SwarmAction::Bridge {
+                    prompt,
+                    scout,
+                    coder,
+                    max_iterations,
+                    verify,
+                    auto_detect,
+                    status,
+                } => {
+                    if status || prompt.is_none() {
+                        let bridge = crate::swarm::bridge::AgentBridge::global();
+                        let st = bridge.status();
+                        println!("{}", "=========================================================".cyan());
+                        println!("{}", "  🌉  Tagisan Agent Bridge Status & Telemetry".bold().yellow());
+                        println!("{}", "=========================================================".cyan());
+                        println!("  Active Agents:         {}", st.active_agents_count);
+                        println!("  Bus Published Msgs:    {}", st.bus_published_count);
+                        println!("  Bus Delivered Msgs:    {}", st.bus_delivered_count);
+                        println!("  Edge Ollama Routed:    {}", st.edge_routed_count);
+                        println!("  Cloud Frontier Routed: {}", st.cloud_routed_count);
+                        println!("  AgentShield Audits:    {}", st.security_audits_count);
+                        println!("  Injections Blocked:    {}", st.injections_blocked);
+                        println!("  Secrets Redacted:      {}", st.secrets_redacted);
+                    } else if let Some(p) = prompt {
+                        let mut config = crate::swarm::bridge::LocalSwarmConfig::new()
+                            .with_max_iterations(max_iterations);
+                        if let Some(s) = scout {
+                            config = config.with_scout_model(s);
+                        }
+                        if let Some(c) = coder {
+                            config = config.with_coder_model(c);
+                        }
+                        if let Some(v) = verify {
+                            config = config.with_verify_command(v);
+                        }
+                        let bridge = crate::swarm::bridge::LocalSwarmBridge::new(config);
+                        if auto_detect {
+                            let _ = bridge.auto_detect_models().await;
+                        }
+                        let res = bridge.execute_serial_turn_cycle(&p).await?;
+                        println!("Result: success={}, iterations={}", res.success, res.iterations);
+                        println!("{}", res.coder_output);
+                    }
+                }
+                SwarmAction::Cloud {
+                    prompt,
+                    triage,
+                    primary,
+                    reviewer,
+                    failover,
+                } => {
+                    println!("{}", "=========================================================".cyan());
+                    println!("{}", "  ☁️   Tagisan Cloud Frontier LLM Agent Bridge & Consensus Swarm".bold().yellow());
+                    println!("{}", "=========================================================".cyan());
+
+                    let mut config = crate::swarm::cloud_bridge::CloudSwarmConfig::new()
+                        .with_failover_enabled(failover);
+
+                    if let Some(t) = triage {
+                        config = config.with_triage_model(t);
+                    }
+                    if let Some(p) = primary {
+                        config = config.with_primary_model(p);
+                    }
+                    if let Some(r) = reviewer {
+                        config = config.with_reviewer_model(r);
+                    }
+
+                    let bridge = crate::swarm::cloud_bridge::CloudSwarmBridge::new(config);
+
+                    println!("  Triage Model:   {}", bridge.config.triage_model.cyan().bold());
+                    println!("  Primary Model:  {}", bridge.config.primary_model.green().bold());
+                    println!("  Reviewer Model: {}", bridge.config.reviewer_model.bright_blue().bold());
+                    println!("  Failover Chain: {:?}", bridge.config.failover_chain.iter().map(|f| f.as_str()).collect::<Vec<_>>());
+                    println!("  Consensus Thresh: {:.2}", bridge.config.consensus_threshold);
+                    println!("{}", "---------------------------------------------------------".cyan());
+
+                    let res = bridge.execute_cloud_swarm_cycle(&prompt).await?;
+                    println!("\n{}", "🏁 Cloud Swarm Execution Summary".bold().yellow());
+                    println!("  Success:             {}", if res.success { "PASSED".green().bold() } else { "FAILED".red().bold() });
+                    println!("  Consensus Reached:   {}", if res.consensus_reached { "YES".green().bold() } else { "NO".yellow().bold() });
+                    println!("  Consensus Score:     {:.2}", res.consensus_score);
+                    println!("  Distillation Savings:{:.1}% ({} -> {} tokens)", res.token_savings_pct, res.raw_tokens, res.distilled_tokens);
+                    println!("  Primary Provider:    {:?} ({})", res.primary_provider, res.primary_model);
+                    println!("  Failover Occurred:   {}", if res.failover_occurred { "YES".yellow().bold() } else { "NO".green() });
+                    println!("  Reviewer Provider:   {:?} ({})", res.reviewer_provider, res.reviewer_model);
+                    println!("  Review Score:        {:.2}", res.review_evaluation.score);
+                    println!("  Secrets Redacted:    {}", res.secrets_redacted_count);
+                    println!("  Reflexions Synced:   {}", res.invariants_synced_count);
+                    println!("\n{}", "📋 Distilled Contract:".bold().cyan());
+                    println!("{}", res.distilled_contract.to_contract_json());
+                    println!("\n{}", "💻 Primary Deliverable:".bold().green());
+                    println!("{}", res.primary_output);
+                    println!("\n{}", "🛡️ Reviewer Critique & Fuzz Tests:".bold().bright_blue());
+                    println!("Critique: {}", res.review_evaluation.critique);
+                    if !res.review_evaluation.fuzz_tests.is_empty() {
+                        println!("Fuzz Tests Generated:");
+                        for ft in &res.review_evaluation.fuzz_tests {
+                            println!("  - {ft}");
+                        }
                     }
                 }
             }

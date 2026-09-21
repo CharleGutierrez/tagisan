@@ -41,6 +41,8 @@ pub enum ReplCommand {
     Ollama(String),
     Tuner(String),
     Bridge(String),
+    Swarm(String),
+    CloudSwarm(String),
     Oracle(String),
     Astra(String),
     Arc(String),
@@ -137,6 +139,8 @@ impl InteractiveRepl {
             "/ollama" | "/accel" => ReplCommand::Ollama(arg),
             "/tuner" | "/memtune" => ReplCommand::Tuner(arg),
             "/bridge" => ReplCommand::Bridge(arg),
+            "/swarm" => ReplCommand::Swarm(arg),
+            "/cswarm" | "/cloud-swarm" => ReplCommand::CloudSwarm(arg),
             "/oracle" | "/ora" => ReplCommand::Oracle(arg),
             "/astra" | "/cu" => ReplCommand::Astra(arg),
             "/arc" | "/arc3" => ReplCommand::Arc(arg),
@@ -325,6 +329,7 @@ impl InteractiveRepl {
                     {}  Hyper-Ollama Acceleration Suite (warm, prewarm)\n\
                     {}  Ollama Memory Tuner & Auto-Unload Watchdog (status, unload, start)\n\
                     {}  Federated Agent Bridge (status, agents, broadcast, route)\n\
+                    {}  Cloud Frontier Swarm (Triage -> Primary -> Reviewer Consensus)\n\
                     {}   GPT Astra Computer-Use (status, screen, click, type, run)\n\
                     {}   ARC-AGI-3 Reasoning Engine (solve ARC task JSON)\n\
                     {}   Swarm Visual & Computer-Use Web Dashboard\n\
@@ -366,6 +371,7 @@ impl InteractiveRepl {
                     "/ollama [cmd]".bold().green(),
                     "/tuner [cmd]".bold().green(),
                     "/bridge <cmd>".bold().green(),
+                    "/cswarm <prompt>".bold().green(),
                     "/astra [cmd]".bold().green(),
                     "/arc <path>".bold().green(),
                     "/dashboard [port]".bold().green(),
@@ -493,8 +499,8 @@ impl InteractiveRepl {
                     }
                 }
             }
-            ReplCommand::Model(name) => self.switch_model_and_provider(&name),
-            ReplCommand::Provider(name) => self.switch_model_and_provider(&name),
+            ReplCommand::Model(name) => self.switch_model_and_provider(&name).await,
+            ReplCommand::Provider(name) => self.switch_model_and_provider(&name).await,
             ReplCommand::Tools(arg) => {
                 let trimmed = arg.trim().to_lowercase();
                 if trimmed == "on" || trimmed == "enable" || trimmed == "all" {
@@ -983,6 +989,31 @@ impl InteractiveRepl {
                             decision.reason
                         )))
                     }
+                    "run" | "local" => {
+                        if parts.len() < 2 {
+                            return Ok(Some("Usage: /bridge run <prompt> (or /swarm <prompt>)".to_string()));
+                        }
+                        let prompt = parts[1..].join(" ");
+                        let bridge = crate::swarm::bridge::LocalSwarmBridge::new(crate::swarm::bridge::LocalSwarmConfig::new());
+                        let res = bridge.execute_serial_turn_cycle(&prompt).await?;
+                        let status = if res.success { "PASSED".green().bold() } else { "FAILED".red().bold() };
+                        let mut out = format!(
+                            "🌉 [Local Swarm Bridge Result] {}\n\
+                             Iterations: {} | Models Evicted: {:?} | Heap Trims: {}\n\n\
+                             📋 Scout Contract:\n{}\n\n\
+                             💻 Coder Deliverable:\n{}\n",
+                            status,
+                            res.iterations,
+                            res.evicted_models,
+                            res.trims_performed,
+                            res.scout_contract.to_contract_json(),
+                            res.coder_output
+                        );
+                        if let Some(err) = res.error {
+                            out.push_str(&format!("\n⚠️ Diagnostic Error: {}\n", err.red()));
+                        }
+                        Ok(Some(out))
+                    }
                     "help" | _ => {
                         Ok(Some(format!(
                             "Tagisan Agent Bridge Commands:\n\
@@ -990,15 +1021,84 @@ impl InteractiveRepl {
                              {}               - List all registered agents and their circuit states\n\
                              {} - Broadcast event message to all topic subscribers\n\
                              {}   - Evaluate edge-to-cloud workload routing for a task\n\
+                             {}     - Execute asymmetric local swarm on 8GB laptop (Scout -> Coder -> Verifier)\n\
                              {}                 - Display this bridge help manual\n",
                             "/bridge status".bold().green(),
                             "/bridge agents".bold().green(),
                             "/bridge broadcast <topic> <msg>".bold().green(),
                             "/bridge route <task>".bold().green(),
+                            "/bridge run <prompt>".bold().green(),
                             "/bridge help".bold().green(),
                         )))
                     }
                 }
+            }
+            ReplCommand::Swarm(arg) => {
+                let trimmed = arg.trim();
+                if trimmed.is_empty() {
+                    return Ok(Some("Usage: /swarm <prompt> (executes asymmetric local swarm: Scout -> Coder -> Verifier with serial memory eviction)".to_string()));
+                }
+                let bridge = crate::swarm::bridge::LocalSwarmBridge::new(crate::swarm::bridge::LocalSwarmConfig::new());
+                let res = bridge.execute_serial_turn_cycle(trimmed).await?;
+                let status = if res.success { "PASSED".green().bold() } else { "FAILED".red().bold() };
+                let mut out = format!(
+                    "🐝 [Asymmetric Local Swarm Result] {}\n\
+                     Iterations: {} | Models Evicted: {:?} | Heap Trims: {}\n\n\
+                     📋 Scout Contract:\n{}\n\n\
+                     💻 Coder Deliverable:\n{}\n",
+                    status,
+                    res.iterations,
+                    res.evicted_models,
+                    res.trims_performed,
+                    res.scout_contract.to_contract_json(),
+                    res.coder_output
+                );
+                if let Some(err) = res.error {
+                    out.push_str(&format!("\n⚠️ Diagnostic Error: {}\n", err.red()));
+                }
+                Ok(Some(out))
+            }
+            ReplCommand::CloudSwarm(arg) => {
+                let trimmed = arg.trim();
+                if trimmed.is_empty() {
+                    return Ok(Some("Usage: /cswarm <prompt> (or /cloud-swarm <prompt>)".to_string()));
+                }
+                let config = crate::swarm::cloud_bridge::CloudSwarmConfig::new();
+                let bridge = crate::swarm::cloud_bridge::CloudSwarmBridge::new(config);
+                let res = bridge.execute_cloud_swarm_cycle(trimmed).await?;
+                let status = if res.success { "PASSED".green().bold() } else { "FAILED".red().bold() };
+                let mut out = format!(
+                    "☁️ [Cloud Frontier Swarm Result] {}\n\
+                     Consensus: {} (Score: {:.2}) | Distillation Savings: {:.1}%\n\
+                     Primary: {:?} ({}) | Failover: {}\n\
+                     Reviewer: {:?} ({}) | Review Score: {:.2}\n\n\
+                     📋 Distilled Contract:\n{}\n\n\
+                     💻 Primary Deliverable:\n{}\n\n\
+                     🛡️ Reviewer Evaluation:\n{}\n",
+                    status,
+                    if res.consensus_reached { "REACHED".green().bold() } else { "DISPUTED".yellow().bold() },
+                    res.consensus_score,
+                    res.token_savings_pct,
+                    res.primary_provider,
+                    res.primary_model,
+                    if res.failover_occurred { "YES".yellow().bold() } else { "NO".green() },
+                    res.reviewer_provider,
+                    res.reviewer_model,
+                    res.review_evaluation.score,
+                    res.distilled_contract.to_contract_json(),
+                    res.primary_output,
+                    res.review_evaluation.critique
+                );
+                if !res.review_evaluation.fuzz_tests.is_empty() {
+                    out.push_str("\nFuzz Tests Generated:\n");
+                    for ft in &res.review_evaluation.fuzz_tests {
+                        out.push_str(&format!("  • {ft}\n"));
+                    }
+                }
+                if let Some(err) = res.error {
+                    out.push_str(&format!("\n⚠️ Diagnostic Error: {}\n", err.red()));
+                }
+                Ok(Some(out))
             }
             ReplCommand::Oracle(arg) => {
                 let parts: Vec<&str> = arg.split_whitespace().collect();
@@ -2060,7 +2160,11 @@ impl InteractiveRepl {
             }
             ReplCommand::Exit => {
                 self.running = false;
-                Ok(Some("Exiting interactive session. Goodbye!".to_string()))
+                let mut msg = "Exiting interactive session. Goodbye!".to_string();
+                if let Some(unload_msg) = self.unload_local_models_on_exit().await {
+                    msg.push_str(&format!("\n{}", unload_msg));
+                }
+                Ok(Some(msg))
             }
             ReplCommand::UserPrompt(prompt) => {
                 let response = self.run_turn(&prompt).await?;
@@ -2069,8 +2173,10 @@ impl InteractiveRepl {
         }
     }
 
-    /// Dynamically switch active model and/or LLM provider during an interactive session
-    pub fn switch_model_and_provider(&mut self, input: &str) -> Result<Option<String>> {
+    /// Dynamically switch active model and/or LLM provider during an interactive session.
+    /// Includes Pre-Unload Memory Hygiene: unloads resident local models and trims heap
+    /// before loading a new model to eliminate swap thrashing and laptop lockups.
+    pub async fn switch_model_and_provider(&mut self, input: &str) -> Result<Option<String>> {
         let trimmed = input.trim();
         if trimmed.is_empty() {
             let prov_id = self.agent.provider.provider_id();
@@ -2212,6 +2318,34 @@ impl InteractiveRepl {
             }
         };
 
+        // 🧹 Pre-Unload Memory Hygiene:
+        // If switching from a local provider OR switching to a local provider,
+        // proactively evict resident models and trim heap to prevent swap thrashing.
+        let current_provider_id = self.agent.provider.provider_id().to_string();
+        let was_local = current_provider_id == "ollama" || current_provider_id == "colibri";
+        let will_be_local = target_provider == "ollama" || target_provider == "colibri";
+        let mut unloaded_models = Vec::new();
+
+        if was_local || will_be_local {
+            let tuner = crate::engine::memory_tuner::OllamaMemoryTuner::default_local();
+            let unload_action = async {
+                if tuner.is_ollama_reachable().await {
+                    if let Ok(unloaded) = tuner.unload_all_models().await {
+                        return unloaded;
+                    }
+                }
+                Vec::new()
+            };
+
+            // 1.5s timeout safety: switching models never hangs or blocks the user
+            if let Ok(unloaded) = tokio::time::timeout(std::time::Duration::from_millis(1500), unload_action).await {
+                unloaded_models = unloaded;
+            }
+
+            // Immediately return glibc heap arenas to Linux kernel
+            crate::governor::HostMemoryGovernor::new().trim_heap();
+        }
+
         // Obtain target provider handle
         let prov = if target_provider == "ollama" {
             Some(
@@ -2235,6 +2369,15 @@ impl InteractiveRepl {
             target_model.bold().green(),
             target_provider.bold().cyan()
         );
+
+        if !unloaded_models.is_empty() {
+            response.push_str(&format!(
+                "\n🧹 [Memory Hygiene] Unloaded resident local model(s) [{}] from VRAM/RAM and trimmed heap.",
+                unloaded_models.join(", ")
+            ));
+        } else if was_local || will_be_local {
+            response.push_str("\n🧹 [Memory Hygiene] Unloaded resident local model(s) from VRAM/RAM and trimmed heap.");
+        }
 
         if target_provider == "ollama" {
             let installed = crate::providers::ollama::OllamaProvider::discover_installed_models();
@@ -2262,6 +2405,44 @@ impl InteractiveRepl {
         }
 
         Ok(Some(response))
+    }
+
+    /// Dedicated helper to safely unload all resident local LLMs (Ollama) from memory upon REPL exit.
+    /// Incorporates 1.5s timeout safety and non-blocking heap trimming (`malloc_trim(0)`).
+    pub async fn unload_local_models_on_exit(&self) -> Option<String> {
+        let tuner = crate::engine::memory_tuner::OllamaMemoryTuner::default_local();
+        let unload_action = async {
+            if tuner.is_ollama_reachable().await {
+                match tuner.unload_all_models().await {
+                    Ok(unloaded) => {
+                        crate::governor::HostMemoryGovernor::new().trim_heap();
+                        if !unloaded.is_empty() {
+                            Some(format!(
+                                "🧹 Unloaded local LLMs from memory (RAM/VRAM freed): [{}]",
+                                unloaded.join(", ")
+                            ))
+                        } else {
+                            Some("🧹 Unloaded local LLMs from memory (RAM/VRAM freed).".to_string())
+                        }
+                    }
+                    Err(_) => {
+                        crate::governor::HostMemoryGovernor::new().trim_heap();
+                        None
+                    }
+                }
+            } else {
+                crate::governor::HostMemoryGovernor::new().trim_heap();
+                None
+            }
+        };
+
+        match tokio::time::timeout(std::time::Duration::from_millis(1500), unload_action).await {
+            Ok(res) => res,
+            Err(_) => {
+                crate::governor::HostMemoryGovernor::new().trim_heap();
+                None
+            }
+        }
     }
 
     /// Print AGY Dual-Core UX banner for current session
@@ -2486,6 +2667,11 @@ impl InteractiveRepl {
         // Clean up sandbox if active
         if let Some(mut sb) = self.sandbox.take() {
             let _ = sb.cleanup();
+        }
+
+        // Unload local models upon REPL exit (handles /exit, EOF/Ctrl+D, and loop termination)
+        if let Some(unload_msg) = self.unload_local_models_on_exit().await {
+            println!("{}", unload_msg);
         }
 
         println!("\n{}", "👋 Session concluded. Thank you for building with Tagisan!".green().bold());

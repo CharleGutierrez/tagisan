@@ -2278,6 +2278,16 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         visio_deploy_kubernetes_diagram_microservices(),
         visio_deploy_pdfa_iso_19005_archival_standards(),
         visio_deploy_cad_omnigraffle_legacy_migration(),
+        // =========================================================================
+        // Harness Engineering Sovereign Skills Suite (7 Skills)
+        // =========================================================================
+        harness_polyglot_cli_generator_pro_max(),
+        harness_ast_abi_ingest_pro_max(),
+        harness_sandbox_pty_runtime_pro_max(),
+        harness_protocol_serialization_pro_max(),
+        harness_fuzz_benchmark_pro_max(),
+        harness_dag_lifecycle_telemetry_pro_max(),
+        harness_engineering_sovereign_master_pro_max(),
     ]
 }
 
@@ -2306,6 +2316,30 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     if let Some(skill) = map.get(&lower).cloned() {
         return Some(skill);
     }
+
+    // Harness Engineering Skills Suite Shorthand Aliases
+    if lower == "polyglot-cli" || lower == "cli-generator" || lower == "harness-generator" || lower == "clap-cli" {
+        return find_built_in_skill("harness-polyglot-cli-generator-pro-max");
+    }
+    if lower == "ast-abi" || lower == "ast-abi-ingest" || lower == "tree-sitter-parse" || lower == "dwarf-symbols" {
+        return find_built_in_skill("harness-ast-abi-ingest-pro-max");
+    }
+    if lower == "sandbox-pty" || lower == "landlock-sandbox" || lower == "pty-runtime" || lower == "vcr-replay" {
+        return find_built_in_skill("harness-sandbox-pty-runtime-pro-max");
+    }
+    if lower == "protocol-serialization" || lower == "grpc-to-cli" || lower == "proto-to-cli" || lower == "sql-to-crud" || lower == "fix-protocol" {
+        return find_built_in_skill("harness-protocol-serialization-pro-max");
+    }
+    if lower == "fuzz-benchmark" || lower == "proptest-harness" || lower == "differential-testing" || lower == "mutation-fuzzing" {
+        return find_built_in_skill("harness-fuzz-benchmark-pro-max");
+    }
+    if lower == "dag-lifecycle" || lower == "harness-dag" || lower == "cli-composition" || lower == "semver-shim" {
+        return find_built_in_skill("harness-dag-lifecycle-telemetry-pro-max");
+    }
+    if lower == "harness-engineering-master" || lower == "sovereign-harness" || lower == "harness-architect" || lower == "full-stack-harness" {
+        return find_built_in_skill("harness-engineering-sovereign-master-pro-max");
+    }
+
 
     if lower == "lsp" || lower == "code-intelligence" || lower == "language-server" || lower == "diagnostics" || lower == "compiler-check" || lower == "symbol-lookup" || lower == "definition" || lower == "references" || lower == "hover-docs" || lower == "ast-analysis" || lower == "typecheck" || lower == "lsp-pro-max" || lower == "lsp-code-intelligence" {
         return find_built_in_skill("lsp-code-intelligence-pro-max");
@@ -145437,3 +145471,71 @@ To pass automated quality gates within Tagisan ECC, this skill must satisfy:
     )
 }
 
+
+
+// =========================================================================
+// Harness Engineering Sovereign Skills Suite (7 Skills)
+// =========================================================================
+
+pub fn harness_polyglot_cli_generator_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/harness-polyglot-cli-generator-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "harness-polyglot-cli-generator-pro-max",
+            "Autonomous Polyglot CLI Harness Generator for Tagisan. Synthesizes standalone native CLIs in Rust (clap derive + serde_json), TypeScript/Bun, Go (cobra/pflag), WASM/WASI 0.2 components (wit-bindgen), and POSIX sh (getopts). Enforces zero exit-code masking, strict typed JSON outputs via --json, structured stderr diagnostics, and zero external runtime dependencies.",
+            include_str!("../../assets/skills/harness-polyglot-cli-generator-pro-max/SKILL.md"),
+        ))
+}
+
+pub fn harness_ast_abi_ingest_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/harness-ast-abi-ingest-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "harness-ast-abi-ingest-pro-max",
+            "Deep AST & Multi-Language ABI Ingestion for Tagisan. Parses Tree-sitter CSTs, extracts C/C++ native headers and DWARF/ELF symbols via libclang/gimli, analyzes Go ASTs with struct tags, disassembles JVM classfile bytecode, and extracts Erlang/Elixir BEAM module exports. Enforces complete parameter type resolution, docstring preservation, default value extraction, and handling of variadics and generics.",
+            include_str!("../../assets/skills/harness-ast-abi-ingest-pro-max/SKILL.md"),
+        ))
+}
+
+pub fn harness_sandbox_pty_runtime_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/harness-sandbox-pty-runtime-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "harness-sandbox-pty-runtime-pro-max",
+            "Advanced Sandboxing & PTY Interactive Runtimes for Tagisan. Cross-platform isolation (Linux Landlock v1-v3 + Seccomp BPF, macOS Seatbelt sandbox-exec, Windows AppContainer/Job Object), interactive PTY/pseudoterminal emulation (controlling vim, fzf, htop, curses TUIs), ephemeral micro-containers/jails, and VCR HTTP/TLS fixture recording & replay. Enforces no root escape, deterministic input-output capture, zero hanging on blocked child processes, and a 1MB memory capture ceiling.",
+            include_str!("../../assets/skills/harness-sandbox-pty-runtime-pro-max/SKILL.md"),
+        ))
+}
+
+pub fn harness_protocol_serialization_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/harness-protocol-serialization-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "harness-protocol-serialization-pro-max",
+            "Universal Protocol & Serialization Ingestion for Tagisan. Synthesizes CLI harnesses from gRPC/Protobuf (.proto) definitions, GraphQL schemas and introspection, SQL relational schemas (PostgreSQL, MySQL, SQLite) to typed CRUD CLIs, and binary wire protocols (FIX 4.2/5.0, NASDAQ ITCH/OUCH, MQTT v5, Modbus RTU/TCP). Enforces schema validation, round-trip serialization preservation, type-safe enum mapping, and robust connection pooling.",
+            include_str!("../../assets/skills/harness-protocol-serialization-pro-max/SKILL.md"),
+        ))
+}
+
+pub fn harness_fuzz_benchmark_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/harness-fuzz-benchmark-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "harness-fuzz-benchmark-pro-max",
+            "Generative Fuzzing & Microbenchmarking Harness for Tagisan. Synthesizes property-based testing harnesses (proptest in Rust, hypothesis in Python), differential testing between alternative implementations, coverage-guided mutation fuzzing, and latency/memory microbenchmarks (p50, p99, memory allocation tracing). Enforces deterministic seed reproducibility, shrinking of minimal failing inputs, and zero false-negative exit code handling.",
+            include_str!("../../assets/skills/harness-fuzz-benchmark-pro-max/SKILL.md"),
+        ))
+}
+
+pub fn harness_dag_lifecycle_telemetry_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/harness-dag-lifecycle-telemetry-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "harness-dag-lifecycle-telemetry-pro-max",
+            "Harness Lifecycle, Composition DAG & Telemetry for Tagisan. Multi-harness composition pipelines (piping outputs between synthesized CLIs), SemVer upgrade & deprecation shims, and execution telemetry feedback loop (auto-refining SKILL.md cheat sheets based on agent failure traces). Enforces topological DAG execution, dead-letter queue handling, idempotent execution, and schema backward-compatibility checks.",
+            include_str!("../../assets/skills/harness-dag-lifecycle-telemetry-pro-max/SKILL.md"),
+        ))
+}
+
+pub fn harness_engineering_sovereign_master_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/harness-engineering-sovereign-master-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "harness-engineering-sovereign-master-pro-max",
+            "Master Sovereign Harness Engineering Umbrella Skill for Tagisan. Unifies all 6 harness engineering pillars into an autonomous end-to-end system: Polyglot CLI generation (Rust/Bun/Go/WASM/POSIX), deep AST & ABI ingestion (Tree-sitter/libclang/DWARF/Go/JVM/BEAM), cross-platform sandboxing & PTY emulation (Landlock/Seccomp/Seatbelt/AppContainer), universal protocol codecs (gRPC/GraphQL/SQL/FIX/ITCH/MQTT), generative fuzzing & microbenchmarking (proptest/differential/p99), and DAG lifecycle orchestration with telemetry self-refinement.",
+            include_str!("../../assets/skills/harness-engineering-sovereign-master-pro-max/SKILL.md"),
+        ))
+}

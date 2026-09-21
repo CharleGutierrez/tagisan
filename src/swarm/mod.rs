@@ -1,5 +1,6 @@
 pub mod atlas;
 pub mod bridge;
+pub mod cloud_bridge;
 pub mod cluster;
 pub mod consensus;
 pub mod coordinator;
@@ -8,6 +9,7 @@ pub mod repl;
 pub mod session;
 
 pub use bridge::*;
+pub use cloud_bridge::*;
 
 pub use atlas::{AtlasEntry, SwarmAtlas, TopicCluster};
 pub use cluster::{

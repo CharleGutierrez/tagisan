@@ -46,10 +46,22 @@ pub struct MemoryTunerConfig {
 
 impl Default for MemoryTunerConfig {
     fn default() -> Self {
+        let ollama_url = if let Ok(host) = std::env::var("OLLAMA_HOST") {
+            if host.starts_with("http://") || host.starts_with("https://") {
+                host
+            } else {
+                format!("http://{}", host)
+            }
+        } else if let Ok(url) = std::env::var("OLLAMA_URL") {
+            url
+        } else {
+            DEFAULT_OLLAMA_URL.to_string()
+        };
+
         Self {
             bind_host: "127.0.0.1".to_string(),
             bind_port: DEFAULT_TUNER_PORT,
-            ollama_url: DEFAULT_OLLAMA_URL.to_string(),
+            ollama_url,
             inactivity_timeout_secs: DEFAULT_INACTIVITY_TIMEOUT_SECS,
             watchdog_interval_secs: DEFAULT_WATCHDOG_INTERVAL_SECS,
             auto_start_proxy: true,
