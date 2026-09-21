@@ -999,10 +999,13 @@ impl InteractiveRepl {
                         let status = if res.success { "PASSED".green().bold() } else { "FAILED".red().bold() };
                         let mut out = format!(
                             "🌉 [Local Swarm Bridge Result] {}\n\
+                             Scout: '{}' | Coder: '{}'\n\
                              Iterations: {} | Models Evicted: {:?} | Heap Trims: {}\n\n\
                              📋 Scout Contract:\n{}\n\n\
                              💻 Coder Deliverable:\n{}\n",
                             status,
+                            res.scout_model.cyan(),
+                            res.coder_model.green(),
                             res.iterations,
                             res.evicted_models,
                             res.trims_performed,
@@ -1043,10 +1046,13 @@ impl InteractiveRepl {
                 let status = if res.success { "PASSED".green().bold() } else { "FAILED".red().bold() };
                 let mut out = format!(
                     "🐝 [Asymmetric Local Swarm Result] {}\n\
+                     Scout: '{}' | Coder: '{}'\n\
                      Iterations: {} | Models Evicted: {:?} | Heap Trims: {}\n\n\
                      📋 Scout Contract:\n{}\n\n\
                      💻 Coder Deliverable:\n{}\n",
                     status,
+                    res.scout_model.cyan(),
+                    res.coder_model.green(),
                     res.iterations,
                     res.evicted_models,
                     res.trims_performed,

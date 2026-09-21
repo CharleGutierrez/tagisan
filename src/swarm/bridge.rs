@@ -2097,6 +2097,8 @@ pub struct VerifierOutcome {
 pub struct LocalSwarmResult {
     pub success: bool,
     pub iterations: usize,
+    pub scout_model: String,
+    pub coder_model: String,
     pub scout_contract: ScoutContract,
     pub coder_output: String,
     pub verifier_outcome: VerifierOutcome,
@@ -2646,6 +2648,50 @@ impl LocalSwarmBridge {
             "🚀 [Local Swarm Bridge] Initiating serial turn cycle for 8GB workstation...".bold().yellow()
         );
 
+        // 0. Auto-Resolve Models: Ensure configured models exist in Ollama; auto-fallback to installed models
+        let (resolved_scout, resolved_coder) = match self.executor.fetch_installed_models().await {
+            Ok(tags) if !tags.is_empty() => {
+                let scout_exists = tags.iter().any(|t| {
+                    t.name == self.config.scout_model
+                        || t.name.starts_with(&format!("{}:", self.config.scout_model))
+                        || self.config.scout_model.starts_with(&format!("{}:", t.name))
+                });
+                let coder_exists = tags.iter().any(|t| {
+                    t.name == self.config.coder_model
+                        || t.name.starts_with(&format!("{}:", self.config.coder_model))
+                        || self.config.coder_model.starts_with(&format!("{}:", t.name))
+                });
+
+                let (optimal_scout, optimal_coder) = select_optimal_models(&tags);
+                let scout = if scout_exists {
+                    self.config.scout_model.clone()
+                } else {
+                    info!(
+                        "{}",
+                        format!(
+                            "🤖 [Local Swarm] Configured scout '{}' not installed; auto-selected installed model '{}'",
+                            self.config.scout_model, optimal_scout
+                        ).yellow()
+                    );
+                    optimal_scout
+                };
+                let coder = if coder_exists {
+                    self.config.coder_model.clone()
+                } else {
+                    info!(
+                        "{}",
+                        format!(
+                            "🤖 [Local Swarm] Configured coder '{}' not installed; auto-selected installed model '{}'",
+                            self.config.coder_model, optimal_coder
+                        ).yellow()
+                    );
+                    optimal_coder
+                };
+                (scout, coder)
+            }
+            _ => (self.config.scout_model.clone(), self.config.coder_model.clone()),
+        };
+
         // 1. AgentShield Gateway Scan on user input (prompt injection scan & secret redaction)
         let user_msg = BridgeMessage::new(
             "user",
@@ -2666,7 +2712,7 @@ impl LocalSwarmBridge {
         // 3. Turn 1: Scout Execution
         info!(
             "{}",
-            format!("🔍 [Turn 1: Scout ({})] Analyzing intent & synthesizing contract...", self.config.scout_model).cyan()
+            format!("🔍 [Turn 1: Scout ({})] Analyzing intent & synthesizing contract...", resolved_scout).cyan()
         );
 
         let scout_system = "You are the Scout & Intent Router in the Tagisan Asymmetric Local Swarm.\n\
@@ -2680,7 +2726,7 @@ Return ONLY valid JSON.";
             keep_alive: "0s".to_string(),
         };
 
-        let scout_raw = match self.executor.generate(&self.config.scout_model, scout_system, safe_prompt, &scout_opts).await {
+        let scout_raw = match self.executor.generate(&resolved_scout, scout_system, safe_prompt, &scout_opts).await {
             Ok(res) => {
                 self.circuit_breakers.record_success(LocalSwarmRole::Scout.agent_id());
                 res
@@ -2700,8 +2746,8 @@ Return ONLY valid JSON.";
         // 4. Memory Hygiene Step 1: Evict Scout from RAM/VRAM
         let mut evicted_models = Vec::new();
         if self.config.auto_evict {
-            self.unload_model_and_trim(&self.config.scout_model).await?;
-            evicted_models.push(self.config.scout_model.clone());
+            self.unload_model_and_trim(&resolved_scout).await?;
+            evicted_models.push(resolved_scout.clone());
         }
 
         // 5. Coder & Verifier Feedback Loop
@@ -2728,7 +2774,7 @@ Return ONLY valid JSON.";
                 "{}",
                 format!(
                     "💻 [Turn 2: Coder ({})] Generating solution (Iteration {}/{})...",
-                    self.config.coder_model, iteration, self.config.max_iterations
+                    resolved_coder, iteration, self.config.max_iterations
                 )
                 .cyan()
             );
@@ -2787,7 +2833,7 @@ Please output the implementation directly.",
                 keep_alive: "0s".to_string(),
             };
 
-            match self.executor.generate(&self.config.coder_model, coder_system, &coder_user_prompt, &coder_opts).await {
+            match self.executor.generate(&resolved_coder, coder_system, &coder_user_prompt, &coder_opts).await {
                 Ok(res) => {
                     self.circuit_breakers.record_success(LocalSwarmRole::Coder.agent_id());
                     coder_output = res;
@@ -2800,8 +2846,8 @@ Please output the implementation directly.",
 
             // Memory Hygiene Step 2: Evict Coder from RAM/VRAM
             if self.config.auto_evict {
-                self.unload_model_and_trim(&self.config.coder_model).await?;
-                evicted_models.push(self.config.coder_model.clone());
+                self.unload_model_and_trim(&resolved_coder).await?;
+                evicted_models.push(resolved_coder.clone());
             }
 
             // Turn 3: Deterministic Verifier Execution
@@ -2862,6 +2908,8 @@ Please fix all errors identified in the diagnostics above.\n",
         Ok(LocalSwarmResult {
             success,
             iterations: current_iteration,
+            scout_model: resolved_scout,
+            coder_model: resolved_coder,
             scout_contract: contract,
             coder_output,
             verifier_outcome,
