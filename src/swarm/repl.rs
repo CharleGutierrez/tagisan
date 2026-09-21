@@ -224,67 +224,29 @@ impl InteractiveRepl {
         let spinner_msg = format!("🧠 Thinking & synthesizing with {}...", self.agent.model.bold().cyan());
         let spinner = Spinner::start(spinner_msg);
 
-        let mut header_printed = false;
-        let mut is_thinking = false;
-        let mut repeat_detector = String::new();
-        let mut repeat_count = 0usize;
+        let mut token_count = 0usize;
         let mut loop_aborted = false;
-        let cancel_token = self.context.cancellation_token.clone();
 
-        // Stream tokens live to terminal if in interactive mode
+        // Stream tokens / feedback into spinner if in interactive mode
         let mut on_delta = |delta: &crate::types::StreamChunkDelta| {
             if is_interactive && !loop_aborted {
-                if !header_printed {
-                    spinner.stop();
-                    let model_tag = format!("[{model_name}]").bold().yellow();
-                    print!(
-                        "\n{}\n",
-                        format!("╭── ▲ ✦ Tagisan AI  {} ──────────────────────────────────────────", model_tag).bold().cyan()
-                    );
-                    header_printed = true;
-                }
-
                 match delta {
-                    crate::types::StreamChunkDelta::Thinking(th) => {
-                        if !is_thinking {
-                            print!("\n{}\n", "--- Model Thinking ---".italic().dimmed());
-                            is_thinking = true;
-                        }
-                        print!("{}", th.dimmed());
-                        let _ = std::io::stdout().flush();
+                    crate::types::StreamChunkDelta::Thinking(_) => {
+                        spinner.set_message(format!("🤔 Thinking with {}...", model_name.bold().yellow()));
                     }
-                    crate::types::StreamChunkDelta::Text(t) => {
-                        if is_thinking {
-                            print!("\n{}\n", "--- Response ---".italic().green());
-                            is_thinking = false;
+                    crate::types::StreamChunkDelta::Text(_) => {
+                        token_count += 1;
+                        if token_count % 4 == 0 {
+                            spinner.set_message(format!(
+                                "🧠 Synthesizing with {} ({} tokens)...",
+                                model_name.bold().cyan(),
+                                token_count.to_string().bold().green()
+                            ));
                         }
-
-                        // Anti-Degeneration Repetition Loop Breaker
-                        let trimmed = t.trim();
-                        if !trimmed.is_empty() && trimmed.len() >= 2 {
-                            if trimmed == repeat_detector {
-                                repeat_count += 1;
-                            } else {
-                                repeat_detector = trimmed.to_string();
-                                repeat_count = 1;
-                            }
-
-                            if repeat_count >= 10 {
-                                print!("\n\n{}", "⚠️  [Loop Breaker] Repetition degeneration halted by TGS Guardian.".yellow().bold());
-                                let _ = std::io::stdout().flush();
-                                loop_aborted = true;
-                                cancel_token.cancel();
-                                return;
-                            }
-                        }
-
-                        print!("{}", t);
-                        let _ = std::io::stdout().flush();
                     }
                     crate::types::StreamChunkDelta::ToolCallDelta { name, .. } => {
                         if let Some(n) = name {
-                            print!("\n🔧 [{}] ", n.bold().yellow());
-                            let _ = std::io::stdout().flush();
+                            spinner.set_message(format!("🔧 Executing tool {}...", n.bold().yellow()));
                         }
                     }
                 }
@@ -300,14 +262,7 @@ impl InteractiveRepl {
             }
         };
 
-        if !header_printed {
-            match &exec_result {
-                Ok(_) => spinner.stop(),
-                Err(e) => {
-                    spinner.failure(format!("Generation failed: {e}"));
-                }
-            }
-        }
+        spinner.stop();
         let result = exec_result?;
 
         let elapsed = start_time.elapsed().as_secs_f64();
@@ -327,36 +282,17 @@ impl InteractiveRepl {
         // Auto-save checkpoint
         let _ = self.session_store.save(&self.session_record);
 
-        if is_interactive && header_printed {
-            let tok_per_sec = if elapsed > 0.0 {
-                comp_tokens as f64 / elapsed
-            } else {
-                0.0
-            };
-            println!(
-                "\n{}\n",
-                format!(
-                    "╰──────────────────────── ⚡ {} tokens ({:.1} tok/s) • {:.2}s • ${:.4} ─╯",
-                    comp_tokens.to_string().bold().green(),
-                    tok_per_sec,
-                    elapsed,
-                    self.session_record.total_cost_usd
-                ).dimmed()
-            );
-            Ok(String::new())
-        } else {
-            // Format result with appealing colors, card frame, and emojis
-            let formatted = format_appealing_repl_response(
-                &result.final_answer,
-                &self.agent.model,
-                elapsed,
-                prompt_tokens,
-                comp_tokens,
-                self.session_record.total_cost_usd,
-                &self.session_record.id,
-            );
-            Ok(formatted)
-        }
+        // Format result with appealing colors, card frame, and emojis inside an auto-width box
+        let formatted = format_appealing_repl_response(
+            &result.final_answer,
+            &self.agent.model,
+            elapsed,
+            prompt_tokens,
+            comp_tokens,
+            self.session_record.total_cost_usd,
+            &self.session_record.id,
+        );
+        Ok(formatted)
     }
 
     /// Process a parsed command
@@ -2557,7 +2493,37 @@ impl InteractiveRepl {
     }
 }
 
-/// Format the agent's turn result with appealing borders, emojis, and vibrant syntax cues
+
+/// Helper to word-wrap plain text to fit within a given column width
+pub fn wrap_words(text: &str, max_width: usize) -> Vec<String> {
+    let mut lines = Vec::new();
+    let mut current_line = String::new();
+
+    for word in text.split_whitespace() {
+        let word_len = InteractiveRepl::visible_width(word);
+        if current_line.is_empty() {
+            current_line.push_str(word);
+        } else {
+            let current_len = InteractiveRepl::visible_width(&current_line);
+            if current_len + 1 + word_len <= max_width {
+                current_line.push(' ');
+                current_line.push_str(word);
+            } else {
+                lines.push(current_line);
+                current_line = word.to_string();
+            }
+        }
+    }
+    if !current_line.is_empty() {
+        lines.push(current_line);
+    }
+    if lines.is_empty() {
+        lines.push(String::new());
+    }
+    lines
+}
+
+/// Format the agent's turn result with appealing borders, emojis, and vibrant syntax cues inside an auto-width box
 pub fn format_appealing_repl_response(
     content: &str,
     model: &str,
@@ -2565,21 +2531,25 @@ pub fn format_appealing_repl_response(
     prompt_tokens: u32,
     completion_tokens: u32,
     cost_usd: f64,
-    session_id: &str,
+    _session_id: &str,
 ) -> String {
-    let mut out = String::new();
+    // 1. Detect terminal column width with fallback to 80
+    let term_cols = crossterm::terminal::size()
+        .map(|(w, _)| w as usize)
+        .unwrap_or(80);
 
-    // Appealing Header with AGY Insignia
-    let model_tag = format!("[{model}]").bold().yellow();
-    out.push_str(&format!(
-        "\n{}\n",
-        format!("╭── ▲ ✦ Tagisan AI  {} ──────────────────────────────────────────", model_tag).bold().cyan()
-    ));
+    // Leave 4 cols for border & margin
+    let max_term_inner = term_cols.saturating_sub(4).max(40);
+    let min_inner_width = 72.min(max_term_inner);
+    let max_aesthetic_width = 120.min(max_term_inner);
+    let content_wrap_width = max_aesthetic_width.saturating_sub(4).max(30);
 
+    // 2. Pre-process and word-wrap content lines
+    let mut formatted_body_lines: Vec<String> = Vec::new();
     let mut in_code_block = false;
 
-    for line in content.lines() {
-        let trimmed = line.trim();
+    for raw_line in content.lines() {
+        let trimmed = raw_line.trim();
 
         // Code block entry / exit
         if trimmed.starts_with("```") {
@@ -2587,89 +2557,174 @@ pub fn format_appealing_repl_response(
                 in_code_block = true;
                 let lang = trimmed.trim_start_matches("```").trim();
                 let lang_display = if lang.is_empty() { "code" } else { lang };
-                out.push_str(&format!(
-                    "│  {}\n",
-                    format!("📦 [{}] ──────────────────────────────────", lang_display).bold().yellow()
+                formatted_body_lines.push(format!(
+                    "  📦 [{}] {}",
+                    lang_display.bold().yellow(),
+                    "─".repeat(content_wrap_width.saturating_sub(lang_display.len() + 8)).dimmed()
                 ));
             } else {
                 in_code_block = false;
-                out.push_str(&format!(
-                    "│  {}\n",
-                    "────────────────────────────────────────────────".dimmed()
+                formatted_body_lines.push(format!(
+                    "  {}",
+                    "─".repeat(content_wrap_width).dimmed()
                 ));
             }
             continue;
         }
 
         if in_code_block {
-            // Code block content: indented with soft cyan
-            out.push_str(&format!("│    {}\n", line.cyan()));
+            formatted_body_lines.push(format!("    {}", raw_line.cyan()));
             continue;
         }
 
-        // Markdown Headers with distinct vibrant emojis
+        // Markdown Headers
         if let Some(h1) = trimmed.strip_prefix("# ") {
-            out.push_str(&format!("│\n│  {} {}\n│\n", "📌".bold(), h1.bold().bright_yellow()));
+            formatted_body_lines.push(String::new());
+            formatted_body_lines.push(format!("  {} {}", "📌".bold(), h1.bold().bright_yellow()));
+            formatted_body_lines.push(String::new());
             continue;
         }
         if let Some(h2) = trimmed.strip_prefix("## ") {
-            out.push_str(&format!("│\n│  {} {}\n│\n", "⚡".bold(), h2.bold().bright_cyan()));
+            formatted_body_lines.push(String::new());
+            formatted_body_lines.push(format!("  {} {}", "⚡".bold(), h2.bold().bright_cyan()));
+            formatted_body_lines.push(String::new());
             continue;
         }
         if let Some(h3) = trimmed.strip_prefix("### ") {
-            out.push_str(&format!("│  {} {}\n", "✨".bold(), h3.bold().bright_magenta()));
+            formatted_body_lines.push(format!("  {} {}", "✨".bold(), h3.bold().bright_magenta()));
             continue;
-        }
-
-        // Bullet lists
-        if trimmed.starts_with("- ") || trimmed.starts_with("* ") {
-            let bullet_text = &trimmed[2..];
-            let colored_bullet = format_inline_markdown(bullet_text);
-            out.push_str(&format!("│    {} {}\n", "▸".bold().bright_green(), colored_bullet));
-            continue;
-        }
-
-        // Numbered lists
-        if let Some(dot_idx) = trimmed.find(". ") {
-            let prefix = &trimmed[..dot_idx];
-            if prefix.chars().all(|c| c.is_ascii_digit()) && !prefix.is_empty() {
-                let rest = &trimmed[dot_idx + 2..];
-                let colored_rest = format_inline_markdown(rest);
-                out.push_str(&format!("│    {} {}\n", format!("{}.", prefix).bold().bright_cyan(), colored_rest));
-                continue;
-            }
         }
 
         // Blank lines
         if trimmed.is_empty() {
-            out.push_str("│\n");
+            formatted_body_lines.push(String::new());
             continue;
         }
 
-        // Standard prose with inline formatting & emoji callouts
-        let colored_line = format_inline_markdown(line);
-        out.push_str(&format!("│  {}\n", colored_line));
+        // Bullet lists (- or * or •)
+        if trimmed.starts_with("- ") || trimmed.starts_with("* ") || trimmed.starts_with("• ") {
+            let bullet_text = trimmed.trim_start_matches(|c: char| c == '-' || c == '*' || c == '•').trim_start();
+            let wrapped = wrap_words(bullet_text, content_wrap_width.saturating_sub(4));
+            for (idx, w) in wrapped.iter().enumerate() {
+                let formatted_inline = format_inline_markdown(w);
+                if idx == 0 {
+                    formatted_body_lines.push(format!("  {} {}", "▸".bold().bright_green(), formatted_inline));
+                } else {
+                    formatted_body_lines.push(format!("    {}", formatted_inline));
+                }
+            }
+            continue;
+        }
+
+        // Numbered lists (1. , 2. , etc.)
+        if let Some(dot_idx) = trimmed.find(". ") {
+            let prefix = &trimmed[..dot_idx];
+            if prefix.chars().all(|c| c.is_ascii_digit()) && !prefix.is_empty() {
+                let rest = &trimmed[dot_idx + 2..];
+                let prefix_str = format!("{}.", prefix);
+                let indent_len = prefix_str.len() + 3;
+                let indent_spaces = " ".repeat(indent_len);
+                let wrapped = wrap_words(rest, content_wrap_width.saturating_sub(indent_len));
+                for (idx, w) in wrapped.iter().enumerate() {
+                    let formatted_inline = format_inline_markdown(w);
+                    if idx == 0 {
+                        formatted_body_lines.push(format!("  {} {}", prefix_str.bold().bright_cyan(), formatted_inline));
+                    } else {
+                        formatted_body_lines.push(format!("{}{}", indent_spaces, formatted_inline));
+                    }
+                }
+                continue;
+            }
+        }
+
+        // Standard prose with smart word wrapping
+        let wrapped = wrap_words(trimmed, content_wrap_width);
+        for w in wrapped {
+            let formatted_inline = format_inline_markdown(&w);
+            formatted_body_lines.push(format!("  {}", formatted_inline));
+        }
     }
 
-    // Appealing Footer with real-time stats, emojis, and cost
+    // 3. Compute header and footer to determine required width
+    let model_tag = format!("[{model}]").bold().yellow();
+    let header_prefix = format!("── ▲ ✦ Tagisan AI  {} ", model_tag);
+    let header_vis = InteractiveRepl::visible_width(&header_prefix);
+
     let elapsed_str = if elapsed_secs >= 60.0 {
         format!("{:.1}m", elapsed_secs / 60.0)
     } else {
         format!("{:.2}s", elapsed_secs)
     };
     let total_tokens = prompt_tokens + completion_tokens;
-    let footer_stats = format!(
-        "⏱️ {} │ 🪙 {} tokens (${:.4}) │ 💬 {}",
-        elapsed_str.bold().bright_white(),
-        total_tokens.to_string().bold().bright_green(),
-        cost_usd,
-        session_id.dimmed()
+    let tok_per_sec = if elapsed_secs > 0.0 {
+        completion_tokens as f64 / elapsed_secs
+    } else {
+        0.0
+    };
+    let footer_stats = if completion_tokens > 0 && tok_per_sec > 0.0 {
+        format!(
+            "── ⚡ {} tokens ({:.1} tok/s) • {} • ${:.4} ",
+            total_tokens.to_string().bold().bright_green(),
+            tok_per_sec,
+            elapsed_str.bold().bright_white(),
+            cost_usd
+        )
+    } else {
+        format!(
+            "── ⏱️ {} • 🪙 {} tokens • ${:.4} ",
+            elapsed_str.bold().bright_white(),
+            total_tokens.to_string().bold().bright_green(),
+            cost_usd
+        )
+    };
+    let footer_vis = InteractiveRepl::visible_width(&footer_stats);
+
+    // Compute optimal inner_width based on content, header, footer and terminal bounds
+    let max_line_width = formatted_body_lines
+        .iter()
+        .map(|l| InteractiveRepl::visible_width(l))
+        .max()
+        .unwrap_or(50) + 2;
+
+    let inner_width = max_line_width
+        .max(min_inner_width)
+        .max(header_vis + 4)
+        .max(footer_vis + 4)
+        .min(max_term_inner);
+
+    // 4. Construct Header
+    let top_dashes = inner_width.saturating_sub(header_vis);
+    let top_border = format!(
+        "{}{}{}{}",
+        "╭".cyan().bold(),
+        header_prefix.cyan().bold(),
+        "─".repeat(top_dashes).cyan().bold(),
+        "╮".cyan().bold()
     );
 
-    out.push_str(&format!(
-        "│\n{}\n",
-        format!("╰── ▲ {} ─────────────────────────", footer_stats).bold().cyan()
-    ));
+    // 5. Construct Footer
+    let bot_dashes = inner_width.saturating_sub(footer_vis);
+    let bot_border = format!(
+        "{}{}{}{}",
+        "╰".cyan().bold(),
+        footer_stats.cyan().bold(),
+        "─".repeat(bot_dashes).cyan().bold(),
+        "╯".cyan().bold()
+    );
+
+    // 6. Assemble Output
+    let mut out = String::new();
+    out.push('\n');
+    out.push_str(&top_border);
+    out.push('\n');
+
+    for line in formatted_body_lines {
+        out.push_str(&InteractiveRepl::format_box_line(&line, inner_width));
+        out.push('\n');
+    }
+
+    out.push_str(&bot_border);
+    out.push('\n');
 
     out
 }
@@ -4031,5 +4086,53 @@ mod tests {
         let res = repl.execute_command(ReplCommand::Tuner("status".to_string())).await.unwrap().unwrap();
         assert!(res.contains("TAGISAN OLLAMA MEMORY TUNER"));
         assert!(res.contains("Inactivity Timeout"));
+    }
+
+    #[test]
+    fn test_format_appealing_repl_response_box_alignment() {
+        let sample_content = "I can generate text based on patterns and algorithms, but I don't typically \"code\" in the classical sense. However, I can perform various tasks that involve coding-like functionality, such as:\n\
+                              1. Text manipulation: I can parse and manipulate text using regular expressions, string slicing, and other techniques.\n\
+                              2. Data structures: I can create simple data structures like lists or dictionaries to store and manage data.\n\
+                              - Bullet point one with some details.\n\
+                              - Bullet point two with more details.\n\
+                              ```rust\n\
+                              fn main() {\n\
+                                  println!(\"Hello!\");\n\
+                              }\n\
+                              ```\n\
+                              What do you need help with?";
+
+        let formatted = format_appealing_repl_response(
+            sample_content,
+            "llama3.2:1b",
+            5.2,
+            50,
+            190,
+            0.0,
+            "repl-test",
+        );
+
+        let lines: Vec<&str> = formatted.trim().lines().collect();
+        assert!(lines.len() >= 5);
+
+        // First line must contain ╭ and ╮
+        assert!(lines[0].contains('╭'));
+        assert!(lines[0].contains('╮'));
+
+        // Last line must contain ╰ and ╯
+        let last_line = lines.last().unwrap();
+        assert!(last_line.contains('╰'));
+        assert!(last_line.contains('╯'));
+
+        // Every line must have the EXACT SAME visible width!
+        let expected_width = InteractiveRepl::visible_width(lines[0]);
+        for (idx, line) in lines.iter().enumerate() {
+            let vis = InteractiveRepl::visible_width(line);
+            assert_eq!(
+                vis, expected_width,
+                "Line {} has visible width {} but expected {}: {:?}",
+                idx, vis, expected_width, line
+            );
+        }
     }
 }
