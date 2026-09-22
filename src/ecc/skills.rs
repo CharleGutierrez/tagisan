@@ -2289,6 +2289,7 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         harness_dag_lifecycle_telemetry_pro_max(),
         harness_engineering_sovereign_master_pro_max(),
         harness_engineering_1000_recommendations_pro_max(),
+        nextgen_sovereign_engineering_pro_max(),
     ]
 }
 
@@ -2342,6 +2343,9 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
     if lower == "harness-1000" || lower == "harness-recommendations" || lower == "harness-canon" || lower == "harness-engineering-1000" || lower == "harness-1000-pro-max" || lower == "recommendations-1000" || lower == "top-1000-harness" || lower == "1000-recommendations" {
         return find_built_in_skill("harness-engineering-1000-recommendations-pro-max");
+    }
+    if lower == "nextgen" || lower == "sovereign-nextgen" || lower == "formal-verification" || lower == "verify-smt" || lower == "hypergraph" || lower == "speculative-hybrid" || lower == "git-daemon" || lower == "a2a-protocol" || lower == "nextgen-pro-max" || lower == "nextgen-sovereign-engineering-pro-max" {
+        return find_built_in_skill("nextgen-sovereign-engineering-pro-max");
     }
 
 
@@ -145552,4 +145556,14 @@ pub fn harness_engineering_1000_recommendations_pro_max() -> EccSkill {
             include_str!("../../assets/skills/harness-engineering-1000-recommendations-pro-max/SKILL.md"),
         ))
 }
+
+pub fn nextgen_sovereign_engineering_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/nextgen-sovereign-engineering-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "nextgen-sovereign-engineering-pro-max",
+            "Master Sovereign Autonomous Systems Engineering Skill for Tagisan. Implements the 7 Next-Era Frontiers: SMT-LIB2 / Z3 formal verification, Kani bounded model checking, speculative hybrid NPU/GPU orchestration with Lakandiwa Epistemic Entropy Gating, Living Codebase Hypergraphs, Autonomous Git Daemons, WASI 0.2 capability microVMs, A2A economic protocols, and sub-80ms full-duplex ambient voice copilots.",
+            include_str!("../../assets/skills/nextgen-sovereign-engineering-pro-max/SKILL.md"),
+        ))
+}
+
 

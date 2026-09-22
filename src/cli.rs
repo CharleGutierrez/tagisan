@@ -837,7 +837,7 @@ enum Commands {
         action: crate::agentic::AgenticAction,
     },
     /// Sovereign 100-Book Code Review Canon, Static 5-Layer Auditor & Playbook for Vibe Coders
-    #[command(alias = "vibe-review", alias = "code-review", alias = "vr")]
+    #[command(alias = "code-review", alias = "vr")]
     VibeReview {
         #[command(subcommand)]
         action: crate::vibe_review::ReviewAction,
@@ -875,6 +875,12 @@ enum Commands {
         /// Port to bind (default: 7420)
         #[arg(short, long, default_value = "7420")]
         port: u16,
+    },
+    /// Next-Gen Sovereign Engineering Engine: Formal verification, speculative hybrid, hypergraph, git daemon
+    #[command(alias = "next-gen", alias = "sovereign", alias = "verify")]
+    Nextgen {
+        #[command(subcommand)]
+        action: crate::nextgen::NextgenAction,
     },
 }
 
@@ -6362,6 +6368,9 @@ pub async fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Dashboard { host, port } => {
             handle_dashboard_command(&host, port).await?;
+        }
+        Commands::Nextgen { action } => {
+            crate::nextgen::execute_nextgen(action)?;
         }
     }
 

@@ -37,8 +37,10 @@ pub mod reach;
 pub mod governor;
 pub mod gh_plan;
 pub mod gh_delegate;
+pub mod nextgen;
 
 pub use harness::*;
+pub use nextgen::*;
 pub use otp::*;
 pub use gleam::*;
 pub use ide::*;
