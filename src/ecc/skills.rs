@@ -2288,6 +2288,7 @@ pub fn all_built_in_skills() -> Vec<EccSkill> {
         harness_fuzz_benchmark_pro_max(),
         harness_dag_lifecycle_telemetry_pro_max(),
         harness_engineering_sovereign_master_pro_max(),
+        harness_engineering_1000_recommendations_pro_max(),
     ]
 }
 
@@ -2338,6 +2339,9 @@ pub fn find_built_in_skill(name: &str) -> Option<EccSkill> {
     }
     if lower == "harness-engineering-master" || lower == "sovereign-harness" || lower == "harness-architect" || lower == "full-stack-harness" {
         return find_built_in_skill("harness-engineering-sovereign-master-pro-max");
+    }
+    if lower == "harness-1000" || lower == "harness-recommendations" || lower == "harness-canon" || lower == "harness-engineering-1000" || lower == "harness-1000-pro-max" || lower == "recommendations-1000" || lower == "top-1000-harness" || lower == "1000-recommendations" {
+        return find_built_in_skill("harness-engineering-1000-recommendations-pro-max");
     }
 
 
@@ -145539,3 +145543,13 @@ pub fn harness_engineering_sovereign_master_pro_max() -> EccSkill {
             include_str!("../../assets/skills/harness-engineering-sovereign-master-pro-max/SKILL.md"),
         ))
 }
+
+pub fn harness_engineering_1000_recommendations_pro_max() -> EccSkill {
+    EccSkill::parse(include_str!("../../assets/skills/harness-engineering-1000-recommendations-pro-max/SKILL.md"))
+        .unwrap_or_else(|_| EccSkill::new(
+            "harness-engineering-1000-recommendations-pro-max",
+            "Master Canon & Autonomous Execution Engine for 1,000 Harness Engineering Recommendations in Tagisan. Enforces the 10 foundational pillars across polyglot CLI generation, AST/ABI ingestion, Landlock LSM kernel isolation, universal wire protocols, generative fuzzing, composition DAGs, pass@k / pass^k evaluation rigor, memory safety, hermetic network virtualization, and autonomous self-healing.",
+            include_str!("../../assets/skills/harness-engineering-1000-recommendations-pro-max/SKILL.md"),
+        ))
+}
+
