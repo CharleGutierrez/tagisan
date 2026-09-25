@@ -31,7 +31,7 @@ fn test_quant_foundation_skills_built_in_registration() {
         "qlib-alpha-engineering",
         "chronos-moirai-forecasting",
         "fingpt-multimodal-nlp",
-        "rdagent-factor-mining",
+        "agent-hierarchical-delegation",
     ];
 
     let all_skills = all_ecc_skills();
@@ -101,7 +101,7 @@ fn test_quant_foundation_skills_disk_loading() {
             "qlib-alpha-engineering",
             "chronos-moirai-forecasting",
             "fingpt-multimodal-nlp",
-            "rdagent-factor-mining",
+            "agent-hierarchical-delegation",
         ];
 
         for name in expected {
@@ -141,7 +141,7 @@ fn test_semantic_intent_dispatching_for_quant_foundation_queries() {
         ),
         (
             "RD-Agent alpha mining",
-            "rdagent-factor-mining",
+            "agent-hierarchical-delegation",
         ),
     ];
 
