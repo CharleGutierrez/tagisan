@@ -410,7 +410,7 @@ async fn test_repl_command_parsing_and_execution() {
     assert_eq!(InteractiveRepl::parse_command("/agent architect"), ReplCommand::Agent("architect".to_string()));
     assert_eq!(InteractiveRepl::parse_command("/skill tdd-workflow"), ReplCommand::Skill("tdd-workflow".to_string()));
     assert_eq!(InteractiveRepl::parse_command("/model gpt-4o"), ReplCommand::Model("gpt-4o".to_string()));
-    assert_eq!(InteractiveRepl::parse_command("/tools"), ReplCommand::Tools);
+    assert_eq!(InteractiveRepl::parse_command("/tools"), ReplCommand::Tools("".to_string()));
     assert_eq!(InteractiveRepl::parse_command("/memory"), ReplCommand::Memory);
     assert_eq!(InteractiveRepl::parse_command("/sandbox"), ReplCommand::Sandbox);
     assert_eq!(InteractiveRepl::parse_command("/save check1"), ReplCommand::Save(Some("check1".to_string())));

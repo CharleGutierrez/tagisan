@@ -148,7 +148,7 @@ fn test_brutal_03_memory_lifecycle_and_madv_dontneed_eviction() {
         layer_files.push(p);
     }
 
-    let config = LayerStreamingConfig {
+    let config = LayerStreamingConfig { gguf_path: Some(PathBuf::from("/dev/null")), max_pinned_layers: 4, memory_budget_bytes: 1024 * 1024 * 1024, prefetch_depth: 1,
         model_name: "Llama-3-70B-Brutal-Stress".to_string(),
         num_layers,
         hidden_dim: 512,
@@ -310,7 +310,7 @@ fn test_brutal_06_multithreaded_layer_streaming_concurrency() {
         layer_files.push(p);
     }
 
-    let config = LayerStreamingConfig {
+    let config = LayerStreamingConfig { gguf_path: Some(PathBuf::from("/dev/null")), max_pinned_layers: 4, memory_budget_bytes: 1024 * 1024 * 1024, prefetch_depth: 1,
         model_name: "Concurrency-Test-70B".to_string(),
         num_layers,
         hidden_dim: 256,

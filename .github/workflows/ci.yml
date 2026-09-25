@@ -16,6 +16,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Checkout Vella Repository
+        uses: actions/checkout@v4
+        with:
+          repository: CharleGutierrez/Vella
+          path: ../Vella
+
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
