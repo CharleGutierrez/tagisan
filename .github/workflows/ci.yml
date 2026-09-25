@@ -20,7 +20,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: CharleGutierrez/Vella
-          path: ../Vella
+          path: Vella
+
+      - name: Move Vella
+        run: mv Vella ../Vella
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
